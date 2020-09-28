@@ -1,9 +1,6 @@
----
 kind: ServiceAccount
 apiVersion: v1
 metadata:
-  annotations:
-    iam.gke.io/gcp-service-account: control-plane@k8s-prow.iam.gserviceaccount.com
   name: crier
   namespace: prow
 ---
@@ -13,15 +10,15 @@ metadata:
   namespace: prow
   name: crier
 rules:
-- apiGroups:
-    - "prow.k8s.io"
-  resources:
-    - "prowjobs"
-  verbs:
-    - "get"
-    - "watch"
-    - "list"
-    - "patch"
+  - apiGroups:
+      - "prow.k8s.io"
+    resources:
+      - "prowjobs"
+    verbs:
+      - "get"
+      - "watch"
+      - "list"
+      - "patch"
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
@@ -29,45 +26,45 @@ metadata:
   namespace: test-pods
   name: crier
 rules:
-- apiGroups:
-    - ""
-  resources:
-    - "pods"
-    - "events"
-  verbs:
-    - "get"
-    - "list"
-- apiGroups:
-    - ""
-  resources:
-    - "pods"
-  verbs:
-    - "patch"
+  - apiGroups:
+      - ""
+    resources:
+      - "pods"
+      - "events"
+    verbs:
+      - "get"
+      - "list"
+  - apiGroups:
+      - ""
+    resources:
+      - "pods"
+    verbs:
+      - "patch"
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: crier-namespaced
+  name: crier
   namespace: prow
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: crier
 subjects:
-- kind: ServiceAccount
-  name: crier
-  namespace: prow
+  - kind: ServiceAccount
+    name: crier
+    namespace: prow
 ---
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
-  name: crier-namespaced
+  name: crier
   namespace: test-pods
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
   name: crier
 subjects:
-- kind: ServiceAccount
-  name: crier
-  namespace: prow
+  - kind: ServiceAccount
+    name: crier
+    namespace: prow

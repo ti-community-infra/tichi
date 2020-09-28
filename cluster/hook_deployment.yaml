@@ -20,50 +20,33 @@ spec:
       labels:
         app: hook
     spec:
-      serviceAccountName: hook
+      serviceAccountName: "hook"
       terminationGracePeriodSeconds: 180
       containers:
         - name: hook
-          image: gcr.io/k8s-prow/hook:v20200924-4bb1aa1ffa
+          image: gcr.io/k8s-prow/hook:v20200916-29e367bb39
           imagePullPolicy: Always
           args:
             - --dry-run=false
-            - --slack-token-file=/etc/slack/token
+            - --config-path=/etc/config/config.yaml
+            - --github-token-path=/etc/github/token
             - --github-endpoint=http://ghproxy
             - --github-endpoint=https://api.github.com
-            - --github-token-path=/etc/github/oauth
-            - --config-path=/etc/config/config.yaml
-            - --job-config-path=/etc/job-config
-            - --kubeconfig=/etc/kubeconfig/config
           ports:
             - name: http
               containerPort: 8888
           volumeMounts:
-            - name: slack
-              mountPath: /etc/slack
             - name: hmac
               mountPath: /etc/webhook
               readOnly: true
-            - name: oauth
+            - name: github-token
               mountPath: /etc/github
               readOnly: true
             - name: config
               mountPath: /etc/config
               readOnly: true
-            - name: job-config
-              mountPath: /etc/job-config
-              readOnly: true
             - name: plugins
               mountPath: /etc/plugins
-              readOnly: true
-            - name: cat-api
-              mountPath: /etc/cat-api
-              readOnly: true
-            - name: unsplash-api
-              mountPath: /etc/unsplash-api
-              readOnly: true
-            - name: kubeconfig
-              mountPath: /etc/kubeconfig
               readOnly: true
           livenessProbe:
             httpGet:
@@ -79,31 +62,15 @@ spec:
             periodSeconds: 3
             timeoutSeconds: 600
       volumes:
-        - name: slack
-          secret:
-            secretName: slack-token
         - name: hmac
           secret:
             secretName: hmac-token
-        - name: oauth
+        - name: github-token
           secret:
-            secretName: oauth-token
+            secretName: github-token
         - name: config
           configMap:
             name: config
-        - name: job-config
-          configMap:
-            name: job-config
         - name: plugins
           configMap:
             name: plugins
-        - name: cat-api
-          configMap:
-            name: cat-api-key
-        - name: unsplash-api
-          secret:
-            secretName: unsplash-api-key
-        - name: kubeconfig
-          secret:
-            defaultMode: 420
-            secretName: kubeconfig
