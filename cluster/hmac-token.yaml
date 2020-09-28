@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: prow
+  name: hmac-token
+stringData:
+  # Generate via `openssl rand -hex 20`. This is the secret used in the GitHub webhook configuration
+  hmac: e3168d9cb6fd104723fe1672ab77877bbaf6c7ac

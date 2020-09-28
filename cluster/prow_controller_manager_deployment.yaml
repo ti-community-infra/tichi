@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: prow
+  name: prow-controller-manager
+  labels:
+    app: prow-controller-manager
+spec:
+  # Mutually exclusive with plank. Only one of them may have more than zero replicas.
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: prow-controller-manager
+  template:
+    metadata:
+      labels:
+        app: prow-controller-manager
+    spec:
+      serviceAccountName: prow-controller-manager
+      containers:
+      - name: prow-controller-manager
+        image: gcr.io/k8s-prow/prow-controller-manager:v20200924-4bb1aa1ffa
+        args:
+        - --config-path=/etc/config/config.yaml
+        - --dry-run=false
+        - --enable-controller=plank
+        - --job-config-path=/etc/job-config
+        - --kubeconfig=/etc/kubeconfig/config
+        volumeMounts:
+        - mountPath: /etc/kubeconfig
+          name: kubeconfig
+          readOnly: true
+        - name: config
+          mountPath: /etc/config
+          readOnly: true
+        - name: job-config
+          mountPath: /etc/job-config
+          readOnly: true
+      volumes:
+      - name: kubeconfig
+        secret:
+          defaultMode: 420
+          secretName: kubeconfig
+      - name: config
+        configMap:
+          name: config
+      - name: job-config
+        configMap:
+          name: job-config

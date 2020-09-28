@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: prow
+  name: oauth-token
+stringData:
+  token: e0b1502c8641f55959d98c3dc9d83443353d9beb

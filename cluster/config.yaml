@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: prow
+  name: config
+data:
+  config.yaml: ../config/configs.yaml

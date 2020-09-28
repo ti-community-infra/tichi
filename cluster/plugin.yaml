@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: prow
+  name: plugins
+data:
+  plugins.yaml: ../config/plugins.yaml

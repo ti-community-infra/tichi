@@ -1,0 +1,13 @@
+plugins:
+  tidb-community-bots:
+    - assign
+    - blunderbuss
+    - cat
+    - dog
+    - help
+    - heart
+    - hold
+    - label
+    - trigger
+    - wip
+    - yuks
