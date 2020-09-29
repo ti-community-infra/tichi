@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: prow
+  name: config
+data:
+  config.yaml: |
+    prowjob_namespace: prow
+    pod_namespace: test-pods
+
+    in_repo_config:
+      enabled:
+        "*": true
+
+    deck:
+     spyglass:
+       lenses:
+       - lens:
+           name: metadata
+         required_files:
+         - started.json|finished.json
+       - lens:
+           config:
+           name: buildlog
+         required_files:
+         - build-log.txt
+       - lens:
+           name: junit
+         required_files:
+         - .*/junit.*\.xml
+       - lens:
+           name: podinfo
+         required_files:
+         - podinfo.json
+
+    plank:
+      job_url_prefix_config:
+        "*": https://prow.example.com/view/
+      report_templates:
+        '*': >-
+            [Full PR test history](https://prow.example.com/pr-history?org={{.Spec.Refs.Org}}&repo={{.Spec.Refs.Repo}}&pr={{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}).
+            [Your PR dashboard](https://prow.example.com/pr?query=is:pr+state:open+author:{{with
+            index .Spec.Refs.Pulls 0}}{{.Author}}{{end}}).
+      default_decoration_configs:
+        "*":
+          gcs_configuration:
+            bucket: s3://prow-logs
+            path_strategy: explicit
+          s3_credentials_secret: s3-credentials
+          utility_images:
+            clonerefs: gcr.io/k8s-prow/clonerefs:v20200916-29e367bb39
+            entrypoint: gcr.io/k8s-prow/entrypoint:v20200916-29e367bb39
+            initupload: gcr.io/k8s-prow/initupload:v20200916-29e367bb39
+            sidecar: gcr.io/k8s-prow/sidecar:v20200916-29e367bb39
+
+    tide:
+      merge_method:
+        tidb-community-bots/ti-community-lgtm: squash
+        tidb-community-bots/ti-challenge-bot: squash
+        tidb-community-bots/ti-community-bot: squash
+        tidb-community-bots/prow-config: squash
+
+      queries:
+      - repos:
+        - tidb-community-bots/ti-community-lgtm
+        - tidb-community-bots/ti-challenge-bot
+        - tidb-community-bots/ti-community-bot
+        - tidb-community-bots/prow-config
+        labels:
+        - status/can-merge
+        missingLabels:
+        - needs-rebase
+        - do-not-merge/hold
+        - do-not-merge/work-in-progress
+        - do-not-merge/invalid-owners-file
