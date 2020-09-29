@@ -16,13 +16,14 @@ s3:
 	kubectl apply -f cluster/s3_secrets.yaml
 
 prow: prow-namespace test-pods-namespace oauth hmac s3
+	kubectl apply -f config
 	kubectl apply -f cluster
 
 plugins:
-	kubectl apply -f cluster/plugin.yaml
+	kubectl apply -f config/plugin.yaml
 
 configs:
-	kubectl apply -f cluster/config.yaml
+	kubectl apply -f config/config.yaml
 
 clean:
 	rm -f cluster/oauth-token.yaml
