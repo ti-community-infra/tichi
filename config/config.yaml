@@ -58,12 +58,14 @@ data:
         tidb-community-bots/ti-community-lgtm: squash
         tidb-community-bots/ti-challenge-bot: squash
         tidb-community-bots/ti-community-bot: squash
+        tidb-community-bots/prow-config: squash
 
       queries:
       - repos:
         - tidb-community-bots/ti-community-lgtm
         - tidb-community-bots/ti-challenge-bot
         - tidb-community-bots/ti-community-bot
+        - tidb-community-bots/prow-config
         labels:
         - status/can-merge
         missingLabels:
