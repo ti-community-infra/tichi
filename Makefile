@@ -25,6 +25,9 @@ plugins:
 configs:
 	kubectl apply -f config/config.yaml
 
+external-configs:
+	kubectl apply -f config/external_plugins_config.yaml
+
 clean:
 	rm -f cluster/oauth-token.yaml
 	rm -f cluster/hmac-token.yaml

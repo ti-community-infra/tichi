@@ -18,3 +18,8 @@ data:
       - trigger
       - wip
       - yuks
+    external_plugins:
+      tidb-community-bots/test-dev:
+      - name: ti-community-lgtm
+        events:
+        - issue_comment
