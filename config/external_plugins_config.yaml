@@ -10,3 +10,4 @@ data:
           - tidb-community-bots/test-dev
         review_acts_as_lgtm: true
         store_tree_hash: true
+        pull_reviewers_url: https://bots.tidb.io/ti-community-bot
