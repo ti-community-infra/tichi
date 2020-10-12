@@ -66,6 +66,15 @@ data:
         - wip
         - lifecycle
         - help
+      tidb-community-bots/ti-community-merge:
+        - assign
+        - branchcleaner
+        - help
+        - size
+        - welcome
+        - wip
+        - lifecycle
+        - help
     external_plugins:
       tidb-community-bots/test-dev:
       - name: ti-community-lgtm
