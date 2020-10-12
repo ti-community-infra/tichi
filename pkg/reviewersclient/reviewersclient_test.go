@@ -1,3 +1,4 @@
+//nolint:scopelint
 package reviewersclient
 
 import (
@@ -120,5 +121,4 @@ func TestLoadReviewersAndNeedsLgtm(t *testing.T) {
 
 		testServer.Close()
 	}
-
 }
