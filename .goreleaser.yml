@@ -1,0 +1,20 @@
+before:
+  hooks:
+    - go mod download
+build:
+  skip: true
+source:
+  enabled: true
+checksum:
+  name_template: 'checksums.txt'
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+      - '^config:'
+release:
+  github:
+  prerelease: auto

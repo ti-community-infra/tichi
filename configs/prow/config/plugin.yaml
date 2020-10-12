@@ -48,7 +48,7 @@ data:
         - wip
         - lifecycle
         - help
-      tidb-community-bots/prow-config:
+      tidb-community-bots/ti-community-prow:
         - assign
         - branchcleaner
         - help
