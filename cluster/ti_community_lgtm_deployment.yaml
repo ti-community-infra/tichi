@@ -19,7 +19,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
         - name: ti-community-lgtm
-          image: rustinliu/ti-community-lgtm-prow-plugin:latest
+          image: rustinliu/ti-community-lgtm-prow-plugin:v0.1.6
           imagePullPolicy: Always
           args:
             - --dry-run=false
