@@ -59,7 +59,6 @@ data:
         tidb-community-bots/ti-challenge-bot: squash
         tidb-community-bots/ti-community-bot: squash
         tidb-community-bots/ti-community-prow: squash
-        tidb-community-bots/ti-prow-external-plugins-config: squash
         tidb-community-bots/ti-community-merge: squash
 
       queries:
@@ -68,7 +67,6 @@ data:
         - tidb-community-bots/ti-challenge-bot
         - tidb-community-bots/ti-community-bot
         - tidb-community-bots/ti-community-prow
-        - tidb-community-bots/ti-prow-external-plugins-config
         - tidb-community-bots/ti-community-merge
         labels:
         - status/can-merge
