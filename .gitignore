@@ -19,4 +19,7 @@ bin/
 
 .idea
 
+configs/prow/cluster/oauth-token.yaml
+configs/prow/cluster/hmac-token.yaml
+
 coverage.txt
