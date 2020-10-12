@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: prow
+  name: external-plugins-config
+data:
+  external-plugins.yaml: |
+    ti-community-lgtm:
+      - repos:
+          - tidb-community-bots/test-dev
+        review_acts_as_lgtm: true
+        store_tree_hash: true
+        pull_reviewers_url: https://27a808d943e1.ngrok.io/ti-community-bot

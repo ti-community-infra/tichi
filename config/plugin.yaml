@@ -5,16 +5,72 @@ metadata:
   name: plugins
 data:
   plugins.yaml: |
+    size:
+      s: 10
+      m: 30
+      l: 90
+      xl: 270
+      xxl: 520
     plugins:
-      tidb-community-bots:
-      - assign
-      - blunderbuss
-      - cat
-      - dog
-      - help
-      - heart
-      - hold
-      - label
-      - trigger
-      - wip
-      - yuks
+      tidb-community-bots/test-dev:
+        - assign
+        - branchcleaner
+        - help
+        - size
+        - welcome
+        - wip
+        - lifecycle
+        - help
+      tidb-community-bots/ti-community-lgtm:
+        - assign
+        - branchcleaner
+        - help
+        - size
+        - welcome
+        - wip
+        - lifecycle
+        - help
+      tidb-community-bots/ti-challenge-bot:
+        - assign
+        - branchcleaner
+        - help
+        - size
+        - welcome
+        - wip
+        - lifecycle
+        - help
+      tidb-community-bots/ti-community-bot:
+        - assign
+        - branchcleaner
+        - help
+        - size
+        - welcome
+        - wip
+        - lifecycle
+        - help
+      tidb-community-bots/prow-config:
+        - assign
+        - branchcleaner
+        - help
+        - size
+        - welcome
+        - wip
+        - lifecycle
+        - help
+      tidb-community-bots/ti-prow-external-plugins-config:
+            - assign
+            - branchcleaner
+            - help
+            - size
+            - welcome
+            - wip
+            - lifecycle
+            - help
+    external_plugins:
+      tidb-community-bots/test-dev:
+      - name: ti-community-lgtm
+        events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request_review
+        - pull_request
