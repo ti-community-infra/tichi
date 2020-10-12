@@ -1,33 +1,55 @@
-SHELL := /bin/bash
+PROJECT=ti-community-prow
+GOPATH ?= $(shell go env GOPATH)
+P=8
 
-prow-namespace:
-	kubectl apply -f cluster/prow_namespace.yaml
+# Ensure GOPATH is set before running build process.
+ifeq "$(GOPATH)" ""
+  $(error Please set the environment variable GOPATH before running `make`)
+endif
+FAIL_ON_STDOUT := awk '{ print } END { if (NR > 0) { exit 1 } }'
 
-test-pods-namespace:
-	kubectl apply -f cluster/test-pods_namespace.yaml
+CURDIR := $(shell pwd)
+path_to_add := $(addsuffix /bin,$(subst :,/bin:,$(GOPATH))):$(PWD)/tools/bin
+export PATH := $(path_to_add):$(PATH)
 
-oauth:
-	kubectl apply -f cluster/oauth-token.yaml
+GO              := GO111MODULE=on go
+GOBUILD         := $(GO) build
+GOTEST          := $(GO) test -p $(P)
 
-hmac:
-	kubectl apply -f cluster/hmac-token.yaml
+PACKAGE_LIST  := go list ./...
+PACKAGES  := $$($(PACKAGE_LIST))
+PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/tidb-community-bots/$(PROJECT)/||'
+FILES     := $$(find $$($(PACKAGE_DIRECTORIES)) -name "*.go")
 
-s3:
-	kubectl apply -f cluster/s3_secrets.yaml
 
-prow: prow-namespace test-pods-namespace oauth hmac s3
-	kubectl apply -f config
-	kubectl apply -f cluster
-
-plugins:
-	kubectl apply -f config/plugin.yaml
-
-configs:
-	kubectl apply -f config/config.yaml
-
-external-configs:
-	kubectl apply -f config/external_plugins_config.yaml
+.PHONY: clean test dev check tidy
 
 clean:
-	rm -f cluster/oauth-token.yaml
-	rm -f cluster/hmac-token.yaml
+	$(GO) clean -i ./...
+	rm -rf *.out
+
+test:
+	$(GOTEST) $(PACKAGES)
+	@>&2 echo "Great, all tests passed."
+
+test-with-coverage:
+	$(GOTEST) $(PACKAGES) -race -coverprofile=coverage.txt -covermode=atomic
+
+dev: check test
+
+check: fmt tidy staticcheck
+
+fmt:
+	@echo "gofmt (simplify)"
+	@gofmt -s -l -w $(FILES) 2>&1 | $(FAIL_ON_STDOUT)
+
+tidy:
+	@echo "go mod tidy"
+	./tools/check/check-tidy.sh
+
+staticcheck: tools/bin/golangci-lint
+	tools/bin/golangci-lint run  $$($(PACKAGE_DIRECTORIES))
+
+tools/bin/golangci-lint:
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ./tools/bin v1.31.0
+
