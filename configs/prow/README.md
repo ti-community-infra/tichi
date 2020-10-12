@@ -1,1 +1,3 @@
-# ti-community-prow
+# prow-config
+
+Prow configs for tidb community.
