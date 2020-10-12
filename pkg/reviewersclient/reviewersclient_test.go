@@ -70,7 +70,9 @@ func TestLoadReviewersAndNeedsLgtm(t *testing.T) {
 	org := "tidb-community-bots"
 	repoName := "test-dev"
 	number := 1
+
 	for _, testCase := range testCases {
+		// Fake http client.
 		mux := http.NewServeMux()
 		testServer := httptest.NewServer(mux)
 
@@ -78,6 +80,7 @@ func TestLoadReviewersAndNeedsLgtm(t *testing.T) {
 			testCase.lgtm.PullReviewersURL = testServer.URL
 		}
 
+		// URL pattern.
 		pattern := fmt.Sprintf(testReviewersURLFmt, org, repoName, number)
 		mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
 			if req.Method != "GET" {
@@ -102,6 +105,7 @@ func TestLoadReviewersAndNeedsLgtm(t *testing.T) {
 			if !testCase.exceptError {
 				t.Errorf("unexpected error: '%v'", err)
 			} else {
+				// It should have a error.
 				continue
 			}
 		}
