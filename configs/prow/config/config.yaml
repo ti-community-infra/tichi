@@ -58,7 +58,7 @@ data:
         tidb-community-bots/ti-community-lgtm: squash
         tidb-community-bots/ti-challenge-bot: squash
         tidb-community-bots/ti-community-bot: squash
-        tidb-community-bots/prow-config: squash
+        tidb-community-bots/ti-community-prow: squash
         tidb-community-bots/ti-prow-external-plugins-config: squash
         tidb-community-bots/ti-community-merge: squash
 
@@ -67,7 +67,7 @@ data:
         - tidb-community-bots/ti-community-lgtm
         - tidb-community-bots/ti-challenge-bot
         - tidb-community-bots/ti-community-bot
-        - tidb-community-bots/prow-config
+        - tidb-community-bots/ti-community-prow
         - tidb-community-bots/ti-prow-external-plugins-config
         - tidb-community-bots/ti-community-merge
         labels:
