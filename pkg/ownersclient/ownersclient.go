@@ -44,7 +44,7 @@ type ReviewersClient struct {
 // lgtm from URL of pull request owners.
 func (rc *ReviewersClient) LoadOwners(opts *externalplugins.TiCommunityLgtm,
 	org, repoName string, number int) (*Owners, error) {
-	url := fmt.Sprintf(OwnersURLFmt, opts.PullReviewersURL, org, repoName, number)
+	url := fmt.Sprintf(OwnersURLFmt, opts.PullOwnersURL, org, repoName, number)
 	res, err := rc.Client.Get(url)
 
 	if err != nil {

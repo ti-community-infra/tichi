@@ -29,8 +29,8 @@ type TiCommunityLgtm struct {
 	// StickyLgtmTeam specifies the GitHub team whose members are trusted with sticky LGTM,
 	// which eliminates the need to re-lgtm minor fixes/updates.
 	StickyLgtmTeam string `json:"trusted_team_for_sticky_lgtm,omitempty"`
-	// PullReviewersURL specifies the URL of the reviewer of pull request.
-	PullReviewersURL string `json:"pull_reviewers_url,omitempty"`
+	// PullOwnersURL specifies the URL of the reviewer of pull request.
+	PullOwnersURL string `json:"pull_owners_url,omitempty"`
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists
@@ -66,7 +66,7 @@ func (c *Configuration) Validate() error {
 // validateLgtm will return an error if the URL configured by lgtm is invalid.
 func validateLgtm(lgtms []TiCommunityLgtm) error {
 	for _, lgtm := range lgtms {
-		_, err := url.ParseRequestURI(lgtm.PullReviewersURL)
+		_, err := url.ParseRequestURI(lgtm.PullOwnersURL)
 		if err != nil {
 			return err
 		}

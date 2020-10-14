@@ -18,7 +18,7 @@ func TestGetConfig(t *testing.T) {
 				ReviewActsAsLgtm: true,
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullReviewersURL: "https://bots.tidb.io/ti-community-bot",
+				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
 			expectedPullReviewersURL: "https://bots.tidb.io/ti-community-bot",
 		},
@@ -28,7 +28,7 @@ func TestGetConfig(t *testing.T) {
 				ReviewActsAsLgtm: true,
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullReviewersURL: "https://bots.tidb.io/ti-community-bot",
+				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
 			expectedPullReviewersURL: "https://bots.tidb.io/ti-community-bot",
 		},
@@ -38,8 +38,8 @@ func TestGetConfig(t *testing.T) {
 
 		config := pa.Config()
 		for _, lgtm := range config.TiCommunityLgtm {
-			if lgtm.PullReviewersURL != tc.expectedPullReviewersURL {
-				t.Errorf("Different URL: Got \"%s\" expected \"%s\"", lgtm.PullReviewersURL, tc.expectedPullReviewersURL)
+			if lgtm.PullOwnersURL != tc.expectedPullReviewersURL {
+				t.Errorf("Different URL: Got \"%s\" expected \"%s\"", lgtm.PullOwnersURL, tc.expectedPullReviewersURL)
 			}
 		}
 	}

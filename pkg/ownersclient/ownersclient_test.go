@@ -25,6 +25,7 @@ func TestLoadOwners(t *testing.T) {
 		exceptError      bool
 	}{
 		{
+			name: "valid pull owners URL(use mock URL)",
 			lgtm: &externalplugins.TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
@@ -52,12 +53,13 @@ func TestLoadOwners(t *testing.T) {
 			exceptNeedsLgtm: 2,
 		},
 		{
+			name: "invalid pull owners URL",
 			lgtm: &externalplugins.TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullReviewersURL: "not-found",
+				PullOwnersURL:    "not-found",
 			},
 			data: OwnersResponse{
 				Data: Owners{
@@ -86,57 +88,60 @@ func TestLoadOwners(t *testing.T) {
 	number := 1
 
 	for _, testCase := range testCases {
-		// Fake http client.
-		mux := http.NewServeMux()
-		testServer := httptest.NewServer(mux)
+		t.Run(testCase.name, func(t *testing.T) {
+			// Fake http client.
+			mux := http.NewServeMux()
+			testServer := httptest.NewServer(mux)
 
-		if testCase.lgtm.PullReviewersURL == "" {
-			testCase.lgtm.PullReviewersURL = testServer.URL
-		}
-
-		// URL pattern.
-		pattern := fmt.Sprintf(testReviewersURLFmt, org, repoName, number)
-		mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
-			if req.Method != "GET" {
-				t.Errorf("Except 'Get' got '%s'", req.Method)
+			// NOTICE: add pull owners URL.
+			if testCase.lgtm.PullOwnersURL == "" {
+				testCase.lgtm.PullOwnersURL = testServer.URL
 			}
-			reqBodyBytes := new(bytes.Buffer)
-			err := json.NewEncoder(reqBodyBytes).Encode(testCase.data)
+
+			// URL pattern.
+			pattern := fmt.Sprintf(testReviewersURLFmt, org, repoName, number)
+			mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
+				if req.Method != "GET" {
+					t.Errorf("Except 'Get' got '%s'", req.Method)
+				}
+				reqBodyBytes := new(bytes.Buffer)
+				err := json.NewEncoder(reqBodyBytes).Encode(testCase.data)
+				if err != nil {
+					t.Errorf("Encoding data '%v' failed", testCase.data)
+				}
+
+				_, err = res.Write(reqBodyBytes.Bytes())
+				if err != nil {
+					t.Errorf("Write data '%v' failed", testCase.data)
+				}
+			})
+
+			client := ReviewersClient{Client: testServer.Client()}
+
+			owners, err := client.LoadOwners(testCase.lgtm, org, repoName, number)
 			if err != nil {
-				t.Errorf("Encoding data '%v' failed", testCase.data)
+				if !testCase.exceptError {
+					t.Errorf("unexpected error: '%v'", err)
+				} else {
+					// It should have a error, so skip follow assert.
+					return
+				}
 			}
 
-			_, err = res.Write(reqBodyBytes.Bytes())
-			if err != nil {
-				t.Errorf("Write data '%v' failed", testCase.data)
+			if len(owners.Committers) != len(testCase.exceptCommitters) {
+				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", owners.Committers, testCase.exceptCommitters)
 			}
+
+			if len(owners.Reviewers) != len(testCase.exceptReviewers) {
+				t.Errorf("Different reviewers: Got \"%v\" expected \"%v\"", owners.Reviewers, testCase.exceptReviewers)
+			}
+
+			if owners.NeedsLgtm != testCase.exceptNeedsLgtm {
+				t.Errorf("Different LGTM: Got \"%v\" expected \"%v\"", owners.NeedsLgtm, testCase.exceptNeedsLgtm)
+			}
+
+			testServer.Close()
 		})
-
-		client := ReviewersClient{Client: testServer.Client()}
-
-		owners, err := client.LoadOwners(testCase.lgtm, org, repoName, number)
-		if err != nil {
-			if !testCase.exceptError {
-				t.Errorf("unexpected error: '%v'", err)
-			} else {
-				// It should have a error.
-				continue
-			}
-		}
-
-		if len(owners.Committers) != len(testCase.exceptCommitters) {
-			t.Errorf("Different committers: Got \"%v\" expected \"%v\"", owners.Committers, testCase.exceptCommitters)
-		}
-
-		if len(owners.Reviewers) != len(testCase.exceptReviewers) {
-			t.Errorf("Different reviewers: Got \"%v\" expected \"%v\"", owners.Reviewers, testCase.exceptReviewers)
-		}
-
-		if owners.NeedsLgtm != testCase.exceptNeedsLgtm {
-			t.Errorf("Different LGTM: Got \"%v\" expected \"%v\"", owners.NeedsLgtm, testCase.exceptNeedsLgtm)
-		}
-
-		testServer.Close()
 	}
 }
 
@@ -144,30 +149,29 @@ func TestLoadOwnersFailed(t *testing.T) {
 	testCases := []struct {
 		name        string
 		lgtm        *externalplugins.TiCommunityLgtm
-		data        OwnersResponse
+		invalidData bool
 		exceptError string
 	}{
 		{
+			name: "get data form url failed(use mock URL)",
 			lgtm: &externalplugins.TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullReviewersURL: "https://bots.tidb.io/ti-fake-bot",
-			},
-			data: OwnersResponse{
-				Data: Owners{
-					Committers: []string{
-						"Rustin-Liu",
-					},
-					Reviewers: []string{
-						"Rustin-Liu",
-					},
-					NeedsLgtm: 2,
-				},
-				Message: "Test",
 			},
 			exceptError: "could not get a reviewers",
+		},
+		{
+			name: "parse data failed(use mock URL)",
+			lgtm: &externalplugins.TiCommunityLgtm{
+				Repos:            []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm: true,
+				StoreTreeHash:    true,
+				StickyLgtmTeam:   "tidb-community-bots/bots-test",
+			},
+			invalidData: true,
+			exceptError: "unexpected end of JSON input",
 		},
 	}
 	org := "tidb-community-bots"
@@ -175,32 +179,43 @@ func TestLoadOwnersFailed(t *testing.T) {
 	number := 1
 
 	for _, testCase := range testCases {
-		// Fake http client.
-		mux := http.NewServeMux()
-		testServer := httptest.NewServer(mux)
+		t.Run(testCase.name, func(t *testing.T) {
+			// Fake http client.
+			mux := http.NewServeMux()
+			testServer := httptest.NewServer(mux)
 
-		if testCase.lgtm.PullReviewersURL == "" {
-			testCase.lgtm.PullReviewersURL = testServer.URL
-		}
-
-		// URL pattern.
-		pattern := fmt.Sprintf(testReviewersURLFmt, org, repoName, number)
-		mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
-			if req.Method != "GET" {
-				t.Errorf("Except 'Get' got '%s'", req.Method)
+			if testCase.lgtm.PullOwnersURL == "" {
+				testCase.lgtm.PullOwnersURL = testServer.URL
 			}
-			res.WriteHeader(http.StatusInternalServerError)
+
+			// URL pattern.
+			pattern := fmt.Sprintf(testReviewersURLFmt, org, repoName, number)
+			mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
+				if req.Method != "GET" {
+					t.Errorf("Except 'Get' got '%s'", req.Method)
+				}
+				// If set invalid data true, we need response a invalid data.
+				if testCase.invalidData {
+					_, err := res.Write([]byte{})
+					if err != nil {
+						t.Errorf("Write data '%v' failed", []byte{})
+					}
+				} else {
+					// Just http filed.
+					res.WriteHeader(http.StatusInternalServerError)
+				}
+			})
+
+			client := ReviewersClient{Client: testServer.Client()}
+
+			_, err := client.LoadOwners(testCase.lgtm, org, repoName, number)
+			if err == nil {
+				t.Errorf("expected error '%v'', but it is nil", testCase.exceptError)
+			} else if err.Error() != testCase.exceptError {
+				t.Errorf("expected error '%v'', but it is '%v'", testCase.exceptError, err)
+			}
+
+			testServer.Close()
 		})
-
-		client := ReviewersClient{Client: testServer.Client()}
-
-		_, err := client.LoadOwners(testCase.lgtm, org, repoName, number)
-		if err == nil {
-			t.Errorf("expected error '%v'', but it is nil", testCase.exceptError)
-		} else if err.Error() != testCase.exceptError {
-			t.Errorf("expected error '%v'', but it is '%v'", testCase.exceptError, err)
-		}
-
-		testServer.Close()
 	}
 }
