@@ -15,35 +15,35 @@ func TestValidateTiCommunityLgtmConfig(t *testing.T) {
 		expected error
 	}{
 		{
-			name: "https pull reviewers URL",
+			name: "https pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullReviewersURL: "https://bots.tidb.io/ti-community-bot",
+				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
 			expected: nil,
 		},
 		{
-			name: "http pull reviewers URL",
+			name: "http pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullReviewersURL: "http://bots.tidb.io/ti-community-bot",
+				PullOwnersURL:    "http://bots.tidb.io/ti-community-bot",
 			},
 			expected: nil,
 		},
 		{
-			name: "invalid pull reviewers URL",
+			name: "invalid pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullReviewersURL: "http/bots.tidb.io/ti-community-bot",
+				PullOwnersURL:    "http/bots.tidb.io/ti-community-bot",
 			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
@@ -73,35 +73,35 @@ func TestValidateConfig(t *testing.T) {
 		expected error
 	}{
 		{
-			name: "https pull reviewers URL",
+			name: "https pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullReviewersURL: "https://bots.tidb.io/ti-community-bot",
+				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
 			expected: nil,
 		},
 		{
-			name: "http pull reviewers URL",
+			name: "http pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullReviewersURL: "http://bots.tidb.io/ti-community-bot",
+				PullOwnersURL:    "http://bots.tidb.io/ti-community-bot",
 			},
 			expected: nil,
 		},
 		{
-			name: "invalid pull reviewers URL",
+			name: "invalid pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullReviewersURL: "http/bots.tidb.io/ti-community-bot",
+				PullOwnersURL:    "http/bots.tidb.io/ti-community-bot",
 			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
@@ -141,7 +141,7 @@ func TestLgtmFor(t *testing.T) {
 				ReviewActsAsLgtm: true,
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullReviewersURL: "https://bots.tidb.io/ti-community-bot",
+				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
 			org:  "tidb-community-bots",
 			repo: "test-dev",
@@ -153,7 +153,7 @@ func TestLgtmFor(t *testing.T) {
 				ReviewActsAsLgtm: true,
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullReviewersURL: "http://bots.tidb.io/ti-community-bot",
+				PullOwnersURL:    "http://bots.tidb.io/ti-community-bot",
 			},
 			org:  "tidb-community-bots",
 			repo: "test-dev",
