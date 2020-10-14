@@ -34,15 +34,15 @@ type OwnersLoader interface {
 		repoName string, number int) (*Owners, error)
 }
 
-// OwnersLoader for load PR's reviewers.
-type ReviewersClient struct {
+// OwnersClient for load PR's reviewers.
+type OwnersClient struct {
 	// Client is a HTTP client to request reviewers.
 	Client *http.Client
 }
 
 // LoadOwners returns owners and needs
 // lgtm from URL of pull request owners.
-func (rc *ReviewersClient) LoadOwners(opts *externalplugins.TiCommunityLgtm,
+func (rc *OwnersClient) LoadOwners(opts *externalplugins.TiCommunityLgtm,
 	org, repoName string, number int) (*Owners, error) {
 	url := fmt.Sprintf(OwnersURLFmt, opts.PullOwnersURL, org, repoName, number)
 	res, err := rc.Client.Get(url)
@@ -55,7 +55,7 @@ func (rc *ReviewersClient) LoadOwners(opts *externalplugins.TiCommunityLgtm,
 	}()
 
 	if res.StatusCode != 200 {
-		return nil, errors.New("could not get a reviewers")
+		return nil, errors.New("could not get a owners")
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
@@ -63,9 +63,9 @@ func (rc *ReviewersClient) LoadOwners(opts *externalplugins.TiCommunityLgtm,
 		return nil, err
 	}
 
-	var reviewersRes OwnersResponse
-	if err := json.Unmarshal(body, &reviewersRes); err != nil {
+	var ownersRes OwnersResponse
+	if err := json.Unmarshal(body, &ownersRes); err != nil {
 		return nil, err
 	}
-	return &reviewersRes.Data, nil
+	return &ownersRes.Data, nil
 }

@@ -15,7 +15,7 @@ func TestValidateTiCommunityLgtmConfig(t *testing.T) {
 		expected error
 	}{
 		{
-			name: "https pull reviewers URL",
+			name: "https pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
@@ -26,7 +26,7 @@ func TestValidateTiCommunityLgtmConfig(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name: "http pull reviewers URL",
+			name: "http pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
@@ -37,7 +37,7 @@ func TestValidateTiCommunityLgtmConfig(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name: "invalid pull reviewers URL",
+			name: "invalid pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
@@ -73,7 +73,7 @@ func TestValidateConfig(t *testing.T) {
 		expected error
 	}{
 		{
-			name: "https pull reviewers URL",
+			name: "https pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
@@ -84,7 +84,7 @@ func TestValidateConfig(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name: "http pull reviewers URL",
+			name: "http pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
@@ -95,7 +95,7 @@ func TestValidateConfig(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name: "invalid pull reviewers URL",
+			name: "invalid pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,

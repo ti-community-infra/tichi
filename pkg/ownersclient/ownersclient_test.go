@@ -12,7 +12,7 @@ import (
 	"github.com/tidb-community-bots/ti-community-prow/pkg/externalplugins"
 )
 
-const testReviewersURLFmt = "/repos/%s/%s/pulls/%d/owners"
+const testOwnersURLFmt = "/repos/%s/%s/pulls/%d/owners"
 
 func TestLoadOwners(t *testing.T) {
 	testCases := []struct {
@@ -99,7 +99,7 @@ func TestLoadOwners(t *testing.T) {
 			}
 
 			// URL pattern.
-			pattern := fmt.Sprintf(testReviewersURLFmt, org, repoName, number)
+			pattern := fmt.Sprintf(testOwnersURLFmt, org, repoName, number)
 			mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
 				if req.Method != "GET" {
 					t.Errorf("Except 'Get' got '%s'", req.Method)
@@ -116,7 +116,7 @@ func TestLoadOwners(t *testing.T) {
 				}
 			})
 
-			client := ReviewersClient{Client: testServer.Client()}
+			client := OwnersClient{Client: testServer.Client()}
 
 			owners, err := client.LoadOwners(testCase.lgtm, org, repoName, number)
 			if err != nil {
@@ -160,7 +160,7 @@ func TestLoadOwnersFailed(t *testing.T) {
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 			},
-			exceptError: "could not get a reviewers",
+			exceptError: "could not get a owners",
 		},
 		{
 			name: "parse data failed(use mock URL)",
@@ -189,7 +189,7 @@ func TestLoadOwnersFailed(t *testing.T) {
 			}
 
 			// URL pattern.
-			pattern := fmt.Sprintf(testReviewersURLFmt, org, repoName, number)
+			pattern := fmt.Sprintf(testOwnersURLFmt, org, repoName, number)
 			mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
 				if req.Method != "GET" {
 					t.Errorf("Except 'Get' got '%s'", req.Method)
@@ -206,7 +206,7 @@ func TestLoadOwnersFailed(t *testing.T) {
 				}
 			})
 
-			client := ReviewersClient{Client: testServer.Client()}
+			client := OwnersClient{Client: testServer.Client()}
 
 			_, err := client.LoadOwners(testCase.lgtm, org, repoName, number)
 			if err == nil {

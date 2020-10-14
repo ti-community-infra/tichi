@@ -9,8 +9,8 @@ import (
 
 func TestGetConfig(t *testing.T) {
 	var testcases = []struct {
-		lgtm                     *TiCommunityLgtm
-		expectedPullReviewersURL string
+		lgtm                  *TiCommunityLgtm
+		expectedPullOwnersURL string
 	}{
 		{
 			lgtm: &TiCommunityLgtm{
@@ -20,7 +20,7 @@ func TestGetConfig(t *testing.T) {
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
-			expectedPullReviewersURL: "https://bots.tidb.io/ti-community-bot",
+			expectedPullOwnersURL: "https://bots.tidb.io/ti-community-bot",
 		},
 		{
 			lgtm: &TiCommunityLgtm{
@@ -30,7 +30,7 @@ func TestGetConfig(t *testing.T) {
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
-			expectedPullReviewersURL: "https://bots.tidb.io/ti-community-bot",
+			expectedPullOwnersURL: "https://bots.tidb.io/ti-community-bot",
 		},
 	}
 	for _, tc := range testcases {
@@ -38,8 +38,8 @@ func TestGetConfig(t *testing.T) {
 
 		config := pa.Config()
 		for _, lgtm := range config.TiCommunityLgtm {
-			if lgtm.PullOwnersURL != tc.expectedPullReviewersURL {
-				t.Errorf("Different URL: Got \"%s\" expected \"%s\"", lgtm.PullOwnersURL, tc.expectedPullReviewersURL)
+			if lgtm.PullOwnersURL != tc.expectedPullOwnersURL {
+				t.Errorf("Different URL: Got \"%s\" expected \"%s\"", lgtm.PullOwnersURL, tc.expectedPullOwnersURL)
 			}
 		}
 	}

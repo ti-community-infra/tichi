@@ -10,4 +10,4 @@ data:
           - tidb-community-bots/test-dev
         review_acts_as_lgtm: true
         store_tree_hash: true
-        pull_reviewers_url: https://27a808d943e1.ngrok.io/ti-community-bot
+        pull_owners_url: https://27a808d943e1.ngrok.io/ti-community-bot
