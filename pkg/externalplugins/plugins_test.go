@@ -124,3 +124,16 @@ func TestStartLoadConfig(t *testing.T) {
 
 	_ = os.Remove(tmp)
 }
+
+func TestStartLoadFailed(t *testing.T) {
+	pa := ConfigAgent{}
+
+	failedPath := "../../test/testdata/config_tmp.yaml"
+	_ = os.Remove(failedPath)
+
+	// Start pull config.
+	err := pa.Start(failedPath, false)
+	if err == nil {
+		t.Errorf("expected error, but it is nil")
+	}
+}
