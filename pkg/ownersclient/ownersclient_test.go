@@ -184,6 +184,7 @@ func TestLoadOwnersFailed(t *testing.T) {
 			mux := http.NewServeMux()
 			testServer := httptest.NewServer(mux)
 
+			// Notice: use mock server URL.
 			if testCase.lgtm.PullOwnersURL == "" {
 				testCase.lgtm.PullOwnersURL = testServer.URL
 			}
