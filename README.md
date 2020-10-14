@@ -1,4 +1,4 @@
-# ti-community-prowß
+# ti-community-prow
 
 [![go report card](https://goreportcard.com/badge/github.com/tidb-community-bots/ti-community-prow "go report card")](https://goreportcard.com/report/github.com/tidb-community-bots/ti-community-prow)
 [![GitHub Actions](https://github.com/tidb-community-bots/ti-community-prow/workflows/Test/badge.svg?branch=master)](https://github.com/features/actions)
