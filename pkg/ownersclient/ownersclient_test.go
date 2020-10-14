@@ -1,5 +1,5 @@
 //nolint:scopelint
-package reviewersclient
+package ownersclient
 
 import (
 	"bytes"
@@ -12,16 +12,17 @@ import (
 	"github.com/tidb-community-bots/ti-community-prow/pkg/externalplugins"
 )
 
-const testReviewersURLFmt = "/repos/%s/%s/pulls/%d/reviewers"
+const testReviewersURLFmt = "/repos/%s/%s/pulls/%d/owners"
 
 func TestLoadReviewersAndNeedsLgtm(t *testing.T) {
 	testCases := []struct {
-		name            string
-		lgtm            *externalplugins.TiCommunityLgtm
-		data            ReviewersResponse
-		exceptReviewers []string
-		exceptNeedsLgtm int
-		exceptError     bool
+		name             string
+		lgtm             *externalplugins.TiCommunityLgtm
+		data             OwnersResponse
+		exceptCommitters []string
+		exceptReviewers  []string
+		exceptNeedsLgtm  int
+		exceptError      bool
 	}{
 		{
 			lgtm: &externalplugins.TiCommunityLgtm{
@@ -30,14 +31,20 @@ func TestLoadReviewersAndNeedsLgtm(t *testing.T) {
 				StoreTreeHash:    true,
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 			},
-			data: ReviewersResponse{
-				Data: ReviewersAndNeedsLgtm{
+			data: OwnersResponse{
+				Data: Owners{
+					Committers: []string{
+						"Rustin-Liu",
+					},
 					Reviewers: []string{
 						"Rustin-Liu",
 					},
 					NeedsLgtm: 2,
 				},
 				Message: "Test",
+			},
+			exceptCommitters: []string{
+				"Rustin-Liu",
 			},
 			exceptReviewers: []string{
 				"Rustin-Liu",
@@ -52,14 +59,20 @@ func TestLoadReviewersAndNeedsLgtm(t *testing.T) {
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullReviewersURL: "not-found",
 			},
-			data: ReviewersResponse{
-				Data: ReviewersAndNeedsLgtm{
+			data: OwnersResponse{
+				Data: Owners{
+					Committers: []string{
+						"Rustin-Liu",
+					},
 					Reviewers: []string{
 						"Rustin-Liu",
 					},
 					NeedsLgtm: 2,
 				},
 				Message: "Test",
+			},
+			exceptCommitters: []string{
+				"Rustin-Liu",
 			},
 			exceptReviewers: []string{
 				"Rustin-Liu",
@@ -101,7 +114,7 @@ func TestLoadReviewersAndNeedsLgtm(t *testing.T) {
 
 		client := ReviewersClient{Client: testServer.Client()}
 
-		reviewersAndLgtm, err := client.LoadReviewersAndNeedsLgtm(testCase.lgtm, org, repoName, number)
+		reviewersAndLgtm, err := client.LoadOwners(testCase.lgtm, org, repoName, number)
 		if err != nil {
 			if !testCase.exceptError {
 				t.Errorf("unexpected error: '%v'", err)
@@ -109,6 +122,10 @@ func TestLoadReviewersAndNeedsLgtm(t *testing.T) {
 				// It should have a error.
 				continue
 			}
+		}
+
+		if len(reviewersAndLgtm.Committers) != len(testCase.exceptCommitters) {
+			t.Errorf("Different committers: Got \"%v\" expected \"%v\"", reviewersAndLgtm.Committers, testCase.exceptCommitters)
 		}
 
 		if len(reviewersAndLgtm.Reviewers) != len(testCase.exceptReviewers) {

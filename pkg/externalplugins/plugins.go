@@ -9,6 +9,11 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+var (
+	// pullDuration is a duration for pull config form file.
+	pullDuration = 1 * time.Minute
+)
+
 // ConfigAgent contains the agent mutex and the agent configuration.
 type ConfigAgent struct {
 	mut           sync.Mutex
@@ -53,7 +58,7 @@ func (pa *ConfigAgent) Start(path string, checkUnknownPlugins bool) error {
 		return err
 	}
 	// nolint:staticcheck
-	ticker := time.Tick(1 * time.Minute)
+	ticker := time.Tick(pullDuration)
 	go func() {
 		for range ticker {
 			if err := pa.Load(path); err != nil {

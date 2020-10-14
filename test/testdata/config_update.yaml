@@ -1,0 +1,6 @@
+ti-community-lgtm:
+  - repos:
+      - tidb-community-bots/test-dev
+    review_acts_as_lgtm: true
+    store_tree_hash: false
+    pull_reviewers_url: https://test
