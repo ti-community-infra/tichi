@@ -287,3 +287,96 @@ func TestApproveFor(t *testing.T) {
 		})
 	}
 }
+
+func TestHasSelfApproval(t *testing.T) {
+	testCases := []struct {
+		name                string
+		requireSelfApproval bool
+		approve             *Approve
+		org                 string
+		repo                string
+	}{
+		{
+			name: "default self approval",
+			approve: &Approve{
+				Repos:         []string{"tidb-community-bots/test-dev"},
+				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+		{
+			name:                "self approval",
+			requireSelfApproval: true,
+			approve: &Approve{
+				Repos:         []string{"tidb-community-bots/test-dev"},
+				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+		{
+			name:                "do not self approval",
+			requireSelfApproval: false,
+			approve: &Approve{
+				Repos:         []string{"tidb-community-bots"},
+				PullOwnersURL: "http://bots.tidb.io/ti-community-bot",
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.approve.RequireSelfApproval = &tc.requireSelfApproval
+
+			actual := tc.approve.HasSelfApproval()
+			if !tc.requireSelfApproval != actual {
+				t.Errorf("expected '%v', but it is '%v'", !tc.requireSelfApproval, actual)
+			}
+		})
+	}
+}
+
+func TestConsiderReviewState(t *testing.T) {
+	testCases := []struct {
+		name              string
+		ignoreReviewState bool
+		approve           *Approve
+		org               string
+		repo              string
+	}{
+		{
+			name:    "default consider review",
+			approve: &Approve{},
+			org:     "tidb-community-bots",
+			repo:    "test-dev",
+		},
+		{
+			name:              "ignore review",
+			ignoreReviewState: true,
+			approve:           &Approve{},
+			org:               "tidb-community-bots",
+			repo:              "test-dev",
+		},
+		{
+			name:              "do not ignore review",
+			ignoreReviewState: false,
+			approve:           &Approve{},
+			org:               "tidb-community-bots",
+			repo:              "test-dev",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.approve.IgnoreReviewState = &tc.ignoreReviewState
+
+			actual := tc.approve.ConsiderReviewState()
+			if !tc.ignoreReviewState != actual {
+				t.Errorf("expected '%v', but it is '%v'", !tc.ignoreReviewState, actual)
+			}
+		})
+	}
+}
