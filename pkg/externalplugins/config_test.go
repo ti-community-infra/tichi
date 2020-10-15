@@ -188,7 +188,7 @@ func TestValidateConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{TiCommunityLgtm: []TiCommunityLgtm{
 				*tc.lgtm,
-			}, Merge: []TiCommunityMerge{
+			}, TiCommunityMerge: []TiCommunityMerge{
 				*tc.merge,
 			}}
 			actual := config.Validate()
@@ -300,7 +300,7 @@ func TestMergeFor(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			config := Configuration{Merge: []TiCommunityMerge{
+			config := Configuration{TiCommunityMerge: []TiCommunityMerge{
 				*tc.merge,
 			}}
 
