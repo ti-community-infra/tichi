@@ -57,7 +57,7 @@ func TestValidateTiCommunityLgtmConfig(t *testing.T) {
 				t.Errorf("unexpected error: '%v'", actual)
 			}
 			if tc.expected != nil && actual == nil {
-				t.Errorf("expected error '%v'', but it is nil", tc.expected)
+				t.Errorf("expected error '%v', but it is nil", tc.expected)
 			}
 			if tc.expected != nil && actual != nil && tc.expected.Error() != actual.Error() {
 				t.Errorf("expected error '%v', but it is '%v'", tc.expected, actual)
@@ -106,7 +106,7 @@ func TestValidateApproveConfig(t *testing.T) {
 				t.Errorf("unexpected error: '%v'", actual)
 			}
 			if tc.expected != nil && actual == nil {
-				t.Errorf("expected error '%v'', but it is nil", tc.expected)
+				t.Errorf("expected error '%v', but it is nil", tc.expected)
 			}
 			if tc.expected != nil && actual != nil && tc.expected.Error() != actual.Error() {
 				t.Errorf("expected error '%v', but it is '%v'", tc.expected, actual)
@@ -197,7 +197,7 @@ func TestValidateConfig(t *testing.T) {
 				t.Errorf("unexpected error: '%v'", actual)
 			}
 			if tc.expected != nil && actual == nil {
-				t.Errorf("expected error '%v'', but it is nil", tc.expected)
+				t.Errorf("expected error '%v', but it is nil", tc.expected)
 			}
 			if tc.expected != nil && actual != nil && tc.expected.Error() != actual.Error() {
 				t.Errorf("expected error '%v', but it is '%v'", tc.expected, actual)
