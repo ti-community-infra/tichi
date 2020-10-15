@@ -9,8 +9,8 @@ import (
 
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
-	TiCommunityLgtm []TiCommunityLgtm  `json:"ti-community-lgtm,omitempty"`
-	Merge           []TiCommunityMerge `json:"ti-community-merge,omitempty"`
+	TiCommunityLgtm  []TiCommunityLgtm  `json:"ti-community-lgtm,omitempty"`
+	TiCommunityMerge []TiCommunityMerge `json:"ti-community-merge,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -73,14 +73,14 @@ func (c *Configuration) LgtmFor(org, repo string) *TiCommunityLgtm {
 // or an organization.
 func (c *Configuration) MergeFor(org, repo string) *TiCommunityMerge {
 	fullName := fmt.Sprintf("%s/%s", org, repo)
-	for _, lgtm := range c.Merge {
+	for _, lgtm := range c.TiCommunityMerge {
 		if !sets.NewString(lgtm.Repos...).Has(fullName) {
 			continue
 		}
 		return &lgtm
 	}
 	// If you don't find anything, loop again looking for an org config
-	for _, lgtm := range c.Merge {
+	for _, lgtm := range c.TiCommunityMerge {
 		if !sets.NewString(lgtm.Repos...).Has(org) {
 			continue
 		}
@@ -95,7 +95,7 @@ func (c *Configuration) Validate() error {
 		return err
 	}
 
-	if err := validateMerge(c.Merge); err != nil {
+	if err := validateMerge(c.TiCommunityMerge); err != nil {
 		return err
 	}
 
