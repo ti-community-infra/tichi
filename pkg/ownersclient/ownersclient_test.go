@@ -211,9 +211,9 @@ func TestLoadOwnersFailed(t *testing.T) {
 
 			_, err := client.LoadOwners(testCase.lgtm, org, repoName, number)
 			if err == nil {
-				t.Errorf("expected error '%v'', but it is nil", testCase.exceptError)
+				t.Errorf("expected error '%v', but it is nil", testCase.exceptError)
 			} else if err.Error() != testCase.exceptError {
-				t.Errorf("expected error '%v'', but it is '%v'", testCase.exceptError, err)
+				t.Errorf("expected error '%v', but it is '%v'", testCase.exceptError, err)
 			}
 
 			testServer.Close()
