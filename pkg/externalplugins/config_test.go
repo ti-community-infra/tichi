@@ -252,10 +252,11 @@ func TestLgtmFor(t *testing.T) {
 
 func TestApproveFor(t *testing.T) {
 	testCases := []struct {
-		name    string
-		approve *Approve
-		org     string
-		repo    string
+		name        string
+		approve     *Approve
+		org         string
+		repo        string
+		expectEmpty *Approve
 	}{
 		{
 			name: "Full name",
@@ -275,6 +276,13 @@ func TestApproveFor(t *testing.T) {
 			org:  "tidb-community-bots",
 			repo: "test-dev",
 		},
+		{
+			name:        "Can not find",
+			approve:     &Approve{},
+			org:         "tidb-community-bots1",
+			repo:        "test-dev1",
+			expectEmpty: &Approve{},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -282,8 +290,15 @@ func TestApproveFor(t *testing.T) {
 			config := Configuration{Approve: []Approve{
 				*tc.approve,
 			}}
+
 			approve := config.ApproveFor(tc.org, tc.repo)
-			assert.DeepEqual(t, approve.Repos, tc.approve.Repos)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, approve, &Approve{CommandHelpLink: "https://go.k8s.io/bot-commands",
+					PrProcessLink: "https://git.k8s.io/community/contributors/guide/owners.md#the-code-review-process"})
+			} else {
+				assert.DeepEqual(t, approve.Repos, tc.approve.Repos)
+			}
 		})
 	}
 }
