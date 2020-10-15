@@ -8,33 +8,25 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
-	"github.com/tidb-community-bots/ti-community-prow/pkg/externalplugins"
 )
 
 const testOwnersURLFmt = "/repos/%s/%s/pulls/%d/owners"
 
 func TestLoadOwners(t *testing.T) {
 	testCases := []struct {
-		name             string
-		lgtm             *externalplugins.TiCommunityLgtm
-		data             OwnersResponse
-		exceptCommitters []string
-		exceptReviewers  []string
-		exceptNeedsLgtm  int
-		exceptError      bool
+		name            string
+		ownersURL       string
+		data            OwnersResponse
+		exceptApprovers []string
+		exceptReviewers []string
+		exceptNeedsLgtm int
+		exceptError     bool
 	}{
 		{
 			name: "valid pull owners URL(use mock URL)",
-			lgtm: &externalplugins.TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-			},
 			data: OwnersResponse{
 				Data: Owners{
-					Committers: []string{
+					Approvers: []string{
 						"Rustin-Liu",
 					},
 					Reviewers: []string{
@@ -44,7 +36,7 @@ func TestLoadOwners(t *testing.T) {
 				},
 				Message: "Test",
 			},
-			exceptCommitters: []string{
+			exceptApprovers: []string{
 				"Rustin-Liu",
 			},
 			exceptReviewers: []string{
@@ -53,17 +45,11 @@ func TestLoadOwners(t *testing.T) {
 			exceptNeedsLgtm: 2,
 		},
 		{
-			name: "invalid pull owners URL",
-			lgtm: &externalplugins.TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-				PullOwnersURL:    "not-found",
-			},
+			name:      "invalid pull owners URL",
+			ownersURL: "not-found",
 			data: OwnersResponse{
 				Data: Owners{
-					Committers: []string{
+					Approvers: []string{
 						"Rustin-Liu",
 					},
 					Reviewers: []string{
@@ -73,7 +59,7 @@ func TestLoadOwners(t *testing.T) {
 				},
 				Message: "Test",
 			},
-			exceptCommitters: []string{
+			exceptApprovers: []string{
 				"Rustin-Liu",
 			},
 			exceptReviewers: []string{
@@ -94,8 +80,8 @@ func TestLoadOwners(t *testing.T) {
 			testServer := httptest.NewServer(mux)
 
 			// NOTICE: add pull owners URL.
-			if testCase.lgtm.PullOwnersURL == "" {
-				testCase.lgtm.PullOwnersURL = testServer.URL
+			if testCase.ownersURL == "" {
+				testCase.ownersURL = testServer.URL
 			}
 
 			// URL pattern.
@@ -118,7 +104,7 @@ func TestLoadOwners(t *testing.T) {
 
 			client := OwnersClient{Client: testServer.Client()}
 
-			owners, err := client.LoadOwners(testCase.lgtm, org, repoName, number)
+			owners, err := client.LoadOwners(testCase.ownersURL, org, repoName, number)
 			if err != nil {
 				if !testCase.exceptError {
 					t.Errorf("unexpected error: '%v'", err)
@@ -128,8 +114,8 @@ func TestLoadOwners(t *testing.T) {
 				}
 			}
 
-			if len(owners.Committers) != len(testCase.exceptCommitters) {
-				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", owners.Committers, testCase.exceptCommitters)
+			if len(owners.Approvers) != len(testCase.exceptApprovers) {
+				t.Errorf("Different approvers: Got \"%v\" expected \"%v\"", owners.Approvers, testCase.exceptApprovers)
 			}
 
 			if len(owners.Reviewers) != len(testCase.exceptReviewers) {
@@ -148,28 +134,16 @@ func TestLoadOwners(t *testing.T) {
 func TestLoadOwnersFailed(t *testing.T) {
 	testCases := []struct {
 		name        string
-		lgtm        *externalplugins.TiCommunityLgtm
+		ownersURL   string
 		invalidData bool
 		exceptError string
 	}{
 		{
-			name: "get data form url failed(use mock URL)",
-			lgtm: &externalplugins.TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-			},
+			name:        "get data form url failed(use mock URL)",
 			exceptError: "could not get a owners",
 		},
 		{
-			name: "parse data failed(use mock URL)",
-			lgtm: &externalplugins.TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
-			},
+			name:        "parse data failed(use mock URL)",
 			invalidData: true,
 			exceptError: "unexpected end of JSON input",
 		},
@@ -185,8 +159,8 @@ func TestLoadOwnersFailed(t *testing.T) {
 			testServer := httptest.NewServer(mux)
 
 			// Notice: use mock server URL.
-			if testCase.lgtm.PullOwnersURL == "" {
-				testCase.lgtm.PullOwnersURL = testServer.URL
+			if testCase.ownersURL == "" {
+				testCase.ownersURL = testServer.URL
 			}
 
 			// URL pattern.
@@ -209,7 +183,7 @@ func TestLoadOwnersFailed(t *testing.T) {
 
 			client := OwnersClient{Client: testServer.Client()}
 
-			_, err := client.LoadOwners(testCase.lgtm, org, repoName, number)
+			_, err := client.LoadOwners(testCase.ownersURL, org, repoName, number)
 			if err == nil {
 				t.Errorf("expected error '%v', but it is nil", testCase.exceptError)
 			} else if err.Error() != testCase.exceptError {

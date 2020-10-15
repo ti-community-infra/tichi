@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-
-	"github.com/tidb-community-bots/ti-community-prow/pkg/externalplugins"
 )
 
 const (
@@ -17,9 +15,9 @@ const (
 
 // Owners contains owners and the number of lgtm required by PR.
 type Owners struct {
-	Committers []string `json:"committers"`
-	Reviewers  []string `json:"reviewers"`
-	NeedsLgtm  int      `json:"needsLGTM"`
+	Approvers []string `json:"approvers"`
+	Reviewers []string `json:"reviewers"`
+	NeedsLgtm int      `json:"needsLGTM"`
 }
 
 // OwnersResponse specifies the response to the request to get owners.
@@ -30,7 +28,7 @@ type OwnersResponse struct {
 
 // OwnersLoader load PR's reviewers.
 type OwnersLoader interface {
-	LoadOwners(opts *externalplugins.TiCommunityLgtm, org,
+	LoadOwners(ownersURL string, org,
 		repoName string, number int) (*Owners, error)
 }
 
@@ -42,9 +40,9 @@ type OwnersClient struct {
 
 // LoadOwners returns owners and needs
 // lgtm from URL of pull request owners.
-func (rc *OwnersClient) LoadOwners(opts *externalplugins.TiCommunityLgtm,
+func (rc *OwnersClient) LoadOwners(ownersURL string,
 	org, repoName string, number int) (*Owners, error) {
-	url := fmt.Sprintf(OwnersURLFmt, opts.PullOwnersURL, org, repoName, number)
+	url := fmt.Sprintf(OwnersURLFmt, ownersURL, org, repoName, number)
 	res, err := rc.Client.Get(url)
 
 	if err != nil {
