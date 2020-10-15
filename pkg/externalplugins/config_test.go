@@ -66,15 +66,15 @@ func TestValidateTiCommunityLgtmConfig(t *testing.T) {
 	}
 }
 
-func TestValidateApproveConfig(t *testing.T) {
+func TestValidateMergeConfig(t *testing.T) {
 	testCases := []struct {
 		name     string
-		approve  *Approve
+		merge    *TiCommunityMerge
 		expected error
 	}{
 		{
 			name: "https pull owners URL",
-			approve: &Approve{
+			merge: &TiCommunityMerge{
 				Repos:         []string{"tidb-community-bots/test-dev"},
 				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
 			},
@@ -82,7 +82,7 @@ func TestValidateApproveConfig(t *testing.T) {
 		},
 		{
 			name: "http pull owners URL",
-			approve: &Approve{
+			merge: &TiCommunityMerge{
 				Repos:         []string{"tidb-community-bots/test-dev"},
 				PullOwnersURL: "http://bots.tidb.io/ti-community-bot",
 			},
@@ -90,7 +90,7 @@ func TestValidateApproveConfig(t *testing.T) {
 		},
 		{
 			name: "invalid pull owners URL",
-			approve: &Approve{
+			merge: &TiCommunityMerge{
 				Repos:         []string{"tidb-community-bots/test-dev"},
 				PullOwnersURL: "http/bots.tidb.io/ti-community-bot",
 			},
@@ -100,7 +100,7 @@ func TestValidateApproveConfig(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual := validateApprove([]Approve{*tc.approve})
+			actual := validateMerge([]TiCommunityMerge{*tc.merge})
 
 			if tc.expected == nil && actual != nil {
 				t.Errorf("unexpected error: '%v'", actual)
@@ -119,7 +119,7 @@ func TestValidateConfig(t *testing.T) {
 	testCases := []struct {
 		name     string
 		lgtm     *TiCommunityLgtm
-		approve  *Approve
+		merge    *TiCommunityMerge
 		expected error
 	}{
 		{
@@ -131,7 +131,7 @@ func TestValidateConfig(t *testing.T) {
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
-			approve: &Approve{
+			merge: &TiCommunityMerge{
 				Repos:         []string{"tidb-community-bots/test-dev"},
 				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
 			},
@@ -146,7 +146,7 @@ func TestValidateConfig(t *testing.T) {
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "http://bots.tidb.io/ti-community-bot",
 			},
-			approve: &Approve{
+			merge: &TiCommunityMerge{
 				Repos:         []string{"tidb-community-bots/test-dev"},
 				PullOwnersURL: "http://bots.tidb.io/ti-community-bot",
 			},
@@ -161,14 +161,14 @@ func TestValidateConfig(t *testing.T) {
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "http/bots.tidb.io/ti-community-bot",
 			},
-			approve: &Approve{
+			merge: &TiCommunityMerge{
 				Repos:         []string{"tidb-community-bots/test-dev"},
 				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
 			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
-			name: "invalid approve pull owners URL",
+			name: "invalid merge pull owners URL",
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
@@ -176,7 +176,7 @@ func TestValidateConfig(t *testing.T) {
 				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
-			approve: &Approve{
+			merge: &TiCommunityMerge{
 				Repos:         []string{"tidb-community-bots/test-dev"},
 				PullOwnersURL: "http/bots.tidb.io/ti-community-bot",
 			},
@@ -188,8 +188,8 @@ func TestValidateConfig(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{TiCommunityLgtm: []TiCommunityLgtm{
 				*tc.lgtm,
-			}, Approve: []Approve{
-				*tc.approve,
+			}, Merge: []TiCommunityMerge{
+				*tc.merge,
 			}}
 			actual := config.Validate()
 
@@ -208,10 +208,11 @@ func TestValidateConfig(t *testing.T) {
 
 func TestLgtmFor(t *testing.T) {
 	testCases := []struct {
-		name string
-		lgtm *TiCommunityLgtm
-		org  string
-		repo string
+		name        string
+		lgtm        *TiCommunityLgtm
+		org         string
+		repo        string
+		expectEmpty *TiCommunityLgtm
 	}{
 		{
 			name: "Full name",
@@ -237,6 +238,13 @@ func TestLgtmFor(t *testing.T) {
 			org:  "tidb-community-bots",
 			repo: "test-dev",
 		},
+		{
+			name:        "Can not find",
+			lgtm:        &TiCommunityLgtm{},
+			org:         "tidb-community-bots1",
+			repo:        "test-dev1",
+			expectEmpty: &TiCommunityLgtm{},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -245,22 +253,27 @@ func TestLgtmFor(t *testing.T) {
 				*tc.lgtm,
 			}}
 			lgtm := config.LgtmFor(tc.org, tc.repo)
-			assert.DeepEqual(t, lgtm.Repos, tc.lgtm.Repos)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, lgtm, &TiCommunityLgtm{})
+			} else {
+				assert.DeepEqual(t, lgtm.Repos, tc.lgtm.Repos)
+			}
 		})
 	}
 }
 
-func TestApproveFor(t *testing.T) {
+func TestMergeFor(t *testing.T) {
 	testCases := []struct {
 		name        string
-		approve     *Approve
+		merge       *TiCommunityMerge
 		org         string
 		repo        string
-		expectEmpty *Approve
+		expectEmpty *TiCommunityMerge
 	}{
 		{
 			name: "Full name",
-			approve: &Approve{
+			merge: &TiCommunityMerge{
 				Repos:         []string{"tidb-community-bots/test-dev"},
 				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
 			},
@@ -269,7 +282,7 @@ func TestApproveFor(t *testing.T) {
 		},
 		{
 			name: "Only org",
-			approve: &Approve{
+			merge: &TiCommunityMerge{
 				Repos:         []string{"tidb-community-bots"},
 				PullOwnersURL: "http://bots.tidb.io/ti-community-bot",
 			},
@@ -278,119 +291,25 @@ func TestApproveFor(t *testing.T) {
 		},
 		{
 			name:        "Can not find",
-			approve:     &Approve{},
+			merge:       &TiCommunityMerge{},
 			org:         "tidb-community-bots1",
 			repo:        "test-dev1",
-			expectEmpty: &Approve{},
+			expectEmpty: &TiCommunityMerge{},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			config := Configuration{Approve: []Approve{
-				*tc.approve,
+			config := Configuration{Merge: []TiCommunityMerge{
+				*tc.merge,
 			}}
 
-			approve := config.ApproveFor(tc.org, tc.repo)
+			merge := config.MergeFor(tc.org, tc.repo)
 
 			if tc.expectEmpty != nil {
-				assert.DeepEqual(t, approve, &Approve{CommandHelpLink: "https://go.k8s.io/bot-commands",
-					PrProcessLink: "https://git.k8s.io/community/contributors/guide/owners.md#the-code-review-process"})
+				assert.DeepEqual(t, merge, &TiCommunityMerge{})
 			} else {
-				assert.DeepEqual(t, approve.Repos, tc.approve.Repos)
-			}
-		})
-	}
-}
-
-func TestHasSelfApproval(t *testing.T) {
-	testCases := []struct {
-		name                string
-		requireSelfApproval bool
-		approve             *Approve
-		org                 string
-		repo                string
-	}{
-		{
-			name: "default self approval",
-			approve: &Approve{
-				Repos:         []string{"tidb-community-bots/test-dev"},
-				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
-			},
-			org:  "tidb-community-bots",
-			repo: "test-dev",
-		},
-		{
-			name:                "self approval",
-			requireSelfApproval: true,
-			approve: &Approve{
-				Repos:         []string{"tidb-community-bots/test-dev"},
-				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
-			},
-			org:  "tidb-community-bots",
-			repo: "test-dev",
-		},
-		{
-			name:                "do not self approval",
-			requireSelfApproval: false,
-			approve: &Approve{
-				Repos:         []string{"tidb-community-bots"},
-				PullOwnersURL: "http://bots.tidb.io/ti-community-bot",
-			},
-			org:  "tidb-community-bots",
-			repo: "test-dev",
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			tc.approve.RequireSelfApproval = &tc.requireSelfApproval
-
-			actual := tc.approve.HasSelfApproval()
-			if !tc.requireSelfApproval != actual {
-				t.Errorf("expected '%v', but it is '%v'", !tc.requireSelfApproval, actual)
-			}
-		})
-	}
-}
-
-func TestConsiderReviewState(t *testing.T) {
-	testCases := []struct {
-		name              string
-		ignoreReviewState bool
-		approve           *Approve
-		org               string
-		repo              string
-	}{
-		{
-			name:    "default consider review",
-			approve: &Approve{},
-			org:     "tidb-community-bots",
-			repo:    "test-dev",
-		},
-		{
-			name:              "ignore review",
-			ignoreReviewState: true,
-			approve:           &Approve{},
-			org:               "tidb-community-bots",
-			repo:              "test-dev",
-		},
-		{
-			name:              "do not ignore review",
-			ignoreReviewState: false,
-			approve:           &Approve{},
-			org:               "tidb-community-bots",
-			repo:              "test-dev",
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			tc.approve.IgnoreReviewState = &tc.ignoreReviewState
-
-			actual := tc.approve.ConsiderReviewState()
-			if !tc.ignoreReviewState != actual {
-				t.Errorf("expected '%v', but it is '%v'", !tc.ignoreReviewState, actual)
+				assert.DeepEqual(t, merge.Repos, tc.merge.Repos)
 			}
 		})
 	}
