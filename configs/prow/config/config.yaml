@@ -6,7 +6,7 @@ metadata:
 data:
   config.yaml: |
     prowjob_namespace: prow
-    pod_namespace: test-pods
+    pod_namespace: prow-test-pods
 
     in_repo_config:
       enabled:
