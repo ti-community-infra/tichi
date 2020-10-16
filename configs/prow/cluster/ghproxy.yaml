@@ -6,7 +6,6 @@ metadata:
     app: ghproxy
   name: ghproxy
 spec:
-  storageClassName: shared-ssd-disks
   accessModes:
     - ReadWriteOnce
   resources:

@@ -4,7 +4,6 @@ metadata:
   name: minio
   namespace: prow
 spec:
-  storageClassName: shared-ssd-disks
   accessModes:
     - ReadWriteOnce
   resources:
