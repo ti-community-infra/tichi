@@ -13,7 +13,7 @@ spec:
     serviceName: deck
     servicePort: 80
   rules:
-    - host: prow.example.com
+    - host: prow.tidb.io
       http:
         paths:
           - path: /
@@ -26,5 +26,5 @@ spec:
               servicePort: 8888
   tls:
     - hosts:
-        - prow.example.com
+        - prow.tidb.io
       secretName: prow-ingress-tls

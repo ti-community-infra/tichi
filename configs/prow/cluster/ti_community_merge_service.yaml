@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: prow
+  name: ti-community-merge
+spec:
+  selector:
+    app: ti-community-merge
+  ports:
+    - port: 80
+  type: ClusterIP
