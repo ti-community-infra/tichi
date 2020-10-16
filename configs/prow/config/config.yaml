@@ -35,7 +35,7 @@ data:
 
     plank:
       job_url_prefix_config:
-        "*": https://prow.tidb.io/view/
+        "*": https://prow.tidb.io/view/gcs
       report_templates:
         '*': >-
             [Full PR test history](https://prow.tidb.io/pr-history?org={{.Spec.Refs.Org}}&repo={{.Spec.Refs.Repo}}&pr={{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}).
@@ -44,9 +44,9 @@ data:
       default_decoration_configs:
         "*":
           gcs_configuration:
-            bucket: s3://prow-logs
+            bucket: gs://prow-tidb-logs
             path_strategy: explicit
-          s3_credentials_secret: s3-credentials
+          gcs_credentials_secret: gcs-credentials
           utility_images:
             clonerefs: gcr.io/k8s-prow/clonerefs:v20200916-29e367bb39
             entrypoint: gcr.io/k8s-prow/entrypoint:v20200916-29e367bb39
