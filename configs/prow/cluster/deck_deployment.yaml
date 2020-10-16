@@ -35,7 +35,6 @@ spec:
             - --github-endpoint=https://api.github.com
             - --github-graphql-endpoint=http://ghproxy/graphql
             - --plugin-config=/etc/plugins/plugins.yaml
-            - --s3-credentials-file=/etc/s3-credentials/service-account.json
             - --spyglass=true
           ports:
             - name: http
@@ -50,8 +49,8 @@ spec:
             - name: plugins
               mountPath: /etc/plugins
               readOnly: true
-            - name: s3-credentials
-              mountPath: /etc/s3-credentials
+            - name: gcs-credentials
+              mountPath: /etc/gcs-credentials
               readOnly: true
           livenessProbe:
             httpGet:
@@ -76,6 +75,6 @@ spec:
         - name: plugins
           configMap:
             name: plugins
-        - name: s3-credentials
+        - name: gcs-credentials
           secret:
-            secretName: s3-credentials
+            secretName: gcs-credentials

@@ -21,5 +21,6 @@ bin/
 
 configs/prow/cluster/oauth-token.yaml
 configs/prow/cluster/hmac-token.yaml
+configs/prow/cluster/gcs_secrets.yaml
 
 coverage.txt

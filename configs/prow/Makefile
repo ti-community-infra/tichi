@@ -12,10 +12,10 @@ oauth:
 hmac:
 	kubectl apply -f cluster/hmac-token.yaml
 
-s3:
-	kubectl apply -f cluster/s3_secrets.yaml
+gcs:
+	kubectl apply -f cluster/gcs_secrets.yaml
 
-prow: prow-namespace test-pods-namespace oauth hmac s3
+prow: prow-namespace test-pods-namespace oauth hmac gcs
 	kubectl apply -f config
 	kubectl apply -f cluster
 

@@ -28,9 +28,9 @@ spec:
             - --github-endpoint=http://ghproxy
             - --github-endpoint=https://api.github.com
             - --github-graphql-endpoint=http://ghproxy/graphql
-            - --s3-credentials-file=/etc/s3-credentials/service-account.json
-            - --status-path=s3://tide/tide-status
-            - --history-uri=s3://tide/tide-history.json
+            - --gcs-credentials-file=/etc/gcs-credentials/service-account.json
+            - --status-path=gs://prow-tidb-logs/tide-status
+            - --history-uri=gs://prow-tidb-logs/tide-history.json
           ports:
             - name: http
               containerPort: 8888
@@ -41,8 +41,8 @@ spec:
             - name: config
               mountPath: /etc/config
               readOnly: true
-            - name: s3-credentials
-              mountPath: /etc/s3-credentials
+            - name: gcs-credentials
+              mountPath: /etc/gcs-credentials
               readOnly: true
       volumes:
         - name: github-token
@@ -51,6 +51,6 @@ spec:
         - name: config
           configMap:
             name: config
-        - name: s3-credentials
+        - name: gcs-credentials
           secret:
-            secretName: s3-credentials
+            secretName: gcs-credentials

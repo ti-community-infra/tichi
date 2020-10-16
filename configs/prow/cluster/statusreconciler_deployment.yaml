@@ -28,8 +28,8 @@ spec:
             - --github-token-path=/etc/github/token
             - --github-endpoint=http://ghproxy
             - --github-endpoint=https://api.github.com
-            - --s3-credentials-file=/etc/s3-credentials/service-account.json
-            - --status-path=s3://status-reconciler/status-reconciler-status
+            - --gcs-credentials-file=/etc/gcs-credentials/service-account.json
+            - --status-path=gs://prow-tidb-logs/status-reconciler-status
           volumeMounts:
             - name: github-token
               mountPath: /etc/github
@@ -40,8 +40,8 @@ spec:
             - name: plugins
               mountPath: /etc/plugins
               readOnly: true
-            - name: s3-credentials
-              mountPath: /etc/s3-credentials
+            - name: gcs-credentials
+              mountPath: /etc/gcs-credentials
               readOnly: true
       volumes:
         - name: github-token
@@ -53,6 +53,6 @@ spec:
         - name: plugins
           configMap:
             name: plugins
-        - name: s3-credentials
+        - name: gcs-credentials
           secret:
-            secretName: s3-credentials
+            secretName: gcs-credentials
