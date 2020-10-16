@@ -4,11 +4,12 @@ metadata:
   name: minio
   namespace: prow
 spec:
+  storageClassName: shared-ssd-disks
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi
+      storage: 2Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
