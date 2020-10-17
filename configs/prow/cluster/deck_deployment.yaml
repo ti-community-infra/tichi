@@ -36,6 +36,10 @@ spec:
             - --github-graphql-endpoint=http://ghproxy/graphql
             - --plugin-config=/etc/plugins/plugins.yaml
             - --spyglass=true
+            - --github-oauth-config-file=/etc/oauth/config.yaml
+            - --oauth-url=/github-login
+            - --cookie-secret=/etc/cookie/secret
+            - --dry-run=true
           ports:
             - name: http
               containerPort: 8080
@@ -45,6 +49,12 @@ spec:
               readOnly: true
             - name: github-token
               mountPath: /etc/github
+              readOnly: true
+            - name: oauth-token
+              mountPath: /etc/oauth
+              readOnly: true
+            - name: oauth-cookie
+              mountPath: /etc/cookie
               readOnly: true
             - name: plugins
               mountPath: /etc/plugins
@@ -78,3 +88,9 @@ spec:
         - name: gcs-credentials
           secret:
             secretName: gcs-credentials
+        - name: oauth-token
+          secret:
+            secretName: oauth-token
+        - name: oauth-cookie
+          secret:
+            secretName: oauth-cookie
