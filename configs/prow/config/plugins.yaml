@@ -23,6 +23,7 @@ plugins:
     - lifecycle
     - help
     - hold
+    - lifecycle
   tidb-community-bots/ti-community-lgtm:
     - assign
     - branchcleaner
@@ -33,6 +34,7 @@ plugins:
     - lifecycle
     - help
     - hold
+    - lifecycle
   tidb-community-bots/ti-challenge-bot:
     - assign
     - branchcleaner
@@ -43,6 +45,7 @@ plugins:
     - lifecycle
     - help
     - hold
+    - lifecycle
   tidb-community-bots/ti-community-bot:
     - assign
     - branchcleaner
@@ -53,6 +56,7 @@ plugins:
     - lifecycle
     - help
     - hold
+    - lifecycle
   tidb-community-bots/ti-community-prow:
     - assign
     - branchcleaner
@@ -64,6 +68,7 @@ plugins:
     - help
     - hold
     - config-updater
+    - lifecycle
   tidb-community-bots/ti-community-merge:
     - assign
     - branchcleaner
@@ -74,6 +79,7 @@ plugins:
     - lifecycle
     - help
     - hold
+    - lifecycle
 external_plugins:
   tidb-community-bots/test-dev:
     - name: ti-community-lgtm
