@@ -4,6 +4,8 @@ config_updater:
       name: config
     configs/prow/config/plugins.yaml:
       name: plugins
+    configs/prow/config/external_plugins_config.yaml:
+      name: external-plugins-config
 welcome:
   message_template: "Welcome @{{.AuthorLogin}}! <br><br>It looks like this is your first PR to <a href='https://github.com/{{.Org}}/{{.Repo}}'>{{.Org}}/{{.Repo}}</a> 🎉. <br><br>You will be prompted by a bot to use commands during the review process. Do not be afraid to follow the prompts! It is okay to experiment. [Here is the bot commands documentation](https://prow.tidb.io/command-help). <br><br>You can also check if {{.Org}}/{{.Repo}} has [its own contribution guidelines](https://github.com/{{.Org}}/{{.Repo}}/tree/master/CONTRIBUTING.md). <br><br>We want to make sure your contribution gets all the attention it needs! <br><br>Thank you, and welcome to tidb community. :smiley:"
 size:
@@ -23,7 +25,6 @@ plugins:
     - lifecycle
     - help
     - hold
-    - lifecycle
   tidb-community-bots/ti-community-lgtm:
     - assign
     - branchcleaner
@@ -34,7 +35,6 @@ plugins:
     - lifecycle
     - help
     - hold
-    - lifecycle
   tidb-community-bots/ti-challenge-bot:
     - assign
     - branchcleaner
@@ -45,7 +45,6 @@ plugins:
     - lifecycle
     - help
     - hold
-    - lifecycle
   tidb-community-bots/ti-community-bot:
     - assign
     - branchcleaner
@@ -56,7 +55,6 @@ plugins:
     - lifecycle
     - help
     - hold
-    - lifecycle
   tidb-community-bots/ti-community-prow:
     - assign
     - branchcleaner
@@ -68,7 +66,6 @@ plugins:
     - help
     - hold
     - config-updater
-    - lifecycle
   tidb-community-bots/ti-community-merge:
     - assign
     - branchcleaner
@@ -79,7 +76,6 @@ plugins:
     - lifecycle
     - help
     - hold
-    - lifecycle
 external_plugins:
   tidb-community-bots/test-dev:
     - name: ti-community-lgtm
