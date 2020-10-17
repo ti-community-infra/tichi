@@ -52,6 +52,7 @@ tide:
     tidb-community-bots/ti-community-bot: squash
     tidb-community-bots/ti-community-prow: squash
     tidb-community-bots/ti-community-merge: squash
+    tidb-community-bots/test-dev: squash
 
   queries:
     - repos:
@@ -60,6 +61,7 @@ tide:
         - tidb-community-bots/ti-community-bot
         - tidb-community-bots/ti-community-prow
         - tidb-community-bots/ti-community-merge
+        - tidb-community-bots/test-dev
       labels:
         - status/can-merge
       missingLabels:
