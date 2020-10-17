@@ -21,7 +21,6 @@ plugins:
   tidb-community-bots/test-dev:
     - assign
     - branchcleaner
-    - help
     - size
     - welcome
     - wip
@@ -31,7 +30,6 @@ plugins:
   tidb-community-bots/ti-community-lgtm:
     - assign
     - branchcleaner
-    - help
     - size
     - welcome
     - wip
@@ -41,7 +39,6 @@ plugins:
   tidb-community-bots/ti-challenge-bot:
     - assign
     - branchcleaner
-    - help
     - size
     - welcome
     - wip
@@ -51,7 +48,6 @@ plugins:
   tidb-community-bots/ti-community-bot:
     - assign
     - branchcleaner
-    - help
     - size
     - welcome
     - wip
@@ -61,7 +57,6 @@ plugins:
   tidb-community-bots/ti-community-prow:
     - assign
     - branchcleaner
-    - help
     - size
     - welcome
     - wip
@@ -72,7 +67,6 @@ plugins:
   tidb-community-bots/ti-community-merge:
     - assign
     - branchcleaner
-    - help
     - size
     - welcome
     - wip
