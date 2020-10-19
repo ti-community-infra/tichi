@@ -1,12 +1,14 @@
 ti-community-lgtm:
   - repos:
       - tidb-community-bots/test-dev
+      - tikv/community
     review_acts_as_lgtm: true
     store_tree_hash: true
-    pull_owners_url: https://4d2710bff466.ngrok.io/ti-community-bot
+    pull_owners_url: https://bots.tidb.io/ti-community-bot
 
 ti-community-merge:
   - repos:
       - tidb-community-bots/test-dev
+      - tikv/community
     store_tree_hash: true
-    pull_owners_url: https://4d2710bff466.ngrok.io/ti-community-bot
+    pull_owners_url: https://bots.tidb.io/ti-community-bot
