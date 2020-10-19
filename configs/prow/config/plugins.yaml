@@ -78,6 +78,9 @@ plugins:
     - lifecycle
     - help
     - hold
+  tikv/community:
+    - assign
+
 external_plugins:
   tidb-community-bots/test-dev:
     - name: ti-community-lgtm
