@@ -3,16 +3,14 @@ kind: Ingress
 metadata:
   namespace: prow
   name: prow
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: prow-static-ip
 spec:
-  backend:
-    # specify the default backend for `ingress-gce` (https://cloud.google.com/kubernetes-engine/docs/concepts/ingress#default_backend)
-    serviceName: deck
-    servicePort: 80
   rules:
     - host: prow.tidb.io
       http:
         paths:
-          - path: /
+          - path: /*
             backend:
               serviceName: deck
               servicePort: 80
@@ -20,3 +18,7 @@ spec:
             backend:
               serviceName: hook
               servicePort: 8888
+  tls:
+    - hosts:
+        - "*.tidb.io"
+      secretName: prow-tidb-io
