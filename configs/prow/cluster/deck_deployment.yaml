@@ -37,7 +37,7 @@ spec:
             - --plugin-config=/etc/plugins/plugins.yaml
             - --spyglass=true
             - --github-oauth-config-file=/etc/oauth/config.yaml
-            - --oauth-url=/github-login
+            - --oauth-url=/github-login/redirect
             - --cookie-secret=/etc/cookie/secret
             - --dry-run=true
           ports:
