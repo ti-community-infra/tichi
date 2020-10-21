@@ -1,0 +1,39 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  namespace: prow
+  name: branchprotector
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    metadata:
+      labels:
+        app: branchprotector
+    spec:
+      template:
+        spec:
+          containers:
+            - name: branchprotector
+              image: gcr.io/k8s-prow/branchprotector:v20200924-4bb1aa1ffa
+              args:
+                - --config-path=/etc/config/config.yaml
+                - --github-token-path=/etc/github/token
+                - --confirm
+                - --github-endpoint=http://ghproxy
+                - --github-endpoint=https://api.github.com
+              volumeMounts:
+                - name: github-token
+                  mountPath: /etc/github
+                  readOnly: true
+                - name: config
+                  mountPath: /etc/config
+                  readOnly: true
+          restartPolicy: Never
+          volumes:
+          - name: github-token
+            secret:
+              secretName: github-token
+          - name: config
+            configMap:
+              name: config

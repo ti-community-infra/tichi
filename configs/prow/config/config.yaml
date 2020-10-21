@@ -10,9 +10,9 @@ branch-protection:
           branches:
             master:
               protect: true
-            required_status_checks:
-              contexts:
-                - "Sig Info File Format"
+              required_status_checks:
+                contexts:
+                  - "Sig Info File Format"
 
 in_repo_config:
   enabled:
