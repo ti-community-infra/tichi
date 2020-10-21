@@ -5,6 +5,8 @@ metadata:
   name: prow
   annotations:
     kubernetes.io/ingress.global-static-ip-name: prow-static-ip
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.allow-http: "false" # Waiting https://github.com/kubernetes/ingress-gce/issues/1075 landed.
 spec:
   rules:
     - host: prow.tidb.io
