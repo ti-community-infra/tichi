@@ -1,6 +1,19 @@
 prowjob_namespace: prow
 pod_namespace: prow-test-pods
 
+branch-protection:
+  enforce_admins: true # rules apply to admins too!
+  orgs:
+    tikv:
+      repos:
+        community:
+          branches:
+            master:
+              protect: true
+          required_status_checks:
+            contexts:
+              - "Sig Info File Format"
+
 in_repo_config:
   enabled:
     "*": true
