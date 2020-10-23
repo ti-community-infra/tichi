@@ -20,6 +20,10 @@ spec:
             backend:
               serviceName: hook
               servicePort: 8888
+          - path: /ti-community-owners/*
+            backend:
+              serviceName: ti-community-owners
+              servicePort: 80
   tls:
     - hosts:
         - "*.tidb.io"

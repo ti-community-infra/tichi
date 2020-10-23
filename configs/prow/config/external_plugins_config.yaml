@@ -1,9 +1,10 @@
 ti-community-lgtm:
   - repos:
       - tidb-community-bots/test-dev
+      - tidb-community-bots/ti-community-prow
     review_acts_as_lgtm: true
     store_tree_hash: true
-    pull_owners_url: https://bots.tidb.io/ti-community-bot
+    pull_owners_url: https://prow.tidb.io/ti-community-owners
   - repos:
       - tikv/community
     review_acts_as_lgtm: true
@@ -13,8 +14,9 @@ ti-community-lgtm:
 ti-community-merge:
   - repos:
       - tidb-community-bots/test-dev
+      - tidb-community-bots/ti-community-prow
     store_tree_hash: true
-    pull_owners_url: https://bots.tidb.io/ti-community-bot
+    pull_owners_url: https://prow.tidb.io/ti-community-owners
   - repos:
       - tikv/community
     store_tree_hash: true
