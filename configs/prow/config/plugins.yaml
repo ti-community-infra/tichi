@@ -106,6 +106,66 @@ external_plugins:
         - issue_comment
         - pull_request_review_comment
         - pull_request
+  tidb-community-bots/ti-community-owners:
+    - name: ti-community-lgtm
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request_review
+        - pull_request
+    - name: ti-community-merge
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request
+  tidb-community-bots/ti-community-bot:
+    - name: ti-community-lgtm
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request_review
+        - pull_request
+    - name: ti-community-merge
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request
+  tidb-community-bots/ti-challenge-bot:
+    - name: ti-community-lgtm
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request_review
+        - pull_request
+    - name: ti-community-merge
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request
+  tidb-community-bots/ti-community-merge:
+    - name: ti-community-lgtm
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request_review
+        - pull_request
+    - name: ti-community-merge
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request
+  tidb-community-bots/ti-community-lgtm:
+    - name: ti-community-lgtm
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request_review
+        - pull_request
+    - name: ti-community-merge
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request
   tikv/community:
     - name: ti-community-lgtm
       events:
