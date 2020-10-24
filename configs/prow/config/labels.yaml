@@ -1,4 +1,68 @@
 default:
   labels:
     - color: 00ff00
+      description: Indicates that a PR has LGTM 1.
       name: status/LGT1
+      target: prs
+      prowPlugin: ti-community-lgtm
+      addedBy: reviewers or members
+    - color: 00ff00
+        description: Indicates that a PR has LGTM 2.
+        name: status/LGT2
+        target: prs
+        prowPlugin: ti-community-lgtm
+        addedBy: reviewers or members
+    - color: 0ffa16
+        description: Indicates a PR has been approved by an approver.
+        name: status/can-merge
+        target: prs
+        prowPlugin: ti-community-merge
+        addedBy: reviewers or members
+    - color: ee9900
+        description: Denotes a PR that changes 100-499 lines, ignoring generated files.
+        name: size/L
+        target: prs
+        prowPlugin: size
+        addedBy: prow
+    - color: eebb00
+        description: Denotes a PR that changes 30-99 lines, ignoring generated files.
+        name: size/M
+        target: prs
+        prowPlugin: size
+        addedBy: prow
+    - color: 77bb00
+        description: Denotes a PR that changes 10-29 lines, ignoring generated files.
+        name: size/S
+        target: prs
+        prowPlugin: size
+        addedBy: prow
+    - color: ee5500
+        description: Denotes a PR that changes 500-999 lines, ignoring generated files.
+        name: size/XL
+        target: prs
+        prowPlugin: size
+        addedBy: prow
+    - color: "009900"
+        description: Denotes a PR that changes 0-9 lines, ignoring generated files.
+        name: size/XS
+        target: prs
+        prowPlugin: size
+        addedBy: prow
+    - color: ee0000
+        description: Denotes a PR that changes 1000+ lines, ignoring generated files.
+        name: size/XXL
+        target: prs
+        prowPlugin: size
+        addedBy: prow
+    - color: e11d21
+      description: Indicates that a PR should not merge because someone has issued a /hold command.
+      name: do-not-merge/hold
+      target: prs
+      prowPlugin: hold
+      addedBy: anyone
+    - color: e11d21
+      description: Indicates that a PR should not merge because it is a work in progress.
+      name: do-not-merge/work-in-progress
+      target: prs
+      prowPlugin: wip
+      addedBy: prow
