@@ -31,7 +31,10 @@ configs: config/config.yaml
 	kubectl create configmap config -n prow --from-file=config.yaml=config/config.yaml --dry-run -o yaml | kubectl replace configmap config -n prow -f -
 
 external-plugins-config: config/external_plugins_config.yaml
-	kubectl create configmap external-plugins-config -n prow --from-file=external-plugins.yaml=config/external_plugins_config.yaml --dry-run -o yaml | kubectl replace external-plugins-config config -n prow -f -
+	kubectl create configmap external-plugins-config -n prow --from-file=external-plugins.yaml=config/external_plugins_config.yaml --dry-run -o yaml | kubectl replace configmap external-plugins-config -n prow -f -
+
+labels: config/labels.yaml
+	kubectl create configmap labels-config -n prow --from-file=labels.yaml=config/labels.yaml --dry-run -o yaml | kubectl replace configmap labels-config -n prow -f -
 
 clean:
 	rm -f cluster/github-token.yaml

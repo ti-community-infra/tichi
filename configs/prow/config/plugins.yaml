@@ -9,6 +9,9 @@ config_updater:
     configs/prow/config/external_plugins_config.yaml:
       name: external-plugins-config
       namespace: prow
+    configs/prow/config/labels.yaml:
+      name: labels-config
+      namespace: prow
 
 welcome:
   - repos:

@@ -1,0 +1,4 @@
+default:
+  labels:
+    - color: 00ff00
+      name: status/LGT1

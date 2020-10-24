@@ -4,7 +4,7 @@ metadata:
   namespace: prow
   name: branchprotector
 spec:
-  schedule: "*/5 * * * *"
+  schedule: "*/30 * * * *"
   concurrencyPolicy: Forbid
   jobTemplate:
     metadata:
