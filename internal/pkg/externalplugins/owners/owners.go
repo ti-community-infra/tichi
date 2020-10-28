@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"github.com/tidb-community-bots/ti-community-prow/pkg/ownersclient"
+	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/ownersclient"
 	"k8s.io/test-infra/prow/github"
 )
 

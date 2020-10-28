@@ -49,14 +49,14 @@ func TestStartLoadConfig(t *testing.T) {
 	pa := ConfigAgent{}
 
 	// Create a tmp config file.
-	tmp := "../../test/testdata/config_tmp.yaml"
+	tmp := "../../../test/testdata/config_tmp.yaml"
 	_ = os.Remove(tmp)
 	// Change pull config duration.
 	pullDuration = 1 * time.Second
 
 	// Test and update config.
-	testConfigPath := "../../test/testdata/config_test.yaml"
-	updateConfigPath := "../../test/testdata/config_update.yaml"
+	testConfigPath := "../../../test/testdata/config_test.yaml"
+	updateConfigPath := "../../../test/testdata/config_update.yaml"
 
 	// Start pull config.
 	err := pa.Start(testConfigPath, false)
