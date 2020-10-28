@@ -7,8 +7,6 @@ on:
   pull_request:
     branches:
       - master
-env:
-  GOPROXY: "https://goproxy.cn"
 jobs:
   build:
     runs-on: ubuntu-latest
