@@ -1,6 +1,5 @@
 PROJECT=ti-community-prow
 GOPATH ?= $(shell go env GOPATH)
-P=8
 
 # Ensure GOPATH is set before running build process.
 ifeq "$(GOPATH)" ""
@@ -14,7 +13,7 @@ export PATH := $(path_to_add):$(PATH)
 
 GO              := GO111MODULE=on go
 GOBUILD         := $(GO) build
-GOTEST          := $(GO) test -p $(P)
+GOTEST          := $(GO) test
 
 PACKAGE_LIST  := go list ./...
 PACKAGES  := $$($(PACKAGE_LIST))
