@@ -7,6 +7,8 @@ on:
   pull_request:
     branches:
       - master
+env:
+  GOPROXY: "https://goproxy.cn"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,7 +19,7 @@ jobs:
         with:
           go-version: 1.14.x
       - name: Build and test
-        run: make dev
+        run: make check
       - name: Test coverage
         run: make test-with-coverage
       - name: Upload coverage to Codecov

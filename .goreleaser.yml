@@ -1,8 +1,37 @@
 before:
   hooks:
     - go mod download
-build:
-  skip: true
+builds:
+  -
+    id: "ti-community-lgtm"
+    binary: ticommunitylgtm
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/ticommunitylgtm/main.go
+    env:
+      - CGO_ENABLED=0
+  -
+    id: "ti-community-merge"
+    binary: ticommunitymerge
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/ticommunitymerge/main.go
+    env:
+      - CGO_ENABLED=0
+  -
+    id: "ti-community-owners"
+    binary: ticommunityowners
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/ticommunityowners/main.go
+    env:
+      - CGO_ENABLED=0
 source:
   enabled: true
 checksum:
@@ -18,3 +47,34 @@ changelog:
 release:
   github:
   prerelease: auto
+dockers:
+  -
+    binaries:
+      - ticommunitylgtm
+    builds:
+      - ti-community-lgtm
+    image_templates:
+      - "rustinliu/ti-community-prow-lgtm-plugin:latest"
+      - "rustinliu/ti-community-prow-lgtm-plugin:{{ .Tag }}"
+      - "rustinliu/ti-community-prow-lgtm-plugin:{{ .Major }}"
+    dockerfile: Dockerfile
+  -
+    binaries:
+      - ticommunitymerge
+    builds:
+      - ti-community-merge
+    image_templates:
+      - "rustinliu/ti-community-prow-merge-plugin:latest"
+      - "rustinliu/ti-community-prow-merge-plugin:{{ .Tag }}"
+      - "rustinliu/ti-community-prow-merge-plugin:{{ .Major }}"
+    dockerfile: Dockerfile
+  -
+    binaries:
+      - ticommunityowners
+    builds:
+      - ti-community-owners
+    image_templates:
+      - "rustinliu/ti-community-prow-owners-plugin:latest"
+      - "rustinliu/ti-community-prow-owners-plugin:{{ .Tag }}"
+      - "rustinliu/ti-community-prow-owners-plugin:{{ .Major }}"
+    dockerfile: Dockerfile

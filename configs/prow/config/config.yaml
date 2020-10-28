@@ -1,5 +1,6 @@
 prowjob_namespace: prow
 pod_namespace: prow-test-pods
+log_level: debug
 
 branch-protection:
   enforce_admins: true # rules apply to admins too!
