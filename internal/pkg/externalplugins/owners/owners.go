@@ -42,43 +42,31 @@ type Server struct {
 	Log            *logrus.Entry
 }
 
-// ListOwners returns owners of tidb community PR.
-func (s *Server) ListOwners(org string, repo string, number int,
-	config *tiexternalplugins.Configuration) (*ownersclient.OwnersResponse, error) {
-	owners := config.OwnersFor(org, repo)
-
-	// Get pull request.
-	pull, err := s.Gc.GetPullRequest(org, repo, number)
+func (s *Server) listOwnersForNonSig(org string, repo string) (*ownersclient.OwnersResponse, error) {
+	collaborators, err := s.Gc.ListCollaborators(org, repo)
 	if err != nil {
-		s.Log.WithField("pullNumber", number).WithError(err).Error("Failed get pull request.")
+		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed get collaborators.")
 		return nil, err
 	}
 
-	// Find sig label.
-	sigName := GetSigNameByLabel(pull.Labels)
-
-	// When we cannot find a sig label for PR, we will use a partner.
-	if sigName == "" {
-		collaborators, err := s.Gc.ListCollaborators(org, repo)
-		if err != nil {
-			s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed get collaborators.")
-			return nil, err
-		}
-
-		var collaboratorsLogin []string
-		for _, collaborator := range collaborators {
-			collaboratorsLogin = append(collaboratorsLogin, collaborator.Login)
-		}
-
-		return &ownersclient.OwnersResponse{
-			Data: ownersclient.Owners{
-				Approvers: collaboratorsLogin,
-				Reviewers: collaboratorsLogin,
-				NeedsLgtm: lgtmTwo,
-			},
-			Message: listOwnersSuccessMessage,
-		}, nil
+	var collaboratorsLogin []string
+	for _, collaborator := range collaborators {
+		collaboratorsLogin = append(collaboratorsLogin, collaborator.Login)
 	}
+
+	return &ownersclient.OwnersResponse{
+		Data: ownersclient.Owners{
+			Approvers: collaboratorsLogin,
+			Reviewers: collaboratorsLogin,
+			NeedsLgtm: lgtmTwo,
+		},
+		Message: listOwnersSuccessMessage,
+	}, nil
+}
+
+func (s *Server) listOwnersForSig(org string, repo string, sigName string,
+	config *tiexternalplugins.Configuration) (*ownersclient.OwnersResponse, error) {
+	owners := config.OwnersFor(org, repo)
 
 	url := owners.SigEndpoint + fmt.Sprintf(SigEndpointFmt, sigName)
 	// Get sig info.
@@ -139,6 +127,27 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		},
 		Message: listOwnersSuccessMessage,
 	}, nil
+}
+
+// ListOwners returns owners of tidb community PR.
+func (s *Server) ListOwners(org string, repo string, number int,
+	config *tiexternalplugins.Configuration) (*ownersclient.OwnersResponse, error) {
+	// Get pull request.
+	pull, err := s.Gc.GetPullRequest(org, repo, number)
+	if err != nil {
+		s.Log.WithField("pullNumber", number).WithError(err).Error("Failed get pull request.")
+		return nil, err
+	}
+
+	// Find sig label.
+	sigName := GetSigNameByLabel(pull.Labels)
+
+	// When we cannot find a sig label for PR, we will use a collaborators.
+	if sigName == "" {
+		return s.listOwnersForNonSig(org, repo)
+	}
+
+	return s.listOwnersForSig(org, repo, sigName, config)
 }
 
 // GetSigNameByLabel returns the name of sig when the label prefix matches.
