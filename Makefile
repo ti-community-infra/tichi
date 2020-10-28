@@ -1,6 +1,5 @@
 PROJECT=ti-community-prow
 GOPATH ?= $(shell go env GOPATH)
-P=8
 
 # Ensure GOPATH is set before running build process.
 ifeq "$(GOPATH)" ""
@@ -14,7 +13,7 @@ export PATH := $(path_to_add):$(PATH)
 
 GO              := GO111MODULE=on go
 GOBUILD         := $(GO) build
-GOTEST          := $(GO) test -p $(P)
+GOTEST          := $(GO) test
 
 PACKAGE_LIST  := go list ./...
 PACKAGES  := $$($(PACKAGE_LIST))
@@ -48,7 +47,7 @@ tidy:
 	./tools/check/check-tidy.sh
 
 staticcheck: tools/bin/golangci-lint
-	tools/bin/golangci-lint run  $$($(PACKAGE_DIRECTORIES))
+	tools/bin/golangci-lint run  $$($(PACKAGE_DIRECTORIES)) --timeout 500s
 
 tools/bin/golangci-lint:
 	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ./tools/bin v1.31.0
