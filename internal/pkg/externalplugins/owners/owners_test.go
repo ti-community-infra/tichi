@@ -187,6 +187,123 @@ func TestListOwners(t *testing.T) {
 	}
 }
 
+func TestListOwnersFailed(t *testing.T) {
+	collaborators := []string{"collab1", "collab2"}
+	org := "tidb-community-bots"
+	repoName := "test-dev"
+	sigName := "testing"
+	pullNumber := 1
+	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
+
+	testCases := []struct {
+		name        string
+		labels      []github.Label
+		invalidData bool
+		exceptError string
+	}{
+		{
+			name: "has one sig label",
+			labels: []github.Label{
+				{
+					Name: "sig/testing",
+				},
+			},
+			invalidData: true,
+			exceptError: "unexpected end of JSON input",
+		},
+		{
+			name: "non sig label",
+			labels: []github.Label{
+				{
+					Name: "sig/testing",
+				},
+			},
+			invalidData: false,
+			exceptError: "could not get a sig",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// Fake http client.
+			mux := http.NewServeMux()
+			testServer := httptest.NewServer(mux)
+
+			config := &tiexternalplugins.Configuration{}
+			config.TiCommunityOwners = []tiexternalplugins.TiCommunityOwners{
+				{
+					Repos:       []string{"tidb-community-bots/test-dev"},
+					SigEndpoint: testServer.URL,
+				},
+			}
+
+			// URL pattern.
+			pattern := fmt.Sprintf(SigEndpointFmt, sigName)
+			mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
+				if req.Method != "GET" {
+					t.Errorf("Except 'Get' got '%s'", req.Method)
+				}
+
+				if testCase.invalidData {
+					_, err := res.Write([]byte{})
+					if err != nil {
+						t.Errorf("Write data invalidData failed")
+					}
+				} else {
+					// Just http filed.
+					res.WriteHeader(http.StatusInternalServerError)
+				}
+			})
+
+			fc := &fakegithub.FakeClient{
+				IssueComments: make(map[int][]github.IssueComment),
+				PullRequests: map[int]*github.PullRequest{
+					pullNumber: {
+						Base: github.PullRequestBranch{
+							Ref: "master",
+						},
+						Head: github.PullRequestBranch{
+							SHA: SHA,
+						},
+						User:   github.User{Login: "author"},
+						Number: 5,
+						State:  "open",
+					},
+				},
+				PullRequestChanges: map[int][]github.PullRequestChange{
+					pullNumber: {
+						{Filename: "doc/README.md"},
+					},
+				},
+				Collaborators: collaborators,
+			}
+
+			// NOTICE: adds labels.
+			if testCase.labels != nil {
+				fc.PullRequests[pullNumber].Labels = testCase.labels
+			}
+
+			ownersServer := Server{
+				Client: testServer.Client(),
+				TokenGenerator: func() []byte {
+					return []byte{}
+				},
+				Gc:  fc,
+				Log: logrus.WithField("server", "testing"),
+			}
+
+			_, err := ownersServer.ListOwners(org, repoName, pullNumber, config)
+			if err == nil {
+				t.Errorf("expected error '%v', but it is nil", testCase.exceptError)
+			} else if err.Error() != testCase.exceptError {
+				t.Errorf("expected error '%v', but it is '%v'", testCase.exceptError, err)
+			}
+
+			testServer.Close()
+		})
+	}
+}
+
 func TestGetSigNameByLabel(t *testing.T) {
 	testLabel1 := "testLabel1"
 	testLabel2 := "testLabel2"
