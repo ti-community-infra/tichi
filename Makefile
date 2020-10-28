@@ -48,7 +48,7 @@ tidy:
 	./tools/check/check-tidy.sh
 
 staticcheck: tools/bin/golangci-lint
-	tools/bin/golangci-lint run  $$($(PACKAGE_DIRECTORIES))
+	tools/bin/golangci-lint run  $$($(PACKAGE_DIRECTORIES)) --timeout 500s
 
 tools/bin/golangci-lint:
 	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ./tools/bin v1.31.0
