@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	tiexternalplugins "github.com/tidb-community-bots/ti-community-prow/pkg/externalplugins"
-	"github.com/tidb-community-bots/ti-community-prow/pkg/externalplugins/merge"
-	"github.com/tidb-community-bots/ti-community-prow/pkg/ownersclient"
+	tiexternalplugins "github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
+	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins/merge"
+	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/ownersclient"
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/commentpruner"
 	"k8s.io/test-infra/prow/config/secret"
