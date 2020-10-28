@@ -13,19 +13,6 @@ const (
 	OwnersURLFmt = "%s/repos/%s/%s/pulls/%d/owners"
 )
 
-// Owners contains owners and the number of lgtm required by PR.
-type Owners struct {
-	Approvers []string `json:"approvers"`
-	Reviewers []string `json:"reviewers"`
-	NeedsLgtm int      `json:"needsLGTM"`
-}
-
-// OwnersResponse specifies the response to the request to get owners.
-type OwnersResponse struct {
-	Data    Owners `json:"data"`
-	Message string `json:"message"`
-}
-
 // OwnersLoader load PR's reviewers.
 type OwnersLoader interface {
 	LoadOwners(ownersURL string, org,
