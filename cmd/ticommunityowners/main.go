@@ -121,8 +121,8 @@ func main() {
 			return
 		}
 
+		// Get config everytime.
 		config := server.ConfigAgent.Config()
-
 		ownersData, err := server.ListOwners(owner, repo, pullNumber, config)
 		if err != nil {
 			c.Status(http.StatusInternalServerError)

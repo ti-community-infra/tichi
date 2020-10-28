@@ -6,12 +6,15 @@ type SigResponse struct {
 	Message string  `json:"message"`
 }
 
+// ContributorInfo specifies the contributor's github info.
 type ContributorInfo struct {
 	GithubName string `json:"githubName"`
-	Level      string `json:"level"`
-	Email      string `json:"email"`
+	// Level specifies the level of contributor at this sig.
+	Level string `json:"level"`
+	Email string `json:"email"`
 }
 
+// ContributorInfo specifies the sig's membership.
 type SigMembership struct {
 	TechLeaders        []ContributorInfo `json:"techLeaders"`
 	CoLeaders          []ContributorInfo `json:"coLeaders"`
@@ -20,8 +23,12 @@ type SigMembership struct {
 	ActiveContributors []ContributorInfo `json:"activeContributors"`
 }
 
+// ContributorInfo specifies the sig info.
 type SigInfo struct {
-	Name       string        `json:"name"`
+	// Name specifies the name of sig.
+	Name string `json:"name"`
+	// Membership specifies the membership of sig.
 	Membership SigMembership `json:"membership"`
-	NeedsLgtm  int           `json:"needsLGTM"`
+	// Membership specifies the default required lgtm number of sig.
+	NeedsLgtm int `json:"needsLGTM"`
 }
