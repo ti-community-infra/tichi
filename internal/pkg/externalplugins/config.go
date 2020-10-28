@@ -12,6 +12,7 @@ type Configuration struct {
 	TiCommunityLgtm   []TiCommunityLgtm   `json:"ti-community-lgtm,omitempty"`
 	TiCommunityMerge  []TiCommunityMerge  `json:"ti-community-merge,omitempty"`
 	TiCommunityOwners []TiCommunityOwners `json:"ti-community-owners,omitempty"`
+	TiCommunityLabel  []TiCommunityLabel  `json:"ti-community-label,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -56,6 +57,23 @@ type TiCommunityOwners struct {
 	Repos []string `json:"repos,omitempty"`
 	// SigEndpoint specifies the URL of the sig info.
 	SigEndpoint string `json:"sig_endpoint,omitempty"`
+}
+
+// TiCommunityLabel is the config for the label plugin.
+type TiCommunityLabel struct {
+	// Repos is either of the form org/repos or just org.
+	// The AdditionalLabels and Prefixes values are applicable
+	// to these repos.
+	Repos []string `json:"repos,omitempty"`
+	// AdditionalLabels is a set of additional labels enabled for use
+	// on top of the existing "status/*", "priority/*"
+	// and "sig/*" labels.
+	// Labels can be used with `/[remove-]label <additionalLabel>` commands.
+	AdditionalLabels []string `json:"additional_labels,omitempty"`
+	// Prefixes is a set of label prefixes which replaces the existing
+	// "status", "priority"," and "sig" label prefixes.
+	// Labels can be used with `/[remove-]<prefix> <target>` commands.
+	Prefixes []string `json:"prefixes,omitempty"`
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists
@@ -119,6 +137,27 @@ func (c *Configuration) OwnersFor(org, repo string) *TiCommunityOwners {
 		return &owners
 	}
 	return &TiCommunityOwners{}
+}
+
+// LabelFor finds the TiCommunityLabel for a repo, if one exists.
+// TiCommunityLabel configuration can be listed for a repository
+// or an organization.
+func (c *Configuration) LabelFor(org, repo string) *TiCommunityLabel {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, label := range c.TiCommunityLabel {
+		if !sets.NewString(label.Repos...).Has(fullName) {
+			continue
+		}
+		return &label
+	}
+	// If you don't find anything, loop again looking for an org config
+	for _, label := range c.TiCommunityLabel {
+		if !sets.NewString(label.Repos...).Has(org) {
+			continue
+		}
+		return &label
+	}
+	return &TiCommunityLabel{}
 }
 
 // Validate will return an error if there are any invalid external plugin config.
