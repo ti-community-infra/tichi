@@ -19,7 +19,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
         - name: ti-community-owners
-          image: rustinliu/ti-community-owners-prow-plugin:v0.0.5
+          image: rustinliu/ti-community-prow-owners-plugin:v0.5.0
           imagePullPolicy: Always
           args:
             - --dry-run=false

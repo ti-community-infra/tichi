@@ -31,3 +31,8 @@ ti-community-merge:
       - tikv/community
     store_tree_hash: true
     pull_owners_url: https://bots.tidb.io/ti-community-bot
+
+ti-community-owners:
+  - repos:
+      - tidb-community-bots/test-dev
+    sig_endpoint: https://bots.tidb.io/ti-community-bot
