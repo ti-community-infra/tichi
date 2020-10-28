@@ -1,4 +1,4 @@
-//nolint:scopelint
+//nolint:scopelint,dupl
 package externalplugins
 
 import (
@@ -120,6 +120,7 @@ func TestValidateConfig(t *testing.T) {
 		name     string
 		lgtm     *TiCommunityLgtm
 		merge    *TiCommunityMerge
+		owners   *TiCommunityOwners
 		expected error
 	}{
 		{
@@ -135,6 +136,9 @@ func TestValidateConfig(t *testing.T) {
 				Repos:         []string{"tidb-community-bots/test-dev"},
 				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
 			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot"},
 			expected: nil,
 		},
 		{
@@ -150,6 +154,9 @@ func TestValidateConfig(t *testing.T) {
 				Repos:         []string{"tidb-community-bots/test-dev"},
 				PullOwnersURL: "http://bots.tidb.io/ti-community-bot",
 			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "http://bots.tidb.io/ti-community-bot"},
 			expected: nil,
 		},
 		{
@@ -165,6 +172,9 @@ func TestValidateConfig(t *testing.T) {
 				Repos:         []string{"tidb-community-bots/test-dev"},
 				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
 			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot"},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -180,7 +190,28 @@ func TestValidateConfig(t *testing.T) {
 				Repos:         []string{"tidb-community-bots/test-dev"},
 				PullOwnersURL: "http/bots.tidb.io/ti-community-bot",
 			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot"},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
+		},
+		{
+			name: "invalid owners sig endpoint",
+			lgtm: &TiCommunityLgtm{
+				Repos:            []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm: true,
+				StoreTreeHash:    true,
+				StickyLgtmTeam:   "tidb-community-bots/bots-test",
+				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:         []string{"tidb-community-bots/test-dev"},
+				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https/bots.tidb.io/ti-community-bot"},
+			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 	}
 
@@ -190,6 +221,8 @@ func TestValidateConfig(t *testing.T) {
 				*tc.lgtm,
 			}, TiCommunityMerge: []TiCommunityMerge{
 				*tc.merge,
+			}, TiCommunityOwners: []TiCommunityOwners{
+				*tc.owners,
 			}}
 			actual := config.Validate()
 
@@ -310,6 +343,58 @@ func TestMergeFor(t *testing.T) {
 				assert.DeepEqual(t, merge, &TiCommunityMerge{})
 			} else {
 				assert.DeepEqual(t, merge.Repos, tc.merge.Repos)
+			}
+		})
+	}
+}
+
+func TestOwnersFor(t *testing.T) {
+	testCases := []struct {
+		name        string
+		owners      *TiCommunityOwners
+		org         string
+		repo        string
+		expectEmpty *TiCommunityOwners
+	}{
+		{
+			name: "Full name",
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "http://bots.tidb.io/ti-community-bot",
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+		{
+			name: "Only org",
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots"},
+				SigEndpoint: "http://bots.tidb.io/ti-community-bot",
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+		{
+			name:        "Can not find",
+			owners:      &TiCommunityOwners{},
+			org:         "tidb-community-bots1",
+			repo:        "test-dev1",
+			expectEmpty: &TiCommunityOwners{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := Configuration{TiCommunityOwners: []TiCommunityOwners{
+				*tc.owners,
+			}}
+
+			merge := config.OwnersFor(tc.org, tc.repo)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, merge, &TiCommunityOwners{})
+			} else {
+				assert.DeepEqual(t, merge.Repos, tc.owners.Repos)
 			}
 		})
 	}

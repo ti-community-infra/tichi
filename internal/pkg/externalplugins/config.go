@@ -9,8 +9,9 @@ import (
 
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
-	TiCommunityLgtm  []TiCommunityLgtm  `json:"ti-community-lgtm,omitempty"`
-	TiCommunityMerge []TiCommunityMerge `json:"ti-community-merge,omitempty"`
+	TiCommunityLgtm   []TiCommunityLgtm   `json:"ti-community-lgtm,omitempty"`
+	TiCommunityMerge  []TiCommunityMerge  `json:"ti-community-merge,omitempty"`
+	TiCommunityOwners []TiCommunityOwners `json:"ti-community-owners,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -47,6 +48,16 @@ type TiCommunityMerge struct {
 	PullOwnersURL string `json:"pull_owners_url,omitempty"`
 }
 
+// TiCommunityMerge specifies a configuration for a single owners.
+//
+// The configuration for the owners plugin is defined as a list of these structures.
+type TiCommunityOwners struct {
+	// Repos is either of the form org/repos or just org.
+	Repos []string `json:"repos,omitempty"`
+	// SigEndpoint specifies the URL of the sig info.
+	SigEndpoint string `json:"sig_endpoint,omitempty"`
+}
+
 // LgtmFor finds the Lgtm for a repo, if one exists
 // a trigger can be listed for the repo itself or for the
 // owning organization
@@ -73,20 +84,41 @@ func (c *Configuration) LgtmFor(org, repo string) *TiCommunityLgtm {
 // or an organization.
 func (c *Configuration) MergeFor(org, repo string) *TiCommunityMerge {
 	fullName := fmt.Sprintf("%s/%s", org, repo)
-	for _, lgtm := range c.TiCommunityMerge {
-		if !sets.NewString(lgtm.Repos...).Has(fullName) {
+	for _, merge := range c.TiCommunityMerge {
+		if !sets.NewString(merge.Repos...).Has(fullName) {
 			continue
 		}
-		return &lgtm
+		return &merge
 	}
 	// If you don't find anything, loop again looking for an org config
-	for _, lgtm := range c.TiCommunityMerge {
-		if !sets.NewString(lgtm.Repos...).Has(org) {
+	for _, merge := range c.TiCommunityMerge {
+		if !sets.NewString(merge.Repos...).Has(org) {
 			continue
 		}
-		return &lgtm
+		return &merge
 	}
 	return &TiCommunityMerge{}
+}
+
+// OwnersFor finds the TiCommunityOwners for a repo, if one exists.
+// TiCommunityOwners configuration can be listed for a repository
+// or an organization.
+func (c *Configuration) OwnersFor(org, repo string) *TiCommunityOwners {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, owners := range c.TiCommunityOwners {
+		if !sets.NewString(owners.Repos...).Has(fullName) {
+			continue
+		}
+		return &owners
+	}
+	// If you don't find anything, loop again looking for an org config
+	for _, owners := range c.TiCommunityOwners {
+		if !sets.NewString(owners.Repos...).Has(org) {
+			continue
+		}
+		return &owners
+	}
+	return &TiCommunityOwners{}
 }
 
 // Validate will return an error if there are any invalid external plugin config.
@@ -96,6 +128,10 @@ func (c *Configuration) Validate() error {
 	}
 
 	if err := validateMerge(c.TiCommunityMerge); err != nil {
+		return err
+	}
+
+	if err := validateOwners(c.TiCommunityOwners); err != nil {
 		return err
 	}
 
@@ -118,6 +154,18 @@ func validateLgtm(lgtms []TiCommunityLgtm) error {
 func validateMerge(merges []TiCommunityMerge) error {
 	for _, merge := range merges {
 		_, err := url.ParseRequestURI(merge.PullOwnersURL)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// validateOwners will return an error if the endpoint configured by merge is invalid.
+func validateOwners(merges []TiCommunityOwners) error {
+	for _, merge := range merges {
+		_, err := url.ParseRequestURI(merge.SigEndpoint)
 		if err != nil {
 			return err
 		}

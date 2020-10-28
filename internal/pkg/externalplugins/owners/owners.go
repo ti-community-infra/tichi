@@ -2,31 +2,29 @@ package owners
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/sirupsen/logrus"
+	tiexternalplugins "github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/ownersclient"
 	"k8s.io/test-infra/prow/github"
 )
 
-// TODO: we should use a sig info api.
-var sigInfoURL = "https://github.com"
+const (
+	// SigEndpointFmt specifies a format for sigs URL.
+	SigEndpointFmt = "/sigs/%s"
+)
 
 const (
 	// sigPrefix is a default sig label prefix.
 	sigPrefix = "sig/"
 	// listOwnersSuccessMessage returns on success.
 	listOwnersSuccessMessage = "List all owners success."
-	// FIXME : This fmt should be a sig info restful URL.
-	defaultSifInfoFileURLFmt = "/%s/community/blob/master/sig/%s/membership.json"
-)
-
-const (
-	// FIXME: should use sig info's needs lgtm number.
-	lgtmTwo = 2
+	lgtmTwo                  = 2
 )
 
 type githubClient interface {
@@ -40,11 +38,15 @@ type Server struct {
 
 	TokenGenerator func() []byte
 	Gc             githubClient
+	ConfigAgent    *tiexternalplugins.ConfigAgent
 	Log            *logrus.Entry
 }
 
 // ListOwners returns owners of tidb community PR.
-func (s *Server) ListOwners(org string, repo string, number int) (*ownersclient.OwnersResponse, error) {
+func (s *Server) ListOwners(org string, repo string, number int,
+	config *tiexternalplugins.Configuration) (*ownersclient.OwnersResponse, error) {
+	owners := config.OwnersFor(org, repo)
+
 	// Get pull request.
 	pull, err := s.Gc.GetPullRequest(org, repo, number)
 	if err != nil {
@@ -78,7 +80,7 @@ func (s *Server) ListOwners(org string, repo string, number int) (*ownersclient.
 		}, nil
 	}
 
-	url := sigInfoURL + fmt.Sprintf(defaultSifInfoFileURLFmt, org, sigName)
+	url := owners.SigEndpoint + fmt.Sprintf(SigEndpointFmt, sigName)
 	// Get sig info.
 	res, err := s.Client.Get(url)
 	if err != nil {
@@ -89,13 +91,18 @@ func (s *Server) ListOwners(org string, repo string, number int) (*ownersclient.
 		_ = res.Body.Close()
 	}()
 
+	if res.StatusCode != 200 {
+		s.Log.WithField("url", url).WithError(err).Error("Failed get sig info.")
+		return nil, errors.New("could not get a sig")
+	}
+
 	// Unmarshal sig members from body.
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
-	var sigInfo SigMembersInfo
-	if err := json.Unmarshal(body, &sigInfo); err != nil {
+	var sigRes SigResponse
+	if err := json.Unmarshal(body, &sigRes); err != nil {
 		s.Log.WithField("body", body).WithError(err).Error("Failed unmarshal body.")
 		return nil, err
 	}
@@ -103,22 +110,24 @@ func (s *Server) ListOwners(org string, repo string, number int) (*ownersclient.
 	var approvers []string
 	var reviewers []string
 
-	for _, leader := range sigInfo.TechLeaders {
+	sig := sigRes.Data
+
+	for _, leader := range sig.Membership.TechLeaders {
 		approvers = append(approvers, leader.GithubName)
 		reviewers = append(reviewers, leader.GithubName)
 	}
 
-	for _, coLeader := range sigInfo.CoLeaders {
+	for _, coLeader := range sig.Membership.CoLeaders {
 		approvers = append(approvers, coLeader.GithubName)
 		reviewers = append(reviewers, coLeader.GithubName)
 	}
 
-	for _, committer := range sigInfo.Committers {
+	for _, committer := range sig.Membership.Committers {
 		approvers = append(approvers, committer.GithubName)
 		reviewers = append(reviewers, committer.GithubName)
 	}
 
-	for _, reviewer := range sigInfo.Reviewers {
+	for _, reviewer := range sig.Membership.Reviewers {
 		reviewers = append(reviewers, reviewer.GithubName)
 	}
 
@@ -126,7 +135,7 @@ func (s *Server) ListOwners(org string, repo string, number int) (*ownersclient.
 		Data: ownersclient.Owners{
 			Approvers: approvers,
 			Reviewers: reviewers,
-			NeedsLgtm: lgtmTwo,
+			NeedsLgtm: sig.NeedsLgtm,
 		},
 		Message: listOwnersSuccessMessage,
 	}, nil

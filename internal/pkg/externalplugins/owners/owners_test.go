@@ -10,44 +10,51 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
+	tiexternalplugins "github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/github/fakegithub"
 )
 
-const testOwnersURLFmt = "/%s/community/blob/master/sig/%s/membership.json"
-
 func TestListOwners(t *testing.T) {
-	validSigInfo := SigMembersInfo{
-		TechLeaders: []ContributorInfo{
-			{
-				GithubName: "leader1",
-			}, {
-				GithubName: "leader2",
+	validSigRes := SigResponse{
+		Data: SigInfo{
+			Name: "test",
+			Membership: SigMembership{
+				TechLeaders: []ContributorInfo{
+					{
+						GithubName: "leader1",
+					}, {
+						GithubName: "leader2",
+					},
+				},
+				CoLeaders: []ContributorInfo{
+					{
+						GithubName: "coLeader1",
+					}, {
+						GithubName: "coLeader2",
+					},
+				},
+				Committers: []ContributorInfo{
+					{
+						GithubName: "committer1",
+					}, {
+						GithubName: "committer2",
+					},
+				},
+				Reviewers: []ContributorInfo{
+					{
+						GithubName: "reviewer1",
+					}, {
+						GithubName: "reviewer2",
+					},
+				},
+				ActiveContributors: []ContributorInfo{},
 			},
+			NeedsLgtm: lgtmTwo,
 		},
-		CoLeaders: []ContributorInfo{
-			{
-				GithubName: "coLeader1",
-			}, {
-				GithubName: "coLeader2",
-			},
-		},
-		Committers: []ContributorInfo{
-			{
-				GithubName: "committer1",
-			}, {
-				GithubName: "committer2",
-			},
-		},
-		Reviewers: []ContributorInfo{
-			{
-				GithubName: "reviewer1",
-			}, {
-				GithubName: "reviewer2",
-			},
-		},
-		ActiveContributors: []ContributorInfo{},
+		Message: listOwnersSuccessMessage,
 	}
+
 	collaborators := []string{"collab1", "collab2"}
 	org := "tidb-community-bots"
 	repoName := "test-dev"
@@ -57,15 +64,15 @@ func TestListOwners(t *testing.T) {
 
 	testCases := []struct {
 		name            string
-		sigInfo         *SigMembersInfo
+		sigRes          *SigResponse
 		labels          []github.Label
 		exceptApprovers []string
 		exceptReviewers []string
 		exceptNeedsLgtm int
 	}{
 		{
-			name:    "has one sig label",
-			sigInfo: &validSigInfo,
+			name:   "has one sig label",
+			sigRes: &validSigRes,
 			labels: []github.Label{
 				{
 					Name: "sig/testing",
@@ -83,7 +90,7 @@ func TestListOwners(t *testing.T) {
 		},
 		{
 			name:            "non sig label",
-			sigInfo:         &validSigInfo,
+			sigRes:          &validSigRes,
 			exceptApprovers: collaborators,
 			exceptReviewers: collaborators,
 			exceptNeedsLgtm: lgtmTwo,
@@ -95,23 +102,30 @@ func TestListOwners(t *testing.T) {
 			// Fake http client.
 			mux := http.NewServeMux()
 			testServer := httptest.NewServer(mux)
-			sigInfoURL = testServer.URL
+
+			config := &tiexternalplugins.Configuration{}
+			config.TiCommunityOwners = []tiexternalplugins.TiCommunityOwners{
+				{
+					Repos:       []string{"tidb-community-bots/test-dev"},
+					SigEndpoint: testServer.URL,
+				},
+			}
 
 			// URL pattern.
-			pattern := fmt.Sprintf(testOwnersURLFmt, org, sigName)
+			pattern := fmt.Sprintf(SigEndpointFmt, sigName)
 			mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
 				if req.Method != "GET" {
 					t.Errorf("Except 'Get' got '%s'", req.Method)
 				}
 				reqBodyBytes := new(bytes.Buffer)
-				err := json.NewEncoder(reqBodyBytes).Encode(testCase.sigInfo)
+				err := json.NewEncoder(reqBodyBytes).Encode(testCase.sigRes)
 				if err != nil {
-					t.Errorf("Encoding data '%v' failed", testCase.sigInfo)
+					t.Errorf("Encoding data '%v' failed", testCase.sigRes)
 				}
 
 				_, err = res.Write(reqBodyBytes.Bytes())
 				if err != nil {
-					t.Errorf("Write data '%v' failed", testCase.sigInfo)
+					t.Errorf("Write data '%v' failed", testCase.sigRes)
 				}
 			})
 
@@ -152,7 +166,7 @@ func TestListOwners(t *testing.T) {
 				Log: logrus.WithField("server", "testing"),
 			}
 
-			res, err := ownersServer.ListOwners(org, repoName, pullNumber)
+			res, err := ownersServer.ListOwners(org, repoName, pullNumber, config)
 
 			if err != nil {
 				t.Errorf("unexpected error: '%v'", err)

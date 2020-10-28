@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	tiexternalplugins "github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins/owners"
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"
@@ -25,6 +26,8 @@ type options struct {
 
 	dryRun bool
 	github prowflagutil.GitHubOptions
+
+	externalPluginsConfig string
 
 	webhookSecretFile string
 }
@@ -45,6 +48,8 @@ func gatherOptions() options {
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	fs.IntVar(&o.port, "port", 80, "Port to listen on.")
 	fs.BoolVar(&o.dryRun, "dry-run", true, "Dry run for testing. Uses API tokens but does not mutate.")
+	fs.StringVar(&o.externalPluginsConfig, "external-plugins-config",
+		"/etc/plugins/external-plugins.yaml", "Path to external plugin config file.")
 	fs.StringVar(&o.webhookSecretFile, "hmac-secret-file",
 		"/etc/webhook/hmac", "Path to the file containing the GitHub HMAC secret.")
 
@@ -71,6 +76,11 @@ func main() {
 		logrus.WithError(err).Fatal("Error starting secrets agent.")
 	}
 
+	epa := &tiexternalplugins.ConfigAgent{}
+	if err := epa.Start(o.externalPluginsConfig, false); err != nil {
+		log.WithError(err).Fatalf("Error loading external plugin config from %q.", o.externalPluginsConfig)
+	}
+
 	githubClient, err := o.github.GitHubClient(secretAgent, o.dryRun)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting GitHub client.")
@@ -88,6 +98,7 @@ func main() {
 		Client:         client,
 		TokenGenerator: secretAgent.GetTokenGenerator(o.webhookSecretFile),
 		Gc:             githubClient,
+		ConfigAgent:    epa,
 		Log:            log,
 	}
 
@@ -109,7 +120,10 @@ func main() {
 			log.WithError(err).Error("Failed convert pull number.")
 			return
 		}
-		ownersData, err := server.ListOwners(owner, repo, pullNumber)
+
+		config := server.ConfigAgent.Config()
+
+		ownersData, err := server.ListOwners(owner, repo, pullNumber, config)
 		if err != nil {
 			c.Status(http.StatusInternalServerError)
 			log.WithError(err).Error("Failed list owners.")
