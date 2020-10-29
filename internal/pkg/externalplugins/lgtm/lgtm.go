@@ -99,7 +99,6 @@ type githubClient interface {
 	DeleteComment(org, repo string, ID int) error
 	BotName() (string, error)
 	GetSingleCommit(org, repo, SHA string) (github.SingleCommit, error)
-	IsMember(org, user string) (bool, error)
 	ListTeams(org string) ([]github.Team, error)
 	ListTeamMembers(id int, role string) ([]github.TeamMember, error)
 }

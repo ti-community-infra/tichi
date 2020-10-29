@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/ownersclient"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/github"
 )
 
@@ -30,6 +31,8 @@ const (
 type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
 	ListCollaborators(org, repo string) ([]github.User, error)
+	ListTeams(org string) ([]github.Team, error)
+	ListTeamMembers(id int, role string) ([]github.TeamMember, error)
 }
 
 type Server struct {
@@ -42,7 +45,8 @@ type Server struct {
 	Log            *logrus.Entry
 }
 
-func (s *Server) listOwnersForNonSig(org string, repo string) (*ownersclient.OwnersResponse, error) {
+func (s *Server) listOwnersForNonSig(org string, repo string,
+	trustTeamMembers []string) (*ownersclient.OwnersResponse, error) {
 	collaborators, err := s.Gc.ListCollaborators(org, repo)
 	if err != nil {
 		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed get collaborators.")
@@ -54,10 +58,11 @@ func (s *Server) listOwnersForNonSig(org string, repo string) (*ownersclient.Own
 		collaboratorsLogin = append(collaboratorsLogin, collaborator.Login)
 	}
 
+	approvers := sets.NewString(collaboratorsLogin...).Insert(trustTeamMembers...).List()
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
-			Approvers: collaboratorsLogin,
-			Reviewers: collaboratorsLogin,
+			Approvers: approvers,
+			Reviewers: approvers,
 			NeedsLgtm: lgtmTwo,
 		},
 		Message: listOwnersSuccessMessage,
@@ -65,7 +70,7 @@ func (s *Server) listOwnersForNonSig(org string, repo string) (*ownersclient.Own
 }
 
 func (s *Server) listOwnersForSig(sigName string,
-	opts *tiexternalplugins.TiCommunityOwners) (*ownersclient.OwnersResponse, error) {
+	opts *tiexternalplugins.TiCommunityOwners, trustTeamMembers []string) (*ownersclient.OwnersResponse, error) {
 	url := opts.SigEndpoint + fmt.Sprintf(SigEndpointFmt, sigName)
 	// Get sig info.
 	res, err := s.Client.Get(url)
@@ -119,8 +124,8 @@ func (s *Server) listOwnersForSig(sigName string,
 
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
-			Approvers: approvers,
-			Reviewers: reviewers,
+			Approvers: sets.NewString(approvers...).Insert(trustTeamMembers...).List(),
+			Reviewers: sets.NewString(reviewers...).Insert(trustTeamMembers...).List(),
 			NeedsLgtm: sig.NeedsLgtm,
 		},
 		Message: listOwnersSuccessMessage,
@@ -139,23 +144,25 @@ func (s *Server) ListOwners(org string, repo string, number int,
 
 	opts := config.OwnersFor(org, repo)
 	// Find sig label.
-	sigName := GetSigNameByLabel(pull.Labels)
+	sigName := getSigNameByLabel(pull.Labels)
 
 	// Use default sig name if cannot find.
 	if sigName == "" {
 		sigName = opts.DefaultSigName
 	}
 
+	trustTeamMembers := getTrustTeamMembers(s.Log, s.Gc, org, opts.OwnersTrustTeam)
+
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
 	if sigName == "" {
-		return s.listOwnersForNonSig(org, repo)
+		return s.listOwnersForNonSig(org, repo, trustTeamMembers)
 	}
 
-	return s.listOwnersForSig(sigName, opts)
+	return s.listOwnersForSig(sigName, opts, trustTeamMembers)
 }
 
-// GetSigNameByLabel returns the name of sig when the label prefix matches.
-func GetSigNameByLabel(labels []github.Label) string {
+// getSigNameByLabel returns the name of sig when the label prefix matches.
+func getSigNameByLabel(labels []github.Label) string {
 	var sigName string
 	for _, label := range labels {
 		if strings.HasPrefix(label.Name, sigPrefix) {
@@ -165,4 +172,28 @@ func GetSigNameByLabel(labels []github.Label) string {
 	}
 
 	return ""
+}
+
+// getTrustTeamMembers returns the members of trust team.
+func getTrustTeamMembers(log *logrus.Entry, gc githubClient, org, trustTeam string) []string {
+	if len(trustTeam) > 0 {
+		if teams, err := gc.ListTeams(org); err == nil {
+			for _, teamInOrg := range teams {
+				// lgtm.TrustedAuthorTeams is supposed to be a very short list.
+				if strings.Compare(teamInOrg.Name, trustTeam) == 0 {
+					if members, err := gc.ListTeamMembers(teamInOrg.ID, github.RoleAll); err == nil {
+						var membersLogin []string
+						for _, member := range members {
+							membersLogin = append(membersLogin, member.Login)
+						}
+						return membersLogin
+					}
+					log.WithError(err).Errorf("Failed to list members in %s:%s.", org, teamInOrg.Name)
+				}
+			}
+		} else {
+			log.WithError(err).Errorf("Failed to list teams in org %s.", org)
+		}
+	}
+	return []string{}
 }

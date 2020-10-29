@@ -58,7 +58,11 @@ type TiCommunityOwners struct {
 	// SigEndpoint specifies the URL of the sig info.
 	SigEndpoint string `json:"sig_endpoint,omitempty"`
 	// DefaultSigName specifies the default sig name of this repo's PR.
-	DefaultSigName  string `json:"default_sig_name,omitempty"`
+	DefaultSigName string `json:"default_sig_name,omitempty"`
+	// WARNING: This disables the security mechanism that prevents a malicious member (or
+	// compromised GitHub account) from merging arbitrary code. Use with caution.
+	//
+	// OwnersTrustTeam specifies the GitHub team whose members are trusted.
 	OwnersTrustTeam string `json:"trusted_team_for_owners,omitempty"`
 }
 
