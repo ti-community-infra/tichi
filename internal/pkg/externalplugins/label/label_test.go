@@ -124,9 +124,10 @@ func TestLabel(t *testing.T) {
 			expectedRemovedLabels: []string{},
 		},
 		{
-			name:                  "Command must start at the beginning of the line",
-			body:                  "  /component infra",
-			repoLabels:            []string{"component/infra", "component/api", "priority/critical", "priority/urgent", "priority/important", "type/bug"},
+			name: "Command must start at the beginning of the line",
+			body: "  /component infra",
+			repoLabels: []string{"component/infra", "component/api", "priority/critical",
+				"priority/urgent", "priority/important", "type/bug"},
 			issueLabels:           []string{},
 			expectedNewLabels:     formatLabels(),
 			expectedRemovedLabels: []string{},
@@ -307,9 +308,10 @@ func TestLabel(t *testing.T) {
 			expectedRemovedLabels: formatLabels("component/infra"),
 		},
 		{
-			name:                  "Multiple Add and Delete Labels",
-			body:                  "/remove-component ruby\n/remove-type srv\n/remove-priority l m\n/component go\n/type cli\n/priority h",
-			repoLabels:            []string{"component/go", "component/ruby", "type/cli", "type/srv", "priority/h", "priority/m", "priority/l"},
+			name: "Multiple Add and Delete Labels",
+			body: "/remove-component ruby\n/remove-type srv\n/remove-priority l m\n/component go\n/type cli\n/priority h",
+			repoLabels: []string{"component/go", "component/ruby",
+				"type/cli", "type/srv", "priority/h", "priority/m", "priority/l"},
 			issueLabels:           []string{"component/ruby", "type/srv", "priority/l", "priority/m"},
 			expectedNewLabels:     formatLabels("component/go", "type/cli", "priority/h"),
 			expectedRemovedLabels: formatLabels("component/ruby", "type/srv", "priority/l", "priority/m"),
@@ -498,7 +500,8 @@ func TestLabel(t *testing.T) {
 		sort.Strings(tc.expectedRemovedLabels)
 		sort.Strings(fakeClient.IssueLabelsRemoved)
 		if !reflect.DeepEqual(tc.expectedRemovedLabels, fakeClient.IssueLabelsRemoved) {
-			t.Errorf("expected the labels %q to be removed, but %q were removed.", tc.expectedRemovedLabels, fakeClient.IssueLabelsRemoved)
+			t.Errorf("expected the labels %q to be removed, but %q were removed.",
+				tc.expectedRemovedLabels, fakeClient.IssueLabelsRemoved)
 		}
 		if len(fakeClient.IssueCommentsAdded) > 0 && !tc.expectedBotComment {
 			t.Errorf("unexpected bot comments: %#v", fakeClient.IssueCommentsAdded)

@@ -10,7 +10,6 @@ import (
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
-	"k8s.io/test-infra/prow/plugins"
 )
 
 const PluginName = "ti-community-label"
@@ -58,7 +57,7 @@ func HelpProvider(externalPluginsConfig *externalplugins.Configuration) func(
 			Config: labelConfig,
 		}
 		pluginHelp.AddCommand(pluginhelp.Command{
-			Usage:       "/[remove-](priority|sig|wg|label) <target>",
+			Usage:       "/[remove-](status|sig|kind|label) <target>",
 			Description: "Applies or removes a label from one of the recognized types of labels.",
 			Featured:    false,
 			WhoCanUse:   "Anyone can trigger this command on a PR.",
@@ -71,7 +70,9 @@ func HelpProvider(externalPluginsConfig *externalplugins.Configuration) func(
 func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent,
 	cfg *externalplugins.Configuration, log *logrus.Entry) error {
 	opts := cfg.LabelFor(ice.Repo.Owner.Login, ice.Repo.Name)
-	var additionalLabels, prefixes = []string{}, []string{}
+	var additionalLabels []string
+	var prefixes []string
+
 	if opts.AdditionalLabels != nil {
 		additionalLabels = opts.AdditionalLabels
 	}
@@ -117,14 +118,7 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 	prefixes []string, e *github.IssueCommentEvent) error {
 	// arrange prefixes in the format "sig|kind|priority|..."
 	// so that they can be used to create labelRegex and removeLabelRegex
-	var labelPrefixes string
-	for k, prefix := range prefixes {
-		if k == 0 {
-			labelPrefixes = prefix
-			continue
-		}
-		labelPrefixes = labelPrefixes + "|" + prefix
-	}
+	labelPrefixes := strings.Join(prefixes, "|")
 
 	labelRegex, err := regexp.Compile(fmt.Sprintf(labelRegexp, labelPrefixes))
 	if err != nil {
@@ -214,7 +208,7 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 	if len(noSuchLabelsOnIssue) > 0 {
 		msg := fmt.Sprintf(nonExistentLabelOnIssue, strings.Join(noSuchLabelsOnIssue, ", "))
 		return gc.CreateComment(org, repo, e.Issue.Number,
-			plugins.FormatResponseRaw(e.Issue.Body, e.Issue.HTMLURL, e.Issue.User.Login, msg))
+			externalplugins.FormatResponseRaw(e.Issue.Body, e.Issue.HTMLURL, e.Issue.User.Login, msg))
 	}
 
 	return nil
