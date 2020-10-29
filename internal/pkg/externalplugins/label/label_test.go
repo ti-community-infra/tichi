@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
+	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/github/fakegithub"
 )
@@ -22,7 +23,7 @@ func formatLabels(labels ...string) []string {
 	return r
 }
 
-func TestLabel(t *testing.T) {
+func TestLabelIssueComment(t *testing.T) {
 	type testCase struct {
 		name                  string
 		body                  string
@@ -480,7 +481,14 @@ func TestLabel(t *testing.T) {
 		if tc.prefixes == nil {
 			tc.prefixes = []string{"component", "type", "priority", "status"}
 		}
-		err := handle(fakeClient, logrus.WithField("plugin", PluginName), tc.extraLabels, tc.prefixes, e)
+		cfg := &externalplugins.Configuration{
+			TiCommunityLabel: []externalplugins.TiCommunityLabel{{
+				Repos:            []string{"org/repo"},
+				AdditionalLabels: tc.extraLabels,
+				Prefixes:         tc.prefixes,
+			}},
+		}
+		err := HandleIssueCommentEvent(fakeClient, e, cfg, logrus.WithField("plugin", PluginName))
 		if err != nil {
 			t.Errorf("didn't expect error from label test: %v", err)
 			continue
