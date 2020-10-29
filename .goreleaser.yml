@@ -32,6 +32,16 @@ builds:
     main: ./cmd/ticommunityowners/main.go
     env:
       - CGO_ENABLED=0
+  -
+    id: "ti-community-label"
+    binary: ticommunitylabel
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/ticommunitylabel/main.go
+    env:
+      - CGO_ENABLED=0
 source:
   enabled: true
 checksum:
@@ -78,3 +88,13 @@ dockers:
       - "rustinliu/ti-community-prow-owners-plugin:{{ .Tag }}"
       - "rustinliu/ti-community-prow-owners-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/owners/Dockerfile
+  -
+    binaries:
+      - ticommunitylabel
+    builds:
+      - ti-community-label
+    image_templates:
+      - "rustinliu/ti-community-prow-label-plugin:latest"
+      - "rustinliu/ti-community-prow-label-plugin:{{ .Tag }}"
+      - "rustinliu/ti-community-prow-label-plugin:{{ .Major }}"
+    dockerfile: ./deployments/plugins/label/Dockerfile

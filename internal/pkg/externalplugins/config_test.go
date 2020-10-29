@@ -389,12 +389,64 @@ func TestOwnersFor(t *testing.T) {
 				*tc.owners,
 			}}
 
-			merge := config.OwnersFor(tc.org, tc.repo)
+			owners := config.OwnersFor(tc.org, tc.repo)
 
 			if tc.expectEmpty != nil {
-				assert.DeepEqual(t, merge, &TiCommunityOwners{})
+				assert.DeepEqual(t, owners, &TiCommunityOwners{})
 			} else {
-				assert.DeepEqual(t, merge.Repos, tc.owners.Repos)
+				assert.DeepEqual(t, owners.Repos, tc.owners.Repos)
+			}
+		})
+	}
+}
+
+func TestLabelFor(t *testing.T) {
+	testCases := []struct {
+		name        string
+		label       *TiCommunityLabel
+		org         string
+		repo        string
+		expectEmpty *TiCommunityLabel
+	}{
+		{
+			name: "Full name",
+			label: &TiCommunityLabel{
+				Repos:    []string{"tidb-community-bots/test-dev"},
+				Prefixes: []string{"status"},
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+		{
+			name: "Only org",
+			label: &TiCommunityLabel{
+				Repos:    []string{"tidb-community-bots"},
+				Prefixes: []string{"status"},
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+		{
+			name:        "Can not find",
+			label:       &TiCommunityLabel{},
+			org:         "tidb-community-bots1",
+			repo:        "test-dev1",
+			expectEmpty: &TiCommunityLabel{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := Configuration{TiCommunityLabel: []TiCommunityLabel{
+				*tc.label,
+			}}
+
+			label := config.LabelFor(tc.org, tc.repo)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, label, &TiCommunityLabel{})
+			} else {
+				assert.DeepEqual(t, label.Repos, tc.label.Repos)
 			}
 		})
 	}
