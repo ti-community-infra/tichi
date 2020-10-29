@@ -63,12 +63,13 @@ func TestListOwners(t *testing.T) {
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 
 	testCases := []struct {
-		name            string
-		sigRes          *SigResponse
-		labels          []github.Label
-		exceptApprovers []string
-		exceptReviewers []string
-		exceptNeedsLgtm int
+		name              string
+		sigRes            *SigResponse
+		labels            []github.Label
+		useDefaultSigName bool
+		exceptApprovers   []string
+		exceptReviewers   []string
+		exceptNeedsLgtm   int
 	}{
 		{
 			name:   "has one sig label",
@@ -95,6 +96,20 @@ func TestListOwners(t *testing.T) {
 			exceptReviewers: collaborators,
 			exceptNeedsLgtm: lgtmTwo,
 		},
+		{
+			name:              "non sig label but use default sig name",
+			sigRes:            &validSigRes,
+			useDefaultSigName: true,
+			exceptApprovers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2",
+			},
+			exceptReviewers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2", "reviewer1", "reviewer2",
+			},
+			exceptNeedsLgtm: lgtmTwo,
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -104,11 +119,17 @@ func TestListOwners(t *testing.T) {
 			testServer := httptest.NewServer(mux)
 
 			config := &tiexternalplugins.Configuration{}
+			owners := tiexternalplugins.TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: testServer.URL,
+			}
+
+			if testCase.useDefaultSigName {
+				owners.DefaultSigName = sigName
+			}
+
 			config.TiCommunityOwners = []tiexternalplugins.TiCommunityOwners{
-				{
-					Repos:       []string{"tidb-community-bots/test-dev"},
-					SigEndpoint: testServer.URL,
-				},
+				owners,
 			}
 
 			// URL pattern.
