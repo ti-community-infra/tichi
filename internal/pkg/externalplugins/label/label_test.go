@@ -3,16 +3,15 @@ package label
 
 import (
 	"fmt"
-	"reflect"
-	"sort"
-	"strings"
-	"testing"
-
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/github/fakegithub"
+	"reflect"
+	"sort"
+	"strings"
+	"testing"
 )
 
 func formatLabels(labels ...string) []string {
@@ -458,10 +457,15 @@ func TestLabelIssueComment(t *testing.T) {
 		sort.Strings(tc.expectedNewLabels)
 
 		issue := github.Issue{
-			Body:   tc.body,
+			Body:   "Test",
 			Number: 1,
 			User:   github.User{Login: "Alice"},
 		}
+		issueComment := github.IssueComment{
+			Body: tc.body,
+			User: github.User{Login: "Alice"},
+		}
+
 		fakeClient := &fakegithub.FakeClient{
 			Issues: map[int]*github.Issue{
 				1: &issue,
@@ -476,9 +480,10 @@ func TestLabelIssueComment(t *testing.T) {
 			_ = fakeClient.AddLabel("org", "repo", 1, label)
 		}
 		e := &github.IssueCommentEvent{
-			Action: github.IssueCommentActionCreated,
-			Issue:  issue,
-			Repo:   github.Repo{Owner: github.User{Login: "org"}, Name: "repo"},
+			Action:  github.IssueCommentActionCreated,
+			Issue:   issue,
+			Comment: issueComment,
+			Repo:    github.Repo{Owner: github.User{Login: "org"}, Name: "repo"},
 		}
 		// Add default prefixes if none present
 		if tc.prefixes == nil {

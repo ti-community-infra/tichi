@@ -36,3 +36,10 @@ ti-community-owners:
   - repos:
       - tidb-community-bots/test-dev
     sig_endpoint: https://bots.tidb.io/ti-community-bot
+
+ti-community-label:
+  - repos:
+      - tidb-community-bots/ti-community-prow
+    prefixes:
+      - status
+      - type
