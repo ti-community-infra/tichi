@@ -67,6 +67,7 @@ func TestListOwners(t *testing.T) {
 		sigRes            *SigResponse
 		labels            []github.Label
 		useDefaultSigName bool
+		trustTeam         string
 		exceptApprovers   []string
 		exceptReviewers   []string
 		exceptNeedsLgtm   int
@@ -110,6 +111,29 @@ func TestListOwners(t *testing.T) {
 			},
 			exceptNeedsLgtm: lgtmTwo,
 		},
+		{
+			name:   "has one sig label and a trust team",
+			sigRes: &validSigRes,
+			labels: []github.Label{
+				{
+					Name: "sig/testing",
+				},
+			},
+			exceptApprovers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2",
+				// Team members.
+				"sig-lead",
+			},
+			exceptReviewers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2", "reviewer1", "reviewer2",
+				// Team members.
+				"sig-lead",
+			},
+			trustTeam:       "Leads",
+			exceptNeedsLgtm: lgtmTwo,
+		},
 	}
 
 	for _, testCase := range testCases {
@@ -126,6 +150,10 @@ func TestListOwners(t *testing.T) {
 
 			if testCase.useDefaultSigName {
 				owners.DefaultSigName = sigName
+			}
+
+			if testCase.trustTeam != "" {
+				owners.OwnersTrustTeam = testCase.trustTeam
 			}
 
 			config.TiCommunityOwners = []tiexternalplugins.TiCommunityOwners{
@@ -364,7 +392,7 @@ func TestGetSigNameByLabel(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			sigName := GetSigNameByLabel(testCase.labels)
+			sigName := getSigNameByLabel(testCase.labels)
 
 			if sigName != testCase.exceptSigName {
 				t.Errorf("expected sig '%s', but it is '%s'", testCase.exceptSigName, sigName)
