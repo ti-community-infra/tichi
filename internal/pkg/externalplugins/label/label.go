@@ -122,12 +122,10 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 
 	labelRegex, err := regexp.Compile(fmt.Sprintf(labelRegexp, labelPrefixes))
 	if err != nil {
-		log.WithError(err).Error("Failed to compile regexp.")
 		return err
 	}
 	removeLabelRegex, err := regexp.Compile(fmt.Sprintf(removeLabelRegexp, labelPrefixes))
 	if err != nil {
-		log.WithError(err).Error("Failed to compile regexp.")
 		return err
 	}
 
