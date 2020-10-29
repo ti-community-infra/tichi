@@ -66,7 +66,6 @@ func (s *Server) listOwnersForNonSig(org string, repo string) (*ownersclient.Own
 
 func (s *Server) listOwnersForSig(sigName string,
 	opts *tiexternalplugins.TiCommunityOwners) (*ownersclient.OwnersResponse, error) {
-
 	url := opts.SigEndpoint + fmt.Sprintf(SigEndpointFmt, sigName)
 	// Get sig info.
 	res, err := s.Client.Get(url)
