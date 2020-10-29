@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -13,7 +12,6 @@ import (
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins/label"
-	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/ownersclient"
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
@@ -89,18 +87,9 @@ func main() {
 	}
 	githubClient.Throttle(360, 360)
 
-	// Skip https verify.
-	//nolint:gosec
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tr}
-	ol := &ownersclient.OwnersClient{Client: client}
-
 	server := &server{
 		tokenGenerator: secretAgent.GetTokenGenerator(o.webhookSecretFile),
 		gc:             githubClient,
-		ol:             ol,
 		configAgent:    epa,
 		log:            log,
 	}
@@ -125,7 +114,6 @@ type server struct {
 	tokenGenerator func() []byte
 	gc             github.Client
 
-	ol          ownersclient.OwnersLoader
 	configAgent *tiexternalplugins.ConfigAgent
 	log         *logrus.Entry
 }
