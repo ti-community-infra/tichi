@@ -109,6 +109,9 @@ external_plugins:
         - issue_comment
         - pull_request_review_comment
         - pull_request
+    - name: ti-community-label
+      events:
+        - issue_comment
   tidb-community-bots/ti-community-owners:
     - name: ti-community-lgtm
       events:

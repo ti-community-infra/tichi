@@ -129,10 +129,10 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 		return err
 	}
 
-	labelMatches := labelRegex.FindAllStringSubmatch(e.Issue.Body, -1)
-	removeLabelMatches := removeLabelRegex.FindAllStringSubmatch(e.Issue.Body, -1)
-	customLabelMatches := customLabelRegex.FindAllStringSubmatch(e.Issue.Body, -1)
-	customRemoveLabelMatches := customRemoveLabelRegex.FindAllStringSubmatch(e.Issue.Body, -1)
+	labelMatches := labelRegex.FindAllStringSubmatch(e.Comment.Body, -1)
+	removeLabelMatches := removeLabelRegex.FindAllStringSubmatch(e.Comment.Body, -1)
+	customLabelMatches := customLabelRegex.FindAllStringSubmatch(e.Comment.Body, -1)
+	customRemoveLabelMatches := customRemoveLabelRegex.FindAllStringSubmatch(e.Comment.Body, -1)
 	if len(labelMatches) == 0 && len(removeLabelMatches) == 0 &&
 		len(customLabelMatches) == 0 && len(customRemoveLabelMatches) == 0 {
 		return nil
@@ -208,7 +208,7 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 	if len(noSuchLabelsOnIssue) > 0 {
 		msg := fmt.Sprintf(nonExistentLabelOnIssue, strings.Join(noSuchLabelsOnIssue, ", "))
 		return gc.CreateComment(org, repo, e.Issue.Number,
-			externalplugins.FormatResponseRaw(e.Issue.Body, e.Issue.HTMLURL, e.Issue.User.Login, msg))
+			externalplugins.FormatResponseRaw(e.Comment.Body, e.Comment.HTMLURL, e.Comment.User.Login, msg))
 	}
 
 	return nil
