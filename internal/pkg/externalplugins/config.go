@@ -57,6 +57,9 @@ type TiCommunityOwners struct {
 	Repos []string `json:"repos,omitempty"`
 	// SigEndpoint specifies the URL of the sig info.
 	SigEndpoint string `json:"sig_endpoint,omitempty"`
+	// DefaultSigName specifies the default sig name of this repo's PR.
+	DefaultSigName  string `json:"default_sig_name,omitempty"`
+	OwnersTrustTeam string `json:"trusted_team_for_owners,omitempty"`
 }
 
 // TiCommunityLabel is the config for the label plugin.
