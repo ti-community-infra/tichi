@@ -1,0 +1,6 @@
+[book]
+authors = ["hi-rustin"]
+language = "en"
+multilingual = false
+src = "src"
+title = "tidb-community-prow-book"
