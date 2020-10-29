@@ -47,7 +47,7 @@ func HelpProvider(externalPluginsConfig *externalplugins.Configuration) func(
 				additionalLabelsConfigMsg = fmt.Sprintf("%v labels can be used with the `/[remove-]label` command.",
 					opts.AdditionalLabels)
 			}
-			labelConfig[repo.Repo] = prefixConfigMsg + additionalLabelsConfigMsg
+			labelConfig[repo.String()] = prefixConfigMsg + additionalLabelsConfigMsg
 		}
 
 		pluginHelp := &pluginhelp.PluginHelp{

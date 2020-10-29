@@ -1,13 +1,16 @@
+//nolint:scopelint
 package label
 
 import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
+	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/github/fakegithub"
 )
@@ -517,5 +520,76 @@ func TestLabelIssueComment(t *testing.T) {
 		if len(fakeClient.IssueCommentsAdded) == 0 && tc.expectedBotComment {
 			t.Error("expected a bot comment but got none")
 		}
+	}
+}
+
+func TestHelpProvider(t *testing.T) {
+	configInfoHasPrefixesPrefix := "The label plugin also includes commands based on"
+	configInfoHasAdditionalLabelsSuffix := "labels can be used with the `/[remove-]label` command."
+	enabledRepos := []config.OrgRepo{
+		{Org: "org1", Repo: "repo"},
+		{Org: "org2", Repo: "repo"},
+	}
+	cases := []struct {
+		name               string
+		config             *externalplugins.Configuration
+		enabledRepos       []config.OrgRepo
+		err                bool
+		configInfoIncludes []string
+		configInfoExcludes []string
+	}{
+		{
+			name:               "Empty config",
+			config:             &externalplugins.Configuration{},
+			enabledRepos:       enabledRepos,
+			configInfoExcludes: []string{configInfoHasPrefixesPrefix, configInfoHasAdditionalLabelsSuffix},
+		},
+		{
+			name: "Prefixes added",
+			config: &externalplugins.Configuration{
+				TiCommunityLabel: []externalplugins.TiCommunityLabel{
+					{
+						Repos:    []string{"org2/repo"},
+						Prefixes: []string{"test"},
+					},
+				},
+			},
+			enabledRepos:       enabledRepos,
+			configInfoExcludes: []string{configInfoHasAdditionalLabelsSuffix},
+			configInfoIncludes: []string{configInfoHasPrefixesPrefix},
+		},
+		{
+			name: "All configs enabled",
+			config: &externalplugins.Configuration{
+				TiCommunityLabel: []externalplugins.TiCommunityLabel{
+					{
+						Repos:            []string{"org2/repo"},
+						Prefixes:         []string{"test"},
+						AdditionalLabels: []string{"test/a"},
+					},
+				},
+			},
+			enabledRepos:       enabledRepos,
+			configInfoIncludes: []string{configInfoHasPrefixesPrefix, configInfoHasAdditionalLabelsSuffix},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			helpProvider := HelpProvider(c.config)
+			pluginHelp, err := helpProvider(c.enabledRepos)
+			if err != nil && !c.err {
+				t.Fatalf("helpProvider error: %v", err)
+			}
+			for _, msg := range c.configInfoExcludes {
+				if strings.Contains(pluginHelp.Config["org2/repo"], msg) {
+					t.Fatalf("helpProvider.Config error mismatch: got %v, but didn't want it", msg)
+				}
+			}
+			for _, msg := range c.configInfoIncludes {
+				if !strings.Contains(pluginHelp.Config["org2/repo"], msg) {
+					t.Fatalf("helpProvider.Config error mismatch: didn't get %v, but wanted it", msg)
+				}
+			}
+		})
 	}
 }
