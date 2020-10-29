@@ -66,3 +66,20 @@ default:
       target: prs
       prowPlugin: wip
       addedBy: prow
+    - color: e11d21
+      description: Categorizes issue or PR as related to a bug.
+      name: type/bug
+      previously:
+        - name: bug
+      target: both
+      prowPlugin: label
+      addedBy: anyone
+    - color: c7def8
+      description: Categorizes issue or PR as related to a new feature.
+      name: type/feature
+      previously:
+        - name: enhancement
+        - name: type/enhancement
+      target: both
+      prowPlugin: label
+      addedBy: anyone

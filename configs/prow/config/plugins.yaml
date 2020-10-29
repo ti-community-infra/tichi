@@ -25,6 +25,16 @@ size:
   xl: 270
   xxl: 520
 
+require_matching_label:
+  - missing_label: needs-type
+    org: tidb-community-bots
+    repo: ti-community-prow
+    issues: true
+    regexp: ^type/
+    missing_comment: |
+      There are no type labels on this issue. Please add an appropriate label by using one of the following commands:
+      - `/type <type-name>`
+
 plugins:
   tidb-community-bots/test-dev:
     - assign
@@ -72,6 +82,7 @@ plugins:
     - help
     - hold
     - config-updater
+    - require-matching-label
   tidb-community-bots/ti-community-merge:
     - assign
     - branchcleaner
