@@ -64,11 +64,10 @@ func (s *Server) listOwnersForNonSig(org string, repo string) (*ownersclient.Own
 	}, nil
 }
 
-func (s *Server) listOwnersForSig(org string, repo string, sigName string,
-	config *tiexternalplugins.Configuration) (*ownersclient.OwnersResponse, error) {
-	owners := config.OwnersFor(org, repo)
+func (s *Server) listOwnersForSig(sigName string,
+	opts *tiexternalplugins.TiCommunityOwners) (*ownersclient.OwnersResponse, error) {
 
-	url := owners.SigEndpoint + fmt.Sprintf(SigEndpointFmt, sigName)
+	url := opts.SigEndpoint + fmt.Sprintf(SigEndpointFmt, sigName)
 	// Get sig info.
 	res, err := s.Client.Get(url)
 	if err != nil {
@@ -139,15 +138,21 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		return nil, err
 	}
 
+	opts := config.OwnersFor(org, repo)
 	// Find sig label.
 	sigName := GetSigNameByLabel(pull.Labels)
 
-	// When we cannot find a sig label for PR, we will use a collaborators.
+	// Use default sig name if cannot find.
+	if sigName == "" {
+		sigName = opts.DefaultSigName
+	}
+
+	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
 	if sigName == "" {
 		return s.listOwnersForNonSig(org, repo)
 	}
 
-	return s.listOwnersForSig(org, repo, sigName, config)
+	return s.listOwnersForSig(sigName, opts)
 }
 
 // GetSigNameByLabel returns the name of sig when the label prefix matches.
