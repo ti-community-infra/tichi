@@ -3,15 +3,16 @@ package label
 
 import (
 	"fmt"
+	"reflect"
+	"sort"
+	"strings"
+	"testing"
+
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/github/fakegithub"
-	"reflect"
-	"sort"
-	"strings"
-	"testing"
 )
 
 func formatLabels(labels ...string) []string {
