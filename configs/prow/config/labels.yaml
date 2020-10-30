@@ -84,6 +84,13 @@ repos:
         target: both
         prowPlugin: label
         addedBy: anyone
+      - color: e11d21
+        description: Indicates a PR cannot be merged because it has merge conflicts with HEAD.
+        name: needs-rebase
+        target: prs
+        prowPlugin: needs-rebase
+        isExternalPlugin: true
+        addedBy: prow
   tikv/community:
     labels:
       - color: 00ff00
@@ -151,5 +158,12 @@ repos:
         name: do-not-merge/work-in-progress
         target: prs
         prowPlugin: wip
+        addedBy: prow
+      - color: e11d21
+        description: Indicates a PR cannot be merged because it has merge conflicts with HEAD.
+        name: needs-rebase
+        target: prs
+        prowPlugin: needs-rebase
+        isExternalPlugin: true
         addedBy: prow
 
