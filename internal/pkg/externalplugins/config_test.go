@@ -17,27 +17,27 @@ func TestValidateTiCommunityLgtmConfig(t *testing.T) {
 		{
 			name: "https pull owners URL",
 			lgtm: &TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			expected: nil,
 		},
 		{
 			name: "http pull owners URL",
 			lgtm: &TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "http://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			expected: nil,
 		},
 		{
 			name: "invalid pull owners URL",
 			lgtm: &TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "http/bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "http/bots.tidb.io/ti-community-bot",
 			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
@@ -69,24 +69,24 @@ func TestValidateMergeConfig(t *testing.T) {
 		{
 			name: "https pull owners URL",
 			merge: &TiCommunityMerge{
-				Repos:         []string{"tidb-community-bots/test-dev"},
-				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			expected: nil,
 		},
 		{
 			name: "http pull owners URL",
 			merge: &TiCommunityMerge{
-				Repos:         []string{"tidb-community-bots/test-dev"},
-				PullOwnersURL: "http://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			expected: nil,
 		},
 		{
 			name: "invalid pull owners URL",
 			merge: &TiCommunityMerge{
-				Repos:         []string{"tidb-community-bots/test-dev"},
-				PullOwnersURL: "http/bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "http/bots.tidb.io/ti-community-bot",
 			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
@@ -120,13 +120,13 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "https pull owners URL",
 			lgtm: &TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:         []string{"tidb-community-bots/test-dev"},
-				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
 				Repos:       []string{"tidb-community-bots/test-dev"},
@@ -136,13 +136,13 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "http pull owners URL",
 			lgtm: &TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "http://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:         []string{"tidb-community-bots/test-dev"},
-				PullOwnersURL: "http://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
 				Repos:       []string{"tidb-community-bots/test-dev"},
@@ -152,13 +152,13 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "invalid lgtm pull owners URL",
 			lgtm: &TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "http/bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "http/bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:         []string{"tidb-community-bots/test-dev"},
-				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
 				Repos:       []string{"tidb-community-bots/test-dev"},
@@ -168,13 +168,13 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "invalid merge pull owners URL",
 			lgtm: &TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:         []string{"tidb-community-bots/test-dev"},
-				PullOwnersURL: "http/bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "http/bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
 				Repos:       []string{"tidb-community-bots/test-dev"},
@@ -184,13 +184,13 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "invalid owners sig endpoint",
 			lgtm: &TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:         []string{"tidb-community-bots/test-dev"},
-				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
 				Repos:       []string{"tidb-community-bots/test-dev"},
@@ -234,9 +234,9 @@ func TestLgtmFor(t *testing.T) {
 		{
 			name: "Full name",
 			lgtm: &TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			org:  "tidb-community-bots",
 			repo: "test-dev",
@@ -244,9 +244,9 @@ func TestLgtmFor(t *testing.T) {
 		{
 			name: "Only org",
 			lgtm: &TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "http://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			org:  "tidb-community-bots",
 			repo: "test-dev",
@@ -287,8 +287,8 @@ func TestMergeFor(t *testing.T) {
 		{
 			name: "Full name",
 			merge: &TiCommunityMerge{
-				Repos:         []string{"tidb-community-bots/test-dev"},
-				PullOwnersURL: "https://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			org:  "tidb-community-bots",
 			repo: "test-dev",
@@ -296,8 +296,8 @@ func TestMergeFor(t *testing.T) {
 		{
 			name: "Only org",
 			merge: &TiCommunityMerge{
-				Repos:         []string{"tidb-community-bots"},
-				PullOwnersURL: "http://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots"},
+				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			org:  "tidb-community-bots",
 			repo: "test-dev",

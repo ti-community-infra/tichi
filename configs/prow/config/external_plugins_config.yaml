@@ -8,11 +8,11 @@ ti-community-lgtm:
       - tidb-community-bots/ti-community-merge
       - tidb-community-bots/ti-community-lgtm
     review_acts_as_lgtm: true
-    pull_owners_url: https://prow.tidb.io/ti-community-owners
+    pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
   - repos:
       - tikv/community
     review_acts_as_lgtm: true
-    pull_owners_url: https://bots.tidb.io/ti-community-bot
+    pull_owners_endpoint: https://bots.tidb.io/ti-community-bot
 
 ti-community-merge:
   - repos:
@@ -24,11 +24,11 @@ ti-community-merge:
       - tidb-community-bots/ti-community-merge
       - tidb-community-bots/ti-community-lgtm
     store_tree_hash: true
-    pull_owners_url: https://prow.tidb.io/ti-community-owners
+    pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
   - repos:
       - tikv/community
     store_tree_hash: true
-    pull_owners_url: https://bots.tidb.io/ti-community-bot
+    pull_owners_endpoint: https://bots.tidb.io/ti-community-bot
 
 ti-community-owners:
   - repos:

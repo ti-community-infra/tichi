@@ -14,17 +14,17 @@ func TestGetConfig(t *testing.T) {
 	}{
 		{
 			lgtm: &TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			expectedPullOwnersURL: "https://bots.tidb.io/ti-community-bot",
 		},
 		{
 			lgtm: &TiCommunityLgtm{
-				Repos:            []string{"tidb-community-bots/test-live"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
+				Repos:              []string{"tidb-community-bots/test-live"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			expectedPullOwnersURL: "https://bots.tidb.io/ti-community-bot",
 		},
@@ -34,8 +34,8 @@ func TestGetConfig(t *testing.T) {
 
 		config := pa.Config()
 		for _, lgtm := range config.TiCommunityLgtm {
-			if lgtm.PullOwnersURL != tc.expectedPullOwnersURL {
-				t.Errorf("Different URL: Got \"%s\" expected \"%s\"", lgtm.PullOwnersURL, tc.expectedPullOwnersURL)
+			if lgtm.PullOwnersEndpoint != tc.expectedPullOwnersURL {
+				t.Errorf("Different URL: Got \"%s\" expected \"%s\"", lgtm.PullOwnersEndpoint, tc.expectedPullOwnersURL)
 			}
 		}
 	}
