@@ -13,7 +13,7 @@ ti-community-lgtm:
 
 ti-community-merge:
   - repos:
-      - tidb-community-bots/test-liv
+      - tidb-community-bots/test-live
       - tidb-community-bots/ti-community-prow
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
