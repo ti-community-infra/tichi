@@ -266,9 +266,9 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			cfg := &externalplugins.Configuration{}
 			cfg.TiCommunityMerge = []externalplugins.TiCommunityMerge{
 				{
-					Repos:         []string{"org/repo"},
-					StoreTreeHash: true,
-					PullOwnersURL: "https://fake/ti-community-bot",
+					Repos:              []string{"org/repo"},
+					StoreTreeHash:      true,
+					PullOwnersEndpoint: "https://fake/ti-community-bot",
 				},
 			}
 
@@ -356,9 +356,9 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			cfg := &externalplugins.Configuration{}
 			cfg.TiCommunityMerge = []externalplugins.TiCommunityMerge{
 				{
-					Repos:         []string{"org/repo"},
-					StoreTreeHash: true,
-					PullOwnersURL: "https://fake/ti-community-bot",
+					Repos:              []string{"org/repo"},
+					StoreTreeHash:      true,
+					PullOwnersEndpoint: "https://fake/ti-community-bot",
 				},
 			}
 
@@ -517,9 +517,9 @@ func TestMergeReviewCommentWithMergeNoti(t *testing.T) {
 		cfg := &externalplugins.Configuration{}
 		cfg.TiCommunityMerge = []externalplugins.TiCommunityMerge{
 			{
-				Repos:         []string{"org/repo"},
-				StoreTreeHash: true,
-				PullOwnersURL: "https://fake/ti-community-bot",
+				Repos:              []string{"org/repo"},
+				StoreTreeHash:      true,
+				PullOwnersEndpoint: "https://fake/ti-community-bot",
 			},
 		}
 
@@ -731,9 +731,9 @@ func TestHandlePullRequest(t *testing.T) {
 			cfg := &externalplugins.Configuration{}
 			cfg.TiCommunityMerge = []externalplugins.TiCommunityMerge{
 				{
-					Repos:         []string{"kubernetes/kubernetes"},
-					StoreTreeHash: true,
-					PullOwnersURL: "https://fake/ti-community-bot",
+					Repos:              []string{"kubernetes/kubernetes"},
+					StoreTreeHash:      true,
+					PullOwnersEndpoint: "https://fake/ti-community-bot",
 				},
 			}
 
@@ -791,9 +791,9 @@ func TestAddTreeHashComment(t *testing.T) {
 	cfg := &externalplugins.Configuration{}
 	cfg.TiCommunityMerge = []externalplugins.TiCommunityMerge{
 		{
-			Repos:         []string{"kubernetes/kubernetes"},
-			StoreTreeHash: true,
-			PullOwnersURL: "https://fake/ti-community-bot",
+			Repos:              []string{"kubernetes/kubernetes"},
+			StoreTreeHash:      true,
+			PullOwnersEndpoint: "https://fake/ti-community-bot",
 		},
 	}
 	rc := reviewCtx{
@@ -858,9 +858,9 @@ func TestRemoveTreeHashComment(t *testing.T) {
 	cfg := &externalplugins.Configuration{}
 	cfg.TiCommunityMerge = []externalplugins.TiCommunityMerge{
 		{
-			Repos:         []string{"kubernetes/kubernetes"},
-			StoreTreeHash: true,
-			PullOwnersURL: "https://fake/ti-community-bot",
+			Repos:              []string{"kubernetes/kubernetes"},
+			StoreTreeHash:      true,
+			PullOwnersEndpoint: "https://fake/ti-community-bot",
 		},
 	}
 	rc := reviewCtx{
@@ -1010,9 +1010,9 @@ func TestHelpProvider(t *testing.T) {
 			config: &externalplugins.Configuration{
 				TiCommunityMerge: []externalplugins.TiCommunityMerge{
 					{
-						Repos:         []string{"org2/repo"},
-						StoreTreeHash: true,
-						PullOwnersURL: "https://fake",
+						Repos:              []string{"org2/repo"},
+						StoreTreeHash:      true,
+						PullOwnersEndpoint: "https://fake",
 					},
 				},
 			},

@@ -263,8 +263,8 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 
 	// Get ti-community-merge config.
 	opts := config.MergeFor(rc.repo.Owner.Login, rc.repo.Name)
-	url := fmt.Sprintf(ownersclient.OwnersURLFmt, opts.PullOwnersURL, org, repoName, number)
-	owners, err := ol.LoadOwners(opts.PullOwnersURL, org, repoName, number)
+	url := fmt.Sprintf(ownersclient.OwnersURLFmt, opts.PullOwnersEndpoint, org, repoName, number)
+	owners, err := ol.LoadOwners(opts.PullOwnersEndpoint, org, repoName, number)
 	if err != nil {
 		return err
 	}

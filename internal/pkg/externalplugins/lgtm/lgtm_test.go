@@ -228,9 +228,9 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 			cfg := &externalplugins.Configuration{}
 			cfg.TiCommunityLgtm = []externalplugins.TiCommunityLgtm{
 				{
-					Repos:            []string{"org/repo"},
-					ReviewActsAsLgtm: true,
-					PullOwnersURL:    "https://fake/ti-community-bot",
+					Repos:              []string{"org/repo"},
+					ReviewActsAsLgtm:   true,
+					PullOwnersEndpoint: "https://fake/ti-community-bot",
 				},
 			}
 
@@ -304,9 +304,9 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 			cfg := &externalplugins.Configuration{}
 			cfg.TiCommunityLgtm = []externalplugins.TiCommunityLgtm{
 				{
-					Repos:            []string{"org/repo"},
-					ReviewActsAsLgtm: true,
-					PullOwnersURL:    "https://fake/ti-community-bot",
+					Repos:              []string{"org/repo"},
+					ReviewActsAsLgtm:   true,
+					PullOwnersEndpoint: "https://fake/ti-community-bot",
 				},
 			}
 
@@ -491,9 +491,9 @@ func TestLGTMFromApproveReview(t *testing.T) {
 		cfg := &externalplugins.Configuration{}
 		cfg.TiCommunityLgtm = []externalplugins.TiCommunityLgtm{
 			{
-				Repos:            []string{"org/repo"},
-				ReviewActsAsLgtm: true,
-				PullOwnersURL:    "https://fake/ti-community-bot",
+				Repos:              []string{"org/repo"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://fake/ti-community-bot",
 			},
 		}
 
@@ -624,9 +624,9 @@ func TestHelpProvider(t *testing.T) {
 			config: &externalplugins.Configuration{
 				TiCommunityLgtm: []externalplugins.TiCommunityLgtm{
 					{
-						Repos:            []string{"org2/repo"},
-						ReviewActsAsLgtm: true,
-						PullOwnersURL:    "https://fake",
+						Repos:              []string{"org2/repo"},
+						ReviewActsAsLgtm:   true,
+						PullOwnersEndpoint: "https://fake",
 					},
 				},
 			},

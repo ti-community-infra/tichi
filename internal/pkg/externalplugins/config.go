@@ -23,8 +23,8 @@ type TiCommunityLgtm struct {
 	// ReviewActsAsLgtm indicates that a GitHub review of "merge" or "request changes"
 	// acts as adding or removing the lgtm label.
 	ReviewActsAsLgtm bool `json:"review_acts_as_lgtm,omitempty"`
-	// PullOwnersURL specifies the URL of the reviewer of pull request.
-	PullOwnersURL string `json:"pull_owners_url,omitempty"`
+	// PullOwnersEndpoint specifies the URL of the reviewer of pull request.
+	PullOwnersEndpoint string `json:"pull_owners_endpoint,omitempty"`
 }
 
 // TiCommunityMerge specifies a configuration for a single merge.
@@ -36,8 +36,8 @@ type TiCommunityMerge struct {
 	// StoreTreeHash indicates if tree_hash should be stored inside a comment to detect
 	// squashed commits before removing can merge labels.
 	StoreTreeHash bool `json:"store_tree_hash,omitempty"`
-	// PullOwnersURL specifies the URL of the reviewer of pull request.
-	PullOwnersURL string `json:"pull_owners_url,omitempty"`
+	// PullOwnersEndpoint specifies the URL of the reviewer of pull request.
+	PullOwnersEndpoint string `json:"pull_owners_endpoint,omitempty"`
 }
 
 // TiCommunityMerge specifies a configuration for a single owners.
@@ -178,7 +178,7 @@ func (c *Configuration) Validate() error {
 // validateLgtm will return an error if the URL configured by lgtm is invalid.
 func validateLgtm(lgtms []TiCommunityLgtm) error {
 	for _, lgtm := range lgtms {
-		_, err := url.ParseRequestURI(lgtm.PullOwnersURL)
+		_, err := url.ParseRequestURI(lgtm.PullOwnersEndpoint)
 		if err != nil {
 			return err
 		}
@@ -190,7 +190,7 @@ func validateLgtm(lgtms []TiCommunityLgtm) error {
 // validateMerge will return an error if the URL configured by merge is invalid.
 func validateMerge(merges []TiCommunityMerge) error {
 	for _, merge := range merges {
-		_, err := url.ParseRequestURI(merge.PullOwnersURL)
+		_, err := url.ParseRequestURI(merge.PullOwnersEndpoint)
 		if err != nil {
 			return err
 		}
