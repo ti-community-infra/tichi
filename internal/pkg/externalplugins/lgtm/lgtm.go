@@ -20,18 +20,14 @@ import (
 const PluginName = "ti-community-lgtm"
 
 var (
-	addLGTMLabelNotification   = "LGTM label has been added.  <details>Git tree hash: %s</details>"
-	addLGTMLabelNotificationRe = regexp.MustCompile(fmt.Sprintf(addLGTMLabelNotification, "(.*)"))
 	configInfoReviewActsAsLgtm = `Reviews of "approve" or "request changes" act as adding or removing LGTM.`
-	configInfoStoreTreeHash    = `Squashing commits does not remove LGTM.`
 
 	// LabelPrefix is the name of the lgtm label applied by the lgtm plugin
 	LabelPrefix = "status/LGT"
 	// LGTMRe is the regex that matches lgtm comments
 	LGTMRe = regexp.MustCompile(`(?mi)^/lgtm(?: no-issue)?\s*$`)
 	// LGTMCancelRe is the regex that matches lgtm cancel comments
-	LGTMCancelRe        = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
-	removeLGTMLabelNoti = "New changes are detected. LGTM label has been removed."
+	LGTMCancelRe = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
 )
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
@@ -47,14 +43,6 @@ func HelpProvider(externalPluginsConfig *externalplugins.Configuration) func(
 			configInfoStrings = append(configInfoStrings, "The plugin has the following configuration:<ul>")
 			if opts.ReviewActsAsLgtm {
 				configInfoStrings = append(configInfoStrings, "<li>"+configInfoReviewActsAsLgtm+"</li>")
-				isConfigured = true
-			}
-			if opts.StoreTreeHash {
-				configInfoStrings = append(configInfoStrings, "<li>"+configInfoStoreTreeHash+"</li>")
-				isConfigured = true
-			}
-			if opts.StickyLgtmTeam != "" {
-				configInfoStrings = append(configInfoStrings, "<li>"+configInfoStickyLgtmTeam(opts.StickyLgtmTeam)+"</li>")
 				isConfigured = true
 			}
 			configInfoStrings = append(configInfoStrings, "</ul>")
@@ -82,10 +70,6 @@ func HelpProvider(externalPluginsConfig *externalplugins.Configuration) func(
 	}
 }
 
-func configInfoStickyLgtmTeam(team string) string {
-	return fmt.Sprintf(`Commits from "%s" do not remove LGTM.`, team)
-}
-
 type githubClient interface {
 	IsCollaborator(owner, repo, login string) (bool, error)
 	AddLabel(owner, repo string, number int, label string) error
@@ -110,15 +94,10 @@ type reviewCtx struct {
 	number                             int
 }
 
-// commentPruner used to delete bot comment.
-type commentPruner interface {
-	PruneComments(shouldPrune func(github.IssueComment) bool)
-}
-
 // HandleIssueCommentEvent handles a GitHub issue comment event and adds or removes a
 // "status/LGT{number}" label.
 func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent, cfg *externalplugins.Configuration,
-	ol ownersclient.OwnersLoader, cp commentPruner, log *logrus.Entry) error {
+	ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	// Only consider open PRs and new comments.
 	if !ice.Issue.IsPullRequest() || ice.Issue.State != "open" || ice.Action != github.IssueCommentActionCreated {
 		return nil
@@ -145,11 +124,11 @@ func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent, cfg
 	}
 
 	// Use common handler to do the rest.
-	return handle(wantLGTM, cfg, rc, gc, ol, cp, log)
+	return handle(wantLGTM, cfg, rc, gc, ol, log)
 }
 
 func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
-	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, cp commentPruner, log *logrus.Entry) error {
+	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	// If ReviewActsAsLgtm is disabled, ignore review event.
 	opts := cfg.LgtmFor(pullReviewEvent.Repo.Owner.Login, pullReviewEvent.Repo.Name)
 	if !opts.ReviewActsAsLgtm {
@@ -193,11 +172,11 @@ func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
 	}
 
 	// Use common handler to do the rest.
-	return handle(wantLGTM, cfg, rc, gc, ol, cp, log)
+	return handle(wantLGTM, cfg, rc, gc, ol, log)
 }
 
 func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *github.ReviewCommentEvent,
-	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, cp commentPruner, log *logrus.Entry) error {
+	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	// Only consider open PRs and new comments.
 	if pullReviewCommentEvent.PullRequest.State != "open" ||
 		pullReviewCommentEvent.Action != github.ReviewCommentActionCreated {
@@ -225,96 +204,11 @@ func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *githu
 	}
 
 	// Use common handler to do the rest.
-	return handle(wantLGTM, cfg, rc, gc, ol, cp, log)
-}
-
-func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
-	cfg *externalplugins.Configuration, log *logrus.Entry) error {
-	if pe.PullRequest.Merged {
-		return nil
-	}
-
-	if pe.Action != github.PullRequestActionSynchronize {
-		return nil
-	}
-
-	org := pe.PullRequest.Base.Repo.Owner.Login
-	repo := pe.PullRequest.Base.Repo.Name
-	number := pe.PullRequest.Number
-	issueAuthor := pe.PullRequest.User.Login
-
-	opts := cfg.LgtmFor(org, repo)
-	if stickyLgtm(log, gc, opts, issueAuthor, org) {
-		// If the author is trusted, skip tree hash verification and LGTM removal.
-		return nil
-	}
-
-	// If we don't have the lgtm label, we don't need to check anything
-	labels, err := gc.GetIssueLabels(org, repo, number)
-	if err != nil {
-		log.WithError(err).Error("Failed to get labels.")
-	}
-
-	currentLabel := ""
-
-	for _, label := range labels {
-		if strings.Contains(label.Name, LabelPrefix) {
-			currentLabel = label.Name
-		}
-	}
-	if currentLabel == "" {
-		return nil
-	}
-
-	if opts.StoreTreeHash {
-		// Check if we have a tree-hash comment.
-		var lastLgtmTreeHash string
-		botName, err := gc.BotName()
-		if err != nil {
-			return err
-		}
-		comments, err := gc.ListIssueComments(org, repo, number)
-		if err != nil {
-			log.WithError(err).Error("Failed to get issue comments.")
-		}
-		// Older comments are still present
-		// iterate backwards to find the last LGTM tree-hash.
-		for i := len(comments) - 1; i >= 0; i-- {
-			comment := comments[i]
-			m := addLGTMLabelNotificationRe.FindStringSubmatch(comment.Body)
-			if comment.User.Login == botName && m != nil && comment.UpdatedAt.Equal(comment.CreatedAt) {
-				lastLgtmTreeHash = m[1]
-				break
-			}
-		}
-		if lastLgtmTreeHash != "" {
-			// Get the current tree-hash.
-			commit, err := gc.GetSingleCommit(org, repo, pe.PullRequest.Head.SHA)
-			if err != nil {
-				log.WithField("sha", pe.PullRequest.Head.SHA).WithError(err).Error("Failed to get commit.")
-			}
-			treeHash := commit.Commit.Tree.SHA
-			if treeHash == lastLgtmTreeHash {
-				// Don't remove the label, PR code hasn't changed.
-				log.Infof("Keeping LGTM label as the tree-hash remained the same: %s", treeHash)
-				return nil
-			}
-		}
-	}
-
-	if err := gc.RemoveLabel(org, repo, number, currentLabel); err != nil {
-		return fmt.Errorf("failed removing lgtm label: %v", err)
-	}
-
-	// Create a comment to inform participants that LGTM label is removed due to new
-	// pull request changes.
-	log.Infof("Commenting with an LGTM removed notification to %s/%s#%d with a message: %s",
-		org, repo, number, removeLGTMLabelNoti)
-	return gc.CreateComment(org, repo, number, removeLGTMLabelNoti)
+	return handle(wantLGTM, cfg, rc, gc, ol, log)
 }
 
 func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
-	gc githubClient, ol ownersclient.OwnersLoader, cp commentPruner, log *logrus.Entry) error {
+	gc githubClient, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	author := rc.author
 	issueAuthor := rc.issueAuthor
 	number := rc.number
@@ -374,11 +268,6 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		if err := gc.RemoveLabel(org, repoName, number, currentLabel); err != nil {
 			return err
 		}
-		if opts.StoreTreeHash {
-			cp.PruneComments(func(comment github.IssueComment) bool {
-				return addLGTMLabelNotificationRe.MatchString(comment.Body)
-			})
-		}
 	} else if nextLabel != "" && wantLGTM {
 		log.Info("Adding LGTM label.")
 		// Remove current label.
@@ -389,27 +278,6 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		}
 		if err := gc.AddLabel(org, repoName, number, nextLabel); err != nil {
 			return err
-		}
-		if !stickyLgtm(log, gc, opts, issueAuthor, org) {
-			if opts.StoreTreeHash {
-				pr, err := gc.GetPullRequest(org, repoName, number)
-				if err != nil {
-					log.WithError(err).Error("Failed to get pull request.")
-				}
-				commit, err := gc.GetSingleCommit(org, repoName, pr.Head.SHA)
-				if err != nil {
-					log.WithField("sha", pr.Head.SHA).WithError(err).Error("Failed to get commit.")
-				}
-				treeHash := commit.Commit.Tree.SHA
-				log.WithField("tree", treeHash).Info("Adding comment to store tree-hash.")
-				if err := gc.CreateComment(org, repoName, number, fmt.Sprintf(addLGTMLabelNotification, treeHash)); err != nil {
-					log.WithError(err).Error("Failed to add comment.")
-				}
-			}
-			// Delete the LGTM removed noti after the LGTM label is added.
-			cp.PruneComments(func(comment github.IssueComment) bool {
-				return strings.Contains(comment.Body, removeLGTMLabelNoti)
-			})
 		}
 	}
 
@@ -434,30 +302,4 @@ func getCurrentAndNextLabel(prefix string, labels []github.Label, needsLgtm int)
 	}
 
 	return currentLabel, nextLabel
-}
-
-// stickyLgtm will check commenter if sticky lgtm team member.
-func stickyLgtm(log *logrus.Entry, gc githubClient, lgtm *externalplugins.TiCommunityLgtm, author, org string) bool {
-	if len(lgtm.StickyLgtmTeam) > 0 {
-		if teams, err := gc.ListTeams(org); err == nil {
-			for _, teamInOrg := range teams {
-				// lgtm.TrustedAuthorTeams is supposed to be a very short list.
-				if strings.Compare(teamInOrg.Name, lgtm.StickyLgtmTeam) == 0 {
-					if members, err := gc.ListTeamMembers(teamInOrg.ID, github.RoleAll); err == nil {
-						for _, member := range members {
-							if strings.Compare(member.Login, author) == 0 {
-								// The author is in a trusted team
-								return true
-							}
-						}
-					} else {
-						log.WithError(err).Errorf("Failed to list members in %s:%s.", org, teamInOrg.Name)
-					}
-				}
-			}
-		} else {
-			log.WithError(err).Errorf("Failed to list teams in org %s.", org)
-		}
-	}
-	return false
 }

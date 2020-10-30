@@ -15,7 +15,6 @@ import (
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins/lgtm"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/ownersclient"
 	"k8s.io/test-infra/pkg/flagutil"
-	"k8s.io/test-infra/prow/commentpruner"
 	"k8s.io/test-infra/prow/config/secret"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
 	"k8s.io/test-infra/prow/github"
@@ -158,13 +157,8 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 		if err := json.Unmarshal(payload, &ice); err != nil {
 			return err
 		}
-		// This should be used once per webhook event.
-		cp := commentpruner.NewEventClient(
-			s.gc, s.log.WithField("client", "commentpruner"),
-			ice.Repo.Owner.Login, ice.Repo.Name, ice.Issue.Number,
-		)
 		go func() {
-			if err := lgtm.HandleIssueCommentEvent(s.gc, &ice, config, s.ol, cp, l); err != nil {
+			if err := lgtm.HandleIssueCommentEvent(s.gc, &ice, config, s.ol, l); err != nil {
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
@@ -173,13 +167,8 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 		if err := json.Unmarshal(payload, &pullReviewCommentEvent); err != nil {
 			return err
 		}
-		// This should be used once per webhook event.
-		cp := commentpruner.NewEventClient(
-			s.gc, s.log.WithField("client", "commentpruner"),
-			pullReviewCommentEvent.Repo.Owner.Login, pullReviewCommentEvent.Repo.Name, pullReviewCommentEvent.PullRequest.Number,
-		)
 		go func() {
-			if err := lgtm.HandlePullReviewCommentEvent(s.gc, &pullReviewCommentEvent, config, s.ol, cp, l); err != nil {
+			if err := lgtm.HandlePullReviewCommentEvent(s.gc, &pullReviewCommentEvent, config, s.ol, l); err != nil {
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
@@ -188,23 +177,8 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 		if err := json.Unmarshal(payload, &prre); err != nil {
 			return err
 		}
-		// This should be used once per webhook event.
-		cp := commentpruner.NewEventClient(
-			s.gc, s.log.WithField("client", "commentpruner"),
-			prre.Repo.Owner.Login, prre.Repo.Name, prre.PullRequest.Number,
-		)
 		go func() {
-			if err := lgtm.HandlePullReviewEvent(s.gc, &prre, config, s.ol, cp, l); err != nil {
-				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
-			}
-		}()
-	case "pull_request":
-		var pe github.PullRequestEvent
-		if err := json.Unmarshal(payload, &pe); err != nil {
-			return err
-		}
-		go func() {
-			if err := lgtm.HandlePullRequestEvent(s.gc, &pe, config, l); err != nil {
+			if err := lgtm.HandlePullReviewEvent(s.gc, &prre, config, s.ol, l); err != nil {
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()

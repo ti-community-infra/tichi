@@ -23,15 +23,6 @@ type TiCommunityLgtm struct {
 	// ReviewActsAsLgtm indicates that a GitHub review of "merge" or "request changes"
 	// acts as adding or removing the lgtm label.
 	ReviewActsAsLgtm bool `json:"review_acts_as_lgtm,omitempty"`
-	// StoreTreeHash indicates if tree_hash should be stored inside a comment to detect
-	// squashed commits before removing lgtm labels.
-	StoreTreeHash bool `json:"store_tree_hash,omitempty"`
-	// WARNING: This disables the security mechanism that prevents a malicious member (or
-	// compromised GitHub account) from merging arbitrary code. Use with caution.
-	//
-	// StickyLgtmTeam specifies the GitHub team whose members are trusted with sticky LGTM,
-	// which eliminates the need to re-lgtm minor fixes/updates.
-	StickyLgtmTeam string `json:"trusted_team_for_sticky_lgtm,omitempty"`
 	// PullOwnersURL specifies the URL of the reviewer of pull request.
 	PullOwnersURL string `json:"pull_owners_url,omitempty"`
 }
