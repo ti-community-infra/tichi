@@ -36,16 +36,7 @@ require_matching_label:
       - `/type <type-name>`
 
 plugins:
-  tidb-community-bots/test-dev:
-    - assign
-    - branchcleaner
-    - size
-    - welcome
-    - wip
-    - lifecycle
-    - help
-    - hold
-  tidb-community-bots/ti-community-lgtm:
+  tidb-community-bots/test-live:
     - assign
     - branchcleaner
     - size
@@ -83,20 +74,11 @@ plugins:
     - hold
     - config-updater
     - require-matching-label
-  tidb-community-bots/ti-community-merge:
-    - assign
-    - branchcleaner
-    - size
-    - welcome
-    - wip
-    - lifecycle
-    - help
-    - hold
   tikv/community:
     - assign
 
 external_plugins:
-  tidb-community-bots/test-dev:
+  tidb-community-bots/test-live:
     - name: ti-community-lgtm
       events:
         - issue_comment
@@ -127,18 +109,6 @@ external_plugins:
       events:
         - pull_request
         - issue_comment
-  tidb-community-bots/ti-community-owners:
-    - name: ti-community-lgtm
-      events:
-        - issue_comment
-        - pull_request_review_comment
-        - pull_request_review
-        - pull_request
-    - name: ti-community-merge
-      events:
-        - issue_comment
-        - pull_request_review_comment
-        - pull_request
   tidb-community-bots/ti-community-bot:
     - name: ti-community-lgtm
       events:
@@ -152,30 +122,6 @@ external_plugins:
         - pull_request_review_comment
         - pull_request
   tidb-community-bots/ti-challenge-bot:
-    - name: ti-community-lgtm
-      events:
-        - issue_comment
-        - pull_request_review_comment
-        - pull_request_review
-        - pull_request
-    - name: ti-community-merge
-      events:
-        - issue_comment
-        - pull_request_review_comment
-        - pull_request
-  tidb-community-bots/ti-community-merge:
-    - name: ti-community-lgtm
-      events:
-        - issue_comment
-        - pull_request_review_comment
-        - pull_request_review
-        - pull_request
-    - name: ti-community-merge
-      events:
-        - issue_comment
-        - pull_request_review_comment
-        - pull_request
-  tidb-community-bots/ti-community-lgtm:
     - name: ti-community-lgtm
       events:
         - issue_comment

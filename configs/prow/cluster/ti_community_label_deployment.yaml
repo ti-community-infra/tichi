@@ -19,7 +19,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
         - name: ti-community-label
-          image: rustinliu/ti-community-prow-label-plugin:v0.8.0
+          image: rustinliu/ti-community-prow-label-plugin:v0.8.1
           imagePullPolicy: Always
           args:
             - --dry-run=false
