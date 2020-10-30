@@ -1,12 +1,9 @@
 ti-community-lgtm:
   - repos:
-      - tidb-community-bots/test-dev
+      - tidb-community-bots/test-live
       - tidb-community-bots/ti-community-prow
-      - tidb-community-bots/ti-community-owners
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
-      - tidb-community-bots/ti-community-merge
-      - tidb-community-bots/ti-community-lgtm
     review_acts_as_lgtm: true
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
   - repos:
@@ -16,13 +13,10 @@ ti-community-lgtm:
 
 ti-community-merge:
   - repos:
-      - tidb-community-bots/test-dev
+      - tidb-community-bots/test-liv
       - tidb-community-bots/ti-community-prow
-      - tidb-community-bots/ti-community-owners
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
-      - tidb-community-bots/ti-community-merge
-      - tidb-community-bots/ti-community-lgtm
     store_tree_hash: true
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
   - repos:
@@ -32,12 +26,18 @@ ti-community-merge:
 
 ti-community-owners:
   - repos:
-      - tidb-community-bots/test-dev
+      - tidb-community-bots/test-live
+      - tidb-community-bots/ti-community-prow
+      - tidb-community-bots/ti-community-bot
+      - tidb-community-bots/ti-challenge-bot
     sig_endpoint: https://bots.tidb.io/ti-community-bot
 
 ti-community-label:
   - repos:
+      - tidb-community-bots/test-live
       - tidb-community-bots/ti-community-prow
+      - tidb-community-bots/ti-community-bot
+      - tidb-community-bots/ti-challenge-bot
     prefixes:
       - status
       - type

@@ -61,24 +61,18 @@ plank:
 
 tide:
   merge_method:
-    tidb-community-bots/ti-community-lgtm: squash
     tidb-community-bots/ti-challenge-bot: squash
     tidb-community-bots/ti-community-bot: squash
     tidb-community-bots/ti-community-prow: squash
-    tidb-community-bots/ti-community-merge: squash
-    tidb-community-bots/test-dev: squash
-    tidb-community-bots/ti-community-owners: squash
+    tidb-community-bots/test-live: squash
     tikv/community: squash
 
   queries:
     - repos:
-        - tidb-community-bots/ti-community-lgtm
         - tidb-community-bots/ti-challenge-bot
         - tidb-community-bots/ti-community-bot
         - tidb-community-bots/ti-community-prow
-        - tidb-community-bots/ti-community-merge
-        - tidb-community-bots/test-dev
-        - tidb-community-bots/ti-community-owners
+        - tidb-community-bots/test-live
         - tikv/community
       labels:
         - status/can-merge
