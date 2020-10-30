@@ -19,8 +19,6 @@ func TestValidateTiCommunityLgtmConfig(t *testing.T) {
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
 			expected: nil,
@@ -30,8 +28,6 @@ func TestValidateTiCommunityLgtmConfig(t *testing.T) {
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "http://bots.tidb.io/ti-community-bot",
 			},
 			expected: nil,
@@ -41,8 +37,6 @@ func TestValidateTiCommunityLgtmConfig(t *testing.T) {
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "http/bots.tidb.io/ti-community-bot",
 			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
@@ -128,8 +122,6 @@ func TestValidateConfig(t *testing.T) {
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -146,8 +138,6 @@ func TestValidateConfig(t *testing.T) {
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "http://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -164,8 +154,6 @@ func TestValidateConfig(t *testing.T) {
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "http/bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -182,8 +170,6 @@ func TestValidateConfig(t *testing.T) {
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -200,8 +186,6 @@ func TestValidateConfig(t *testing.T) {
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -252,8 +236,6 @@ func TestLgtmFor(t *testing.T) {
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
 			org:  "tidb-community-bots",
@@ -264,8 +246,6 @@ func TestLgtmFor(t *testing.T) {
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots"},
 				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "http://bots.tidb.io/ti-community-bot",
 			},
 			org:  "tidb-community-bots",

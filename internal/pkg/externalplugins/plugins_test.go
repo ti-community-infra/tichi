@@ -16,8 +16,6 @@ func TestGetConfig(t *testing.T) {
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
 			expectedPullOwnersURL: "https://bots.tidb.io/ti-community-bot",
@@ -26,8 +24,6 @@ func TestGetConfig(t *testing.T) {
 			lgtm: &TiCommunityLgtm{
 				Repos:            []string{"tidb-community-bots/test-live"},
 				ReviewActsAsLgtm: true,
-				StoreTreeHash:    true,
-				StickyLgtmTeam:   "tidb-community-bots/bots-test",
 				PullOwnersURL:    "https://bots.tidb.io/ti-community-bot",
 			},
 			expectedPullOwnersURL: "https://bots.tidb.io/ti-community-bot",
@@ -71,9 +67,9 @@ func TestStartLoadConfig(t *testing.T) {
 		t.Errorf("Different TiCommunityLgtm len: Got \"%d\" expected \"%d\"",
 			len(config.TiCommunityLgtm), expectLen)
 	}
-	if config.TiCommunityLgtm[expectLen-1].StoreTreeHash != true {
-		t.Errorf("Different StoreTreeHash: Got \"%v\" expected \"%v\"",
-			config.TiCommunityLgtm[expectLen-1].StoreTreeHash, true)
+	if config.TiCommunityLgtm[expectLen-1].ReviewActsAsLgtm != true {
+		t.Errorf("Different ReviewActsAsLgtm: Got \"%v\" expected \"%v\"",
+			config.TiCommunityLgtm[expectLen-1].ReviewActsAsLgtm, true)
 	}
 
 	// Move test config into tmp.
@@ -104,9 +100,9 @@ func TestStartLoadConfig(t *testing.T) {
 
 	// Wait a moment.
 	time.Sleep(pullDuration + 1)
-	if config.TiCommunityLgtm[expectLen-1].StoreTreeHash == false {
-		t.Errorf("Different StoreTreeHash: Got \"%v\" expected \"%v\"",
-			config.TiCommunityLgtm[expectLen-1].StoreTreeHash, false)
+	if config.TiCommunityLgtm[expectLen-1].ReviewActsAsLgtm == false {
+		t.Errorf("Different ReviewActsAsLgtm: Got \"%v\" expected \"%v\"",
+			config.TiCommunityLgtm[expectLen-1].ReviewActsAsLgtm, false)
 	}
 
 	{
