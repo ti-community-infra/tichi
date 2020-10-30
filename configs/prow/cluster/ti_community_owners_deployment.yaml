@@ -24,6 +24,8 @@ spec:
           args:
             - --dry-run=false
             - --github-token-path=/etc/github/token
+            - --github-endpoint=http://ghproxy
+            - --github-endpoint=https://api.github.com
           ports:
             - name: http
               containerPort: 80
