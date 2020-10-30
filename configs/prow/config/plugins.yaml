@@ -126,6 +126,7 @@ external_plugins:
     - name: needs-rebase
       events:
         - pull_request
+        - issue_comment
   tidb-community-bots/ti-community-owners:
     - name: ti-community-lgtm
       events:
