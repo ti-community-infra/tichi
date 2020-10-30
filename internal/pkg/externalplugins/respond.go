@@ -9,14 +9,14 @@ import (
 
 // AboutThisBotWithoutCommands contains the message that explains how to interact with the bot.
 const AboutThisBotWithoutCommands = "Instructions for interacting with me using PR comments are available " +
-	"[here](https://github.com/pingcap/community/blob/master/contributors/command-help.md).  " +
+	"[here](https://prow.tidb.io/command-help).  " +
 	"If you have questions or suggestions related to my behavior, " +
 	"please file an issue against the " +
 	"[tidb-community-bots/prow-config]" +
-	"(https://github.com/tidb-community-bots/prow-config/issues/new?title=Prow%20issue:) repository."
+	"(https://github.com/tidb-community-bots/ti-community-prow/issues/new?title=Prow%20issue:) repository."
 
 // AboutThisBotCommands contains the message that links to the commands the bot understand.
-const AboutThisBotCommands = "I understand the commands that are listed [here](https://go.k8s.io/bot-commands)."
+const AboutThisBotCommands = "I understand the commands that are listed [here](https://prow.tidb.io/command-help)."
 
 // AboutThisBot contains the text of both AboutThisBotWithoutCommands and AboutThisBotCommands.
 const AboutThisBot = AboutThisBotWithoutCommands + " " + AboutThisBotCommands
