@@ -78,7 +78,6 @@ plugins:
     - assign
   tikv/pd:
     - assign
-    - wip
 
 external_plugins:
   tidb-community-bots/test-live:
