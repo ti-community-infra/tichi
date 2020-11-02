@@ -4,6 +4,7 @@ ti-community-lgtm:
       - tidb-community-bots/ti-community-prow
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
+      - tikv/pd
     review_acts_as_lgtm: true
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
   - repos:
@@ -17,6 +18,7 @@ ti-community-merge:
       - tidb-community-bots/ti-community-prow
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
+      - tikv/pd
     store_tree_hash: true
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
   - repos:
@@ -30,6 +32,7 @@ ti-community-owners:
       - tidb-community-bots/ti-community-prow
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
+      - tikv/pd
     sig_endpoint: https://bots.tidb.io/ti-community-bot
 
 ti-community-label:
