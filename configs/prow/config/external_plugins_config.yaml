@@ -32,7 +32,11 @@ ti-community-owners:
       - tidb-community-bots/ti-community-prow
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
+    sig_endpoint: https://bots.tidb.io/ti-community-bot
+  - repos:
       - tikv/pd
+    default_sig_name: scheduling
+    trusted_team_for_owners: maintainers
     sig_endpoint: https://bots.tidb.io/ti-community-bot
 
 ti-community-label:
