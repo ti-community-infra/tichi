@@ -14,6 +14,43 @@ branch-protection:
               required_status_checks:
                 contexts:
                   - "Sig Info File Format"
+    tidb-community-bots:
+      repos:
+        ti-community-prow:
+          branches:
+            master:
+              protect: true
+              required_status_checks:
+                contexts:
+                  - build
+                  - lint
+                  - "Semantic Pull Request"
+                  - "codecov/project"
+        ti-community-bot:
+          branches:
+            master:
+              protect: true
+              required_status_checks:
+                contexts:
+                  - "build (10.x, ubuntu-latest)"
+                  - "build (10.x, macos-latest)"
+                  - "build (12.x, ubuntu-latest)"
+                  - "build (12.x, macos-latest)"
+                  - "Semantic Pull Request"
+                  - "codecov/project"
+        ti-challenge-bot:
+          branches:
+            master:
+              protect: true
+              required_status_checks:
+                contexts:
+                  - "build (10.x, ubuntu-latest)"
+                  - "build (10.x, macos-latest)"
+                  - "build (10.x, windows-latest)"
+                  - "build (12.x, ubuntu-latest)"
+                  - "build (12.x, macos-latest)"
+                  - "build (12.x, windows-latest)"
+                  - "Semantic Pull Request"
 
 in_repo_config:
   enabled:
@@ -60,6 +97,8 @@ plank:
         sidecar: gcr.io/k8s-prow/sidecar:v20201102-45eeca6478
 
 tide:
+  sync_period: 1m
+
   merge_method:
     tidb-community-bots/ti-challenge-bot: squash
     tidb-community-bots/ti-community-bot: squash
@@ -67,6 +106,11 @@ tide:
     tidb-community-bots/test-live: squash
     tikv/community: squash
     tikv/pd: squash
+
+  target_url: https://prow.tidb.io/tide
+
+  pr_status_base_urls:
+    '*': https://prow.k8s.io/pr
 
   queries:
     - repos:
@@ -82,3 +126,8 @@ tide:
         - do-not-merge/hold
         - do-not-merge/work-in-progress
         - needs-rebase
+
+  context_options:
+    orgs:
+      tidb-community-bots:
+        from-branch-protection: true
