@@ -14,6 +14,43 @@ branch-protection:
               required_status_checks:
                 contexts:
                   - "Sig Info File Format"
+    tidb-community-bots:
+      repos:
+        ti-community-prow:
+          branches:
+            master:
+              protect: true
+              required_status_checks:
+                contexts:
+                  - build
+                  - lint
+                  - "Semantic Pull Request"
+                  - "codecov/project"
+        ti-community-bot:
+          branches:
+            master:
+              protect: true
+              required_status_checks:
+                contexts:
+                  - "build (10.x, ubuntu-latest)"
+                  - "build (10.x, macos-latest)"
+                  - "build (12.x, ubuntu-latest)"
+                  - "build (12.x, macos-latest)"
+                  - "Semantic Pull Request"
+                  - "codecov/project"
+        ti-challenge-bot:
+          branches:
+            master:
+              protect: true
+              required_status_checks:
+                contexts:
+                  - "build (10.x, ubuntu-latest)"
+                  - "build (10.x, macos-latest)"
+                  - "build (10.x, windows-latest)"
+                  - "build (12.x, ubuntu-latest)"
+                  - "build (12.x, macos-latest)"
+                  - "build (12.x, windows-latest)"
+                  - "Semantic Pull Request"
 
 in_repo_config:
   enabled:
