@@ -97,7 +97,7 @@ plank:
         sidecar: gcr.io/k8s-prow/sidecar:v20201102-45eeca6478
 
 tide:
-  sync_period: 2m
+  sync_period: 1m
 
   merge_method:
     tidb-community-bots/ti-challenge-bot: squash
