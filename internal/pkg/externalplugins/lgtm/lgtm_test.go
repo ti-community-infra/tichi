@@ -107,18 +107,6 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 			shouldToggle: true,
 		},
 		{
-			name:         "lgtm comment by reviewer collab2, with no-issue",
-			body:         "/lgtm no-issue",
-			commenter:    "collab2",
-			shouldToggle: true,
-		},
-		{
-			name:         "lgtm comment by reviewer collab2, with no-issue and trailing space",
-			body:         "/lgtm no-issue \r",
-			commenter:    "collab2",
-			shouldToggle: true,
-		},
-		{
 			name:         "lgtm comment by random",
 			body:         "/lgtm",
 			commenter:    "not-in-the-org",

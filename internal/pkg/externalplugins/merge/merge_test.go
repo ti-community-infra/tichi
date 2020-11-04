@@ -120,22 +120,6 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			shouldComment:    true,
 		},
 		{
-			name:             "merge comment by approver collab2, with no-issue",
-			body:             "/merge no-issue",
-			commenter:        "collab2",
-			currentLGTMLabel: lgtmTwo,
-			shouldToggle:     true,
-			shouldComment:    true,
-		},
-		{
-			name:             "merge comment by approver collab2, with no-issue and trailing space",
-			body:             "/merge no-issue \r",
-			commenter:        "collab2",
-			currentLGTMLabel: lgtmTwo,
-			shouldToggle:     true,
-			shouldComment:    true,
-		},
-		{
 			name:          "merge comment by random",
 			body:          "/merge",
 			commenter:     "not-in-the-org",
@@ -444,18 +428,6 @@ func TestMergeReviewCommentWithMergeNoti(t *testing.T) {
 		{
 			name:         "merge comment by approver collab2, with trailing space",
 			body:         "/merge ",
-			commenter:    "collab2",
-			shouldDelete: true,
-		},
-		{
-			name:         "merge comment by approver collab2, with no-issue",
-			body:         "/merge no-issue",
-			commenter:    "collab2",
-			shouldDelete: true,
-		},
-		{
-			name:         "merge comment by approver collab2, with no-issue and trailing space",
-			body:         "/merge no-issue \r",
 			commenter:    "collab2",
 			shouldDelete: true,
 		},
