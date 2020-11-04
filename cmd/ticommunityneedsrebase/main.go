@@ -89,15 +89,16 @@ func main() {
 		log:            log,
 	}
 
-	defer interrupts.WaitForGracefulShutdown()
-
 	health := pjutil.NewHealth()
 	health.ServeReady()
 
 	mux := http.NewServeMux()
 	mux.Handle("/", server)
+
 	externalplugins.ServeExternalPluginHelp(mux, log, needsrebase.HelpProvider)
 	httpServer := &http.Server{Addr: ":" + strconv.Itoa(o.port), Handler: mux}
+
+	defer interrupts.WaitForGracefulShutdown()
 	interrupts.ListenAndServe(httpServer, 5*time.Second)
 }
 
