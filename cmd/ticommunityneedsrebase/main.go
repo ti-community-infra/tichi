@@ -23,9 +23,8 @@ import (
 type options struct {
 	port int
 
-	pluginConfig string
-	dryRun       bool
-	github       prowflagutil.GitHubOptions
+	dryRun bool
+	github prowflagutil.GitHubOptions
 
 	webhookSecretFile string
 }
