@@ -25,7 +25,7 @@ var (
 	// LabelPrefix is the name of the lgtm label applied by the lgtm plugin
 	LabelPrefix = "status/LGT"
 	// LGTMRe is the regex that matches lgtm comments
-	LGTMRe = regexp.MustCompile(`(?mi)^/lgtm(?: no-issue)?\s*$`)
+	LGTMRe = regexp.MustCompile(`(?mi)^/lgtm\s*$`)
 	// LGTMCancelRe is the regex that matches lgtm cancel comments
 	LGTMCancelRe = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
 )

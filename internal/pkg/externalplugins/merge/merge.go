@@ -30,7 +30,7 @@ var (
 	// LabelPrefix is the name of the lgtm label applied by the lgtm plugin
 	LabelPrefix = "status/LGT"
 	// CanMergeRe is the regex that matches merge comments
-	CanMergeRe = regexp.MustCompile(`(?mi)^/merge(?: no-issue)?\s*$`)
+	CanMergeRe = regexp.MustCompile(`(?mi)^/merge\s*$`)
 	// CanMergeCancelRe is the regex that matches merge cancel comments
 	CanMergeCancelRe        = regexp.MustCompile(`(?mi)^/merge cancel\s*$`)
 	removeCanMergeLabelNoti = "New changes are detected. Can merge label has been removed."
