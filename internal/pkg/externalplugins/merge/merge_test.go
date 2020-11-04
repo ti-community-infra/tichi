@@ -532,9 +532,11 @@ func TestMergeReviewCommentWithMergeNoti(t *testing.T) {
 func TestHandlePullRequest(t *testing.T) {
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	treeSHA := "6dcb09b5b57875f334f61aebed695e2e4193db5e"
+	prName := "kubernetes/kubernetes#101"
 	cases := []struct {
 		name             string
 		event            github.PullRequestEvent
+		prCommits        map[string][]github.RepositoryCommit
 		removeLabelErr   error
 		createCommentErr error
 
@@ -560,6 +562,13 @@ func TestHandlePullRequest(t *testing.T) {
 						},
 					},
 					Head: github.PullRequestBranch{
+						SHA: SHA,
+					},
+				},
+			},
+			prCommits: map[string][]github.RepositoryCommit{
+				prName: {
+					{
 						SHA: SHA,
 					},
 				},
@@ -601,6 +610,13 @@ func TestHandlePullRequest(t *testing.T) {
 					},
 				},
 			},
+			prCommits: map[string][]github.RepositoryCommit{
+				prName: {
+					{
+						SHA: SHA,
+					},
+				},
+			},
 			issueComments: map[int][]github.IssueComment{
 				101: {
 					{
@@ -626,6 +642,13 @@ func TestHandlePullRequest(t *testing.T) {
 						},
 					},
 					Head: github.PullRequestBranch{
+						SHA: SHA,
+					},
+				},
+			},
+			prCommits: map[string][]github.RepositoryCommit{
+				prName: {
+					{
 						SHA: SHA,
 					},
 				},
@@ -662,6 +685,13 @@ func TestHandlePullRequest(t *testing.T) {
 					},
 				},
 			},
+			prCommits: map[string][]github.RepositoryCommit{
+				prName: {
+					{
+						SHA: SHA,
+					},
+				},
+			},
 			issueComments: map[int][]github.IssueComment{
 				101: {
 					{
@@ -694,8 +724,9 @@ func TestHandlePullRequest(t *testing.T) {
 				Commits:          make(map[string]github.SingleCommit),
 				Collaborators:    []string{"collab"},
 				IssueLabelsAdded: c.IssueLabelsAdded,
+				CommitMap:        c.prCommits,
 			}
-			fakeGitHub.IssueLabelsAdded = append(fakeGitHub.IssueLabelsAdded, "kubernetes/kubernetes#101:"+canMergeLabel)
+			fakeGitHub.IssueLabelsAdded = append(fakeGitHub.IssueLabelsAdded, prName+":"+canMergeLabel)
 			commit := github.SingleCommit{}
 			commit.Commit.Tree.SHA = treeSHA
 			fakeGitHub.Commits[SHA] = commit
@@ -1008,6 +1039,108 @@ func TestHelpProvider(t *testing.T) {
 				if !strings.Contains(pluginHelp.Config["org2/repo"], msg) {
 					t.Fatalf("helpProvider.Config error mismatch: didn't get %v, but wanted it", msg)
 				}
+			}
+		})
+	}
+}
+
+func TestAllGuaranteed(t *testing.T) {
+	treeSHA := "6dcb09b5b57875f334f61aebed695e2e4193db5e"
+
+	var testcases = []struct {
+		name             string
+		lastCanMergeSha  string
+		commits          []github.RepositoryCommit
+		exceptGuaranteed bool
+	}{
+		{
+			name:            "Only one commit",
+			lastCanMergeSha: treeSHA,
+			commits: []github.RepositoryCommit{
+				{
+					SHA: treeSHA,
+				},
+			},
+			exceptGuaranteed: true,
+		},
+		{
+			name:            "All authored commits",
+			lastCanMergeSha: treeSHA,
+			commits: []github.RepositoryCommit{
+				{
+					SHA: "some-sha",
+				},
+				{
+					SHA: treeSHA,
+				},
+			},
+			exceptGuaranteed: true,
+		},
+		{
+			name:            "Guaranteed by github",
+			lastCanMergeSha: treeSHA,
+			commits: []github.RepositoryCommit{
+				{
+					SHA: "some-sha",
+				},
+				{
+					SHA: treeSHA,
+				},
+				{
+					SHA: "some-sha",
+					Committer: github.User{
+						Login: githubUpdateCommitter,
+					},
+				},
+			},
+			exceptGuaranteed: true,
+		},
+		{
+			name:            "New commit not guaranteed",
+			lastCanMergeSha: treeSHA,
+			commits: []github.RepositoryCommit{
+				{
+					SHA: "some-sha",
+				},
+				{
+					SHA: treeSHA,
+				},
+				{
+					SHA: "some-sha",
+				},
+			},
+			exceptGuaranteed: false,
+		},
+		{
+			name:            "New commit and github update",
+			lastCanMergeSha: treeSHA,
+			commits: []github.RepositoryCommit{
+				{
+					SHA: "some-sha",
+				},
+				{
+					SHA: treeSHA,
+				},
+				{
+					SHA: "some-sha",
+					Committer: github.User{
+						Login: githubUpdateCommitter,
+					},
+				},
+				{
+					SHA: "some-sha",
+				},
+			},
+			exceptGuaranteed: false,
+		},
+	}
+
+	for _, testcase := range testcases {
+		t.Run(testcase.name, func(t *testing.T) {
+			isGuaranteed := isAllGuaranteed(testcase.commits, testcase.lastCanMergeSha, logrus.WithField("plugin", PluginName))
+
+			if isGuaranteed != testcase.exceptGuaranteed {
+				t.Fatalf("=guarantee mismatch: got %v, want %v", isGuaranteed, testcase.exceptGuaranteed)
 			}
 		})
 	}
