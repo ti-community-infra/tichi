@@ -22,6 +22,8 @@ const PluginName = "ti-community-merge"
 // canMergeLabel is the name of the merge label applied by the merge plugin
 const canMergeLabel = "status/can-merge"
 
+const githubUpdateCommitter = "web-flow"
+
 var (
 	addCanMergeLabelNotification   = "Can merge label has been added.  <details>Git tree hash: %s</details>"
 	addCanMergeLabelNotificationRe = regexp.MustCompile(fmt.Sprintf(addCanMergeLabelNotification, "(.*)"))
@@ -85,6 +87,7 @@ type githubClient interface {
 	DeleteComment(org, repo string, ID int) error
 	BotName() (string, error)
 	GetSingleCommit(org, repo, SHA string) (github.SingleCommit, error)
+	ListPRCommits(org, repo string, number int) ([]github.RepositoryCommit, error)
 }
 
 // reviewCtx contains information about each review event.
@@ -217,15 +220,13 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 			}
 		}
 		if lastCanMergeTreeHash != "" {
-			// Get the current tree-hash.
-			commit, err := gc.GetSingleCommit(org, repo, pe.PullRequest.Head.SHA)
+			prCommits, err := gc.ListPRCommits(org, repo, number)
 			if err != nil {
-				log.WithField("sha", pe.PullRequest.Head.SHA).WithError(err).Error("Failed to get commit.")
+				log.WithField("sha", pe.PullRequest.Head.SHA).WithError(err).Error("Failed to get PR's commits.")
 			}
-			treeHash := commit.Commit.Tree.SHA
-			if treeHash == lastCanMergeTreeHash {
-				// Don't remove the label, PR code hasn't changed.
-				log.Infof("Keeping can merge label as the tree-hash remained the same: %s", treeHash)
+
+			// Don't remove the label, PR code hasn't changed.
+			if isAllGuaranteed(prCommits, lastCanMergeTreeHash, log) {
 				return nil
 			}
 		}
@@ -359,4 +360,27 @@ func isLGTMSatisfy(prefix string, labels []github.Label, needsLgtm int) bool {
 	}
 
 	return needsLgtm == currentLgtmNumber
+}
+
+func isAllGuaranteed(prCommits []github.RepositoryCommit, lastCanMergeTreeHash string, log *logrus.Entry) bool {
+	guaranteed := true
+
+	lastGuaranteedIndex := 0
+	for i, commit := range prCommits {
+		if commit.SHA == lastCanMergeTreeHash {
+			lastGuaranteedIndex = i
+		}
+	}
+
+	unCheckCommits := prCommits[lastGuaranteedIndex+1:]
+
+	for _, commit := range unCheckCommits {
+		if commit.Committer.Login != githubUpdateCommitter {
+			guaranteed = false
+		} else {
+			log.Infof("Keeping can merge label as the tree-hash remained the same: %s", commit.SHA)
+		}
+	}
+
+	return guaranteed
 }
