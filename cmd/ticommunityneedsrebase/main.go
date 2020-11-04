@@ -18,7 +18,6 @@ import (
 	"k8s.io/test-infra/prow/interrupts"
 	"k8s.io/test-infra/prow/pjutil"
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
-	"k8s.io/test-infra/prow/plugins"
 )
 
 type options struct {
@@ -45,7 +44,6 @@ func gatherOptions() options {
 	o := options{}
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	fs.IntVar(&o.port, "port", 8888, "Port to listen on.")
-	fs.StringVar(&o.pluginConfig, "plugin-config", "/etc/plugins/plugins.yaml", "Path to plugin config file.")
 	fs.BoolVar(&o.dryRun, "dry-run", true, "Dry run for testing. Uses API tokens but does not mutate.")
 	fs.StringVar(&o.webhookSecretFile, "hmac-secret-file", "/etc/webhook/hmac",
 		"Path to the file containing the GitHub HMAC secret.")
@@ -70,11 +68,6 @@ func main() {
 	secretAgent := &secret.Agent{}
 	if err := secretAgent.Start([]string{o.github.TokenPath, o.webhookSecretFile}); err != nil {
 		logrus.WithError(err).Fatal("Error starting secrets agent.")
-	}
-
-	pa := &plugins.ConfigAgent{}
-	if err := pa.Start(o.pluginConfig, false); err != nil {
-		log.WithError(err).Fatalf("Error loading plugin config from %q.", o.pluginConfig)
 	}
 
 	githubClient, err := o.github.GitHubClient(secretAgent, o.dryRun)
