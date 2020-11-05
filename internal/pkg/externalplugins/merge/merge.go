@@ -326,11 +326,11 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 				if err != nil {
 					log.WithError(err).Error("Failed to get pull request.")
 				}
-				commit, err := gc.GetSingleCommit(org, repoName, pr.Head.SHA)
+				prCommits, err := gc.ListPRCommits(org, repoName, number)
 				if err != nil {
 					log.WithField("sha", pr.Head.SHA).WithError(err).Error("Failed to get commit.")
 				}
-				treeHash := commit.Commit.Tree.SHA
+				treeHash := prCommits[len(prCommits)-1].SHA
 				log.WithField("tree", treeHash).Info("Adding comment to store tree-hash.")
 				if err := gc.CreateComment(org, repoName, number, fmt.Sprintf(addCanMergeLabelNotification, treeHash)); err != nil {
 					log.WithError(err).Error("Failed to add comment.")
