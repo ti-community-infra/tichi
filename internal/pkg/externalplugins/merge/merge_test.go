@@ -198,6 +198,7 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 		},
 	}
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
+	prName := "org/repo#5"
 	for _, tc := range testcases {
 		t.Logf("Running scenario %q", tc.name)
 		// Test issue comments.
@@ -223,6 +224,13 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 					},
 				},
 				Collaborators: []string{"collab1", "collab2"},
+				CommitMap: map[string][]github.RepositoryCommit{
+					prName: {
+						{
+							SHA: SHA,
+						},
+					},
+				},
 			}
 			e := &github.IssueCommentEvent{
 				Action: github.IssueCommentActionCreated,
@@ -241,10 +249,10 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 				Repo: github.Repo{Owner: github.User{Login: "org"}, Name: "repo"},
 			}
 			if tc.currentLGTMLabel != "" {
-				fc.IssueLabelsAdded = append(fc.IssueLabelsAdded, "org/repo#5:"+tc.currentLGTMLabel)
+				fc.IssueLabelsAdded = append(fc.IssueLabelsAdded, prName+":"+tc.currentLGTMLabel)
 			}
 			if tc.canMergeLabel != "" {
-				fc.IssueLabelsAdded = append(fc.IssueLabelsAdded, "org/repo#5:"+tc.canMergeLabel)
+				fc.IssueLabelsAdded = append(fc.IssueLabelsAdded, prName+":"+tc.canMergeLabel)
 			}
 
 			cfg := &externalplugins.Configuration{}
@@ -319,6 +327,13 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 					},
 				},
 				Collaborators: []string{"collab1", "collab2"},
+				CommitMap: map[string][]github.RepositoryCommit{
+					prName: {
+						{
+							SHA: SHA,
+						},
+					},
+				},
 			}
 			e := &github.ReviewCommentEvent{
 				Action: github.ReviewCommentActionCreated,
@@ -445,6 +460,7 @@ func TestMergeReviewCommentWithMergeNoti(t *testing.T) {
 		},
 	}
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
+	prName := "org/repo#5"
 	for _, tc := range testcases {
 		fc := &fakegithub.FakeClient{
 			IssueComments: make(map[int][]github.IssueComment),
@@ -462,6 +478,13 @@ func TestMergeReviewCommentWithMergeNoti(t *testing.T) {
 				},
 			},
 			Collaborators: []string{"collab1", "collab2"},
+			CommitMap: map[string][]github.RepositoryCommit{
+				prName: {
+					{
+						SHA: SHA,
+					},
+				},
+			},
 		}
 		e := &github.ReviewCommentEvent{
 			Action: github.ReviewCommentActionCreated,
@@ -484,7 +507,7 @@ func TestMergeReviewCommentWithMergeNoti(t *testing.T) {
 			Body: removeCanMergeLabelNoti,
 		}
 		fc.IssueComments[5] = append(fc.IssueComments[5], ic)
-		fc.IssueLabelsAdded = append(fc.IssueLabelsAdded, "org/repo#5:"+lgtmTwo)
+		fc.IssueLabelsAdded = append(fc.IssueLabelsAdded, prName+":"+lgtmTwo)
 
 		cfg := &externalplugins.Configuration{}
 		cfg.TiCommunityMerge = []externalplugins.TiCommunityMerge{
@@ -791,6 +814,7 @@ func TestAddTreeHashComment(t *testing.T) {
 
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	treeSHA := "6dcb09b5b57875f334f61aebed695e2e4193db5e"
+	prName := "kubernetes/kubernetes#101"
 	cfg := &externalplugins.Configuration{}
 	cfg.TiCommunityMerge = []externalplugins.TiCommunityMerge{
 		{
@@ -825,8 +849,15 @@ func TestAddTreeHashComment(t *testing.T) {
 			},
 		},
 		Collaborators: []string{"collab1", "collab2"},
+		CommitMap: map[string][]github.RepositoryCommit{
+			prName: {
+				{
+					SHA: SHA,
+				},
+			},
+		},
 	}
-	fc.IssueLabelsAdded = []string{"kubernetes/kubernetes#101:" + lgtmTwo}
+	fc.IssueLabelsAdded = []string{prName + ":" + lgtmTwo}
 
 	commit := github.SingleCommit{}
 	commit.Commit.Tree.SHA = treeSHA

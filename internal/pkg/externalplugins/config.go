@@ -34,7 +34,7 @@ type TiCommunityMerge struct {
 	// Repos is either of the form org/repos or just org.
 	Repos []string `json:"repos,omitempty"`
 	// StoreTreeHash indicates if tree_hash should be stored inside a comment to detect
-	// squashed commits before removing can merge labels.
+	// guaranteed commits before removing can merge labels.
 	StoreTreeHash bool `json:"store_tree_hash,omitempty"`
 	// PullOwnersEndpoint specifies the URL of the reviewer of pull request.
 	PullOwnersEndpoint string `json:"pull_owners_endpoint,omitempty"`
