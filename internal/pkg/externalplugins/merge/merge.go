@@ -378,7 +378,7 @@ func isAllGuaranteed(prCommits []github.RepositoryCommit, lastCanMergeTreeHash s
 		if commit.Committer.Login != githubUpdateCommitter {
 			guaranteed = false
 		} else {
-			log.Infof("Keeping can merge label as the tree-hash remained the same: %s", commit.SHA)
+			log.Infof("Remove can merge label the tree-hash is: %s", commit.SHA)
 		}
 	}
 
