@@ -14,6 +14,21 @@ branch-protection:
               required_status_checks:
                 contexts:
                   - "Sig Info File Format"
+        pd:
+          branches:
+            master:
+              protect: true
+              required_status_checks:
+                contexts:
+                  - "DCO"
+                  - "continuous-integration/travis-ci"
+                  - "idc-jenkins-ci-pd/check_release_note"
+                  - "idc-jenkins-ci-pd/integration-common-test"
+                  - "idc-jenkins-ci-pd/integration-compatibility-test"
+                  - "idc-jenkins-ci-pd/integration-ddl-test"
+                  - "idc-jenkins-ci-pd/integration-lightning-test"
+                  - "idc-jenkins-ci/build"
+                  - "idc-jenkins-ci/test"
     pingcap:
       repos:
         community:
@@ -130,6 +145,7 @@ tide:
         - tidb-community-bots/test-live
         - tikv/community
         - tikv/pd
+        - pingcap/community
       labels:
         - status/can-merge
       missingLabels:
@@ -141,3 +157,9 @@ tide:
     orgs:
       tidb-community-bots:
         from-branch-protection: true
+      tikv:
+        repos:
+          pd:
+            branches:
+              master:
+                from-branch-protection: true
