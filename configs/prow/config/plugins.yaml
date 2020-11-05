@@ -78,6 +78,8 @@ plugins:
     - assign
   tikv/pd:
     - assign
+  pingcap/community:
+    - assign
 
 external_plugins:
   tidb-community-bots/test-live:
@@ -147,6 +149,21 @@ external_plugins:
         - pull_request
         - issue_comment
   tikv/pd:
+    - name: ti-community-lgtm
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request_review
+    - name: ti-community-merge
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request
+    - name: needs-rebase
+      events:
+        - pull_request
+        - issue_comment
+  pingcap/community:
     - name: ti-community-lgtm
       events:
         - issue_comment

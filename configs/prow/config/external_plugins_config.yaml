@@ -9,6 +9,7 @@ ti-community-lgtm:
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
   - repos:
       - tikv/community
+      - pingcap/community
     review_acts_as_lgtm: true
     pull_owners_endpoint: https://bots.tidb.io/ti-community-bot
 
@@ -23,6 +24,7 @@ ti-community-merge:
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
   - repos:
       - tikv/community
+      - pingcap/community
     store_tree_hash: true
     pull_owners_endpoint: https://bots.tidb.io/ti-community-bot
 
