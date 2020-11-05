@@ -1,0 +1,3 @@
+# Plugins
+
+在 TiDB 的社区中，我们使用了大量来自 Kubernetes 社区的插件，也根据 TiDB 的社区实践定制开发了大量的插件。 
