@@ -27,7 +27,7 @@ const githubUpdateCommitter = "web-flow"
 var (
 	addCanMergeLabelNotification   = "Can merge label has been added.  <details>Git tree hash: %s</details>"
 	addCanMergeLabelNotificationRe = regexp.MustCompile(fmt.Sprintf(addCanMergeLabelNotification, "(.*)"))
-	configInfoStoreTreeHash        = `Squashing commits does not remove can merge label.`
+	configInfoStoreTreeHash        = `Guaranteed commits does not remove can merge label.`
 
 	// LabelPrefix is the name of the lgtm label applied by the lgtm plugin
 	LabelPrefix = "status/LGT"
@@ -86,7 +86,6 @@ type githubClient interface {
 	ListIssueComments(org, repo string, number int) ([]github.IssueComment, error)
 	DeleteComment(org, repo string, ID int) error
 	BotName() (string, error)
-	GetSingleCommit(org, repo, SHA string) (github.SingleCommit, error)
 	ListPRCommits(org, repo string, number int) ([]github.RepositoryCommit, error)
 }
 
@@ -330,6 +329,7 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 				if err != nil {
 					log.WithField("sha", pr.Head.SHA).WithError(err).Error("Failed to get commit.")
 				}
+				// Store the last commit hash.
 				treeHash := prCommits[len(prCommits)-1].SHA
 				log.WithField("tree", treeHash).Info("Adding comment to store tree-hash.")
 				if err := gc.CreateComment(org, repoName, number, fmt.Sprintf(addCanMergeLabelNotification, treeHash)); err != nil {
