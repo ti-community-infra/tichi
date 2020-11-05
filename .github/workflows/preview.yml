@@ -17,10 +17,11 @@ jobs:
         with:
           mdbook-version: 'latest'
       - run: mdbook build
-      - uses: afc163/surge-preview@v1.5.4
+      - uses: afc163/surge-preview@v1
         with:
           surge_token: ${{ secrets.SURGE_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           build: |
-            echo donothing
+            npm install
+            npm run build
           dist: docs/book
