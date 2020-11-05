@@ -14,6 +14,15 @@ branch-protection:
               required_status_checks:
                 contexts:
                   - "Sig Info File Format"
+    pingcap:
+      repos:
+        community:
+          branches:
+            master:
+              protect: true
+              required_status_checks:
+                contexts:
+                  - "Sig Info File Format"
     tidb-community-bots:
       repos:
         ti-community-prow:
@@ -106,6 +115,7 @@ tide:
     tidb-community-bots/test-live: squash
     tikv/community: squash
     tikv/pd: squash
+    pingcap/community: squash
 
   target_url: https://prow.tidb.io/tide
 
