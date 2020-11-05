@@ -14,6 +14,7 @@ branch-protection:
               required_status_checks:
                 contexts:
                   - "Sig Info File Format"
+                strict: true
         pd:
           branches:
             master:
@@ -29,6 +30,7 @@ branch-protection:
                   - "idc-jenkins-ci-pd/integration-lightning-test"
                   - "idc-jenkins-ci/build"
                   - "idc-jenkins-ci/test"
+                strict: true
     pingcap:
       repos:
         community:
