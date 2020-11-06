@@ -15,14 +15,14 @@ Tide 是 Prow 的一个组件，主要通过一些给定条件来管理 GitHub P
 
 ## Tide 在 TiDB 社区
 
-Tide 在 TiDB 社区使用基本正常，但是我们还是遇到了一个棘手的问题（**目前其他社区也还没解决该问题**）：
+Tide 在 TiDB 社区使用基本正常，但是还是遇到了一个棘手的问题（**目前其他社区也还没解决该问题**）：
 
 - PR1: 重命名 bifurcate() 为 bifurcateCrab()
 - PR2: 调用 bifurcate()
   
 这个时候两个 PR 都会以当前 master 作为 Base 分支进行测试，两个 PR 都会通过。但是一旦 PR1 先合并入 master 分支，第二个 PR 合并之后（因为测试也通过了），就会导致 master 出现找不到 `bifurcate` 的错误。
 
-目前我们正在致力于解决这个问题，我会在推荐的工作流中介绍如何解决该问题。
+目前正在致力于解决这个问题，我会在推荐的工作流中介绍如何解决该问题。
 
 **Kubernetes 社区目前没有这个问题，因为如果使用 Prow 的 CI 系统 Tide 会自动有最新的 master 作为 base 进行测试**。
 
@@ -53,6 +53,10 @@ Tide 在 TiDB 社区使用基本正常，但是我们还是遇到了一个棘手
 #### 为什么 PR 合并了，但是 Tide 的状态还是 Penning?
 
 因为有些情况下可能它检测到了 PR 已经满足了要求，但是还没来得及将状态更新到 GitHub 就已经合并了。
+
+#### 如果我的 PR 的其中某个测试失败了，我是需要全部重新跑，还是只跑一个？
+
+只需要重新跑失败的测试即可。
 
 ## 其他参考资料
 - [Maintainer's Guide to Tide](https://github.com/kubernetes/test-infra/blob/master/prow/cmd/tide/maintainers.md)
