@@ -165,10 +165,10 @@
                     <main>
                         <h1><a class="header" href="#ti-community-owners" id="ti-community-owners">ti-community-owners</a></h1>
 <h2><a class="header" href="#设计背景" id="设计背景">设计背景</a></h2>
-<p>设计 owners 主要是为了 ti-community-lgtm 和 ti-community-merge 服务，在 Kubernetes 社区中，他们使用 <a href="https://github.com/kubernetes/test-infra/blob/master/OWNERS">OWNERS</a> 定义权限，在该文件中指定了当前目录及子目录的 reviewers 和 approvers。但是目前 TiDB 社区已经依赖于社区先前的 <a href="https://github.com/pingcap-incubator/cherry-bot">Bot</a> 运行了很长一段时间。大家在先前的 Bot 的使用过程中摸索出了一套协作机制。如果直接采用 Kubernetes 社区的机制会带来非常高的学习成本，水土不服。</p>
-<p>所以我们决定研发一个适合当前协作模式的权限控制服务，我们基于目前 TiDB 社区的 <a href="https://github.com/pingcap/community">sig</a> 架构定义了每个 PR 的权限。</p>
+<p>设计 owners 主要是为了 ti-community-lgtm 和 ti-community-merge 服务，在 Kubernetes 社区中，他们使用 <a href="https://github.com/kubernetes/test-infra/blob/master/OWNERS">OWNERS</a> 文件定义权限，在该文件中指定了当前目录及子目录的 reviewers 和 approvers。但是目前 TiDB 社区已经依赖于社区先前的 <a href="https://github.com/pingcap-incubator/cherry-bot">Bot</a> 运行了很长一段时间。大家在先前的 Bot 的使用过程中摸索出了一套协作机制。如果直接采用 Kubernetes 社区的机制会带来非常高的学习成本，水土不服。</p>
+<p>所以决定研发一个适合当前 TiDB 社区协作模式的权限控制服务，基于目前 TiDB 社区的 <a href="https://github.com/pingcap/community">sig</a> 架构定义了每个 PR 的权限。</p>
 <h2><a class="header" href="#权限设计" id="权限设计">权限设计</a></h2>
-<p>基于目前 TiDB 的 sig 的设计，我们将权限划分如下：</p>
+<p>基于目前 TiDB 的 sig 的设计，将权限划分如下：</p>
 <ul>
 <li>approvers（<strong>可以使用 /merge 命令</strong>）
 <ul>
@@ -188,22 +188,22 @@
 </ul>
 </li>
 </ul>
-<p>在 TiDB 相关社区的协作过程中，<strong>一个 PR 一般要经过多次 review 之后才能进行合并</strong>。所以我们在这个服务中该要定义清楚每个 PR 需要的 <code>LGTM</code> 个数。</p>
+<p>在 TiDB 相关社区的协作过程中，<strong>一个 PR 一般要经过多次 review 之后才能进行合并</strong>。所以在这个服务中该要定义清楚每个 PR 需要的 <code>LGTM</code> 个数。</p>
 <h2><a class="header" href="#实现思路" id="实现思路">实现思路</a></h2>
-<p>为了实现以上描述的权限划分，我们决定采取 RESTFUL 接口来定义每个 PR 的权限。</p>
+<p>为了实现以上描述的权限划分，最终决定采取 RESTFUL 接口来定义每个 PR 的权限。</p>
 <p>接口路径：<code>/repos/:org/:repo/pulls/:number/owners</code></p>
-<p>因为我们要基于 sig 来划分权限，所以我们要求这些 PR 中能够获取到当前 PR 所属的 sig。我们会在当前 PR 中查找以 <code>sig/</code> 开头的标签，然后查找该 sig 的信息。最终根据获取到的实时的 sig 的信息生成 owners。</p>
+<p>因为要基于 sig 来划分权限，所以要求这些 PR 中能够获取到当前 PR 所属的 sig。owners 会在当前 PR 中查找以 <code>sig/</code> 开头的标签，然后查找该 sig 的信息。最终根据获取到的实时的 sig 的信息生成 owners。</p>
 <p>但是可能确实存在一些特殊情况找不到对应的sig：</p>
 <ul>
 <li>一些模块暂时未划分清楚 sig：使用当前仓库的 collaborator</li>
 <li>一些小型仓库直接隶属于某个 sig: 支持为该仓库配置默认的 sig</li>
 </ul>
 <p>这样基本上就能够实现该服务。</p>
-<p>注：因为 maintainers 没有隶属于任何一个 sig，所以我们会通过一个配置项来直接从 GitHub team 获取。</p>
-<h2><a class="header" href="#配置参数" id="配置参数">配置参数</a></h2>
+<p>注：因为 maintainers 没有隶属于任何一个 sig，所以会通过一个配置项来直接从 GitHub team 获取。</p>
+<h2><a class="header" href="#参数配置" id="参数配置">参数配置</a></h2>
 <table><thead><tr><th>参数名</th><th>类型</th><th>说明</th></tr></thead><tbody>
-<tr><td>repos</td><td>[]</td><td>配置生效仓库</td></tr>
-<tr><td>sig_endpoint</td><td>string</td><td>获取 sig 信息 RESTFUL 接口路径</td></tr>
+<tr><td>repos</td><td>[]string</td><td>配置生效仓库</td></tr>
+<tr><td>sig_endpoint</td><td>string</td><td>获取 sig 信息 RESTFUL 接口地址</td></tr>
 <tr><td>default_sig_name</td><td>string</td><td>为该仓库设置默认 sig 名字</td></tr>
 <tr><td>trusted_team_for_owners</td><td>string</td><td>信任的 GitHub team（一般为 maintainers team）</td></tr>
 </tbody></table>
@@ -217,6 +217,8 @@
     sig_endpoint: https://bots.tidb.io/ti-community-bot
 </code></pre>
 <h2><a class="header" href="#qa" id="qa">Q&amp;A</a></h2>
+<h3><a class="header" href="#如何查看当前-pr-的权限" id="如何查看当前-pr-的权限">如何查看当前 PR 的权限？</a></h3>
+<p>直接通过与 GitHub 一致的 RESTFUL 接口查看，例如：<a href="https://prow.tidb.io/ti-community-owners/repos/tidb-community-bots/test-dev/pulls/179/owners">tidb-community-bots/test-dev/pulls/179</a></p>
 
                     </main>
 

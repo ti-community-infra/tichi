@@ -163,7 +163,76 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#lgtm" id="lgtm">LGTM</a></h1>
+                        <h1><a class="header" href="#ti-community-lgtm" id="ti-community-lgtm">ti-community-lgtm</a></h1>
+<h2><a class="header" href="#设计背景" id="设计背景">设计背景</a></h2>
+<p>在 TiDB 社区中，我们采用了多阶段 code review 的方式来进行协作。一个 PR 一般会经过多个人的 review，才能达到合并的基本条件。例如：当 PR 被第一个人 review 之后，会为该 PR 打上 <code>status/LGT1</code> 的标签。然后当 PR 被第二个 review 之后，会为该 PR 打上 <code>status/LGT2</code> 的标签。每个 sig 都会设置默认需要的 LGTM 的个数，一般为 2 个。</p>
+<p>ti-community-lgtm 就是用来根据权限，自动的为 PR 添加对应 label 的插件。它会作为一个独立的服务部署，由 Prow Hook 将 GitHub 的 webhook 事件转发给该插件进行处理。</p>
+<h2><a class="header" href="#权限设计" id="权限设计">权限设计</a></h2>
+<p>因为该插件主要负责 code review 的协作过程，所以权限如下：</p>
+<ul>
+<li>
+<p><code>/lgtm</code> 或 GitHub approve</p>
+<ul>
+<li>reviewers
+<ul>
+<li>maintainers</li>
+<li>techLeaders</li>
+<li>coLeaders</li>
+<li>committers</li>
+<li>reviewers</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><code>/lgtm cancel</code> 或 GitHub Request Changes</p>
+<ul>
+<li>reviewers
+<ul>
+<li>maintainers</li>
+<li>techLeaders</li>
+<li>coLeaders</li>
+<li>committers</li>
+<li>reviewers</li>
+</ul>
+</li>
+<li><strong>PR author</strong></li>
+</ul>
+</li>
+</ul>
+<h2><a class="header" href="#实现思路" id="实现思路">实现思路</a></h2>
+<p>想要实现该插件不仅要考虑到它作为 <code>/lgtm</code> 这样的评论命令，而且要考虑它作为 code review 的协作工具怎么和 GitHub 本身的 review 功能结合起来。</p>
+<p>在考虑到 TiDB 原来在使用该功能的混乱状况之后，我们对 lgtm 事件的响应做了更加严格的限制，只有在以下情况下才会触发该功能(<strong>命令不区分大小写</strong>)：</p>
+<ul>
+<li>在普通的 comment 中使用 <code>/lgtm [cancel]</code></li>
+<li>在单个的 review comment 中使用 <code>lgtm [cancel]</code></li>
+<li>使用 GitHub 本身 Approve/Request Changes 功能</li>
+</ul>
+<p><strong>需要注意的是</strong>：</p>
+<ul>
+<li>该命令必须以 <code>/</code> 开始</li>
+<li>Approve 功能中的 comment 不会生效（使用 Approve 请直接点击 Approve/Request Changes，在 comment 中使用 <code>/lgtm</code> 会被视为无效）</li>
+</ul>
+<h2><a class="header" href="#参数配置" id="参数配置">参数配置</a></h2>
+<table><thead><tr><th>参数名</th><th>类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>repos</td><td>[]string</td><td>配置生效仓库</td></tr>
+<tr><td>review_acts_as_lgtm</td><td>bool</td><td>是否将 GitHub Approve/Request Changes 视为有效的 <code>/lgtm [cancel]</code></td></tr>
+<tr><td>pull_owners_endpoint</td><td>string</td><td>PR owners RESTFUL 接口地址</td></tr>
+</tbody></table>
+<h2><a class="header" href="#参考文档" id="参考文档">参考文档</a></h2>
+<ul>
+<li><a href="https://prow.tidb.io/command-help#lgtm">command help</a></li>
+<li><a href="https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/lgtm">代码</a></li>
+</ul>
+<h2><a class="header" href="#qa" id="qa">Q&amp;A</a></h2>
+<h3><a class="header" href="#为什么我在使用-github-的-approve-功能并且在-comment-中填写-lgtm-导致-approve-无效" id="为什么我在使用-github-的-approve-功能并且在-comment-中填写-lgtm-导致-approve-无效">为什么我在使用 GitHub 的 Approve 功能并且在 comment 中填写 <code>/lgtm</code> 导致 Approve 无效？</a></h3>
+<p>因为过去一段时间在 TiDB 社区，lgtm 功能支持的触发条件太多，大家使用过程越来越随意和复杂，有时根本分不清楚该操作是否该记为一次有效的 lgtm。在这次的设计中我们希望保证该功能清晰明了，在使用 Approve 时不再适配任何的 comment 中的 <code>/lgtm</code>，所以当你同时使用这两个功能时，机器人会直接忽略这次操作。<strong>Keep It Simple, Stupid</strong>.</p>
+<h3><a class="header" href="#我是否可以-lgtm-自己的-pr" id="我是否可以-lgtm-自己的-pr">我是否可以 <code>/lgtm</code> 自己的 PR?</a></h3>
+<p>不可以，就算你拥有 reviewer 的权限也不会被记为一次有效的 code review。这就像在 GitHub 你无法 approve 自己的 PR 一样。</p>
+<h3><a class="header" href="#为什么-lgtm-cancel-会直接去掉我多次的-review-的结果" id="为什么-lgtm-cancel-会直接去掉我多次的-review-的结果">为什么 <code>/lgtm cancel</code> 会直接去掉我多次的 review 的结果？</a></h3>
+<p>因为当一个 reviewer 认为该代码存在问题并且需要重新 review 时，我们认为前面的 review 也是存在隐患的。</p>
+<h3><a class="header" href="#为什么我有了新的提交-lgtm-相关的标签还是保存" id="为什么我有了新的提交-lgtm-相关的标签还是保存">为什么我有了新的提交 lgtm 相关的标签还是保存？</a></h3>
+<p>这是因为目前 TiDB 社区的 code review 阶段较多，如果在有新的提交时立马取消该 lgtm 这会导致整个 PR review 过程周期很长， PR 合并困难。所以我们将这部分放宽松由 reviewer 和作者负责，在觉得需要重新 review 时可以自行 <code>/lgtm cancel</code>。</p>
 
                     </main>
 
