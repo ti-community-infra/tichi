@@ -22,14 +22,10 @@ branch-protection:
               required_status_checks:
                 contexts:
                   - "DCO"
-                  - "continuous-integration/travis-ci"
+                  - "continuous-integration/travis-ci/pr"
                   - "idc-jenkins-ci-pd/check_release_note"
-                  - "idc-jenkins-ci-pd/integration-common-test"
-                  - "idc-jenkins-ci-pd/integration-compatibility-test"
-                  - "idc-jenkins-ci-pd/integration-ddl-test"
-                  - "idc-jenkins-ci-pd/integration-lightning-test"
-                  - "idc-jenkins-ci/build"
                   - "idc-jenkins-ci/test"
+                  - "idc-jenkins-ci/build"
                 strict: true
     pingcap:
       repos:
@@ -52,6 +48,7 @@ branch-protection:
                   - lint
                   - "Semantic Pull Request"
                   - "codecov/project"
+                strict: true
         ti-community-bot:
           branches:
             master:
@@ -159,3 +156,17 @@ tide:
     orgs:
       tidb-community-bots:
         from-branch-protection: true
+      tikv:
+        repos:
+          pd:
+            required-contexts:
+              - "DCO"
+              - "continuous-integration/travis-ci/pr"
+              - "idc-jenkins-ci-pd/check_release_note"
+              - "idc-jenkins-ci-pd/integration-common-test"
+              - "idc-jenkins-ci-pd/integration-compatibility-test"
+              - "idc-jenkins-ci-pd/integration-ddl-test"
+              - "idc-jenkins-ci-pd/integration-lightning-test"
+              - "idc-jenkins-ci/build"
+              - "idc-jenkins-ci/test"
+            skip-unknown-contexts: true
