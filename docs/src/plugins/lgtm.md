@@ -60,7 +60,7 @@ ti-community-lgtm 就是用来根据权限，自动的为 PR 添加对应 label 
 
 ### 为什么我在使用 GitHub 的 Approve 功能并且在 comment 中填写 `/lgtm` 导致 Approve 无效？
 
-因为过去一段时间在 TiDB 社区，lgtm 功能支持的触发条件太多，大家使用过程越来越随意和复杂，有时根本分不清楚该操作是否该记为一次有效的 lgtm。在这次的设计中我们希望保证的清晰明了，在使用 Approve 时不再适配任何的 comment 中的 `/lgtm`，所以当你同时使用这两个功能时，机器人会直接忽略这次操作。**Keep It Simple, Stupid**.
+因为过去一段时间在 TiDB 社区，lgtm 功能支持的触发条件太多，大家使用过程越来越随意和复杂，有时根本分不清楚该操作是否该记为一次有效的 lgtm。在这次的设计中我们希望保证该功能清晰明了，在使用 Approve 时不再适配任何的 comment 中的 `/lgtm`，所以当你同时使用这两个功能时，机器人会直接忽略这次操作。**Keep It Simple, Stupid**.
 
 ### 我是否可以 `/lgtm` 自己的 PR?
 
