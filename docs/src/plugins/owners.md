@@ -22,7 +22,7 @@
   - committers
   - reviewers
 
-在 TiDB 相关社区的协作过程中，**一个 PR 一般要经过多次 review 之后才能进行合并**。所以在这个服务中该要定义清楚每个 PR 需要的 `LGTM` 个数。你也可以在配置中指定 PR 要求 lgtm 个数的 label 前缀。owners 会自动采用要求的 lgtm 个数。
+在 TiDB 相关社区的协作过程中，**一个 PR 一般要经过多次 review 之后才能进行合并**。所以在这个服务中该要定义清楚每个 PR 需要的 `LGTM` 个数。你也可以在配置中指定 PR 要求 `LGTM` 个数的 label 前缀。owners 会自动采用要求的 `LGTM` 个数。
 
 ## 实现思路
 
@@ -60,6 +60,7 @@ ti-community-owners:
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
     sig_endpoint: https://bots.tidb.io/ti-community-bot
+    require_lgtm_label_prefix: require/LGT
 ```
 
 ## Q&A
