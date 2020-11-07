@@ -8,7 +8,7 @@ type OwnersResponse struct {
 
 // Owners contains owners and the number of lgtm required by PR.
 type Owners struct {
-	Approvers []string `json:"approvers,omitempty"`
-	Reviewers []string `json:"reviewers,omitempty"`
-	NeedsLgtm int      `json:"needsLGTM,omitempty"`
+	Committers []string `json:"committers,omitempty"`
+	Reviewers  []string `json:"reviewers,omitempty"`
+	NeedsLgtm  int      `json:"needsLGTM,omitempty"`
 }

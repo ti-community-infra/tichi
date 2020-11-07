@@ -269,21 +269,21 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 		return err
 	}
 
-	approvers := sets.String{}
-	for _, approver := range owners.Approvers {
-		approvers.Insert(approver)
+	committers := sets.String{}
+	for _, committer := range owners.Committers {
+		committers.Insert(committer)
 	}
 
-	// Not approvers but want merge.
-	if !approvers.Has(author) && wantMerge {
-		resp := "adding 'status/cam-merge' is restricted to approvers in [list](" + url + ")."
+	// Not committers but want merge.
+	if !committers.Has(author) && wantMerge {
+		resp := "adding 'status/cam-merge' is restricted to committers in [list](" + url + ")."
 		log.Infof("Reply to /merge request with comment: \"%s\"", resp)
 		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
-	// Not author or approvers but want remove merge.
-	if !approvers.Has(author) && !isAuthor && !wantMerge {
-		resp := "removing 'status/cam-merge' is restricted to approvers in [list](" + url + ") or PR author."
+	// Not author or committers but want remove merge.
+	if !committers.Has(author) && !isAuthor && !wantMerge {
+		resp := "removing 'status/cam-merge' is restricted to committers in [list](" + url + ") or PR author."
 		log.Infof("Reply to /merge cancel request with comment: \"%s\"", resp)
 		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}

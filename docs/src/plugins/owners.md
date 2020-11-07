@@ -2,7 +2,7 @@
 
 ## 设计背景
 
-设计 owners 主要是为了 ti-community-lgtm 和 ti-community-merge 服务，在 Kubernetes 社区中，他们使用 [OWNERS](https://github.com/kubernetes/test-infra/blob/master/OWNERS) 文件定义权限，在该文件中指定了当前目录及子目录的 reviewers 和 approvers。但是目前 TiDB 社区已经依赖于社区先前的 [Bot](https://github.com/pingcap-incubator/cherry-bot) 运行了很长一段时间。大家在先前的 Bot 的使用过程中摸索出了一套协作机制。如果直接采用 Kubernetes 社区的机制会带来非常高的学习成本，水土不服。
+设计 owners 主要是为了 ti-community-lgtm 和 ti-community-merge 服务，在 Kubernetes 社区中，他们使用 [OWNERS](https://github.com/kubernetes/test-infra/blob/master/OWNERS) 文件定义权限，在该文件中指定了当前目录及子目录的 reviewers 和 committers。但是目前 TiDB 社区已经依赖于社区先前的 [Bot](https://github.com/pingcap-incubator/cherry-bot) 运行了很长一段时间。大家在先前的 Bot 的使用过程中摸索出了一套协作机制。如果直接采用 Kubernetes 社区的机制会带来非常高的学习成本，水土不服。
 
 所以决定研发一个适合当前 TiDB 社区协作模式的权限控制服务，基于目前 TiDB 社区的 [sig](https://github.com/pingcap/community) 架构定义了每个 PR 的权限。
 
@@ -10,7 +10,7 @@
 
 基于目前 TiDB 的 sig 的设计，将权限划分如下：
 
-- approvers（**可以使用 /merge 命令**）
+- committers（**可以使用 /merge 命令**）
   - maintainers
   - techLeaders
   - coLeaders

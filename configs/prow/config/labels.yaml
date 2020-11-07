@@ -14,7 +14,7 @@ repos:
         prowPlugin: ti-community-lgtm
         addedBy: reviewers or members
       - color: 0ffa16
-        description: Indicates a PR has been approved by an approver.
+        description: Indicates a PR has been approved by an committer.
         name: status/can-merge
         target: prs
         prowPlugin: ti-community-merge
@@ -106,7 +106,7 @@ repos:
         prowPlugin: ti-community-lgtm
         addedBy: reviewers or members
       - color: 0ffa16
-        description: Indicates a PR has been approved by an approver.
+        description: Indicates a PR has been approved by an committer.
         name: status/can-merge
         target: prs
         prowPlugin: ti-community-merge
@@ -181,7 +181,7 @@ repos:
         prowPlugin: ti-community-lgtm
         addedBy: reviewers or members
       - color: 0ffa16
-        description: Indicates a PR has been approved by an approver.
+        description: Indicates a PR has been approved by an committer.
         name: status/can-merge
         target: prs
         prowPlugin: ti-community-merge
