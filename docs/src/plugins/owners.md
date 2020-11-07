@@ -22,7 +22,7 @@
   - committers
   - reviewers
 
-在 TiDB 相关社区的协作过程中，**一个 PR 一般要经过多次 review 之后才能进行合并**。所以在这个服务中该要定义清楚每个 PR 需要的 `LGTM` 个数。
+在 TiDB 相关社区的协作过程中，**一个 PR 一般要经过多次 review 之后才能进行合并**。所以在这个服务中该要定义清楚每个 PR 需要的 `LGTM` 个数。你也可以在配置中指定 PR 要求 lgtm 个数的 label 前缀。owners 会自动采用要求的 lgtm 个数。
 
 ## 实现思路
 
@@ -42,12 +42,13 @@
 
 ## 参数配置
 
-| 参数名                  | 类型     | 说明                                          |
-| ----------------------- | -------- | --------------------------------------------- |
-| repos                   | []string | 配置生效仓库                                  |
-| sig_endpoint            | string   | 获取 sig 信息 RESTFUL 接口地址                |
-| default_sig_name        | string   | 为该仓库设置默认 sig 名字                     |
-| trusted_team_for_owners | string   | 信任的 GitHub team（一般为 maintainers team） |
+| 参数名                    | 类型     | 说明                                          |
+| ------------------------- | -------- | --------------------------------------------- |
+| repos                     | []string | 配置生效仓库                                  |
+| sig_endpoint              | string   | 获取 sig 信息 RESTFUL 接口地址                |
+| default_sig_name          | string   | 为该仓库设置默认 sig 名字                     |
+| require_lgtm_label_prefix | string   | 指定当前 PR 需要的 lgtm 个数                  |
+| trusted_team_for_owners   | string   | 信任的 GitHub team（一般为 maintainers team） |
 
 例如：
 
