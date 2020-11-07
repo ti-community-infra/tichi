@@ -111,6 +111,7 @@ func handle(cfg *externalplugins.Configuration, rc reviewCtx, gc githubClient, l
 			resp := autoRespond.Message
 			log.Infof("Commenting with \"%s\".", resp)
 			err := gc.CreateComment(owner, repo, rc.number, externalplugins.FormatResponseRaw(body, rc.htmlURL, rc.author, resp))
+			// When we got an err direly return.
 			if err != nil {
 				return err
 			}
