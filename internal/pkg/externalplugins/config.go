@@ -50,6 +50,8 @@ type TiCommunityOwners struct {
 	SigEndpoint string `json:"sig_endpoint,omitempty"`
 	// DefaultSigName specifies the default sig name of this repo's PR.
 	DefaultSigName string `json:"default_sig_name,omitempty"`
+	// RequireLgtmLabelPrefix specifies the prefix of require lgtm label.
+	RequireLgtmLabelPrefix string `json:"require_lgtm_label_prefix,omitempty"`
 	// WARNING: This disables the security mechanism that prevents a malicious member (or
 	// compromised GitHub account) from merging arbitrary code. Use with caution.
 	//
