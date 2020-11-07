@@ -107,6 +107,10 @@ external_plugins:
     - name: ti-community-label
       events:
         - issue_comment
+    - name: ti-community-autoresponder
+      events:
+        - issue_comment
+        - pull_request_review_comment
     - name: needs-rebase
       events:
         - pull_request

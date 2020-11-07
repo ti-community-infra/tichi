@@ -50,3 +50,11 @@ ti-community-label:
     prefixes:
       - status
       - type
+
+ti-community-autoresponder:
+  - repos:
+      - tidb-community-bots/ti-community-prow
+    auto_responds:
+      - regex: "(?mi)^/ping\\s*$"
+        message: "pong"
+
