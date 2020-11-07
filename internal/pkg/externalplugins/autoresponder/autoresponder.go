@@ -110,7 +110,7 @@ func handle(cfg *externalplugins.Configuration, rc reviewCtx, gc githubClient, l
 		if regex.MatchString(body) {
 			resp := autoRespond.Message
 			log.Infof("Commenting with \"%s\".", resp)
-			err := gc.CreateComment(owner, repo, rc.number, externalplugins.FormatResponseRaw(body, rc.htmlURL, rc.author, resp))
+			err := gc.CreateComment(owner, repo, rc.number, externalplugins.FormatSimpleResponse(rc.author, resp))
 			// When we got an err direly return.
 			if err != nil {
 				return err
