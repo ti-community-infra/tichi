@@ -63,14 +63,16 @@ func TestListOwners(t *testing.T) {
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 
 	testCases := []struct {
-		name              string
-		sigRes            *SigResponse
-		labels            []github.Label
-		useDefaultSigName bool
-		trustTeam         string
-		exceptApprovers   []string
-		exceptReviewers   []string
-		exceptNeedsLgtm   int
+		name                   string
+		sigRes                 *SigResponse
+		labels                 []github.Label
+		useDefaultSigName      bool
+		trustTeam              string
+		requireLgtmLabelPrefix string
+
+		exceptApprovers []string
+		exceptReviewers []string
+		exceptNeedsLgtm int
 	}{
 		{
 			name:   "has one sig label",
@@ -91,11 +93,45 @@ func TestListOwners(t *testing.T) {
 			exceptNeedsLgtm: lgtmTwo,
 		},
 		{
+			name:   "has one sig label and require one lgtm",
+			sigRes: &validSigRes,
+			labels: []github.Label{
+				{
+					Name: "sig/testing",
+				}, {
+					Name: "require-LGT1",
+				},
+			},
+			requireLgtmLabelPrefix: "require-LGT",
+			exceptApprovers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2",
+			},
+			exceptReviewers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2", "reviewer1", "reviewer2",
+			},
+			exceptNeedsLgtm: 1,
+		},
+		{
 			name:            "non sig label",
 			sigRes:          &validSigRes,
 			exceptApprovers: collaborators,
 			exceptReviewers: collaborators,
 			exceptNeedsLgtm: lgtmTwo,
+		},
+		{
+			name:   "non sig label and require one lgtm",
+			sigRes: &validSigRes,
+			labels: []github.Label{
+				{
+					Name: "require-LGT1",
+				},
+			},
+			requireLgtmLabelPrefix: "require-LGT",
+			exceptApprovers:        collaborators,
+			exceptReviewers:        collaborators,
+			exceptNeedsLgtm:        1,
 		},
 		{
 			name:              "non sig label but use default sig name",
@@ -110,6 +146,26 @@ func TestListOwners(t *testing.T) {
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
 			exceptNeedsLgtm: lgtmTwo,
+		},
+		{
+			name:              "non sig label but use default sig name and require one lgtm",
+			sigRes:            &validSigRes,
+			useDefaultSigName: true,
+			labels: []github.Label{
+				{
+					Name: "require-LGT1",
+				},
+			},
+			requireLgtmLabelPrefix: "require-LGT",
+			exceptApprovers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2",
+			},
+			exceptReviewers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2", "reviewer1", "reviewer2",
+			},
+			exceptNeedsLgtm: 1,
 		},
 		{
 			name:   "has one sig label and a trust team",
@@ -154,6 +210,10 @@ func TestListOwners(t *testing.T) {
 
 			if testCase.trustTeam != "" {
 				owners.OwnersTrustTeam = testCase.trustTeam
+			}
+
+			if testCase.requireLgtmLabelPrefix != "" {
+				owners.RequireLgtmLabelPrefix = testCase.requireLgtmLabelPrefix
 			}
 
 			config.TiCommunityOwners = []tiexternalplugins.TiCommunityOwners{
@@ -396,6 +456,76 @@ func TestGetSigNameByLabel(t *testing.T) {
 
 			if sigName != testCase.exceptSigName {
 				t.Errorf("expected sig '%s', but it is '%s'", testCase.exceptSigName, sigName)
+			}
+		})
+	}
+}
+
+func TestGetRequireLgtmByLabel(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		labels                 []github.Label
+		requireLgtmLabelPrefix string
+		exceptLgtm             int
+		exceptErr              string
+	}{
+		{
+			name: "No require",
+			labels: []github.Label{
+				{
+					Name: "sig/testing",
+				},
+			},
+			requireLgtmLabelPrefix: "require/LGT",
+			exceptLgtm:             0,
+		}, {
+			name: "Require one lgtm",
+			labels: []github.Label{
+				{
+					Name: "sig/testing",
+				}, {
+					Name: "require/LGT1",
+				},
+			},
+			requireLgtmLabelPrefix: "require/LGT",
+			exceptLgtm:             1,
+		}, {
+			name: "Require two lgtm",
+			labels: []github.Label{
+				{
+					Name: "sig/testing",
+				}, {
+					Name: "require-LGT2",
+				},
+			},
+			requireLgtmLabelPrefix: "require-LGT",
+			exceptLgtm:             2,
+		},
+		{
+			name: "Wrong require",
+			labels: []github.Label{
+				{
+					Name: "sig/testing",
+				}, {
+					Name: "require-LGTabcde",
+				},
+			},
+			requireLgtmLabelPrefix: "require-LGT",
+			exceptLgtm:             0,
+			exceptErr:              "strconv.Atoi: parsing \"abcde\": invalid syntax",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			requireLgtm, err := getRequireLgtmByLabel(testCase.labels, testCase.requireLgtmLabelPrefix)
+
+			if requireLgtm != testCase.exceptLgtm {
+				t.Errorf("expected lgtm '%d', but it is '%d'", testCase.exceptLgtm, requireLgtm)
+			}
+
+			if err != nil && err.Error() != testCase.exceptErr {
+				t.Errorf("expected err '%v', but it is '%v'", testCase.exceptErr, err)
 			}
 		})
 	}

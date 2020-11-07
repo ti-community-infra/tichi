@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -46,7 +47,7 @@ type Server struct {
 }
 
 func (s *Server) listOwnersForNonSig(org string, repo string,
-	trustTeamMembers []string) (*ownersclient.OwnersResponse, error) {
+	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	collaborators, err := s.Gc.ListCollaborators(org, repo)
 	if err != nil {
 		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed get collaborators.")
@@ -57,20 +58,25 @@ func (s *Server) listOwnersForNonSig(org string, repo string,
 	for _, collaborator := range collaborators {
 		collaboratorsLogin = append(collaboratorsLogin, collaborator.Login)
 	}
-
 	approvers := sets.NewString(collaboratorsLogin...).Insert(trustTeamMembers...).List()
+
+	if requireLgtm == 0 {
+		requireLgtm = lgtmTwo
+	}
+
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
 			Approvers: approvers,
 			Reviewers: approvers,
-			NeedsLgtm: lgtmTwo,
+			NeedsLgtm: requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
 	}, nil
 }
 
 func (s *Server) listOwnersForSig(sigName string,
-	opts *tiexternalplugins.TiCommunityOwners, trustTeamMembers []string) (*ownersclient.OwnersResponse, error) {
+	opts *tiexternalplugins.TiCommunityOwners, trustTeamMembers []string,
+	requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	url := opts.SigEndpoint + fmt.Sprintf(SigEndpointFmt, sigName)
 	// Get sig info.
 	res, err := s.Client.Get(url)
@@ -122,11 +128,15 @@ func (s *Server) listOwnersForSig(sigName string,
 		reviewers = append(reviewers, reviewer.GithubName)
 	}
 
+	if requireLgtm == 0 {
+		requireLgtm = sig.NeedsLgtm
+	}
+
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
 			Approvers: sets.NewString(approvers...).Insert(trustTeamMembers...).List(),
 			Reviewers: sets.NewString(reviewers...).Insert(trustTeamMembers...).List(),
-			NeedsLgtm: sig.NeedsLgtm,
+			NeedsLgtm: requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
 	}, nil
@@ -151,14 +161,20 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		sigName = opts.DefaultSigName
 	}
 
+	requireLgtm, err := getRequireLgtmByLabel(pull.Labels, opts.RequireLgtmLabelPrefix)
+	if err != nil {
+		s.Log.WithField("pullNumber", number).WithError(err).Error("Failed parse require lgtm.")
+		return nil, err
+	}
+
 	trustTeamMembers := getTrustTeamMembers(s.Log, s.Gc, org, opts.OwnersTrustTeam)
 
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
 	if sigName == "" {
-		return s.listOwnersForNonSig(org, repo, trustTeamMembers)
+		return s.listOwnersForNonSig(org, repo, trustTeamMembers, requireLgtm)
 	}
 
-	return s.listOwnersForSig(sigName, opts, trustTeamMembers)
+	return s.listOwnersForSig(sigName, opts, trustTeamMembers, requireLgtm)
 }
 
 // getSigNameByLabel returns the name of sig when the label prefix matches.
@@ -174,12 +190,32 @@ func getSigNameByLabel(labels []github.Label) string {
 	return ""
 }
 
+// getRequireLgtmByLabel returns the number of require lgtm when the label prefix matches.
+func getRequireLgtmByLabel(labels []github.Label, labelPrefix string) (int, error) {
+	noRequireLgtm := 0
+
+	if len(labelPrefix) == 0 {
+		return noRequireLgtm, nil
+	}
+
+	for _, label := range labels {
+		if strings.HasPrefix(label.Name, labelPrefix) {
+			requireLgtm, err := strconv.Atoi(strings.TrimPrefix(label.Name, labelPrefix))
+			if err != nil {
+				return noRequireLgtm, err
+			}
+			return requireLgtm, nil
+		}
+	}
+
+	return noRequireLgtm, nil
+}
+
 // getTrustTeamMembers returns the members of trust team.
 func getTrustTeamMembers(log *logrus.Entry, gc githubClient, org, trustTeam string) []string {
 	if len(trustTeam) > 0 {
 		if teams, err := gc.ListTeams(org); err == nil {
 			for _, teamInOrg := range teams {
-				// lgtm.TrustedAuthorTeams is supposed to be a very short list.
 				if strings.Compare(teamInOrg.Name, trustTeam) == 0 {
 					if members, err := gc.ListTeamMembers(teamInOrg.ID, github.RoleAll); err == nil {
 						var membersLogin []string
