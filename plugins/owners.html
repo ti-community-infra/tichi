@@ -188,7 +188,7 @@
 </ul>
 </li>
 </ul>
-<p>在 TiDB 相关社区的协作过程中，<strong>一个 PR 一般要经过多次 review 之后才能进行合并</strong>。所以在这个服务中该要定义清楚每个 PR 需要的 <code>LGTM</code> 个数。</p>
+<p>在 TiDB 相关社区的协作过程中，<strong>一个 PR 一般要经过多次 review 之后才能进行合并</strong>。所以在这个服务中该要定义清楚每个 PR 需要的 <code>LGTM</code> 个数。你也可以在配置中指定 PR 要求 <code>LGTM</code> 个数的 label 前缀。owners 会自动采用要求的 <code>LGTM</code> 个数。</p>
 <h2><a class="header" href="#实现思路" id="实现思路">实现思路</a></h2>
 <p>为了实现以上描述的权限划分，最终决定采取 RESTFUL 接口来定义每个 PR 的权限。</p>
 <p>接口路径：<code>/repos/:org/:repo/pulls/:number/owners</code></p>
@@ -205,6 +205,7 @@
 <tr><td>repos</td><td>[]string</td><td>配置生效仓库</td></tr>
 <tr><td>sig_endpoint</td><td>string</td><td>获取 sig 信息 RESTFUL 接口地址</td></tr>
 <tr><td>default_sig_name</td><td>string</td><td>为该仓库设置默认 sig 名字</td></tr>
+<tr><td>require_lgtm_label_prefix</td><td>string</td><td>指定当前 PR 需要的 lgtm 个数</td></tr>
 <tr><td>trusted_team_for_owners</td><td>string</td><td>信任的 GitHub team（一般为 maintainers team）</td></tr>
 </tbody></table>
 <p>例如：</p>
@@ -215,6 +216,7 @@
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
     sig_endpoint: https://bots.tidb.io/ti-community-bot
+    require_lgtm_label_prefix: require/LGT
 </code></pre>
 <h2><a class="header" href="#qa" id="qa">Q&amp;A</a></h2>
 <h3><a class="header" href="#如何查看当前-pr-的权限" id="如何查看当前-pr-的权限">如何查看当前 PR 的权限？</a></h3>
