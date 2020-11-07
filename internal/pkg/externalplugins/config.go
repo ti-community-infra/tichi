@@ -3,16 +3,18 @@ package externalplugins
 import (
 	"fmt"
 	"net/url"
+	"regexp"
 
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
-	TiCommunityLgtm   []TiCommunityLgtm   `json:"ti-community-lgtm,omitempty"`
-	TiCommunityMerge  []TiCommunityMerge  `json:"ti-community-merge,omitempty"`
-	TiCommunityOwners []TiCommunityOwners `json:"ti-community-owners,omitempty"`
-	TiCommunityLabel  []TiCommunityLabel  `json:"ti-community-label,omitempty"`
+	TiCommunityLgtm          []TiCommunityLgtm          `json:"ti-community-lgtm,omitempty"`
+	TiCommunityMerge         []TiCommunityMerge         `json:"ti-community-merge,omitempty"`
+	TiCommunityOwners        []TiCommunityOwners        `json:"ti-community-owners,omitempty"`
+	TiCommunityLabel         []TiCommunityLabel         `json:"ti-community-label,omitempty"`
+	TiCommunityAutoresponder []TiCommunityAutoresponder `json:"ti-community-autoresponder,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -74,6 +76,22 @@ type TiCommunityLabel struct {
 	// "status", "priority"," and "sig" label prefixes.
 	// Labels can be used with `/[remove-]<prefix> <target>` commands.
 	Prefixes []string `json:"prefixes,omitempty"`
+}
+
+// TiCommunityAutoresponder is the config for the autoresponder plugin.
+type TiCommunityAutoresponder struct {
+	// Repos is either of the form org/repos or just org.
+	Repos []string `json:"repos,omitempty"`
+	// AutoResponds is a set of responds.
+	AutoResponds []AutoRespond `json:"auto_responds,omitempty"`
+}
+
+// AutoRespond is the config for auto respond.
+type AutoRespond struct {
+	// Regex specifies the conditions for the trigger to respond automatically.
+	Regex string `json:"regex,omitempty"`
+	// Message specifies the content of the automatic respond.
+	Message string `json:"message,omitempty"`
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists
@@ -160,6 +178,27 @@ func (c *Configuration) LabelFor(org, repo string) *TiCommunityLabel {
 	return &TiCommunityLabel{}
 }
 
+// Autoresponder For finds the TiCommunityAutoresponder for a repo, if one exists.
+// TiCommunityAutoresponder configuration can be listed for a repository
+// or an organization.
+func (c *Configuration) AutoresponderFor(org, repo string) *TiCommunityAutoresponder {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, autoresponder := range c.TiCommunityAutoresponder {
+		if !sets.NewString(autoresponder.Repos...).Has(fullName) {
+			continue
+		}
+		return &autoresponder
+	}
+	// If you don't find anything, loop again looking for an org config
+	for _, autoresponder := range c.TiCommunityAutoresponder {
+		if !sets.NewString(autoresponder.Repos...).Has(org) {
+			continue
+		}
+		return &autoresponder
+	}
+	return &TiCommunityAutoresponder{}
+}
+
 // Validate will return an error if there are any invalid external plugin config.
 func (c *Configuration) Validate() error {
 	if err := validateLgtm(c.TiCommunityLgtm); err != nil {
@@ -171,6 +210,10 @@ func (c *Configuration) Validate() error {
 	}
 
 	if err := validateOwners(c.TiCommunityOwners); err != nil {
+		return err
+	}
+
+	if err := validateAutoresponder(c.TiCommunityAutoresponder); err != nil {
 		return err
 	}
 
@@ -202,11 +245,25 @@ func validateMerge(merges []TiCommunityMerge) error {
 }
 
 // validateOwners will return an error if the endpoint configured by merge is invalid.
-func validateOwners(merges []TiCommunityOwners) error {
-	for _, merge := range merges {
+func validateOwners(owners []TiCommunityOwners) error {
+	for _, merge := range owners {
 		_, err := url.ParseRequestURI(merge.SigEndpoint)
 		if err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+// validateAutoresponder will return an error if the regex cannot compile.
+func validateAutoresponder(autoresponders []TiCommunityAutoresponder) error {
+	for _, autoresponder := range autoresponders {
+		for _, respond := range autoresponder.AutoResponds {
+			_, err := regexp.Compile(respond.Regex)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

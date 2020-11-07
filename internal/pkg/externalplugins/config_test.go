@@ -8,114 +8,14 @@ import (
 	"gotest.tools/assert"
 )
 
-func TestValidateTiCommunityLgtmConfig(t *testing.T) {
-	testCases := []struct {
-		name     string
-		lgtm     *TiCommunityLgtm
-		expected error
-	}{
-		{
-			name: "https pull owners URL",
-			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm:   true,
-				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
-			},
-			expected: nil,
-		},
-		{
-			name: "http pull owners URL",
-			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm:   true,
-				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
-			},
-			expected: nil,
-		},
-		{
-			name: "invalid pull owners URL",
-			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm:   true,
-				PullOwnersEndpoint: "http/bots.tidb.io/ti-community-bot",
-			},
-			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			actual := validateLgtm([]TiCommunityLgtm{*tc.lgtm})
-
-			if tc.expected == nil && actual != nil {
-				t.Errorf("unexpected error: '%v'", actual)
-			}
-			if tc.expected != nil && actual == nil {
-				t.Errorf("expected error '%v', but it is nil", tc.expected)
-			}
-			if tc.expected != nil && actual != nil && tc.expected.Error() != actual.Error() {
-				t.Errorf("expected error '%v', but it is '%v'", tc.expected, actual)
-			}
-		})
-	}
-}
-
-func TestValidateMergeConfig(t *testing.T) {
-	testCases := []struct {
-		name     string
-		merge    *TiCommunityMerge
-		expected error
-	}{
-		{
-			name: "https pull owners URL",
-			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots/test-dev"},
-				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
-			},
-			expected: nil,
-		},
-		{
-			name: "http pull owners URL",
-			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots/test-dev"},
-				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
-			},
-			expected: nil,
-		},
-		{
-			name: "invalid pull owners URL",
-			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots/test-dev"},
-				PullOwnersEndpoint: "http/bots.tidb.io/ti-community-bot",
-			},
-			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			actual := validateMerge([]TiCommunityMerge{*tc.merge})
-
-			if tc.expected == nil && actual != nil {
-				t.Errorf("unexpected error: '%v'", actual)
-			}
-			if tc.expected != nil && actual == nil {
-				t.Errorf("expected error '%v', but it is nil", tc.expected)
-			}
-			if tc.expected != nil && actual != nil && tc.expected.Error() != actual.Error() {
-				t.Errorf("expected error '%v', but it is '%v'", tc.expected, actual)
-			}
-		})
-	}
-}
-
 func TestValidateConfig(t *testing.T) {
 	testCases := []struct {
-		name     string
-		lgtm     *TiCommunityLgtm
-		merge    *TiCommunityMerge
-		owners   *TiCommunityOwners
-		expected error
+		name           string
+		lgtm           *TiCommunityLgtm
+		merge          *TiCommunityMerge
+		owners         *TiCommunityOwners
+		autoresponders *TiCommunityAutoresponder
+		expected       error
 	}{
 		{
 			name: "https pull owners URL",
@@ -130,7 +30,17 @@ func TestValidateConfig(t *testing.T) {
 			},
 			owners: &TiCommunityOwners{
 				Repos:       []string{"tidb-community-bots/test-dev"},
-				SigEndpoint: "https://bots.tidb.io/ti-community-bot"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
 			expected: nil,
 		},
 		{
@@ -146,7 +56,17 @@ func TestValidateConfig(t *testing.T) {
 			},
 			owners: &TiCommunityOwners{
 				Repos:       []string{"tidb-community-bots/test-dev"},
-				SigEndpoint: "http://bots.tidb.io/ti-community-bot"},
+				SigEndpoint: "http://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
 			expected: nil,
 		},
 		{
@@ -162,7 +82,17 @@ func TestValidateConfig(t *testing.T) {
 			},
 			owners: &TiCommunityOwners{
 				Repos:       []string{"tidb-community-bots/test-dev"},
-				SigEndpoint: "https://bots.tidb.io/ti-community-bot"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -178,7 +108,17 @@ func TestValidateConfig(t *testing.T) {
 			},
 			owners: &TiCommunityOwners{
 				Repos:       []string{"tidb-community-bots/test-dev"},
-				SigEndpoint: "https://bots.tidb.io/ti-community-bot"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -194,20 +134,63 @@ func TestValidateConfig(t *testing.T) {
 			},
 			owners: &TiCommunityOwners{
 				Repos:       []string{"tidb-community-bots/test-dev"},
-				SigEndpoint: "https/bots.tidb.io/ti-community-bot"},
+				SigEndpoint: "https/bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
+		},
+		{
+			name: "invalid autoresponder regex",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   "?[)",
+						Message: "/run-all-test",
+					},
+				},
+			},
+			expected: fmt.Errorf("error parsing regexp: missing argument to repetition operator: `?`"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			config := Configuration{TiCommunityLgtm: []TiCommunityLgtm{
-				*tc.lgtm,
-			}, TiCommunityMerge: []TiCommunityMerge{
-				*tc.merge,
-			}, TiCommunityOwners: []TiCommunityOwners{
-				*tc.owners,
-			}}
+			config := Configuration{
+				TiCommunityLgtm: []TiCommunityLgtm{
+					*tc.lgtm,
+				},
+				TiCommunityMerge: []TiCommunityMerge{
+					*tc.merge,
+				},
+				TiCommunityOwners: []TiCommunityOwners{
+					*tc.owners,
+				},
+				TiCommunityAutoresponder: []TiCommunityAutoresponder{
+					*tc.autoresponders,
+				},
+			}
 			actual := config.Validate()
 
 			if tc.expected == nil && actual != nil {
@@ -427,6 +410,68 @@ func TestLabelFor(t *testing.T) {
 				assert.DeepEqual(t, label, &TiCommunityLabel{})
 			} else {
 				assert.DeepEqual(t, label.Repos, tc.label.Repos)
+			}
+		})
+	}
+}
+
+func TestAutoresponderFor(t *testing.T) {
+	testCases := []struct {
+		name          string
+		autoresponder *TiCommunityAutoresponder
+		org           string
+		repo          string
+		expectEmpty   *TiCommunityAutoresponder
+	}{
+		{
+			name: "Full name",
+			autoresponder: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+		{
+			name: "Only org",
+			autoresponder: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+		{
+			name:          "Can not find",
+			autoresponder: &TiCommunityAutoresponder{},
+			org:           "tidb-community-bots1",
+			repo:          "test-dev1",
+			expectEmpty:   &TiCommunityAutoresponder{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := Configuration{TiCommunityAutoresponder: []TiCommunityAutoresponder{
+				*tc.autoresponder,
+			}}
+
+			autoresponder := config.AutoresponderFor(tc.org, tc.repo)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, autoresponder, &TiCommunityAutoresponder{})
+			} else {
+				assert.DeepEqual(t, autoresponder.Repos, tc.autoresponder.Repos)
 			}
 		})
 	}
