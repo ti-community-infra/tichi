@@ -14,19 +14,19 @@ const testOwnersURLFmt = "/repos/%s/%s/pulls/%d/owners"
 
 func TestLoadOwners(t *testing.T) {
 	testCases := []struct {
-		name            string
-		ownersURL       string
-		data            OwnersResponse
-		exceptApprovers []string
-		exceptReviewers []string
-		exceptNeedsLgtm int
-		exceptError     bool
+		name             string
+		ownersURL        string
+		data             OwnersResponse
+		exceptCommitters []string
+		exceptReviewers  []string
+		exceptNeedsLgtm  int
+		exceptError      bool
 	}{
 		{
 			name: "valid pull owners URL(use mock URL)",
 			data: OwnersResponse{
 				Data: Owners{
-					Approvers: []string{
+					Committers: []string{
 						"Rustin-Liu",
 					},
 					Reviewers: []string{
@@ -36,7 +36,7 @@ func TestLoadOwners(t *testing.T) {
 				},
 				Message: "Test",
 			},
-			exceptApprovers: []string{
+			exceptCommitters: []string{
 				"Rustin-Liu",
 			},
 			exceptReviewers: []string{
@@ -49,7 +49,7 @@ func TestLoadOwners(t *testing.T) {
 			ownersURL: "not-found",
 			data: OwnersResponse{
 				Data: Owners{
-					Approvers: []string{
+					Committers: []string{
 						"Rustin-Liu",
 					},
 					Reviewers: []string{
@@ -59,7 +59,7 @@ func TestLoadOwners(t *testing.T) {
 				},
 				Message: "Test",
 			},
-			exceptApprovers: []string{
+			exceptCommitters: []string{
 				"Rustin-Liu",
 			},
 			exceptReviewers: []string{
@@ -114,8 +114,8 @@ func TestLoadOwners(t *testing.T) {
 				}
 			}
 
-			if len(owners.Approvers) != len(testCase.exceptApprovers) {
-				t.Errorf("Different approvers: Got \"%v\" expected \"%v\"", owners.Approvers, testCase.exceptApprovers)
+			if len(owners.Committers) != len(testCase.exceptCommitters) {
+				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", owners.Committers, testCase.exceptCommitters)
 			}
 
 			if len(owners.Reviewers) != len(testCase.exceptReviewers) {

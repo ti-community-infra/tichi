@@ -58,7 +58,7 @@ func (s *Server) listOwnersForNonSig(org string, repo string,
 	for _, collaborator := range collaborators {
 		collaboratorsLogin = append(collaboratorsLogin, collaborator.Login)
 	}
-	approvers := sets.NewString(collaboratorsLogin...).Insert(trustTeamMembers...).List()
+	committers := sets.NewString(collaboratorsLogin...).Insert(trustTeamMembers...).List()
 
 	if requireLgtm == 0 {
 		requireLgtm = lgtmTwo
@@ -66,9 +66,9 @@ func (s *Server) listOwnersForNonSig(org string, repo string,
 
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
-			Approvers: approvers,
-			Reviewers: approvers,
-			NeedsLgtm: requireLgtm,
+			Committers: committers,
+			Reviewers:  committers,
+			NeedsLgtm:  requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
 	}, nil
@@ -104,23 +104,23 @@ func (s *Server) listOwnersForSig(sigName string,
 		return nil, err
 	}
 
-	var approvers []string
+	var committers []string
 	var reviewers []string
 
 	sig := sigRes.Data
 
 	for _, leader := range sig.Membership.TechLeaders {
-		approvers = append(approvers, leader.GithubName)
+		committers = append(committers, leader.GithubName)
 		reviewers = append(reviewers, leader.GithubName)
 	}
 
 	for _, coLeader := range sig.Membership.CoLeaders {
-		approvers = append(approvers, coLeader.GithubName)
+		committers = append(committers, coLeader.GithubName)
 		reviewers = append(reviewers, coLeader.GithubName)
 	}
 
 	for _, committer := range sig.Membership.Committers {
-		approvers = append(approvers, committer.GithubName)
+		committers = append(committers, committer.GithubName)
 		reviewers = append(reviewers, committer.GithubName)
 	}
 
@@ -134,9 +134,9 @@ func (s *Server) listOwnersForSig(sigName string,
 
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
-			Approvers: sets.NewString(approvers...).Insert(trustTeamMembers...).List(),
-			Reviewers: sets.NewString(reviewers...).Insert(trustTeamMembers...).List(),
-			NeedsLgtm: requireLgtm,
+			Committers: sets.NewString(committers...).Insert(trustTeamMembers...).List(),
+			Reviewers:  sets.NewString(reviewers...).Insert(trustTeamMembers...).List(),
+			NeedsLgtm:  requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
 	}, nil

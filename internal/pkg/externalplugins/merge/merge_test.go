@@ -22,15 +22,15 @@ var (
 )
 
 type fakeOwnersClient struct {
-	approvers []string
-	needsLgtm int
+	committers []string
+	needsLgtm  int
 }
 
 func (f *fakeOwnersClient) LoadOwners(_ string,
 	_, _ string, _ int) (*ownersclient.Owners, error) {
 	return &ownersclient.Owners{
-		Approvers: f.approvers,
-		NeedsLgtm: f.needsLgtm,
+		Committers: f.committers,
+		NeedsLgtm:  f.needsLgtm,
 	}, nil
 }
 
@@ -66,21 +66,21 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			shouldToggle: false,
 		},
 		{
-			name:          "merge comment by approver collab1, no lgtm and no can merge on pr",
+			name:          "merge comment by committer collab1, no lgtm and no can merge on pr",
 			body:          "/merge",
 			commenter:     "collab1",
 			shouldToggle:  false,
 			shouldComment: true,
 		},
 		{
-			name:          "MERGE comment by approver collab1, no lgtm and no can merge on pr",
+			name:          "MERGE comment by committer collab1, no lgtm and no can merge on pr",
 			body:          "/MERGE",
 			commenter:     "collab1",
 			shouldToggle:  false,
 			shouldComment: true,
 		},
 		{
-			name:             "merge comment by approver collab1, lgtm satisfy and no can merge on pr",
+			name:             "merge comment by committer collab1, lgtm satisfy and no can merge on pr",
 			body:             "/merge",
 			commenter:        "collab1",
 			currentLGTMLabel: lgtmTwo,
@@ -104,7 +104,7 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			shouldComment:    false,
 		},
 		{
-			name:             "merge comment by approver collab2",
+			name:             "merge comment by committer collab2",
 			body:             "/merge",
 			commenter:        "collab2",
 			currentLGTMLabel: lgtmTwo,
@@ -112,7 +112,7 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			shouldComment:    true,
 		},
 		{
-			name:             "merge comment by approver collab2, with trailing space",
+			name:             "merge comment by committer collab2, with trailing space",
 			body:             "/merge ",
 			commenter:        "collab2",
 			currentLGTMLabel: lgtmTwo,
@@ -127,7 +127,7 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			shouldComment: true,
 		},
 		{
-			name:             "merge cancel by approver collab2",
+			name:             "merge cancel by committer collab2",
 			body:             "/merge cancel",
 			commenter:        "collab2",
 			currentLGTMLabel: lgtmTwo,
@@ -145,7 +145,7 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			shouldComment:    true,
 		},
 		{
-			name:             "merge cancel comment by approver collab1",
+			name:             "merge cancel comment by committer collab1",
 			body:             "/merge cancel",
 			commenter:        "collab1",
 			currentLGTMLabel: lgtmTwo,
@@ -154,7 +154,7 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			shouldComment:    false,
 		},
 		{
-			name:             "merge cancel comment by approver collab1, with trailing space",
+			name:             "merge cancel comment by committer collab1, with trailing space",
 			body:             "/merge cancel \r",
 			commenter:        "collab1",
 			currentLGTMLabel: lgtmTwo,
@@ -171,7 +171,7 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			shouldComment: false,
 		},
 		{
-			name:             "merge comment by approver collab2, can merge is exist",
+			name:             "merge comment by committer collab2, can merge is exist",
 			body:             "/merge ",
 			commenter:        "collab2",
 			currentLGTMLabel: lgtmTwo,
@@ -189,7 +189,7 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			shouldComment:    true,
 		},
 		{
-			name:             "merge comment by approver collab1, lgtm not satisfy and no can merge on pr",
+			name:             "merge comment by committer collab1, lgtm not satisfy and no can merge on pr",
 			body:             "/merge",
 			commenter:        "collab1",
 			currentLGTMLabel: lgtmOne,
@@ -265,8 +265,8 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			}
 
 			foc := &fakeOwnersClient{
-				approvers: []string{"collab1", "collab2"},
-				needsLgtm: 2,
+				committers: []string{"collab1", "collab2"},
+				needsLgtm:  2,
 			}
 
 			cp := &fakePruner{
@@ -362,8 +362,8 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			}
 
 			foc := &fakeOwnersClient{
-				approvers: []string{"collab1", "collab2"},
-				needsLgtm: 2,
+				committers: []string{"collab1", "collab2"},
+				needsLgtm:  2,
 			}
 
 			cp := &fakePruner{
@@ -417,13 +417,13 @@ func TestMergeReviewCommentWithMergeNoti(t *testing.T) {
 			shouldDelete: false,
 		},
 		{
-			name:         "merge comment by approver collab1, no can merge on pr",
+			name:         "merge comment by committer collab1, no can merge on pr",
 			body:         "/merge",
 			commenter:    "collab1",
 			shouldDelete: true,
 		},
 		{
-			name:         "MERGE comment by approver collab1, no can merge on pr",
+			name:         "MERGE comment by committer collab1, no can merge on pr",
 			body:         "/MERGE",
 			commenter:    "collab1",
 			shouldDelete: true,
@@ -435,13 +435,13 @@ func TestMergeReviewCommentWithMergeNoti(t *testing.T) {
 			shouldDelete: false,
 		},
 		{
-			name:         "merge comment by approver collab2",
+			name:         "merge comment by committer collab2",
 			body:         "/merge",
 			commenter:    "collab2",
 			shouldDelete: true,
 		},
 		{
-			name:         "merge comment by approver collab2, with trailing space",
+			name:         "merge comment by committer collab2, with trailing space",
 			body:         "/merge ",
 			commenter:    "collab2",
 			shouldDelete: true,
@@ -519,8 +519,8 @@ func TestMergeReviewCommentWithMergeNoti(t *testing.T) {
 		}
 
 		foc := &fakeOwnersClient{
-			approvers: []string{"collab1", "collab2"},
-			needsLgtm: 2,
+			committers: []string{"collab1", "collab2"},
+			needsLgtm:  2,
 		}
 
 		cp := &fakePruner{
@@ -767,7 +767,7 @@ func TestHandlePullRequest(t *testing.T) {
 				fakeGitHub,
 				&c.event,
 				cfg,
-				logrus.WithField("plugin", "approve"),
+				logrus.WithField("plugin", PluginName),
 			)
 
 			if err != nil && c.err == nil {
@@ -864,8 +864,8 @@ func TestAddTreeHashComment(t *testing.T) {
 	fc.Commits[SHA] = commit
 
 	foc := &fakeOwnersClient{
-		approvers: []string{"collab1"},
-		needsLgtm: 2,
+		committers: []string{"collab1"},
+		needsLgtm:  2,
 	}
 
 	_ = handle(true, cfg, rc, fc, foc, &fakePruner{}, logrus.WithField("plugin", PluginName))
@@ -927,8 +927,8 @@ func TestRemoveTreeHashComment(t *testing.T) {
 	}
 
 	foc := &fakeOwnersClient{
-		approvers: []string{"collab1"},
-		needsLgtm: 2,
+		committers: []string{"collab1"},
+		needsLgtm:  2,
 	}
 
 	_ = handle(false, cfg, rc, fc, foc, fp, logrus.WithField("plugin", PluginName))

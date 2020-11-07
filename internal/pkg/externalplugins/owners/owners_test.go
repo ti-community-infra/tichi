@@ -70,9 +70,9 @@ func TestListOwners(t *testing.T) {
 		trustTeam              string
 		requireLgtmLabelPrefix string
 
-		exceptApprovers []string
-		exceptReviewers []string
-		exceptNeedsLgtm int
+		exceptCommitters []string
+		exceptReviewers  []string
+		exceptNeedsLgtm  int
 	}{
 		{
 			name:   "has one sig label",
@@ -82,7 +82,7 @@ func TestListOwners(t *testing.T) {
 					Name: "sig/testing",
 				},
 			},
-			exceptApprovers: []string{
+			exceptCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 			},
@@ -103,7 +103,7 @@ func TestListOwners(t *testing.T) {
 				},
 			},
 			requireLgtmLabelPrefix: "require-LGT",
-			exceptApprovers: []string{
+			exceptCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 			},
@@ -114,11 +114,11 @@ func TestListOwners(t *testing.T) {
 			exceptNeedsLgtm: 1,
 		},
 		{
-			name:            "non sig label",
-			sigRes:          &validSigRes,
-			exceptApprovers: collaborators,
-			exceptReviewers: collaborators,
-			exceptNeedsLgtm: lgtmTwo,
+			name:             "non sig label",
+			sigRes:           &validSigRes,
+			exceptCommitters: collaborators,
+			exceptReviewers:  collaborators,
+			exceptNeedsLgtm:  lgtmTwo,
 		},
 		{
 			name:   "non sig label and require one lgtm",
@@ -129,7 +129,7 @@ func TestListOwners(t *testing.T) {
 				},
 			},
 			requireLgtmLabelPrefix: "require-LGT",
-			exceptApprovers:        collaborators,
+			exceptCommitters:       collaborators,
 			exceptReviewers:        collaborators,
 			exceptNeedsLgtm:        1,
 		},
@@ -137,7 +137,7 @@ func TestListOwners(t *testing.T) {
 			name:              "non sig label but use default sig name",
 			sigRes:            &validSigRes,
 			useDefaultSigName: true,
-			exceptApprovers: []string{
+			exceptCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 			},
@@ -157,7 +157,7 @@ func TestListOwners(t *testing.T) {
 				},
 			},
 			requireLgtmLabelPrefix: "require-LGT",
-			exceptApprovers: []string{
+			exceptCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 			},
@@ -175,7 +175,7 @@ func TestListOwners(t *testing.T) {
 					Name: "sig/testing",
 				},
 			},
-			exceptApprovers: []string{
+			exceptCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 				// Team members.
@@ -281,8 +281,8 @@ func TestListOwners(t *testing.T) {
 				t.Errorf("unexpected error: '%v'", err)
 			}
 
-			if len(res.Data.Approvers) != len(testCase.exceptApprovers) {
-				t.Errorf("Different approvers: Got \"%v\" expected \"%v\"", res.Data.Approvers, testCase.exceptApprovers)
+			if len(res.Data.Committers) != len(testCase.exceptCommitters) {
+				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", res.Data.Committers, testCase.exceptCommitters)
 			}
 
 			if len(res.Data.Reviewers) != len(testCase.exceptReviewers) {
