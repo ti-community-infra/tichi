@@ -52,6 +52,15 @@ builds:
     main: ./cmd/ticommunityneedsrebase/main.go
     env:
       - CGO_ENABLED=0
+  - id: "ti-community-autoresponder"
+    binary: ticommunityautoresponder
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/ticommunityautoresponder/main.go
+    env:
+      - CGO_ENABLED=0
 source:
   enabled: true
 checksum:
@@ -118,3 +127,12 @@ dockers:
       - "rustinliu/ti-community-prow-needs-rebase-plugin:{{ .Tag }}"
       - "rustinliu/ti-community-prow-needs-rebase-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/needsrebase/Dockerfile
+  - binaries:
+      - ticommunityautoresponder
+    builds:
+      - ti-community-autoresponder
+    image_templates:
+      - "rustinliu/ti-community-prow-autoresponder-plugin:latest"
+      - "rustinliu/ti-community-prow-autoresponder-plugin:{{ .Tag }}"
+      - "rustinliu/ti-community-prow-autoresponder-plugin:{{ .Major }}"
+    dockerfile: ./deployments/plugins/autoresponder/Dockerfile
