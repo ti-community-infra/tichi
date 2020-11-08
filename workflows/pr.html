@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Tide - Prow in TiDB</title>
+        <title>PR workflow - Prow in TiDB</title>
         
         
 
@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="../components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/tide.html" class="active"><strong aria-hidden="true">2.1.</strong> Tide</a></li></ol></li><li class="chapter-item expanded "><a href="../plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="../plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="../plugins/merge.html"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="../plugins/label.html"><strong aria-hidden="true">3.4.</strong> ti-community-label</a></li></ol></li><li class="chapter-item expanded "><a href="../workflows.html"><strong aria-hidden="true">4.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workflows/pr.html"><strong aria-hidden="true">4.1.</strong> PR workflow</a></li><li class="chapter-item expanded "><a href="../workflows/label.html"><strong aria-hidden="true">4.2.</strong> Label workflow</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="../components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li></ol></li><li class="chapter-item expanded "><a href="../plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="../plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="../plugins/merge.html"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="../plugins/label.html"><strong aria-hidden="true">3.4.</strong> ti-community-label</a></li></ol></li><li class="chapter-item expanded "><a href="../workflows.html"><strong aria-hidden="true">4.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workflows/pr.html" class="active"><strong aria-hidden="true">4.1.</strong> PR workflow</a></li><li class="chapter-item expanded "><a href="../workflows/label.html"><strong aria-hidden="true">4.2.</strong> Label workflow</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -163,69 +163,52 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#a-hrefhttpsgithubcomkubernetestest-infratreemasterprowtidetidea" id="a-hrefhttpsgithubcomkubernetestest-infratreemasterprowtidetidea"><a href="https://github.com/kubernetes/test-infra/tree/master/prow/tide">Tide</a></a></h1>
-<p>Tide 是 Prow 的一个组件，主要通过一些给定条件来管理 GitHub PR 池。它将自动重新检测符合条件的PR，并在它们通过检测时自动合并它们。</p>
-<p>它具有一下特性：</p>
-<ul>
-<li>自动运行批处理测试，并在可能的情况下将多个 PR 合并在一起。（如果你不使用 Prow 的 CI，这个功能是失效的）</li>
-<li>确保在允许 PR 合并之前，针对最近的基本分支提交对 PR 进行测试。（如果你不使用 Prow 的 CI，这个功能是失效的）</li>
-<li>维护一个 GitHub 状态上下文，该上下文指示每个 PR 是否在 PR 池中或缺少哪些要求。（这个就是指类似于其他 CI 在 PR 中汇报的状态，在该状态的 message 中会指定目前 PR 的状态）</li>
-<li>支持使用特别的 GitHub Label 阻止 PR 合并到单个分支或整个存储库。</li>
-<li>Prometheus 指标。</li>
-<li>支持具有“可选”状态，这些状态上下文对于合并不是强制的。</li>
-<li>提供有关当前 PR 池的实时数据和尝试合并历史记录，可以在 <a href="https://github.com/kubernetes/test-infra/tree/master/prow/cmd/deck">Deck</a>、<a href="https://prow.tidb.io/tide">Tide Dashboard</a> 、<a href="https://prow.tidb.io/pr">PR Status</a> 和 <a href="https://prow.tidb.io/tide-history">Tide History</a> 中展示这些数据。</li>
-<li>有效地进行扩展，使具有单个 bot 令牌的单个实例可以为满足合并条件的数十个组织和存储库提供合并自动化。每个不同的 'org/repo:branch' 组合都定义了一个不干扰的合并池，因此合并仅影响同一分支中的其他 PR。</li>
-<li>提供可配置的合并模式（'merge', 'squash', or 'rebase'）。</li>
-</ul>
-<h2><a class="header" href="#tide-在-tidb-社区" id="tide-在-tidb-社区">Tide 在 TiDB 社区</a></h2>
-<p>Tide 在 TiDB 社区使用基本正常，但是还是遇到了一个棘手的问题（<strong>目前其他社区也还没解决该问题</strong>）：</p>
+                        <h1><a class="header" href="#pr-workflow" id="pr-workflow">PR workflow</a></h1>
+<h2><a class="header" href="#设计背景" id="设计背景">设计背景</a></h2>
+<p>在引入 Tide 之后 PR 的协作流程发生了一些变化，但是基本的大框架还是保留了下来。主要的调整发生在 PR 合并阶段，从原来一次性的 <code>/merge</code> 命令去触发机器人运行测试合并代码变成了 <code>/merge</code> 只负责打上 <code>status/can-merge</code> 标签。当 PR 的标签满足要求并且所有测试通过后，PR 将会自动合并无需人为干预。</p>
+<p><strong>⚠️ 注意：在阅读以下内容之前请先仔细阅读 <a href="./../components/tide.html">Tide</a>、<a href="./../plugins/lgtm.html">ti-community-lgtm</a> 和 <a href="./../plugins/merge.html">ti-community-merge</a> 章节内容</strong>。</p>
+<h2><a class="header" href="#推荐使用-squash-模式合并代码" id="推荐使用-squash-模式合并代码">推荐使用 Squash 模式合并代码</a></h2>
+<p>在合并方式上我们还是推荐采用 GitHub 的 Squash 模式进行合并，因为这是目前 TiDB 社区的传统，大家都会在 PR 中创建大量提交，然后再合并时通过 GitHub 自动进行 Squash。目前我们的 ti-community-merge 的设计也是为 Squash 模式服务，<strong>如果不采用 Squash 模式，那么你在 PR 中就需要自己负责 rebase 或者 squash PR，这样会使我们存储提交 hash 的功能失效（详见 Q&amp;A），最终导致你的标签被视为新的提交而自动取消</strong>。所以我们强烈建议大家使用 Squash 模式进行协作。</p>
+<h2><a class="header" href="#推荐打开-require-branches-to-be-up-to-date-before-merging-分支保护选项" id="推荐打开-require-branches-to-be-up-to-date-before-merging-分支保护选项">推荐打开 Require branches to be up to date before merging 分支保护选项</a></h2>
+<p>打开这个功能就能解决我们在 Tide 介绍中提到的问题：</p>
+<blockquote>
 <ul>
 <li>PR1: 重命名 bifurcate() 为 bifurcateCrab()</li>
 <li>PR2: 调用 bifurcate()</li>
 </ul>
 <p>这个时候两个 PR 都会以当前 master 作为 Base 分支进行测试，两个 PR 都会通过。但是一旦 PR1 先合并入 master 分支，第二个 PR 合并之后（因为测试也通过了），就会导致 master 出现找不到 <code>bifurcate</code> 的错误。</p>
-<p>目前正在致力于解决这个问题，我会在推荐的工作流中介绍如何解决该问题。</p>
-<p><strong>Kubernetes 社区目前没有这个问题，因为如果使用 Prow 的 CI 系统 Tide 会自动有最新的 master 作为 base 进行测试</strong>。</p>
-<h2><a class="header" href="#我怎么样才能让我的-pr-合并" id="我怎么样才能让我的-pr-合并">我怎么样才能让我的 PR 合并？</a></h2>
-<p>如果你只是想让自己的 PR 合并，你看下面的文档就可以了。</p>
-<h3><a class="header" href="#从这几个地方获取-pr-状态" id="从这几个地方获取-pr-状态">从这几个地方获取 PR 状态</a></h3>
+</blockquote>
+<p>该功能要求 PR 在合并之前必须合并当前 master 到 PR，这样就保证我们的 PR 用了最新的 master 分支作为 Base 测试。但是打开这个功能之后有两个影响：</p>
+<ol>
+<li>PR 在合并当前 master 到 PR 之前无法自动合并</li>
+<li>PR 合并当前 master 到 PR 导致 <code>status/can-merge</code> 标签消失</li>
+</ol>
+<p><strong>第一个问题我正在努力解决当中，会开发一个插件自动更新 master 到 PR。第二个问题已经解决，因为可以识别到使用 GitHub 更新按钮更新 master 到 PR 的提交的 committer 为 <code>web-flow</code>，所以可以根据 committer 来判断是否信任该提交。</strong></p>
+<h2><a class="header" href="#推荐协作流程" id="推荐协作流程">推荐协作流程</a></h2>
 <ul>
-<li>PR 下面的 CI 状态上下文。状态要么告诉你的 PR 在合并池了，要么告诉你为什么它不在合并池中。 点击详情会跳转到 <a href="https://prow.tidb.io/tide">Tide Dashboard</a>。例如：<img src="https://user-images.githubusercontent.com/29879298/98230629-54037400-1f96-11eb-8a9c-1144905fbbd5.png" alt="example" /></li>
-<li>在 <a href="https://prow.tidb.io/pr">PR status</a> 中，你的每一个 PR 都会有一个卡片，每个卡片都显示了测试结果和合并要求。（推荐使用）</li>
-<li>在 <a href="https://prow.tidb.io/tide">Tide Dashboard</a> 中，显示每个合并池的状态,可以查看 Tide 当前正在做什么以及 PR 在重新检测队列中的位置。</li>
-</ul>
-<h3><a class="header" href="#qa" id="qa">Q&amp;A</a></h3>
-<h4><a class="header" href="#我的-pr-有没有在合并队列中" id="我的-pr-有没有在合并队列中">我的 PR 有没有在合并队列中？</a></h4>
-<p>如果 Tide 的状态是成功（绿色）那么它就已经在合并池了，如果是未成功（黄色）那么它不会进入合并池。</p>
-<h4><a class="header" href="#我的-pr-为啥没有在合并队列中" id="我的-pr-为啥没有在合并队列中">我的 PR 为啥没有在合并队列中？</a></h4>
-<p>如果是你刚刚更新完 PR，请等待一下让 Tide 有时间去检测（默认一分钟）。</p>
-<p>决定你的 PR 在不在队列中由以下两个部分决定：</p>
+<li><a href="https://viewer.diagrams.net/?highlight=0000ff&amp;edit=_blank&amp;layers=1&amp;nav=1&amp;title=pr-workflow.drawio#R7Vxdc5s4FP01emwGEB%2FiERw77W62022zm%2B3TDrEVmxaDF%2BM47q9fCYQBIWM5YOO6nslMLCGE4N5zdO%2BRAMDB%2FPUu9hazP6IJDoCmTF4BvAWapuqaSf7Rmk1WY2koq5jG%2FoQ1Kiq%2B%2BD8wq1RY7cqf4GWlYRJFQeIvqpXjKAzxOKnUeXEcravNnqOgetWFN8W1ii9jL6jXPvqTZMZqVdMuDrzH%2FnTGLo00Kzsw9%2FLG7E6WM28SrUtVcAjgII6iJPs1fx3ggD68%2FLk8ftg8Bvffzbvf%2Flz%2B5%2F3l%2Fv7w8e93WWejQ07Z3kKMw6TbrrWs6xcvWLHnxe412eQPMI5W4QTTThQA3VkyD8hPlfz8hpNkwwzurZKIVEVxMoumUegF91G0YO2eozBhzVRaxuHEoYYl5XHgLZf%2B%2BGHmh9mBkR%2Fk3ZMSOwuR0jKJo%2B9bC9LjW3PQYQXeEw5cb%2Fx9mg53EAVRTA6FUYhpVxPiEuyOiiEOi1pysSTe%2FEM7uzHy4lfWd1q4fa2UNqwkaRlmwWW0ise4oR1kAPHiKWb93ePhhxfzk%2Fq8mv47%2FaZ9%2BLieh8zSCr2vkpczu9%2FhaI7JIEmDGAde4r9UoeAxRE237banfop8ch%2BawtC%2FdX2GfdVSql1kA2VnFb5HfpSGUVSlHnmAd8K6dw4RcHXgqGBoATQAzpDWIAUgAwxNgEbAVsBQB64DHB1opjcnXuiGT8tFaizl0%2BcG%2F6ZetZ75Cf6y8FIzrQklVn2%2B7MvkqblT6sDMF%2Fa46GGu8oLjBL82Gjc%2FalaNhFhxXWK73I6zEtHpym53qBjyUKshgdVsaiPbSc03Asi6skyPLJNPzXtpRpekGeaJ75QbrcoX7EJvpaG8SfT8vMQVhtlLVdA8LVXZAqc3gU0YypHw%2Fv2ucwn4yL1frfh%2BAYUz837ZSZZ5oHKjGAidzOF1jvY1Q87hidG9TanZgjZY7o4BIAcszVIax8W3V%2B1Ke%2FIjG0Gn6MttWoJfjF98vCZ1KQ4RcEZgaNDowDFlpqNZNH9aLfcHBBX%2FpxgbeXM%2FoPf%2BHgcvOPHHniBs8AJ%2FGlLkEZfGsRhY5JJ%2BOCUlsyg9pHAmvHzEcMLi7A0F8YQiiCdQB%2FGEEIf1lORQuhQSooA4S3ZtN1VznPE29moipTJ5NSCiRUbQymR1OH5O4Uh8nQLSAs6A%2FtFAPY3eCSAJRF2TYpWE9K6RjjQDcGOguAedO5xf1h7SMfcWNKcIuoVPXK09qFOA5NVPShghpa%2BlIwVCaKFHgOxu1xc%2BzHq02IP5jm0KXdIURp%2Bm0HcF7q6TBgw2cBBTFGiNCVwLuC49hBzgKKnRvISECtro%2Fu6hDsOz5Cto9M1X6DqpcwCQAIrVJ1AM%2BTndodLcAXP6HlRU7X4qjOiiwFeEET7x6m5O72dSP1OQWJIg6TfyVQUrKnL6zz0VT6qmqKWJ1OtJRhk47MDcn0wyq%2BOl%2F8N7SvujxmBZPenccIFx2wQbtvDGTgZbIa1suAb3lFcDmZrfvTbyBhWhycN%2BORHhCFzKiQiG0reIcNVnj6bP5llgnveVzuotC5SdLHakHoWkqyHzWLRVX8PgUcNH39lt1yTdekeIC2UkF0PaasP5gGW1Yd0wOGC304bF05Qgw7uGVVy4JBNXwZZxldzCnaXI%2BWpn7lHXKtsIAHXfOksBwNT6FgDUX0MDU2W39Ki9qmBqfavNIJrP%2FSRh6b1Bc3i67cakPu%2FW5ZuzzOFNu3c3FwSel%2BjmshKWivp0c01E9heanduNSCHJOYuLzjcfV%2BuSo4CIrpl5m8zcEq1cijJzfutndwxZl12uqfkFp%2BbyU8WOhKOn5JzLqVF%2BHwcn5zaHQHik5BxyA1aMxnHx7S21241b4glZIJdfYniEJH2%2B9Ub%2BdlQs2rr9xlx47IXv5pjcbn3yPceEGMnu4OHR2l1savbh%2BYUsddjMcmzEbN8V24sYvU%2FEQAF%2FHRi8%2FHSZReaoTet%2B%2BhEn5q5mnhzHVxX4ILjB06jAqsIrMkeWgWG%2BUfrylQG4Y4NEoQxUTJGvpbW0sFo1cL4F8vhA10SWNel%2BJORSyzojYBtXFaGVimDLviRwNBVB62VD4dFpWXYL7ZFeANa5XBXx%2BzM6ylV13p%2FM5ly11r6aq%2B6dXuyT5LaircXNry8jYJtpNnVLX2WmidYtjSWLNjblIXKU0hXhMCUlMCulKyN9%2B1ltCj%2FrtMdj5ixWcaDOs4t1Y9T4xRbQi8FpMt3Ri91LtHiG71fIJ2a9ShlQ78VgZxreQ9lVaNh2FVoyvFdPvMsDij4l0aBsGZRb7dtSfJiGhYSg6SGbbmv%2FKWStIo%2FqTdeC%2FehaOXUesPJxrloYbLti0jYKFC8MdB0EqipPErA5CuRPOMmKBdy5XInsUlhm0cAL6aKP0lyEhtCsASo3qqZXZQR2xTMWBK%2BvpL2Fc%2FS2r9tIRgzbijezTucOs%2BOdAouuhBVMcKEEsGMfV7EIoOgVA%2BafcThjAhBtN6rLgm24%2FqoY1jOA3iTDPKwp2Zt%2BHk45KNY%2FxTfjTpAmCL%2Fy0tFGWVIsPpKZgbX41Cgc%2Fg8%3D">要求两个 lgtm 的 PR 的协作流程图</a>
 <ul>
-<li>检查你的 PR label 是否满足要求。</li>
-<li>检查你要求的 CI 是否都通过了。</li>
+<li>流程中如果发现新的提交，<strong>会保持 lgtm 相关 label，但是会自动取消 <code>status/can-merge</code> 标签</strong></li>
+<li>在某些测试不通过是时，<strong>只需触发失败的测试即可</strong></li>
 </ul>
-<h4><a class="header" href="#为什么-pr-合并了但是-tide-的状态还是-penning" id="为什么-pr-合并了但是-tide-的状态还是-penning">为什么 PR 合并了，但是 Tide 的状态还是 Penning?</a></h4>
-<p>因为有些情况下可能它检测到了 PR 已经满足了要求，但是还没来得及将状态更新到 GitHub 就已经合并了。</p>
-<h4><a class="header" href="#如果我的-pr-的其中某个测试失败了我是需要全部重新跑还是只跑一个" id="如果我的-pr-的其中某个测试失败了我是需要全部重新跑还是只跑一个">如果我的 PR 的其中某个测试失败了，我是需要全部重新跑，还是只跑一个？</a></h4>
-<p>只需要重新跑失败的测试即可。</p>
-<h2><a class="header" href="#其他参考资料" id="其他参考资料">其他参考资料</a></h2>
-<ul>
-<li><a href="https://github.com/kubernetes/test-infra/blob/master/prow/cmd/tide/maintainers.md">Maintainer's Guide to Tide</a></li>
-<li><a href="https://github.com/bors-ng/bors-ng">bors-ng</a></li>
+</li>
 </ul>
+<h2><a class="header" href="#qa" id="qa">Q&amp;A</a></h2>
+<h3><a class="header" href="#为什么我自己-rebase-或者-squash-提交会导致-statuscan-merge-被移除" id="为什么我自己-rebase-或者-squash-提交会导致-statuscan-merge-被移除">为什么我自己 rebase 或者 squash 提交会导致 <code>status/can-merge</code> 被移除？</a></h3>
+<p><strong>因为我们目前存储的是打上 <code>status/can-merge</code> 标签时你 PR 中的最后一个提交的 hash</strong>。当你 rebase 之后整个 hash 都会发生变化，所以会自动取消标签。当你自己 squash 的时候，因为我们存储的是最后一个提交的 hash 不是第一个提交的 hash，这样还是会导致 hash 对不上自动取消标签。</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="../components.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../workflows.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="../plugins.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../workflows/label.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -237,13 +220,13 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="../components.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../workflows.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a rel="next" href="../plugins.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../workflows/label.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
