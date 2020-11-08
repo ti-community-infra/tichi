@@ -1,14 +1,15 @@
 presubmits:
   tidb-community-bots/ti-community-prow:
-    - name: pull-kubernetes-validate-prow-yaml
+    - name: pull-ti-community-prow-validate-prow-yaml
       always_run: true
       decorate: true
+      branches:
+        - master
       spec:
         containers:
           - image: gcr.io/k8s-prow/checkconfig:v20201104-7f4d0d52ed
             command:
-              - /app/prow/cmd/checkconfig/app.binary
+              - /checkconfig
             args:
               - --plugin-config=configs/prow/config/plugins.yaml
               - --config-path=configs/prow/config/config.yaml
-              - --prow-yaml-repo-name=$(REPO_OWNER)/$(REPO_NAME)
