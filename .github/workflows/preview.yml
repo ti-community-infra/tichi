@@ -24,5 +24,3 @@ jobs:
           build: |
             echo donothing
           dist: docs/book
-      - name: Get the preview_url
-          run: echo "url => ${{ steps.preview_step.outputs.preview_url }}"

@@ -9,3 +9,5 @@
   - [ti-community-merge](./plugins/merge.md)
   - [ti-community-label](./plugins/label.md)
 - [Workflows](./workflows.md)
+  - [PR workflow](./workflows/pr.md)
+  - [Label workflow](./workflows/label.md)
