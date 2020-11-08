@@ -8,7 +8,7 @@ ti-community-lgtm 就是用来根据权限，自动的为 PR 添加对应 label 
 
 ## 权限设计
 
-因为该插件主要负责 code review 的协作过程，所以权限如下：
+该插件主要负责 code review 的协作过程，权限如下：
 
 - `/lgtm` 或 GitHub approve
   - reviewers
@@ -51,10 +51,29 @@ ti-community-lgtm 就是用来根据权限，自动的为 PR 添加对应 label 
 | review_acts_as_lgtm  | bool     | 是否将 GitHub Approve/Request Changes 视为有效的 `/lgtm [cancel]` |
 | pull_owners_endpoint | string   | PR owners RESTFUL 接口地址                                        |
 
+例如：
+
+```yml
+ti-community-lgtm:
+  - repos:
+      - tidb-community-bots/test-live
+      - tidb-community-bots/ti-community-prow
+      - tidb-community-bots/ti-community-bot
+      - tidb-community-bots/ti-challenge-bot
+      - tikv/pd
+    review_acts_as_lgtm: true
+    pull_owners_endpoint: https://prow.tidb.io/ti-community-owners # 你可以定义不同的获取 owners 的链接
+  - repos:
+      - tikv/community
+      - pingcap/community
+    review_acts_as_lgtm: true
+    pull_owners_endpoint: https://bots.tidb.io/ti-community-bot # 我们针对 community 做了 owners 的定制
+```
+
 ## 参考文档
 
-- [command help](https://prow.tidb.io/command-help#lgtm)
-- [代码](https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/lgtm)
+- [command help](https://prow.tidb.io/command-help?repo=tidb-community-bots%2Ftest-live#lgtm)
+- [代码实现](https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/lgtm)
 
 ## Q&A
 
