@@ -9,6 +9,6 @@ presubmits:
             command:
               - /app/prow/cmd/checkconfig/app.binary
             args:
-              - --plugin-config=./configs/prow/config/plugins.yaml
-              - --config-path=./configs/prow/config/config.yaml
+              - --plugin-config=configs/prow/config/plugins.yaml
+              - --config-path=configs/prow/config/config.yaml
               - --prow-yaml-repo-name=$(REPO_OWNER)/$(REPO_NAME)
