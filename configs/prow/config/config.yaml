@@ -77,7 +77,7 @@ branch-protection:
 
 in_repo_config:
   enabled:
-    "*": true
+    tidb-community-bots/ti-community-prow: true
 
 deck:
   spyglass:
