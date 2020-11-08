@@ -35,6 +35,12 @@ require_matching_label:
       There are no type labels on this issue. Please add an appropriate label by using one of the following commands:
       - `/type <type-name>`
 
+triggers:
+  - repos:
+      - tidb-community-bots/ti-community-prow
+    ignore_ok_to_test: true
+    only_org_members: false
+
 plugins:
   tidb-community-bots/test-live:
     - assign
@@ -74,6 +80,7 @@ plugins:
     - hold
     - config-updater
     - require-matching-label
+    - trigger
   tikv/community:
     - assign
   tikv/pd:
