@@ -44,10 +44,11 @@ branch-protection:
               protect: true
               required_status_checks:
                 contexts:
-                  - build
-                  - lint
+                  - "build"
+                  - "lint"
                   - "Semantic Pull Request"
                   - "codecov/project"
+                  - "pull-ti-community-prow-validate-prow-yaml"
                 strict: true
         ti-community-bot:
           branches:
