@@ -1,6 +1,6 @@
 name: Surge PR Preview
 
-on: [pull_request_target, push]
+on: [ pull_request_target, push ]
 
 jobs:
   preview:
@@ -15,11 +15,13 @@ jobs:
         uses: peaceiris/actions-mdbook@v1
         with:
           mdbook-version: 'latest'
-      - run: mdbook build
       - uses: afc163/surge-preview@v1
+        id: preview_step
         with:
           surge_token: ${{ secrets.SURGE_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           build: |
-            echo donothing
+            mdbook build
           dist: docs/book
+      - name: Get the preview_url
+          run: echo "url => ${{ steps.preview_step.outputs.preview_url }}"
