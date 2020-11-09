@@ -40,6 +40,7 @@ ti-community-owners:
     default_sig_name: scheduling
     trusted_team_for_owners: maintainers
     sig_endpoint: https://bots.tidb.io/ti-community-bot
+    require_lgtm_label_prefix: require-LGT
 
 ti-community-label:
   - repos:
@@ -57,4 +58,11 @@ ti-community-autoresponder:
     auto_responds:
       - regex: "(?mi)^/ping\\s*$"
         message: "pong"
+  - repos:
+      - tikv/pd
+    auto_responds:
+      - regex: "(?mi)^/merge\\s*$"
+        message: |
+          It seems you want to merge this PR, I will help you trigger all the tests:
+          /run-all-tests
 
