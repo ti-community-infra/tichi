@@ -167,6 +167,11 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		return nil, err
 	}
 
+	// When we cannot find the require label from the PR, try to use the default require lgtm.
+	if requireLgtm == 0 {
+		requireLgtm = opts.DefaultRequireLgtm
+	}
+
 	trustTeamMembers := getTrustTeamMembers(s.Log, s.Gc, org, opts.OwnersTrustTeam)
 
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
