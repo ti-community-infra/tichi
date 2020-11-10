@@ -36,6 +36,18 @@ branch-protection:
               required_status_checks:
                 contexts:
                   - "Sig Info File Format"
+    pingcap-incubator:
+      repos:
+        tidb-dashboard:
+          branches:
+            master:
+              protect: true
+              required_status_checks:
+                contexts:
+                  - "backend"
+                  - "UI"
+                  - "frontend"
+                  - "license/cla"
     tidb-community-bots:
       repos:
         ti-community-prow:
@@ -131,6 +143,7 @@ tide:
     tikv/community: squash
     tikv/pd: squash
     pingcap/community: squash
+    pingcap-incubator/tidb-dashboard: squash
 
   target_url: https://prow.tidb.io/tide
 
@@ -146,6 +159,7 @@ tide:
         - tikv/community
         - tikv/pd
         - pingcap/community
+        - pingcap-incubator/tidb-dashboard
       labels:
         - status/can-merge
       missingLabels:
@@ -171,3 +185,7 @@ tide:
               - "idc-jenkins-ci/build"
               - "idc-jenkins-ci/test"
             skip-unknown-contexts: true
+      pingcap-incubator:
+        repos:
+          tidb-dashboard:
+            from-branch-protection: true

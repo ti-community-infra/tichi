@@ -5,6 +5,7 @@ ti-community-lgtm:
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
       - tikv/pd
+      - pingcap-incubator/tidb-dashboard
     review_acts_as_lgtm: true
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
   - repos:
@@ -20,6 +21,7 @@ ti-community-merge:
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
       - tikv/pd
+      - pingcap-incubator/tidb-dashboard
     store_tree_hash: true
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
   - repos:
@@ -41,6 +43,11 @@ ti-community-owners:
     trusted_team_for_owners: maintainers
     sig_endpoint: https://bots.tidb.io/ti-community-bot
     require_lgtm_label_prefix: require-LGT
+  - repos:
+      - pingcap-incubator/tidb-dashboard
+    default_sig_name: diagnosis
+    trusted_team_for_owners: maintainers
+    sig_endpoint: https://bots.tidb.io/ti-community-bot
 
 ti-community-label:
   - repos:
