@@ -68,6 +68,7 @@ func TestListOwners(t *testing.T) {
 		labels                 []github.Label
 		useDefaultSigName      bool
 		trustTeam              string
+		defaultRequireLgtm     int
 		requireLgtmLabelPrefix string
 
 		exceptCommitters []string
@@ -168,6 +169,23 @@ func TestListOwners(t *testing.T) {
 			exceptNeedsLgtm: 1,
 		},
 		{
+			name:                   "non sig label but use default sig name and default require two lgtm",
+			sigRes:                 &validSigRes,
+			useDefaultSigName:      true,
+			labels:                 []github.Label{},
+			requireLgtmLabelPrefix: "require-LGT",
+			defaultRequireLgtm:     2,
+			exceptCommitters: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2",
+			},
+			exceptReviewers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2", "reviewer1", "reviewer2",
+			},
+			exceptNeedsLgtm: lgtmTwo,
+		},
+		{
 			name:   "has one sig label and a trust team",
 			sigRes: &validSigRes,
 			labels: []github.Label{
@@ -200,8 +218,9 @@ func TestListOwners(t *testing.T) {
 
 			config := &tiexternalplugins.Configuration{}
 			owners := tiexternalplugins.TiCommunityOwners{
-				Repos:       []string{"tidb-community-bots/test-dev"},
-				SigEndpoint: testServer.URL,
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				SigEndpoint:        testServer.URL,
+				DefaultRequireLgtm: testCase.defaultRequireLgtm,
 			}
 
 			if testCase.useDefaultSigName {

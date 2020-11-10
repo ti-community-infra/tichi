@@ -47,6 +47,7 @@
 | repos                     | []string | 配置生效仓库                                  |
 | sig_endpoint              | string   | 获取 sig 信息 RESTFUL 接口地址                |
 | default_sig_name          | string   | 为该仓库设置默认 sig 名字                     |
+| default_require_lgtm      | int      | 为该仓库设置默认需要的 lgtm 个数              |
 | require_lgtm_label_prefix | string   | 指定当前 PR 需要的 lgtm 个数                  |
 | trusted_team_for_owners   | string   | 信任的 GitHub team（一般为 maintainers team） |
 
