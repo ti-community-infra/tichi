@@ -64,5 +64,6 @@ ti-community-autoresponder:
       - regex: "(?mi)^/merge\\s*$"
         message: |
           It seems you want to merge this PR, I will help you trigger all the tests:
+
           /run-all-tests
 
