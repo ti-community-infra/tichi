@@ -75,3 +75,13 @@ ti-community-autoresponder:
 
           /run-all-tests
 
+ti-community-blunderbuss:
+  - repos:
+      - tidb-community-bots/ti-community-prow
+    pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
+    max_request_count: 1
+    exclude_reviewers:
+      - ti-community-prow-bot
+
+
+
