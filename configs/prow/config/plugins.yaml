@@ -124,6 +124,10 @@ external_plugins:
       events:
         - pull_request
         - issue_comment
+    - name: ti-community-blunderbuss
+      events:
+        - pull_request
+        - issue_comment
   tidb-community-bots/ti-community-bot:
     - name: ti-community-lgtm
       events:

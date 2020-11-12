@@ -2,24 +2,24 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: prow
-  name: ti-community-merge
+  name: ti-community-blunderbuss
   labels:
-    app: ti-community-merge
+    app: ti-community-blunderbuss
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ti-community-merge
+      app: ti-community-blunderbuss
   template:
     metadata:
       labels:
-        app: ti-community-merge
+        app: ti-community-blunderbuss
     spec:
       serviceAccountName: "hook"
       terminationGracePeriodSeconds: 180
       containers:
-        - name: ti-community-merge
-          image: rustinliu/ti-community-prow-merge-plugin:v0.12.0
+        - name: ti-community-blunderbuss
+          image: rustinliu/ti-community-prow-blunderbuss-plugin:v0.12.0
           imagePullPolicy: Always
           args:
             - --dry-run=false

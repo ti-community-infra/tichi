@@ -19,7 +19,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
         - name: ti-community-autoresponder
-          image: rustinliu/ti-community-prow-autoresponder-plugin:v0.11.3
+          image: rustinliu/ti-community-prow-autoresponder-plugin:v0.12.0
           imagePullPolicy: Always
           args:
             - --dry-run=false
