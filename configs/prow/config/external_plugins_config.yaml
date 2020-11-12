@@ -85,7 +85,7 @@ ti-community-blunderbuss:
   - repos:
       - tikv/pd
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
-    max_request_count: 3
+    max_request_count: 2
     exclude_reviewers:
       - ti-community-prow-bot
       - ti-srebot
