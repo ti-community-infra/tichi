@@ -80,7 +80,7 @@ ti-community-blunderbuss:
       - tidb-community-bots/ti-community-prow
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
     max_request_count: 1
-    ExcludeReviewers:
+    exclude_reviewers:
       - ti-community-prow-bot
 
 
