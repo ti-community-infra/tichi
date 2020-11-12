@@ -242,6 +242,38 @@ func TestValidateConfig(t *testing.T) {
 			},
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
+		{
+			name: "invalid blunderbuss max reviewer count",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   -1,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			expected: fmt.Errorf("max reviewer count must more than 0"),
+		},
 	}
 
 	for _, tc := range testCases {

@@ -1,6 +1,7 @@
 package externalplugins
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -317,6 +318,9 @@ func validateBlunderbuss(blunderbusses []TiCommunityBlunderbuss) error {
 		_, err := url.ParseRequestURI(blunderbuss.PullOwnersEndpoint)
 		if err != nil {
 			return err
+		}
+		if blunderbuss.MaxReviewerCount <= 0 {
+			return errors.New("max reviewer count must more than 0")
 		}
 	}
 
