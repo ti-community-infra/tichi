@@ -1,6 +1,7 @@
 package externalplugins
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"regexp"
@@ -15,6 +16,7 @@ type Configuration struct {
 	TiCommunityOwners        []TiCommunityOwners        `json:"ti-community-owners,omitempty"`
 	TiCommunityLabel         []TiCommunityLabel         `json:"ti-community-label,omitempty"`
 	TiCommunityAutoresponder []TiCommunityAutoresponder `json:"ti-community-autoresponder,omitempty"`
+	TiCommunityBlunderbuss   []TiCommunityBlunderbuss   `json:"ti-community-blunderbuss,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -80,7 +82,7 @@ type TiCommunityLabel struct {
 	Prefixes []string `json:"prefixes,omitempty"`
 }
 
-// TiCommunityAutoresponder is the config for the autoresponder plugin.
+// TiCommunityAutoresponder is the config for the blunderbuss plugin.
 type TiCommunityAutoresponder struct {
 	// Repos is either of the form org/repos or just org.
 	Repos []string `json:"repos,omitempty"`
@@ -94,6 +96,19 @@ type AutoRespond struct {
 	Regex string `json:"regex,omitempty"`
 	// Message specifies the content of the automatic respond.
 	Message string `json:"message,omitempty"`
+}
+
+// TiCommunityBlunderbuss is the config for the blunderbuss plugin.
+type TiCommunityBlunderbuss struct {
+	// Repos is either of the form org/repos or just org.
+	Repos []string `json:"repos,omitempty"`
+	// MaxReviewerCount is the maximum number of reviewers to request
+	// reviews from. Defaults to 0 meaning no limit.
+	MaxReviewerCount int `json:"max_request_count,omitempty"`
+	// ExcludeReviewers specifies which reviewers do not participate in code review.
+	ExcludeReviewers []string `json:"exclude_reviewers,omitempty"`
+	// PullOwnersEndpoint specifies the URL of the reviewer of pull request.
+	PullOwnersEndpoint string `json:"pull_owners_endpoint,omitempty"`
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists
@@ -180,7 +195,7 @@ func (c *Configuration) LabelFor(org, repo string) *TiCommunityLabel {
 	return &TiCommunityLabel{}
 }
 
-// Autoresponder For finds the TiCommunityAutoresponder for a repo, if one exists.
+// AutoresponderFor finds the TiCommunityAutoresponder for a repo, if one exists.
 // TiCommunityAutoresponder configuration can be listed for a repository
 // or an organization.
 func (c *Configuration) AutoresponderFor(org, repo string) *TiCommunityAutoresponder {
@@ -201,6 +216,27 @@ func (c *Configuration) AutoresponderFor(org, repo string) *TiCommunityAutorespo
 	return &TiCommunityAutoresponder{}
 }
 
+// BlunderbussFor finds the TiCommunityBlunderbuss for a repo, if one exists.
+// TiCommunityBlunderbuss configuration can be listed for a repository
+// or an organization.
+func (c *Configuration) BlunderbussFor(org, repo string) *TiCommunityBlunderbuss {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, blunderbuss := range c.TiCommunityBlunderbuss {
+		if !sets.NewString(blunderbuss.Repos...).Has(fullName) {
+			continue
+		}
+		return &blunderbuss
+	}
+	// If you don't find anything, loop again looking for an org config
+	for _, blunderbuss := range c.TiCommunityBlunderbuss {
+		if !sets.NewString(blunderbuss.Repos...).Has(org) {
+			continue
+		}
+		return &blunderbuss
+	}
+	return &TiCommunityBlunderbuss{}
+}
+
 // Validate will return an error if there are any invalid external plugin config.
 func (c *Configuration) Validate() error {
 	if err := validateLgtm(c.TiCommunityLgtm); err != nil {
@@ -216,6 +252,10 @@ func (c *Configuration) Validate() error {
 	}
 
 	if err := validateAutoresponder(c.TiCommunityAutoresponder); err != nil {
+		return err
+	}
+
+	if err := validateBlunderbuss(c.TiCommunityBlunderbuss); err != nil {
 		return err
 	}
 
@@ -266,6 +306,21 @@ func validateAutoresponder(autoresponders []TiCommunityAutoresponder) error {
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	return nil
+}
+
+// validateBlunderbuss will return an error if the endpoint configured by blunderbuss is invalid.
+func validateBlunderbuss(blunderbusses []TiCommunityBlunderbuss) error {
+	for _, blunderbuss := range blunderbusses {
+		_, err := url.ParseRequestURI(blunderbuss.PullOwnersEndpoint)
+		if err != nil {
+			return err
+		}
+		if blunderbuss.MaxReviewerCount <= 0 {
+			return errors.New("max reviewer count must more than 0")
 		}
 	}
 

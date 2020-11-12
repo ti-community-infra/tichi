@@ -15,6 +15,7 @@ func TestValidateConfig(t *testing.T) {
 		merge          *TiCommunityMerge
 		owners         *TiCommunityOwners
 		autoresponders *TiCommunityAutoresponder
+		blunderbuss    *TiCommunityBlunderbuss
 		expected       error
 	}{
 		{
@@ -40,6 +41,12 @@ func TestValidateConfig(t *testing.T) {
 						Message: "/run-all-test",
 					},
 				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			expected: nil,
 		},
@@ -67,6 +74,12 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
+			},
 			expected: nil,
 		},
 		{
@@ -92,6 +105,12 @@ func TestValidateConfig(t *testing.T) {
 						Message: "/run-all-test",
 					},
 				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
@@ -119,6 +138,12 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -145,10 +170,16 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
-			name: "invalid autoresponder regex",
+			name: "invalid blunderbuss regex",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -171,7 +202,77 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
 			expected: fmt.Errorf("error parsing regexp: missing argument to repetition operator: `?`"),
+		},
+		{
+			name: "invalid blunderbuss pull owners",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https/bots.tidb.io/ti-community-bot",
+			},
+			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
+		},
+		{
+			name: "invalid blunderbuss max reviewer count",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   -1,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			expected: fmt.Errorf("max reviewer count must more than 0"),
 		},
 	}
 
@@ -189,6 +290,9 @@ func TestValidateConfig(t *testing.T) {
 				},
 				TiCommunityAutoresponder: []TiCommunityAutoresponder{
 					*tc.autoresponders,
+				},
+				TiCommunityBlunderbuss: []TiCommunityBlunderbuss{
+					*tc.blunderbuss,
 				},
 			}
 			actual := config.Validate()
@@ -472,6 +576,62 @@ func TestAutoresponderFor(t *testing.T) {
 				assert.DeepEqual(t, autoresponder, &TiCommunityAutoresponder{})
 			} else {
 				assert.DeepEqual(t, autoresponder.Repos, tc.autoresponder.Repos)
+			}
+		})
+	}
+}
+
+func TestBlunderbussFor(t *testing.T) {
+	testCases := []struct {
+		name        string
+		blunderbuss *TiCommunityBlunderbuss
+		org         string
+		repo        string
+		expectEmpty *TiCommunityBlunderbuss
+	}{
+		{
+			name: "Full name",
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+		{
+			name: "Only org",
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+		{
+			name:        "Can not find",
+			blunderbuss: &TiCommunityBlunderbuss{},
+			org:         "tidb-community-bots1",
+			repo:        "test-dev1",
+			expectEmpty: &TiCommunityBlunderbuss{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := Configuration{TiCommunityBlunderbuss: []TiCommunityBlunderbuss{
+				*tc.blunderbuss,
+			}}
+
+			blunderbuss := config.BlunderbussFor(tc.org, tc.repo)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, blunderbuss, &TiCommunityBlunderbuss{})
+			} else {
+				assert.DeepEqual(t, blunderbuss.Repos, tc.blunderbuss.Repos)
 			}
 		})
 	}
