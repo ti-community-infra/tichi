@@ -81,7 +81,7 @@ type TiCommunityLabel struct {
 	Prefixes []string `json:"prefixes,omitempty"`
 }
 
-// TiCommunityAutoresponder is the config for the autoresponder plugin.
+// TiCommunityAutoresponder is the config for the blunderbuss plugin.
 type TiCommunityAutoresponder struct {
 	// Repos is either of the form org/repos or just org.
 	Repos []string `json:"repos,omitempty"`
