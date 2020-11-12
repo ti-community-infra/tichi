@@ -82,7 +82,7 @@ func handle(ghc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo
 		return fmt.Errorf("error loading RepoOwners: %v", err)
 	}
 
-	reviewers := getReviewers(pr.User.Login, owners.Reviewers, opts.ReviewerCount, log)
+	reviewers := getReviewers(pr.User.Login, owners.Reviewers, log)
 	maxReviewerCount := opts.MaxReviewerCount
 
 	if maxReviewerCount > 0 && len(reviewers) > maxReviewerCount {
@@ -97,7 +97,7 @@ func handle(ghc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo
 	return nil
 }
 
-func getReviewers(author string, reviewers []string, minReviewers int, log *logrus.Entry) []string {
+func getReviewers(author string, reviewers []string, log *logrus.Entry) []string {
 	authorSet := sets.NewString(github.NormLogin(author))
 	reviewersSet := sets.NewString()
 	reviewersSet.Insert(reviewers...)
@@ -106,14 +106,10 @@ func getReviewers(author string, reviewers []string, minReviewers int, log *logr
 	// Exclude the author.
 	availableReviewers := layeredsets.NewString(reviewersSet.Difference(authorSet).List()...)
 
-	if availableReviewers.Len() < minReviewers {
-		log.Debugf("Not enough reviewers found in sig. %d/%d reviewers found.", len(reviewers), minReviewers)
-	}
-
-	for i := 0; i < minReviewers; i++ {
+	for availableReviewers.Len() > 0 {
 		reviewer := availableReviewers.PopRandom()
 		result = append(result, reviewer)
-		log.Infof("Added %s as reviewers. %d/%d reviewers found.", reviewer, len(result), minReviewers)
+		log.Infof("Added %s as reviewers. %d reviewers found.", reviewer, len(result))
 	}
 
 	return result

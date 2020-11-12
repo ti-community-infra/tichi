@@ -101,9 +101,6 @@ type AutoRespond struct {
 type TiCommunityBlunderbuss struct {
 	// Repos is either of the form org/repos or just org.
 	Repos []string `json:"repos,omitempty"`
-	// ReviewerCount is the minimum number of reviewers to request
-	// reviews from. Defaults to requesting reviews from 2 reviewers
-	ReviewerCount int `json:"request_count,omitempty"`
 	// MaxReviewerCount is the maximum number of reviewers to request
 	// reviews from. Defaults to 0 meaning no limit.
 	MaxReviewerCount int `json:"max_request_count,omitempty"`
