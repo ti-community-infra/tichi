@@ -184,6 +184,10 @@ external_plugins:
       events:
         - issue_comment
         - pull_request_review_comment
+    - name: ti-community-blunderbuss
+      events:
+        - pull_request
+        - issue_comment
   pingcap-incubator/tidb-dashboard:
     - name: ti-community-lgtm
       events:

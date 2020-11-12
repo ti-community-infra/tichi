@@ -82,6 +82,29 @@ ti-community-blunderbuss:
     max_request_count: 1
     exclude_reviewers:
       - ti-community-prow-bot
+  - repos:
+      - tikv/pd
+    pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
+    max_request_count: 2
+    exclude_reviewers:
+      # Bots
+      - ti-community-prow-bot
+      - ti-srebot
+      # Maintainers
+      - siddontang
+      - BusyJay
+      - sunxiaoguang
+      - winkyao
+      - zhangjinpeng1987
+      # Inactive reviewers
+      - overvenus
+      - Connor1996
+      - qiuyesuifeng
+      - huachaohuang
+      - howardlau1999
+      - xhebox
+      - Luffbee
+      - shafreeck
 
 
 
