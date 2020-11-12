@@ -3,13 +3,17 @@ package blunderbuss
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/ownersclient"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pkg/layeredsets"
+	"k8s.io/test-infra/prow/pluginhelp"
+	"k8s.io/test-infra/prow/plugins"
 	"k8s.io/test-infra/prow/plugins/assign"
 )
 
@@ -27,7 +31,65 @@ type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
 }
 
-func HandlePullRequest(gc githubClient, pe *github.PullRequestEvent,
+// HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
+// HelpProvider defines the type for function that construct the PluginHelp for plugins.
+func HelpProvider(externalPluginsConfig *externalplugins.Configuration) func(
+	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+		configInfo := map[string]string{}
+		for _, repo := range enabledRepos {
+			opts := externalPluginsConfig.BlunderbussFor(repo.Org, repo.Repo)
+			var isConfigured bool
+			var configInfoStrings []string
+			configInfoStrings = append(configInfoStrings, "The plugin has the following configuration:<ul>")
+			if opts.MaxReviewerCount > 0 {
+				configInfoStrings = append(configInfoStrings, "<li>"+configString(opts.MaxReviewerCount)+"</li>")
+				isConfigured = true
+			}
+			configInfoStrings = append(configInfoStrings, "</ul>")
+			if isConfigured {
+				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
+			}
+		}
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&externalplugins.Configuration{
+			TiCommunityBlunderbuss: []externalplugins.TiCommunityBlunderbuss{
+				{
+					Repos:              []string{"tidb-community-bots/test-dev"},
+					MaxReviewerCount:   2,
+					ExcludeReviewers:   []string{},
+					PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+				},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
+		}
+		pluginHelp := &pluginhelp.PluginHelp{
+			Description: "The blunderbuss plugin automatically requests reviews from reviewers when a new PR is created.",
+			Config:      configInfo,
+			Snippet:     yamlSnippet,
+		}
+		pluginHelp.AddCommand(pluginhelp.Command{
+			Usage:       "/auto-cc",
+			Featured:    false,
+			Description: "Manually request reviews from reviewers for a PR.",
+			Examples:    []string{"/auto-cc"},
+			WhoCanUse:   "Anyone",
+		})
+		return pluginHelp, nil
+	}
+}
+
+func configString(maxReviewerCount int) string {
+	var pluralSuffix string
+	if maxReviewerCount > 1 {
+		pluralSuffix = "s"
+	}
+	return fmt.Sprintf("Blunderbuss is currently configured to request reviews from %d reviewer%s.",
+		maxReviewerCount, pluralSuffix)
+}
+
+func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	pr := &pe.PullRequest
 	if pe.Action != github.PullRequestActionOpened || assign.CCRegexp.MatchString(pr.Body) {

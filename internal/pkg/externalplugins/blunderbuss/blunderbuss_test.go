@@ -1,14 +1,17 @@
+//nolint:scopelint
 package blunderbuss
 
 import (
 	"errors"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/ownersclient"
+	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 )
 
@@ -267,7 +270,7 @@ func TestHandlePullRequest(t *testing.T) {
 			needsLgtm: 2,
 		}
 
-		if err := HandlePullRequest(fc, e, cfg, foc, logrus.WithField("plugin", PluginName)); err != nil {
+		if err := HandlePullRequestEvent(fc, e, cfg, foc, logrus.WithField("plugin", PluginName)); err != nil {
 			t.Errorf("didn't expect error from autoccComment: %v", err)
 			continue
 		}
@@ -319,5 +322,56 @@ func TestGetReviewers(t *testing.T) {
 		if !reflect.DeepEqual(reviewers, tc.exceptReviewers) {
 			t.Errorf("[%s] expected the requested reviewers to be %q, but got %q.", tc.name, tc.excludeReviewers, reviewers)
 		}
+	}
+}
+
+func TestHelpProvider(t *testing.T) {
+	enabledRepos := []config.OrgRepo{
+		{Org: "org1", Repo: "repo"},
+		{Org: "org2", Repo: "repo"},
+	}
+	cases := []struct {
+		name               string
+		config             *externalplugins.Configuration
+		enabledRepos       []config.OrgRepo
+		err                bool
+		configInfoIncludes []string
+	}{
+		{
+			name:               "Empty config",
+			config:             &externalplugins.Configuration{},
+			enabledRepos:       enabledRepos,
+			configInfoIncludes: []string{},
+		},
+		{
+			name: "ReviewerCount specified",
+			config: &externalplugins.Configuration{
+				TiCommunityBlunderbuss: []externalplugins.TiCommunityBlunderbuss{
+					{
+						Repos:              []string{"org2/repo"},
+						MaxReviewerCount:   2,
+						ExcludeReviewers:   []string{},
+						PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+					},
+				},
+			},
+			enabledRepos:       enabledRepos,
+			configInfoIncludes: []string{configString(2)},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			helpProvider := HelpProvider(c.config)
+
+			pluginHelp, err := helpProvider(c.enabledRepos)
+			if err != nil && !c.err {
+				t.Fatalf("helpProvider error: %v", err)
+			}
+			for _, msg := range c.configInfoIncludes {
+				if !strings.Contains(pluginHelp.Config["org2/repo"], msg) {
+					t.Fatalf("helpProvider.Config error mismatch: didn't get %v, but wanted it", msg)
+				}
+			}
+		})
 	}
 }
