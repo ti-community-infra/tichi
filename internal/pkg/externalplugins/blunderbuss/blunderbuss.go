@@ -89,9 +89,11 @@ func configString(maxReviewerCount int) string {
 		maxReviewerCount, pluralSuffix)
 }
 
+// HandleIssueCommentEvent handles a GitHub pull request event and requests review.
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	pr := &pe.PullRequest
+	// Only for open PR and non /cc PR.
 	if pe.Action != github.PullRequestActionOpened || assign.CCRegexp.MatchString(pr.Body) {
 		return nil
 	}
@@ -108,8 +110,10 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	)
 }
 
+// HandleIssueCommentEvent handles a GitHub issue comment event and requests review.
 func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg *externalplugins.Configuration,
 	ol ownersclient.OwnersLoader, log *logrus.Entry) error {
+	// Only consider open PRs and new comments.
 	if ce.Action != github.IssueCommentActionCreated || !ce.Issue.IsPullRequest() || ce.Issue.State == "closed" {
 		return nil
 	}
@@ -147,6 +151,7 @@ func handle(ghc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo
 	reviewers := getReviewers(pr.User.Login, owners.Reviewers, opts.ExcludeReviewers, log)
 	maxReviewerCount := opts.MaxReviewerCount
 
+	// If the maximum count of reviewers greater than 0, it needs to be split.
 	if maxReviewerCount > 0 && len(reviewers) > maxReviewerCount {
 		log.Infof("Limiting request of %d reviewers to %d maxReviewers.", len(reviewers), maxReviewerCount)
 		reviewers = reviewers[:maxReviewerCount]
