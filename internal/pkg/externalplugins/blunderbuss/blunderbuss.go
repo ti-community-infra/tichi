@@ -46,13 +46,13 @@ func HandlePullRequest(gc githubClient, pe *github.PullRequestEvent,
 	)
 }
 
-func HandleIssueCommentEvent(gc githubClient, ce github.IssueCommentEvent, cfg *externalplugins.Configuration,
+func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg *externalplugins.Configuration,
 	ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	if ce.Action != github.IssueCommentActionCreated || !ce.Issue.IsPullRequest() || ce.Issue.State == "closed" {
 		return nil
 	}
 
-	if !match.MatchString(ce.Issue.Body) {
+	if !match.MatchString(ce.Comment.Body) {
 		return nil
 	}
 
@@ -82,7 +82,7 @@ func handle(ghc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo
 		return fmt.Errorf("error loading RepoOwners: %v", err)
 	}
 
-	reviewers := getReviewers(pr.User.Login, owners.Reviewers, log)
+	reviewers := getReviewers(pr.User.Login, owners.Reviewers, opts.ExcludeReviewers, log)
 	maxReviewerCount := opts.MaxReviewerCount
 
 	if maxReviewerCount > 0 && len(reviewers) > maxReviewerCount {
@@ -97,14 +97,16 @@ func handle(ghc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo
 	return nil
 }
 
-func getReviewers(author string, reviewers []string, log *logrus.Entry) []string {
+func getReviewers(author string, reviewers []string, excludeReviewers []string, log *logrus.Entry) []string {
 	authorSet := sets.NewString(github.NormLogin(author))
+	excludeReviewersSet := sets.NewString(excludeReviewers...)
 	reviewersSet := sets.NewString()
 	reviewersSet.Insert(reviewers...)
 
 	var result []string
 	// Exclude the author.
-	availableReviewers := layeredsets.NewString(reviewersSet.Difference(authorSet).List()...)
+	availableReviewers := layeredsets.NewString(
+		reviewersSet.Difference(authorSet).Difference(excludeReviewersSet).List()...)
 
 	for availableReviewers.Len() > 0 {
 		reviewer := availableReviewers.PopRandom()
