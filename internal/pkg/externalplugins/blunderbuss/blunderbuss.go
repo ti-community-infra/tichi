@@ -2,8 +2,10 @@ package blunderbuss
 
 import (
 	"fmt"
+	"math/rand"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
@@ -175,6 +177,7 @@ func getReviewers(author string, reviewers []string, excludeReviewers []string, 
 	availableReviewers := layeredsets.NewString(
 		reviewersSet.Difference(authorSet).Difference(excludeReviewersSet).List()...)
 
+	rand.Seed(time.Now().Unix())
 	for availableReviewers.Len() > 0 {
 		reviewer := availableReviewers.PopRandom()
 		result = append(result, reviewer)
