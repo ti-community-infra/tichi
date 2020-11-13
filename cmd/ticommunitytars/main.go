@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins/needsrebase"
+	"github.com/tidb-community-bots/prow-github/pkg/github"
+	prowflagutil "github.com/tidb-community-bots/prow-github/pkg/github/flagutil"
+	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins/tars"
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"
-	prowflagutil "k8s.io/test-infra/prow/flagutil"
-	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/interrupts"
 	"k8s.io/test-infra/prow/pjutil"
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
@@ -62,7 +62,7 @@ func main() {
 
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	logrus.SetLevel(logrus.InfoLevel)
-	log := logrus.StandardLogger().WithField("plugin", needsrebase.PluginName)
+	log := logrus.StandardLogger().WithField("plugin", tars.PluginName)
 
 	secretAgent := &secret.Agent{}
 	if err := secretAgent.Start([]string{o.github.TokenPath, o.webhookSecretFile}); err != nil {
@@ -87,7 +87,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/", server)
 
-	externalplugins.ServeExternalPluginHelp(mux, log, needsrebase.HelpProvider)
+	externalplugins.ServeExternalPluginHelp(mux, log, tars.HelpProvider)
 	httpServer := &http.Server{Addr: ":" + strconv.Itoa(o.port), Handler: mux}
 
 	defer interrupts.WaitForGracefulShutdown()
@@ -130,7 +130,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			return err
 		}
 		go func() {
-			if err := needsrebase.HandlePullRequestEvent(l, s.ghc, &pre); err != nil {
+			if err := tars.HandlePullRequestEvent(l, s.ghc, &pre); err != nil {
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
@@ -140,7 +140,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			return err
 		}
 		go func() {
-			if err := needsrebase.HandleIssueCommentEvent(l, s.ghc, &ice); err != nil {
+			if err := tars.HandleIssueCommentEvent(l, s.ghc, &ice); err != nil {
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()

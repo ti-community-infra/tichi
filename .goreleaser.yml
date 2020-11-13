@@ -43,13 +43,13 @@ builds:
     env:
       - CGO_ENABLED=0
   -
-    id: "ti-community-needs-rebase"
-    binary: ticommunityneedsrebase
+    id: "ti-community-tars"
+    binary: ticommunitytars
     goos:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunityneedsrebase/main.go
+    main: ./cmd/ticommunitytars/main.go
     env:
       - CGO_ENABLED=0
   - id: "ti-community-autoresponder"
@@ -128,14 +128,14 @@ dockers:
     dockerfile: ./deployments/plugins/label/Dockerfile
   -
     binaries:
-      - ticommunityneedsrebase
+      - ticommunitytars
     builds:
-      - ti-community-needs-rebase
+      - ti-community-tars
     image_templates:
-      - "rustinliu/ti-community-prow-needs-rebase-plugin:latest"
-      - "rustinliu/ti-community-prow-needs-rebase-plugin:{{ .Tag }}"
-      - "rustinliu/ti-community-prow-needs-rebase-plugin:{{ .Major }}"
-    dockerfile: ./deployments/plugins/needsrebase/Dockerfile
+      - "rustinliu/ti-community-prow-tars-plugin:latest"
+      - "rustinliu/ti-community-prow-tars-plugin:{{ .Tag }}"
+      - "rustinliu/ti-community-prow-tars-plugin:{{ .Major }}"
+    dockerfile: ./deployments/plugins/tars/Dockerfile
   - binaries:
       - ticommunityautoresponder
     builds:
