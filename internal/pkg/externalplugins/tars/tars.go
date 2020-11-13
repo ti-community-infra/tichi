@@ -6,9 +6,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/prow-github/pkg/github"
+	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/pluginhelp"
-	"k8s.io/test-infra/prow/plugins"
 )
 
 const (
@@ -124,7 +124,7 @@ func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, 
 		return err
 	}
 
-	msg := plugins.FormatSimpleResponse(author, autoUpdateMessage)
+	msg := externalplugins.FormatSimpleResponse(author, autoUpdateMessage)
 	return ghc.CreateComment(org, repo, num, msg)
 }
 
