@@ -102,6 +102,10 @@ external_plugins:
         - issue_comment
         - pull_request_review_comment
         - pull_request
+    - name: ti-community-tars
+      events:
+        - pull_request
+        - issue_comment
   tidb-community-bots/ti-community-prow:
     - name: ti-community-lgtm
       events:
