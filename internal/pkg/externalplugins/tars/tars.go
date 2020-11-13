@@ -102,11 +102,12 @@ func handle(log *logrus.Entry, ghc githubClient, pr *github.PullRequest) error {
 		return nil
 	}
 
-	return takeAction(log, ghc, org, repo, number, pr.User.Login)
+	lastCommitIndex := len(prCommits) - 1
+	return takeAction(log, ghc, org, repo, number, &prCommits[lastCommitIndex].SHA, pr.User.Login)
 }
 
 // takeAction updates the PR and comment ont it.
-func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int,
+func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, expectedHeadSha *string,
 	author string) error {
 	botName, err := ghc.BotName()
 	if err != nil {
@@ -118,7 +119,7 @@ func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int,
 	}
 
 	log.Infof("Update PR %s/%s#%d.", org, repo, num)
-	err = ghc.UpdatePullRequestBranch(org, repo, num, nil)
+	err = ghc.UpdatePullRequestBranch(org, repo, num, expectedHeadSha)
 	if err != nil {
 		return err
 	}
