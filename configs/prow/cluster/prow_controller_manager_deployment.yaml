@@ -25,7 +25,7 @@ spec:
             - --github-endpoint=http://ghproxy
             - --github-endpoint=https://api.github.com
             - --enable-controller=plank
-          image: gcr.io/k8s-prow/prow-controller-manager:v20201109-a36ed74f01
+          image: gcr.io/k8s-prow/prow-controller-manager:v20201112-00537d1bb4
           volumeMounts:
             - name: github-token
               mountPath: /etc/github
