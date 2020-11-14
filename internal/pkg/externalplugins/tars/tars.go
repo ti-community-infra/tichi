@@ -47,9 +47,13 @@ type pullRequest struct {
 			Login githubql.String
 		}
 	}
-	Head struct {
-		SHA githubql.String
-	}
+	Commits struct {
+		Nodes []struct {
+			Commit struct {
+				oid githubql.GitObjectID
+			}
+		}
+	} `graphql:"commits(last:1)"`
 }
 
 type searchQuery struct {
@@ -170,7 +174,8 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		org := string(pr.Repository.Owner.Login)
 		repo := string(pr.Repository.Name)
 		num := int(pr.Number)
-		sha := string(pr.Head.SHA)
+		lastCommitIndex := len(pr.Commits.Nodes) - 1
+		sha := string(pr.Commits.Nodes[lastCommitIndex].Commit.oid)
 		author := string(pr.Author.Login)
 		l := log.WithFields(logrus.Fields{
 			"org":  org,
