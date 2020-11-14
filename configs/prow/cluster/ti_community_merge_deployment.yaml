@@ -19,7 +19,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
         - name: ti-community-merge
-          image: rustinliu/ti-community-prow-merge-plugin:v0.12.5
+          image: rustinliu/ti-community-prow-merge-plugin:v0.13.1
           imagePullPolicy: Always
           args:
             - --dry-run=false
