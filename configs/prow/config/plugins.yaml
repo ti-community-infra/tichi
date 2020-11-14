@@ -2,16 +2,12 @@ config_updater:
   maps:
     configs/prow/config/config.yaml:
       name: config
-      namespace: prow
     configs/prow/config/plugins.yaml:
       name: plugins
-      namespace: prow
     configs/prow/config/external_plugins_config.yaml:
       name: external-plugins-config
-      namespace: prow
     configs/prow/config/labels.yaml:
       name: labels-config
-      namespace: prow
 
 welcome:
   - repos:

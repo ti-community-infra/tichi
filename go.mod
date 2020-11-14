@@ -10,9 +10,9 @@ replace (
 require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/sirupsen/logrus v1.7.0
-	github.com/tidb-community-bots/prow-github v1.2.4
+	github.com/tidb-community-bots/prow-github v1.2.5
 	gotest.tools v2.2.0+incompatible
 	k8s.io/apimachinery v0.19.3
-	k8s.io/test-infra v0.0.0-20201113003225-7913a618fee0
+	k8s.io/test-infra v0.0.0-20201114015505-f09ff0e80535
 	sigs.k8s.io/yaml v1.2.0
 )
