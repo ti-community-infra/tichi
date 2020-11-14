@@ -1,0 +1,41 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  namespace: prow
+  name: peribolos
+spec:
+  schedule: "* * * * *"  # Every hour at 17 minutes past the hour
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    metadata:
+      labels:
+        app: peribolos
+    spec:
+      template:
+        spec:
+          containers:
+            - name: peribolos
+              image: gcr.io/k8s-prow/peribolos:v20201112-00537d1bb4
+              args:
+                - --config-path=/etc/config/config.yaml
+                - --github-token-path=/etc/github/token
+                - --min-admins=2
+                - --fix-org
+                - --fix-org-members
+                - --fix-teams
+                - --fix-team-members
+              volumeMounts:
+                - name: github-token
+                  mountPath: /etc/github
+                  readOnly: true
+                - name: config
+                  mountPath: /etc/config
+                  readOnly: true
+          restartPolicy: Never
+          volumes:
+            - name: github-token
+              secret:
+                secretName: github-token
+            - name: config
+              configMap:
+                name: config

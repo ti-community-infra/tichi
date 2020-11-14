@@ -1,3 +1,27 @@
+orgs:
+  tidb-community-bots:
+    name: tidb-community-bots
+    description: tidb-community-bots
+    default_repository_permission: read
+    has_organization_projects: true
+    has_repository_projects: true
+    members_can_create_repositories: false
+    billing_email: liudongpo@pingcap.com
+    admins:
+      - tidb-community-prow-bot
+      - sykp241095
+      - hi-rustin
+      - AndreMouche
+    members:
+      - Mini256
+    teams:
+      bots-test:
+        description: For test
+        members:
+          - tidb-community-prow-bot
+          - hi-rustin
+        privacy: closed
+
 prowjob_namespace: prow
 pod_namespace: prow-test-pods
 log_level: debug
