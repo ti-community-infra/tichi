@@ -4,7 +4,7 @@ metadata:
   namespace: prow
   name: peribolos
 spec:
-  schedule: "* * * * *"  # Every hour at 17 minutes past the hour
+  schedule: "30 12 * * *"  # Everyday 12:30.
   concurrencyPolicy: Forbid
   jobTemplate:
     metadata:
@@ -19,11 +19,15 @@ spec:
               args:
                 - --config-path=/etc/config/config.yaml
                 - --github-token-path=/etc/github/token
+                - --github-endpoint=http://ghproxy
+                - --github-endpoint=https://api.github.com
                 - --min-admins=2
                 - --fix-org
                 - --fix-org-members
                 - --fix-teams
                 - --fix-team-members
+                - --tokens=1200
+                - --confirm
               volumeMounts:
                 - name: github-token
                   mountPath: /etc/github
