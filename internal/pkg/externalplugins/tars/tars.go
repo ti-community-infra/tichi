@@ -37,23 +37,13 @@ type githubClient interface {
 }
 
 type pullRequest struct {
-	Number githubql.Int
-	Author struct {
-		Login githubql.String
-	}
+	Number     githubql.Int
 	Repository struct {
 		Name  githubql.String
 		Owner struct {
 			Login githubql.String
 		}
 	}
-	Commits struct {
-		Nodes []struct {
-			Commit struct {
-				oid githubql.GitObjectID
-			}
-		}
-	} `graphql:"commits(last:1)"`
 }
 
 type searchQuery struct {
@@ -128,13 +118,13 @@ func handle(log *logrus.Entry, ghc githubClient, pr *github.PullRequest) error {
 	}
 
 	// Check if we update the base into PR.
-	baseCommit, err := ghc.GetSingleCommit(org, repo, pr.Base.Ref)
+	currentBaseCommit, err := ghc.GetSingleCommit(org, repo, pr.Base.Ref)
 	if err != nil {
 		return err
 	}
 	for _, prCommit := range prCommits {
 		for _, parentCommit := range prCommit.Parents {
-			if parentCommit.SHA == baseCommit.SHA {
+			if parentCommit.SHA == currentBaseCommit.SHA {
 				mergeable = true
 			}
 		}
@@ -174,15 +164,17 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		org := string(pr.Repository.Owner.Login)
 		repo := string(pr.Repository.Name)
 		num := int(pr.Number)
-		lastCommitIndex := len(pr.Commits.Nodes) - 1
-		sha := string(pr.Commits.Nodes[lastCommitIndex].Commit.oid)
-		author := string(pr.Author.Login)
 		l := log.WithFields(logrus.Fields{
 			"org":  org,
 			"repo": repo,
 			"pr":   num,
 		})
-		err := takeAction(log, ghc, org, repo, num, &sha, author)
+
+		pr, err := ghc.GetPullRequest(org, repo, num)
+		if err != nil {
+			l.WithError(err).Error("Error get PR.")
+		}
+		err = handle(l, ghc, pr)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
 		}
