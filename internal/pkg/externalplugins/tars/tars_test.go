@@ -8,8 +8,10 @@ import (
 	"testing"
 	"time"
 
+	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/prow-github/pkg/github"
+	"k8s.io/test-infra/prow/plugins"
 )
 
 func testKey(org, repo string, num int) string {
@@ -192,17 +194,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			outOfDate:  false,
 		},
 		{
-			name:           "first time out of date",
-			pr:             pr(),
-			baseCommit:     baseCommit,
-			prCommits:      outOfDatePrCommits(),
-			outOfDate:      true,
-			expectDeletion: true,
-			expectComment:  true,
-			expectUpdate:   true,
-		},
-		{
-			name:           "second time out of date",
+			name:           "out of date",
 			pr:             pr(),
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
@@ -227,6 +219,203 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			}
 			if err := HandleIssueCommentEvent(logrus.WithField("plugin", PluginName), fc, ice); err != nil {
 				t.Fatalf("error handling issue comment event: %v", err)
+			}
+			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.outOfDate)
+		})
+	}
+}
+
+func TestHandlePullRequestEvent(t *testing.T) {
+	currentBaseSHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
+	outOfDateSHA := "0bd3ed50c88cd53a0931609dsa9d-0a9d0-as9d0"
+	baseCommit := github.RepositoryCommit{
+		SHA: currentBaseSHA,
+	}
+	outOfDatePrCommits := func() []github.RepositoryCommit {
+		prCommits := []github.RepositoryCommit{
+			{
+				Parents: []github.GitCommit{
+					{
+						SHA: outOfDateSHA,
+					},
+				},
+			},
+		}
+		return prCommits
+	}
+	updatePrCommits := func() []github.RepositoryCommit {
+		prCommits := []github.RepositoryCommit{
+			{
+				Parents: []github.GitCommit{
+					{
+						SHA: currentBaseSHA,
+					},
+				},
+			},
+		}
+		return prCommits
+	}
+
+	oldSleep := sleep
+	sleep = func(time.Duration) {}
+	defer func() { sleep = oldSleep }()
+
+	testCases := []struct {
+		name       string
+		merged     bool
+		baseCommit github.RepositoryCommit
+		prCommits  []github.RepositoryCommit
+		outOfDate  bool
+
+		expectComment  bool
+		expectDeletion bool
+		expectUpdate   bool
+	}{
+		{
+			name:       "updated no-op",
+			baseCommit: baseCommit,
+			prCommits:  updatePrCommits(),
+			outOfDate:  false,
+		},
+		{
+			name:           "out of date",
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			expectDeletion: true,
+			expectComment:  true,
+			expectUpdate:   true,
+		}, {
+			name:   "merged pr is ignored",
+			merged: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fc := newFakeGithubClient(nil, nil, tc.baseCommit, tc.prCommits, tc.outOfDate)
+			pre := &github.PullRequestEvent{
+				Action: github.PullRequestActionSynchronize,
+				PullRequest: github.PullRequest{
+					Base: github.PullRequestBranch{
+						Repo: github.Repo{
+							Name:  "repo",
+							Owner: github.User{Login: "org"},
+						},
+					},
+					Merged: tc.merged,
+					Number: 5,
+				},
+			}
+			if err := HandlePullRequestEvent(logrus.WithField("plugin", PluginName), fc, pre); err != nil {
+				t.Fatalf("Unexpected error handling event: %v.", err)
+			}
+			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.expectUpdate)
+		})
+	}
+}
+
+func TestHandleAll(t *testing.T) {
+	currentBaseSHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
+	outOfDateSHA := "0bd3ed50c88cd53a0931609dsa9d-0a9d0-as9d0"
+
+	pr := func() *github.PullRequest {
+		pr := github.PullRequest{
+			Base: github.PullRequestBranch{
+				Repo: github.Repo{
+					Name:  "repo",
+					Owner: github.User{Login: "org"},
+				},
+			},
+			Number: 5,
+		}
+		return &pr
+	}
+	baseCommit := github.RepositoryCommit{
+		SHA: currentBaseSHA,
+	}
+	outOfDatePrCommits := func() []github.RepositoryCommit {
+		prCommits := []github.RepositoryCommit{
+			{
+				Parents: []github.GitCommit{
+					{
+						SHA: outOfDateSHA,
+					},
+				},
+			},
+		}
+		return prCommits
+	}
+	updatePrCommits := func() []github.RepositoryCommit {
+		prCommits := []github.RepositoryCommit{
+			{
+				Parents: []github.GitCommit{
+					{
+						SHA: currentBaseSHA,
+					},
+				},
+			},
+		}
+		return prCommits
+	}
+
+	testCases := []struct {
+		name       string
+		pr         *github.PullRequest
+		baseCommit github.RepositoryCommit
+		prCommits  []github.RepositoryCommit
+		outOfDate  bool
+
+		expectComment  bool
+		expectDeletion bool
+		expectUpdate   bool
+	}{
+		{
+			name: "No pull request, ignoring",
+		},
+		{
+			name:       "updated no-op",
+			pr:         pr(),
+			baseCommit: baseCommit,
+			prCommits:  updatePrCommits(),
+			outOfDate:  false,
+		},
+		{
+			name:           "out of date",
+			pr:             pr(),
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			expectDeletion: true,
+			expectComment:  true,
+			expectUpdate:   true,
+		},
+		{
+			name: "merged pr is ignored",
+			pr:   pr(),
+		},
+	}
+
+	oldSleep := sleep
+	sleep = func(time.Duration) {}
+	defer func() { sleep = oldSleep }()
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var prs []pullRequest
+			if tc.pr != nil {
+				pr := pullRequest{}
+				pr.Number = githubql.Int(tc.pr.Number)
+				pr.Repository.Name = "repo"
+				pr.Repository.Owner.Login = "org"
+				prs = append(prs, pr)
+			}
+			fc := newFakeGithubClient(prs, tc.pr, tc.baseCommit, tc.prCommits, tc.outOfDate)
+			config := &plugins.Configuration{
+				ExternalPlugins: map[string][]plugins.ExternalPlugin{"/": {{Name: PluginName}}},
+			}
+			if err := HandleAll(logrus.WithField("plugin", PluginName), fc, config); err != nil {
+				t.Fatalf("Unexpected error handling all prs: %v.", err)
 			}
 			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.outOfDate)
 		})
