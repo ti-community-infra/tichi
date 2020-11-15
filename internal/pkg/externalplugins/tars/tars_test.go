@@ -123,25 +123,27 @@ func (f *fakeGithub) compareExpected(t *testing.T, org, repo string,
 	}
 }
 
+func getPullRequest() *github.PullRequest {
+	pr := github.PullRequest{
+		Base: github.PullRequestBranch{
+			Repo: github.Repo{
+				Name:  "repo",
+				Owner: github.User{Login: "org"},
+			},
+		},
+		Number: 5,
+	}
+	return &pr
+}
+
 func TestHandleIssueCommentEvent(t *testing.T) {
 	currentBaseSHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	outOfDateSHA := "0bd3ed50c88cd53a0931609dsa9d-0a9d0-as9d0"
 
-	pr := func() *github.PullRequest {
-		pr := github.PullRequest{
-			Base: github.PullRequestBranch{
-				Repo: github.Repo{
-					Name:  "repo",
-					Owner: github.User{Login: "org"},
-				},
-			},
-			Number: 5,
-		}
-		return &pr
-	}
 	baseCommit := github.RepositoryCommit{
 		SHA: currentBaseSHA,
 	}
+
 	outOfDatePrCommits := func() []github.RepositoryCommit {
 		prCommits := []github.RepositoryCommit{
 			{
@@ -154,7 +156,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		}
 		return prCommits
 	}
-	updatePrCommits := func() []github.RepositoryCommit {
+	updatedPrCommits := func() []github.RepositoryCommit {
 		prCommits := []github.RepositoryCommit{
 			{
 				Parents: []github.GitCommit{
@@ -188,14 +190,14 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		},
 		{
 			name:       "updated no-op",
-			pr:         pr(),
+			pr:         getPullRequest(),
 			baseCommit: baseCommit,
-			prCommits:  updatePrCommits(),
+			prCommits:  updatedPrCommits(),
 			outOfDate:  false,
 		},
 		{
 			name:           "out of date",
-			pr:             pr(),
+			pr:             getPullRequest(),
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
@@ -205,7 +207,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		},
 		{
 			name:   "merged pr is ignored",
-			pr:     pr(),
+			pr:     getPullRequest(),
 			merged: true,
 		},
 	}
@@ -319,21 +321,10 @@ func TestHandleAll(t *testing.T) {
 	currentBaseSHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	outOfDateSHA := "0bd3ed50c88cd53a0931609dsa9d-0a9d0-as9d0"
 
-	pr := func() *github.PullRequest {
-		pr := github.PullRequest{
-			Base: github.PullRequestBranch{
-				Repo: github.Repo{
-					Name:  "repo",
-					Owner: github.User{Login: "org"},
-				},
-			},
-			Number: 5,
-		}
-		return &pr
-	}
 	baseCommit := github.RepositoryCommit{
 		SHA: currentBaseSHA,
 	}
+
 	outOfDatePrCommits := func() []github.RepositoryCommit {
 		prCommits := []github.RepositoryCommit{
 			{
@@ -346,7 +337,8 @@ func TestHandleAll(t *testing.T) {
 		}
 		return prCommits
 	}
-	updatePrCommits := func() []github.RepositoryCommit {
+
+	updatedPrCommits := func() []github.RepositoryCommit {
 		prCommits := []github.RepositoryCommit{
 			{
 				Parents: []github.GitCommit{
@@ -375,14 +367,14 @@ func TestHandleAll(t *testing.T) {
 		},
 		{
 			name:       "updated no-op",
-			pr:         pr(),
+			pr:         getPullRequest(),
 			baseCommit: baseCommit,
-			prCommits:  updatePrCommits(),
+			prCommits:  updatedPrCommits(),
 			outOfDate:  false,
 		},
 		{
 			name:           "out of date",
-			pr:             pr(),
+			pr:             getPullRequest(),
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
@@ -392,7 +384,7 @@ func TestHandleAll(t *testing.T) {
 		},
 		{
 			name: "merged pr is ignored",
-			pr:   pr(),
+			pr:   getPullRequest(),
 		},
 	}
 
