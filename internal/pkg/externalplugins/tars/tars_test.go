@@ -1,13 +1,15 @@
+//nolint:scopelint
 package tars
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/tidb-community-bots/prow-github/pkg/github"
 	"testing"
 	"time"
+
+	"github.com/sirupsen/logrus"
+	"github.com/tidb-community-bots/prow-github/pkg/github"
 )
 
 func testKey(org, repo string, num int) string {
@@ -30,7 +32,8 @@ type fakeGithub struct {
 	commentCreated, commentDeleted map[string]bool
 }
 
-func newFakeGithubClient(prs []pullRequest, pr *github.PullRequest, baseCommit github.RepositoryCommit, prCommits []github.RepositoryCommit, outOfDate bool) *fakeGithub {
+func newFakeGithubClient(prs []pullRequest, pr *github.PullRequest,
+	baseCommit github.RepositoryCommit, prCommits []github.RepositoryCommit, outOfDate bool) *fakeGithub {
 	f := &fakeGithub{
 		commentCreated: make(map[string]bool),
 		commentDeleted: make(map[string]bool),
@@ -59,7 +62,8 @@ func (f *fakeGithub) CreateComment(org, repo string, number int, comment string)
 	return nil
 }
 
-func (f *fakeGithub) DeleteStaleComments(org, repo string, number int, comments []github.IssueComment, isStale func(github.IssueComment) bool) error {
+func (f *fakeGithub) DeleteStaleComments(org, repo string, number int,
+	comments []github.IssueComment, isStale func(github.IssueComment) bool) error {
 	f.commentDeleted[testKey(org, repo, number)] = true
 	return nil
 }
@@ -80,7 +84,7 @@ func (f *fakeGithub) GetPullRequest(org, repo string, number int) (*github.PullR
 	return nil, fmt.Errorf("didn't find pull request %s/%s#%d", org, repo, number)
 }
 
-func (f *fakeGithub) GetSingleCommit(org, repo, SHA string) (github.RepositoryCommit, error) {
+func (f *fakeGithub) GetSingleCommit(org, repo, ref string) (github.RepositoryCommit, error) {
 	return f.baseCommit, nil
 }
 
@@ -95,7 +99,8 @@ func (f *fakeGithub) UpdatePullRequestBranch(org, repo string, number int, expec
 	return nil
 }
 
-func (f *fakeGithub) compareExpected(t *testing.T, org, repo string, num int, expectComment bool, expectDeletion bool, expectUpdate bool) {
+func (f *fakeGithub) compareExpected(t *testing.T, org, repo string,
+	num int, expectComment bool, expectDeletion bool, expectUpdate bool) {
 	key := testKey(org, repo, num)
 
 	if expectComment && !f.commentCreated[key] {
