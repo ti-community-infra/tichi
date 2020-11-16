@@ -636,3 +636,55 @@ func TestBlunderbussFor(t *testing.T) {
 		})
 	}
 }
+
+func TestTarsFor(t *testing.T) {
+	testCases := []struct {
+		name        string
+		tars        *TiCommunityTars
+		org         string
+		repo        string
+		expectEmpty *TiCommunityTars
+	}{
+		{
+			name: "Full name",
+			tars: &TiCommunityTars{
+				Repos:   []string{"tidb-community-bots/test-dev"},
+				Message: "updated",
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+		{
+			name: "Only org",
+			tars: &TiCommunityTars{
+				Repos:   []string{"tidb-community-bots"},
+				Message: "updated",
+			},
+			org:  "tidb-community-bots",
+			repo: "test-dev",
+		},
+		{
+			name:        "Can not find",
+			tars:        &TiCommunityTars{},
+			org:         "tidb-community-bots1",
+			repo:        "test-dev1",
+			expectEmpty: &TiCommunityTars{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := Configuration{TiCommunityTars: []TiCommunityTars{
+				*tc.tars,
+			}}
+
+			tars := config.TarsFor(tc.org, tc.repo)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, tars, &TiCommunityTars{})
+			} else {
+				assert.DeepEqual(t, tars.Repos, tc.tars.Repos)
+			}
+		})
+	}
+}

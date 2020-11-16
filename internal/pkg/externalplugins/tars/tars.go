@@ -18,11 +18,12 @@ import (
 
 const (
 	// PluginName is the name of this plugin
-	PluginName        = "ti-community-tars"
-	autoUpdateMessage = "PR auto updated."
+	PluginName = "ti-community-tars"
 )
 
 var sleep = time.Sleep
+
+var configInfoAutoUpdatedMessagePrefix = `Auto updated message:`
 
 type githubClient interface {
 	CreateComment(org, repo string, number int, comment string) error
@@ -64,27 +65,54 @@ type searchQuery struct {
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(_ []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
-	return &pluginhelp.PluginHelp{
+func HelpProvider(epa *externalplugins.ConfigAgent) func(
+	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+		configInfo := map[string]string{}
+		cfg := epa.Config()
+		for _, repo := range enabledRepos {
+			opts := cfg.TarsFor(repo.Org, repo.Repo)
+			var isConfigured bool
+			var configInfoStrings []string
+
+			configInfoStrings = append(configInfoStrings, "The plugin has the following configuration:<ul>")
+
+			if len(opts.Message) != 0 {
+				isConfigured = true
+			}
+
+			configInfoStrings = append(configInfoStrings, "<li>"+configInfoAutoUpdatedMessagePrefix+opts.Message+"</li>")
+
+			configInfoStrings = append(configInfoStrings, "</ul>")
+			if isConfigured {
+				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
+			}
+		}
+		pluginHelp := &pluginhelp.PluginHelp{
 			Description: `The tars plugin help you update your out-of-date PR.`,
-		},
-		nil
+			Config:      configInfo,
+		}
+
+		return pluginHelp, nil
+	}
 }
 
 // HandlePullRequestEvent handles a GitHub pull request event and update the PR
 // if the issue is a PR based on whether the PR out-of-date.
-func HandlePullRequestEvent(log *logrus.Entry, ghc githubClient, pre *github.PullRequestEvent) error {
+func HandlePullRequestEvent(log *logrus.Entry, ghc githubClient, pre *github.PullRequestEvent,
+	cfg *externalplugins.Configuration) error {
 	if pre.Action != github.PullRequestActionOpened &&
 		pre.Action != github.PullRequestActionSynchronize && pre.Action != github.PullRequestActionReopened {
 		return nil
 	}
 
-	return handle(log, ghc, &pre.PullRequest)
+	return handle(log, ghc, &pre.PullRequest, cfg)
 }
 
 // HandleIssueCommentEvent handles a GitHub issue comment event and update the PR
 // if the issue is a PR based on whether the PR out-of-date.
-func HandleIssueCommentEvent(log *logrus.Entry, ghc githubClient, ice *github.IssueCommentEvent) error {
+func HandleIssueCommentEvent(log *logrus.Entry, ghc githubClient, ice *github.IssueCommentEvent,
+	cfg *externalplugins.Configuration) error {
 	if !ice.Issue.IsPullRequest() {
 		return nil
 	}
@@ -93,10 +121,10 @@ func HandleIssueCommentEvent(log *logrus.Entry, ghc githubClient, ice *github.Is
 		return err
 	}
 
-	return handle(log, ghc, pr)
+	return handle(log, ghc, pr, cfg)
 }
 
-func handle(log *logrus.Entry, ghc githubClient, pr *github.PullRequest) error {
+func handle(log *logrus.Entry, ghc githubClient, pr *github.PullRequest, cfg *externalplugins.Configuration) error {
 	if pr.Merged {
 		return nil
 	}
@@ -108,6 +136,7 @@ func handle(log *logrus.Entry, ghc githubClient, pr *github.PullRequest) error {
 	repo := pr.Base.Repo.Name
 	number := pr.Number
 	mergeable := false
+	tars := cfg.TarsFor(org, repo)
 
 	prCommits, err := ghc.ListPRCommits(org, repo, pr.Number)
 	if err != nil {
@@ -135,12 +164,13 @@ func handle(log *logrus.Entry, ghc githubClient, pr *github.PullRequest) error {
 	}
 
 	lastCommitIndex := len(prCommits) - 1
-	return takeAction(log, ghc, org, repo, number, &prCommits[lastCommitIndex].SHA, pr.User.Login)
+	return takeAction(log, ghc, org, repo, number, &prCommits[lastCommitIndex].SHA, pr.User.Login, tars.Message)
 }
 
 // HandleAll checks all orgs and repos that enabled this plugin for open PRs to
 // determine if the issue is a PR based on whether the PR out-of-date.
-func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuration) error {
+func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuration,
+	externalConfig *externalplugins.Configuration) error {
 	log.Info("Checking all PRs.")
 	orgs, repos := config.EnabledReposForExternalPlugin(PluginName)
 	if len(orgs) == 0 && len(repos) == 0 {
@@ -174,7 +204,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		if err != nil {
 			l.WithError(err).Error("Error get PR.")
 		}
-		err = handle(l, ghc, pr)
+		err = handle(l, ghc, pr, externalConfig)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
 		}
@@ -211,14 +241,18 @@ func search(ctx context.Context, log *logrus.Entry, ghc githubClient, q string) 
 
 // takeAction updates the PR and comment ont it.
 func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, expectedHeadSha *string,
-	author string) error {
+	author string, message string) error {
 	botName, err := ghc.BotName()
 	if err != nil {
 		return err
 	}
-	err = ghc.DeleteStaleComments(org, repo, num, nil, shouldPrune(botName))
-	if err != nil {
-		return err
+	hasMessage := len(message) != 0
+
+	if hasMessage {
+		err = ghc.DeleteStaleComments(org, repo, num, nil, shouldPrune(botName, message))
+		if err != nil {
+			return err
+		}
 	}
 
 	log.Infof("Update PR %s/%s#%d.", org, repo, num)
@@ -226,14 +260,16 @@ func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, 
 	if err != nil {
 		return err
 	}
-
-	msg := externalplugins.FormatSimpleResponse(author, autoUpdateMessage)
-	return ghc.CreateComment(org, repo, num, msg)
+	if hasMessage {
+		msg := externalplugins.FormatSimpleResponse(author, message)
+		return ghc.CreateComment(org, repo, num, msg)
+	}
+	return nil
 }
 
-func shouldPrune(botName string) func(github.IssueComment) bool {
+func shouldPrune(botName string, message string) func(github.IssueComment) bool {
 	return func(ic github.IssueComment) bool {
 		return github.NormLogin(botName) == github.NormLogin(ic.User.Login) &&
-			strings.Contains(ic.Body, autoUpdateMessage)
+			strings.Contains(ic.Body, message)
 	}
 }

@@ -5,12 +5,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
 	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/prow-github/pkg/github"
+	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
+	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/plugins"
 )
 
@@ -180,6 +183,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
 		outOfDate  bool
+		message    string
 
 		expectComment  bool
 		expectDeletion bool
@@ -196,13 +200,25 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			outOfDate:  false,
 		},
 		{
-			name:           "out of date",
+			name:           "out of date with message",
 			pr:             getPullRequest(),
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
+			message:        "updated",
 			expectDeletion: true,
 			expectComment:  true,
+			expectUpdate:   true,
+		},
+		{
+			name:           "out of date with empty message",
+			pr:             getPullRequest(),
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "",
+			expectDeletion: false,
+			expectComment:  false,
 			expectUpdate:   true,
 		},
 		{
@@ -219,7 +235,14 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			if tc.pr != nil {
 				ice.Issue.PullRequest = &struct{}{}
 			}
-			if err := HandleIssueCommentEvent(logrus.WithField("plugin", PluginName), fc, ice); err != nil {
+			cfg := &externalplugins.Configuration{}
+			cfg.TiCommunityTars = []externalplugins.TiCommunityTars{
+				{
+					Repos:   []string{"org/repo"},
+					Message: tc.message,
+				},
+			}
+			if err := HandleIssueCommentEvent(logrus.WithField("plugin", PluginName), fc, ice, cfg); err != nil {
 				t.Fatalf("error handling issue comment event: %v", err)
 			}
 			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.outOfDate)
@@ -268,6 +291,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
 		outOfDate  bool
+		message    string
 
 		expectComment  bool
 		expectDeletion bool
@@ -280,14 +304,26 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			outOfDate:  false,
 		},
 		{
-			name:           "out of date",
+			name:           "out of date with message",
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
+			message:        "updated",
 			expectDeletion: true,
 			expectComment:  true,
 			expectUpdate:   true,
-		}, {
+		},
+		{
+			name:           "out of date with empty message",
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "",
+			expectDeletion: false,
+			expectComment:  false,
+			expectUpdate:   true,
+		},
+		{
 			name:   "merged pr is ignored",
 			merged: true,
 		},
@@ -309,7 +345,14 @@ func TestHandlePullRequestEvent(t *testing.T) {
 					Number: 5,
 				},
 			}
-			if err := HandlePullRequestEvent(logrus.WithField("plugin", PluginName), fc, pre); err != nil {
+			cfg := &externalplugins.Configuration{}
+			cfg.TiCommunityTars = []externalplugins.TiCommunityTars{
+				{
+					Repos:   []string{"org/repo"},
+					Message: tc.message,
+				},
+			}
+			if err := HandlePullRequestEvent(logrus.WithField("plugin", PluginName), fc, pre, cfg); err != nil {
 				t.Fatalf("Unexpected error handling event: %v.", err)
 			}
 			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.expectUpdate)
@@ -357,6 +400,7 @@ func TestHandleAll(t *testing.T) {
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
 		outOfDate  bool
+		message    string
 
 		expectComment  bool
 		expectDeletion bool
@@ -373,13 +417,25 @@ func TestHandleAll(t *testing.T) {
 			outOfDate:  false,
 		},
 		{
-			name:           "out of date",
+			name:           "out of date with message",
 			pr:             getPullRequest(),
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
+			message:        "updated",
 			expectDeletion: true,
 			expectComment:  true,
+			expectUpdate:   true,
+		},
+		{
+			name:           "out of date with empty message",
+			pr:             getPullRequest(),
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "",
+			expectDeletion: false,
+			expectComment:  false,
 			expectUpdate:   true,
 		},
 		{
@@ -406,10 +462,128 @@ func TestHandleAll(t *testing.T) {
 			config := &plugins.Configuration{
 				ExternalPlugins: map[string][]plugins.ExternalPlugin{"/": {{Name: PluginName}}},
 			}
-			if err := HandleAll(logrus.WithField("plugin", PluginName), fc, config); err != nil {
+			externalConfig := &externalplugins.Configuration{}
+			externalConfig.TiCommunityTars = []externalplugins.TiCommunityTars{
+				{
+					Repos:   []string{"org/repo"},
+					Message: tc.message,
+				},
+			}
+			if err := HandleAll(logrus.WithField("plugin", PluginName), fc, config, externalConfig); err != nil {
 				t.Fatalf("Unexpected error handling all prs: %v.", err)
 			}
 			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.outOfDate)
+		})
+	}
+}
+
+func TestShouldPrune(t *testing.T) {
+	botName := "ti-community-bot"
+	message := "updated"
+
+	f := shouldPrune(botName, message)
+
+	testCases := []struct {
+		name    string
+		comment github.IssueComment
+
+		shouldPrune bool
+	}{
+		{
+			name: "not bot comment",
+			comment: github.IssueComment{
+				Body: "updated",
+				User: github.User{
+					Login: "user",
+				},
+			},
+			shouldPrune: false,
+		},
+		{
+			name: "random body",
+			comment: github.IssueComment{
+				Body: "random",
+				User: github.User{
+					Login: "user",
+				},
+			},
+			shouldPrune: false,
+		},
+		{
+			name: "bot updated comment",
+			comment: github.IssueComment{
+				Body: "updated",
+				User: github.User{
+					Login: "ti-community-bot",
+				},
+			},
+			shouldPrune: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			shouldPrune := f(tc.comment)
+			if shouldPrune != tc.shouldPrune {
+				t.Errorf("Mismatch should prune except %v, but got %v.", tc.shouldPrune, shouldPrune)
+			}
+		})
+	}
+}
+
+func TestHelpProvider(t *testing.T) {
+	enabledRepos := []config.OrgRepo{
+		{Org: "org1", Repo: "repo"},
+		{Org: "org2", Repo: "repo"},
+	}
+	cases := []struct {
+		name               string
+		config             *externalplugins.Configuration
+		enabledRepos       []config.OrgRepo
+		err                bool
+		configInfoIncludes []string
+		configInfoExcludes []string
+	}{
+		{
+			name:               "Empty config",
+			config:             &externalplugins.Configuration{},
+			enabledRepos:       enabledRepos,
+			configInfoExcludes: []string{configInfoAutoUpdatedMessagePrefix},
+		},
+		{
+			name: "All configs enabled",
+			config: &externalplugins.Configuration{
+				TiCommunityTars: []externalplugins.TiCommunityTars{
+					{
+						Repos:   []string{"org2/repo"},
+						Message: "updated",
+					},
+				},
+			},
+			enabledRepos:       enabledRepos,
+			configInfoIncludes: []string{configInfoAutoUpdatedMessagePrefix},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			epa := &externalplugins.ConfigAgent{}
+			epa.Set(c.config)
+
+			helpProvider := HelpProvider(epa)
+			pluginHelp, err := helpProvider(c.enabledRepos)
+			if err != nil && !c.err {
+				t.Fatalf("helpProvider error: %v", err)
+			}
+			for _, msg := range c.configInfoExcludes {
+				if strings.Contains(pluginHelp.Config["org2/repo"], msg) {
+					t.Fatalf("helpProvider.Config error mismatch: got %v, but didn't want it", msg)
+				}
+			}
+			for _, msg := range c.configInfoIncludes {
+				if !strings.Contains(pluginHelp.Config["org2/repo"], msg) {
+					t.Fatalf("helpProvider.Config error mismatch: didn't get %v, but wanted it", msg)
+				}
+			}
 		})
 	}
 }
