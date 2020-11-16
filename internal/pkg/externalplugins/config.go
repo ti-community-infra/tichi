@@ -118,6 +118,8 @@ type TiCommunityTars struct {
 	Repos []string `json:"repos,omitempty"`
 	// Message specifies the message when the PR is automatically updated.
 	Message string `json:"message,omitempty"`
+	// OnlyWhenLabel specifies that the automatic update is triggered only when the PR has this label.
+	OnlyWhenLabel string `json:"only_when_label,omitempty"`
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists

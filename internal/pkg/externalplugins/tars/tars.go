@@ -23,7 +23,7 @@ const (
 
 var sleep = time.Sleep
 
-var configInfoAutoUpdatedMessagePrefix = `Auto updated message:`
+var configInfoAutoUpdatedMessagePrefix = "Auto updated message: "
 
 type githubClient interface {
 	CreateComment(org, repo string, number int, comment string) error
@@ -137,6 +137,20 @@ func handle(log *logrus.Entry, ghc githubClient, pr *github.PullRequest, cfg *ex
 	number := pr.Number
 	mergeable := false
 	tars := cfg.TarsFor(org, repo)
+
+	// If the OnlyWhenLabel configuration is set, the pr will only be updated if it has this label.
+	if len(tars.OnlyWhenLabel) != 0 {
+		hasTriggerLabel := false
+		for _, label := range pr.Labels {
+			if label.Name == tars.OnlyWhenLabel {
+				hasTriggerLabel = true
+			}
+		}
+		if !hasTriggerLabel {
+			log.Infof("Ignore PR %s/%s#%d without trigger label %s.", org, repo, number, tars.OnlyWhenLabel)
+			return nil
+		}
+	}
 
 	prCommits, err := ghc.ListPRCommits(org, repo, pr.Number)
 	if err != nil {

@@ -142,6 +142,7 @@ func getPullRequest() *github.PullRequest {
 func TestHandleIssueCommentEvent(t *testing.T) {
 	currentBaseSHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	outOfDateSHA := "0bd3ed50c88cd53a0931609dsa9d-0a9d0-as9d0"
+	triggerLabel := "trigger-update"
 
 	baseCommit := github.RepositoryCommit{
 		SHA: currentBaseSHA,
@@ -179,6 +180,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 	testCases := []struct {
 		name       string
 		pr         *github.PullRequest
+		labels     []github.Label
 		merged     bool
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
@@ -193,15 +195,25 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			name: "No pull request, ignoring",
 		},
 		{
-			name:       "updated no-op",
-			pr:         getPullRequest(),
+			name: "updated no-op",
+			pr:   getPullRequest(),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
 			baseCommit: baseCommit,
 			prCommits:  updatedPrCommits(),
 			outOfDate:  false,
 		},
 		{
-			name:           "out of date with message",
-			pr:             getPullRequest(),
+			name: "out of date with message",
+			pr:   getPullRequest(),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
@@ -211,14 +223,51 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectUpdate:   true,
 		},
 		{
-			name:           "out of date with empty message",
-			pr:             getPullRequest(),
+			name: "out of date with empty message",
+			pr:   getPullRequest(),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
 			message:        "",
 			expectDeletion: false,
 			expectComment:  false,
+			expectUpdate:   true,
+		},
+		{
+			name: "out of date with message and non trigger label",
+			pr:   getPullRequest(),
+			labels: []github.Label{
+				{
+					Name: "random",
+				},
+			},
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "updated",
+			expectDeletion: false,
+			expectComment:  false,
+			expectUpdate:   false,
+		},
+		{
+			name: "out of date with message trigger label",
+			pr:   getPullRequest(),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "updated",
+			expectDeletion: true,
+			expectComment:  true,
 			expectUpdate:   true,
 		},
 		{
@@ -235,17 +284,21 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			if tc.pr != nil {
 				ice.Issue.PullRequest = &struct{}{}
 			}
+			if len(tc.labels) != 0 {
+				tc.pr.Labels = tc.labels
+			}
 			cfg := &externalplugins.Configuration{}
 			cfg.TiCommunityTars = []externalplugins.TiCommunityTars{
 				{
-					Repos:   []string{"org/repo"},
-					Message: tc.message,
+					Repos:         []string{"org/repo"},
+					Message:       tc.message,
+					OnlyWhenLabel: triggerLabel,
 				},
 			}
 			if err := HandleIssueCommentEvent(logrus.WithField("plugin", PluginName), fc, ice, cfg); err != nil {
 				t.Fatalf("error handling issue comment event: %v", err)
 			}
-			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.outOfDate)
+			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.expectUpdate)
 		})
 	}
 }
@@ -253,6 +306,8 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 func TestHandlePullRequestEvent(t *testing.T) {
 	currentBaseSHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	outOfDateSHA := "0bd3ed50c88cd53a0931609dsa9d-0a9d0-as9d0"
+	triggerLabel := "trigger-update"
+
 	baseCommit := github.RepositoryCommit{
 		SHA: currentBaseSHA,
 	}
@@ -288,6 +343,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 	testCases := []struct {
 		name       string
 		merged     bool
+		labels     []github.Label
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
 		outOfDate  bool
@@ -298,13 +354,23 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		expectUpdate   bool
 	}{
 		{
-			name:       "updated no-op",
+			name: "updated no-op",
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
 			baseCommit: baseCommit,
 			prCommits:  updatePrCommits(),
 			outOfDate:  false,
 		},
 		{
-			name:           "out of date with message",
+			name: "out of date with message",
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
@@ -314,7 +380,12 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectUpdate:   true,
 		},
 		{
-			name:           "out of date with empty message",
+			name: "out of date with empty message",
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
@@ -323,6 +394,37 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectComment:  false,
 			expectUpdate:   true,
 		},
+		{
+			name: "out of date with message and non trigger label",
+			labels: []github.Label{
+				{
+					Name: "random",
+				},
+			},
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "updated",
+			expectDeletion: false,
+			expectComment:  false,
+			expectUpdate:   false,
+		},
+		{
+			name: "out of date with message and trigger label",
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "updated",
+			expectDeletion: true,
+			expectComment:  true,
+			expectUpdate:   true,
+		},
+
 		{
 			name:   "merged pr is ignored",
 			merged: true,
@@ -343,13 +445,15 @@ func TestHandlePullRequestEvent(t *testing.T) {
 					},
 					Merged: tc.merged,
 					Number: 5,
+					Labels: tc.labels,
 				},
 			}
 			cfg := &externalplugins.Configuration{}
 			cfg.TiCommunityTars = []externalplugins.TiCommunityTars{
 				{
-					Repos:   []string{"org/repo"},
-					Message: tc.message,
+					Repos:         []string{"org/repo"},
+					Message:       tc.message,
+					OnlyWhenLabel: triggerLabel,
 				},
 			}
 			if err := HandlePullRequestEvent(logrus.WithField("plugin", PluginName), fc, pre, cfg); err != nil {
@@ -363,6 +467,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 func TestHandleAll(t *testing.T) {
 	currentBaseSHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	outOfDateSHA := "0bd3ed50c88cd53a0931609dsa9d-0a9d0-as9d0"
+	triggerLabel := "trigger-update"
 
 	baseCommit := github.RepositoryCommit{
 		SHA: currentBaseSHA,
@@ -397,6 +502,7 @@ func TestHandleAll(t *testing.T) {
 	testCases := []struct {
 		name       string
 		pr         *github.PullRequest
+		labels     []github.Label
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
 		outOfDate  bool
@@ -410,15 +516,25 @@ func TestHandleAll(t *testing.T) {
 			name: "No pull request, ignoring",
 		},
 		{
-			name:       "updated no-op",
-			pr:         getPullRequest(),
+			name: "updated no-op",
+			pr:   getPullRequest(),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
 			baseCommit: baseCommit,
 			prCommits:  updatedPrCommits(),
 			outOfDate:  false,
 		},
 		{
-			name:           "out of date with message",
-			pr:             getPullRequest(),
+			name: "out of date with message",
+			pr:   getPullRequest(),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
@@ -428,14 +544,51 @@ func TestHandleAll(t *testing.T) {
 			expectUpdate:   true,
 		},
 		{
-			name:           "out of date with empty message",
-			pr:             getPullRequest(),
+			name: "out of date with empty message",
+			pr:   getPullRequest(),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
 			message:        "",
 			expectDeletion: false,
 			expectComment:  false,
+			expectUpdate:   true,
+		},
+		{
+			name: "out of date with message and non trigger label",
+			pr:   getPullRequest(),
+			labels: []github.Label{
+				{
+					Name: "random",
+				},
+			},
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "updated",
+			expectDeletion: false,
+			expectComment:  false,
+			expectUpdate:   false,
+		},
+		{
+			name: "out of date with message and trigger label",
+			pr:   getPullRequest(),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "updated",
+			expectDeletion: true,
+			expectComment:  true,
 			expectUpdate:   true,
 		},
 		{
@@ -458,6 +611,9 @@ func TestHandleAll(t *testing.T) {
 				pr.Repository.Owner.Login = "org"
 				prs = append(prs, pr)
 			}
+			if len(tc.labels) != 0 {
+				tc.pr.Labels = tc.labels
+			}
 			fc := newFakeGithubClient(prs, tc.pr, tc.baseCommit, tc.prCommits, tc.outOfDate)
 			config := &plugins.Configuration{
 				ExternalPlugins: map[string][]plugins.ExternalPlugin{"/": {{Name: PluginName}}},
@@ -465,14 +621,15 @@ func TestHandleAll(t *testing.T) {
 			externalConfig := &externalplugins.Configuration{}
 			externalConfig.TiCommunityTars = []externalplugins.TiCommunityTars{
 				{
-					Repos:   []string{"org/repo"},
-					Message: tc.message,
+					Repos:         []string{"org/repo"},
+					Message:       tc.message,
+					OnlyWhenLabel: triggerLabel,
 				},
 			}
 			if err := HandleAll(logrus.WithField("plugin", PluginName), fc, config, externalConfig); err != nil {
 				t.Fatalf("Unexpected error handling all prs: %v.", err)
 			}
-			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.outOfDate)
+			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.expectUpdate)
 		})
 	}
 }
