@@ -116,7 +116,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", server)
-	externalplugins.ServeExternalPluginHelp(mux, log, tars.HelpProvider)
+	helpProvider := tars.HelpProvider(epa)
+	externalplugins.ServeExternalPluginHelp(mux, log, helpProvider)
 	httpServer := &http.Server{Addr: ":" + strconv.Itoa(o.port), Handler: mux}
 
 	interrupts.ListenAndServe(httpServer, 5*time.Second)

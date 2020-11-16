@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/prow-github/pkg/github"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
+	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/plugins"
 )
 
@@ -524,6 +526,63 @@ func TestShouldPrune(t *testing.T) {
 			shouldPrune := f(tc.comment)
 			if shouldPrune != tc.shouldPrune {
 				t.Errorf("Mismatch should prune except %v, but got %v.", tc.shouldPrune, shouldPrune)
+			}
+		})
+	}
+}
+
+func TestHelpProvider(t *testing.T) {
+	enabledRepos := []config.OrgRepo{
+		{Org: "org1", Repo: "repo"},
+		{Org: "org2", Repo: "repo"},
+	}
+	cases := []struct {
+		name               string
+		config             *externalplugins.Configuration
+		enabledRepos       []config.OrgRepo
+		err                bool
+		configInfoIncludes []string
+		configInfoExcludes []string
+	}{
+		{
+			name:               "Empty config",
+			config:             &externalplugins.Configuration{},
+			enabledRepos:       enabledRepos,
+			configInfoExcludes: []string{configInfoAutoUpdatedMessagePrefix},
+		},
+		{
+			name: "All configs enabled",
+			config: &externalplugins.Configuration{
+				TiCommunityTars: []externalplugins.TiCommunityTars{
+					{
+						Repos:   []string{"org2/repo"},
+						Message: "updated",
+					},
+				},
+			},
+			enabledRepos:       enabledRepos,
+			configInfoIncludes: []string{configInfoAutoUpdatedMessagePrefix},
+		},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			epa := &externalplugins.ConfigAgent{}
+			epa.Set(c.config)
+
+			helpProvider := HelpProvider(epa)
+			pluginHelp, err := helpProvider(c.enabledRepos)
+			if err != nil && !c.err {
+				t.Fatalf("helpProvider error: %v", err)
+			}
+			for _, msg := range c.configInfoExcludes {
+				if strings.Contains(pluginHelp.Config["org2/repo"], msg) {
+					t.Fatalf("helpProvider.Config error mismatch: got %v, but didn't want it", msg)
+				}
+			}
+			for _, msg := range c.configInfoIncludes {
+				if !strings.Contains(pluginHelp.Config["org2/repo"], msg) {
+					t.Fatalf("helpProvider.Config error mismatch: didn't get %v, but wanted it", msg)
+				}
 			}
 		})
 	}

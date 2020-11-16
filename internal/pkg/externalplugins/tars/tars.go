@@ -23,6 +23,8 @@ const (
 
 var sleep = time.Sleep
 
+var configInfoAutoUpdatedMessagePrefix = `Auto updated message:`
+
 type githubClient interface {
 	CreateComment(org, repo string, number int, comment string) error
 	BotName() (string, error)
@@ -63,11 +65,36 @@ type searchQuery struct {
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(_ []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
-	return &pluginhelp.PluginHelp{
+func HelpProvider(epa *externalplugins.ConfigAgent) func(
+	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+		configInfo := map[string]string{}
+		cfg := epa.Config()
+		for _, repo := range enabledRepos {
+			opts := cfg.TarsFor(repo.Org, repo.Repo)
+			var isConfigured bool
+			var configInfoStrings []string
+
+			configInfoStrings = append(configInfoStrings, "The plugin has the following configuration:<ul>")
+
+			if len(opts.Message) != 0 {
+				isConfigured = true
+			}
+
+			configInfoStrings = append(configInfoStrings, "<li>"+configInfoAutoUpdatedMessagePrefix+opts.Message+"</li>")
+
+			configInfoStrings = append(configInfoStrings, "</ul>")
+			if isConfigured {
+				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
+			}
+		}
+		pluginHelp := &pluginhelp.PluginHelp{
 			Description: `The tars plugin help you update your out-of-date PR.`,
-		},
-		nil
+			Config:      configInfo,
+		}
+
+		return pluginHelp, nil
+	}
 }
 
 // HandlePullRequestEvent handles a GitHub pull request event and update the PR
