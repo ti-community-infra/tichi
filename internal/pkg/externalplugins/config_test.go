@@ -648,8 +648,9 @@ func TestTarsFor(t *testing.T) {
 		{
 			name: "Full name",
 			tars: &TiCommunityTars{
-				Repos:   []string{"tidb-community-bots/test-dev"},
-				Message: "updated",
+				Repos:         []string{"tidb-community-bots/test-dev"},
+				Message:       "updated",
+				OnlyWhenLabel: "trigger-update",
 			},
 			org:  "tidb-community-bots",
 			repo: "test-dev",
@@ -657,8 +658,9 @@ func TestTarsFor(t *testing.T) {
 		{
 			name: "Only org",
 			tars: &TiCommunityTars{
-				Repos:   []string{"tidb-community-bots"},
-				Message: "updated",
+				Repos:         []string{"tidb-community-bots"},
+				Message:       "updated",
+				OnlyWhenLabel: "trigger-update",
 			},
 			org:  "tidb-community-bots",
 			repo: "test-dev",
