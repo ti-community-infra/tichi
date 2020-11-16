@@ -474,3 +474,57 @@ func TestHandleAll(t *testing.T) {
 		})
 	}
 }
+
+func TestShouldPrune(t *testing.T) {
+	botName := "ti-community-bot"
+	message := "updated"
+
+	f := shouldPrune(botName, message)
+
+	testCases := []struct {
+		name    string
+		comment github.IssueComment
+
+		shouldPrune bool
+	}{
+		{
+			name: "not bot comment",
+			comment: github.IssueComment{
+				Body: "updated",
+				User: github.User{
+					Login: "user",
+				},
+			},
+			shouldPrune: false,
+		},
+		{
+			name: "random body",
+			comment: github.IssueComment{
+				Body: "random",
+				User: github.User{
+					Login: "user",
+				},
+			},
+			shouldPrune: false,
+		},
+		{
+			name: "bot updated comment",
+			comment: github.IssueComment{
+				Body: "updated",
+				User: github.User{
+					Login: "ti-community-bot",
+				},
+			},
+			shouldPrune: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			shouldPrune := f(tc.comment)
+			if shouldPrune != tc.shouldPrune {
+				t.Errorf("Mismatch should prune except %v, but got %v.", tc.shouldPrune, shouldPrune)
+			}
+		})
+	}
+}
