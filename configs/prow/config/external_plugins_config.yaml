@@ -106,5 +106,9 @@ ti-community-blunderbuss:
       - Luffbee
       - shafreeck
 
+ti-community-tars:
+  - repos:
+      - tidb-community-bots/test-live
+    message: "Your PR has out-of-dated, I have automatically updated it for you."
 
 
