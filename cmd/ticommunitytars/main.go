@@ -12,6 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/prow-github/pkg/github"
 	prowflagutil "github.com/tidb-community-bots/prow-github/pkg/github/flagutil"
+	tiexternalplugins "github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins/tars"
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"
@@ -24,9 +25,10 @@ import (
 type options struct {
 	port int
 
-	pluginConfig string
-	dryRun       bool
-	github       prowflagutil.GitHubOptions
+	pluginConfig          string
+	dryRun                bool
+	github                prowflagutil.GitHubOptions
+	externalPluginsConfig string
 
 	updatePeriod time.Duration
 
@@ -48,6 +50,8 @@ func gatherOptions() options {
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	fs.IntVar(&o.port, "port", 8888, "Port to listen on.")
 	fs.StringVar(&o.pluginConfig, "plugin-config", "/etc/plugins/plugins.yaml", "Path to plugin config file.")
+	fs.StringVar(&o.externalPluginsConfig, "external-plugins-config",
+		"/etc/plugins/external_plugins_config.yaml", "Path to external plugin config file.")
 	fs.BoolVar(&o.dryRun, "dry-run", true, "Dry run for testing. Uses API tokens but does not mutate.")
 	fs.DurationVar(&o.updatePeriod, "update-period", time.Minute*30, "Period duration for periodic scans of all PRs.")
 	fs.StringVar(&o.webhookSecretFile, "hmac-secret-file", "/etc/webhook/hmac",
@@ -80,6 +84,11 @@ func main() {
 		log.WithError(err).Fatalf("Error loading plugin config from %q.", o.pluginConfig)
 	}
 
+	epa := &tiexternalplugins.ConfigAgent{}
+	if err := epa.Start(o.externalPluginsConfig, false); err != nil {
+		log.WithError(err).Fatalf("Error loading external plugin config from %q.", o.externalPluginsConfig)
+	}
+
 	githubClient, err := o.github.GitHubClient(secretAgent, o.dryRun)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting GitHub client.")
@@ -90,12 +99,13 @@ func main() {
 		tokenGenerator: secretAgent.GetTokenGenerator(o.webhookSecretFile),
 		ghc:            githubClient,
 		log:            log,
+		configAgent:    epa,
 	}
 
 	defer interrupts.WaitForGracefulShutdown()
 	interrupts.TickLiteral(func() {
 		start := time.Now()
-		if err := tars.HandleAll(log, githubClient, pa.Config()); err != nil {
+		if err := tars.HandleAll(log, githubClient, pa.Config(), epa.Config()); err != nil {
 			log.WithError(err).Error("Error during periodic update of all PRs.")
 		}
 		log.WithField("duration", fmt.Sprintf("%v", time.Since(start))).Info("Periodic update complete.")
@@ -118,6 +128,8 @@ type Server struct {
 	tokenGenerator func() []byte
 	ghc            github.Client
 	log            *logrus.Entry
+
+	configAgent *tiexternalplugins.ConfigAgent
 }
 
 // ServeHTTP validates an incoming webhook and puts it into the event channel.
@@ -141,6 +153,9 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			github.EventGUID: eventGUID,
 		},
 	)
+	// Get external plugins config.
+	config := s.configAgent.Config()
+
 	switch eventType {
 	case "pull_request":
 		var pre github.PullRequestEvent
@@ -148,7 +163,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			return err
 		}
 		go func() {
-			if err := tars.HandlePullRequestEvent(l, s.ghc, &pre); err != nil {
+			if err := tars.HandlePullRequestEvent(l, s.ghc, &pre, config); err != nil {
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
@@ -158,7 +173,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			return err
 		}
 		go func() {
-			if err := tars.HandleIssueCommentEvent(l, s.ghc, &ice); err != nil {
+			if err := tars.HandleIssueCommentEvent(l, s.ghc, &ice, config); err != nil {
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()

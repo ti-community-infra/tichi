@@ -11,6 +11,7 @@ import (
 	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/prow-github/pkg/github"
+	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/plugins"
 )
 
@@ -219,7 +220,14 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			if tc.pr != nil {
 				ice.Issue.PullRequest = &struct{}{}
 			}
-			if err := HandleIssueCommentEvent(logrus.WithField("plugin", PluginName), fc, ice); err != nil {
+			cfg := &externalplugins.Configuration{}
+			cfg.TiCommunityTars = []externalplugins.TiCommunityTars{
+				{
+					Repos:   []string{"org/repo"},
+					Message: "updated",
+				},
+			}
+			if err := HandleIssueCommentEvent(logrus.WithField("plugin", PluginName), fc, ice, cfg); err != nil {
 				t.Fatalf("error handling issue comment event: %v", err)
 			}
 			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.outOfDate)
@@ -309,7 +317,14 @@ func TestHandlePullRequestEvent(t *testing.T) {
 					Number: 5,
 				},
 			}
-			if err := HandlePullRequestEvent(logrus.WithField("plugin", PluginName), fc, pre); err != nil {
+			cfg := &externalplugins.Configuration{}
+			cfg.TiCommunityTars = []externalplugins.TiCommunityTars{
+				{
+					Repos:   []string{"org/repo"},
+					Message: "updated",
+				},
+			}
+			if err := HandlePullRequestEvent(logrus.WithField("plugin", PluginName), fc, pre, cfg); err != nil {
 				t.Fatalf("Unexpected error handling event: %v.", err)
 			}
 			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.expectUpdate)
@@ -406,7 +421,14 @@ func TestHandleAll(t *testing.T) {
 			config := &plugins.Configuration{
 				ExternalPlugins: map[string][]plugins.ExternalPlugin{"/": {{Name: PluginName}}},
 			}
-			if err := HandleAll(logrus.WithField("plugin", PluginName), fc, config); err != nil {
+			externalConfig := &externalplugins.Configuration{}
+			externalConfig.TiCommunityTars = []externalplugins.TiCommunityTars{
+				{
+					Repos:   []string{"org/repo"},
+					Message: "updated",
+				},
+			}
+			if err := HandleAll(logrus.WithField("plugin", PluginName), fc, config, externalConfig); err != nil {
 				t.Fatalf("Unexpected error handling all prs: %v.", err)
 			}
 			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.outOfDate)

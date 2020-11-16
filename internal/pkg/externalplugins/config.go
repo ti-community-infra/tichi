@@ -17,6 +17,7 @@ type Configuration struct {
 	TiCommunityLabel         []TiCommunityLabel         `json:"ti-community-label,omitempty"`
 	TiCommunityAutoresponder []TiCommunityAutoresponder `json:"ti-community-autoresponder,omitempty"`
 	TiCommunityBlunderbuss   []TiCommunityBlunderbuss   `json:"ti-community-blunderbuss,omitempty"`
+	TiCommunityTars          []TiCommunityTars          `json:"ti-community-tars,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -109,6 +110,14 @@ type TiCommunityBlunderbuss struct {
 	ExcludeReviewers []string `json:"exclude_reviewers,omitempty"`
 	// PullOwnersEndpoint specifies the URL of the reviewer of pull request.
 	PullOwnersEndpoint string `json:"pull_owners_endpoint,omitempty"`
+}
+
+// TiCommunityTars is the config for the tars plugin.
+type TiCommunityTars struct {
+	// Repos is either of the form org/repos or just org.
+	Repos []string `json:"repos,omitempty"`
+	// Message specifies the message when the PR is automatically updated.
+	Message string `json:"message,omitempty"`
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists
@@ -235,6 +244,27 @@ func (c *Configuration) BlunderbussFor(org, repo string) *TiCommunityBlunderbuss
 		return &blunderbuss
 	}
 	return &TiCommunityBlunderbuss{}
+}
+
+// TarsFor finds the TiCommunityTars for a repo, if one exists.
+// TiCommunityTars configuration can be listed for a repository
+// or an organization.
+func (c *Configuration) TarsFor(org, repo string) *TiCommunityTars {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, tars := range c.TiCommunityTars {
+		if !sets.NewString(tars.Repos...).Has(fullName) {
+			continue
+		}
+		return &tars
+	}
+	// If you don't find anything, loop again looking for an org config
+	for _, tars := range c.TiCommunityTars {
+		if !sets.NewString(tars.Repos...).Has(org) {
+			continue
+		}
+		return &tars
+	}
+	return &TiCommunityTars{}
 }
 
 // Validate will return an error if there are any invalid external plugin config.
