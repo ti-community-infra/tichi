@@ -181,6 +181,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
 		outOfDate  bool
+		message    string
 
 		expectComment  bool
 		expectDeletion bool
@@ -197,13 +198,25 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			outOfDate:  false,
 		},
 		{
-			name:           "out of date",
+			name:           "out of date with message",
 			pr:             getPullRequest(),
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
+			message:        "updated",
 			expectDeletion: true,
 			expectComment:  true,
+			expectUpdate:   true,
+		},
+		{
+			name:           "out of date with empty message",
+			pr:             getPullRequest(),
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "",
+			expectDeletion: false,
+			expectComment:  false,
 			expectUpdate:   true,
 		},
 		{
@@ -224,7 +237,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			cfg.TiCommunityTars = []externalplugins.TiCommunityTars{
 				{
 					Repos:   []string{"org/repo"},
-					Message: "updated",
+					Message: tc.message,
 				},
 			}
 			if err := HandleIssueCommentEvent(logrus.WithField("plugin", PluginName), fc, ice, cfg); err != nil {
@@ -276,6 +289,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
 		outOfDate  bool
+		message    string
 
 		expectComment  bool
 		expectDeletion bool
@@ -288,14 +302,26 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			outOfDate:  false,
 		},
 		{
-			name:           "out of date",
+			name:           "out of date with message",
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
+			message:        "updated",
 			expectDeletion: true,
 			expectComment:  true,
 			expectUpdate:   true,
-		}, {
+		},
+		{
+			name:           "out of date with empty message",
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "",
+			expectDeletion: false,
+			expectComment:  false,
+			expectUpdate:   true,
+		},
+		{
 			name:   "merged pr is ignored",
 			merged: true,
 		},
@@ -321,7 +347,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			cfg.TiCommunityTars = []externalplugins.TiCommunityTars{
 				{
 					Repos:   []string{"org/repo"},
-					Message: "updated",
+					Message: tc.message,
 				},
 			}
 			if err := HandlePullRequestEvent(logrus.WithField("plugin", PluginName), fc, pre, cfg); err != nil {
@@ -372,6 +398,7 @@ func TestHandleAll(t *testing.T) {
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
 		outOfDate  bool
+		message    string
 
 		expectComment  bool
 		expectDeletion bool
@@ -388,13 +415,25 @@ func TestHandleAll(t *testing.T) {
 			outOfDate:  false,
 		},
 		{
-			name:           "out of date",
+			name:           "out of date with message",
 			pr:             getPullRequest(),
 			baseCommit:     baseCommit,
 			prCommits:      outOfDatePrCommits(),
 			outOfDate:      true,
+			message:        "updated",
 			expectDeletion: true,
 			expectComment:  true,
+			expectUpdate:   true,
+		},
+		{
+			name:           "out of date with empty message",
+			pr:             getPullRequest(),
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "",
+			expectDeletion: false,
+			expectComment:  false,
 			expectUpdate:   true,
 		},
 		{
@@ -425,7 +464,7 @@ func TestHandleAll(t *testing.T) {
 			externalConfig.TiCommunityTars = []externalplugins.TiCommunityTars{
 				{
 					Repos:   []string{"org/repo"},
-					Message: "updated",
+					Message: tc.message,
 				},
 			}
 			if err := HandleAll(logrus.WithField("plugin", PluginName), fc, config, externalConfig); err != nil {
