@@ -60,8 +60,6 @@ branch-protection:
               required_status_checks:
                 contexts:
                   - "Sig Info File Format"
-    pingcap:
-      repos:
         tidb-dashboard:
           branches:
             master:
