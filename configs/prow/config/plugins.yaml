@@ -83,7 +83,7 @@ plugins:
     - assign
   pingcap/community:
     - assign
-  pingcap-incubator/tidb-dashboard:
+  pingcap/tidb-dashboard:
     - assign
 
 external_plugins:
@@ -192,7 +192,7 @@ external_plugins:
       events:
         - pull_request
         - issue_comment
-  pingcap-incubator/tidb-dashboard:
+  pingcap/tidb-dashboard:
     - name: ti-community-lgtm
       events:
         - issue_comment
