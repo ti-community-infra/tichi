@@ -56,7 +56,9 @@ func (s *Server) listOwnersForNonSig(org string, repo string,
 
 	var collaboratorsLogin []string
 	for _, collaborator := range collaborators {
-		collaboratorsLogin = append(collaboratorsLogin, collaborator.Login)
+		if collaborator.Permissions.Push || collaborator.Permissions.Admin {
+			collaboratorsLogin = append(collaboratorsLogin, collaborator.Login)
+		}
 	}
 	committers := sets.NewString(collaboratorsLogin...).Insert(trustTeamMembers...).List()
 

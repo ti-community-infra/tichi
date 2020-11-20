@@ -115,14 +115,14 @@ func TestListOwners(t *testing.T) {
 			exceptNeedsLgtm: 1,
 		},
 		{
-			name:             "non sig label",
+			name:             "non sig label with non permission collaborators",
 			sigRes:           &validSigRes,
-			exceptCommitters: collaborators,
-			exceptReviewers:  collaborators,
+			exceptCommitters: []string{},
+			exceptReviewers:  []string{},
 			exceptNeedsLgtm:  lgtmTwo,
 		},
 		{
-			name:   "non sig label and require one lgtm",
+			name:   "non sig label with non permission collaborators and require one lgtm",
 			sigRes: &validSigRes,
 			labels: []github.Label{
 				{
@@ -130,8 +130,8 @@ func TestListOwners(t *testing.T) {
 				},
 			},
 			requireLgtmLabelPrefix: "require-LGT",
-			exceptCommitters:       collaborators,
-			exceptReviewers:        collaborators,
+			exceptCommitters:       []string{},
+			exceptReviewers:        []string{},
 			exceptNeedsLgtm:        1,
 		},
 		{
