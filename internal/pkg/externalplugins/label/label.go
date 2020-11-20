@@ -32,12 +32,14 @@ type githubClient interface {
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(externalPluginsConfig *externalplugins.Configuration) func(
+func HelpProvider(epa *externalplugins.ConfigAgent) func(
 	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 		labelConfig := map[string]string{}
+		cfg := epa.Config()
+
 		for _, repo := range enabledRepos {
-			opts := externalPluginsConfig.LabelFor(repo.Org, repo.Repo)
+			opts := cfg.LabelFor(repo.Org, repo.Repo)
 
 			var prefixConfigMsg, additionalLabelsConfigMsg string
 			if opts.Prefixes != nil {

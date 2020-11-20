@@ -581,7 +581,10 @@ func TestHelpProvider(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			helpProvider := HelpProvider(c.config)
+			epa := &externalplugins.ConfigAgent{}
+			epa.Set(c.config)
+
+			helpProvider := HelpProvider(epa)
 			pluginHelp, err := helpProvider(c.enabledRepos)
 			if err != nil && !c.err {
 				t.Fatalf("helpProvider error: %v", err)

@@ -99,7 +99,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/", server)
 
-	helpProvider := autoresponder.HelpProvider(epa.Config())
+	helpProvider := autoresponder.HelpProvider(epa)
 	externalplugins.ServeExternalPluginHelp(mux, log, helpProvider)
 	httpServer := &http.Server{Addr: ":" + strconv.Itoa(o.port), Handler: mux}
 

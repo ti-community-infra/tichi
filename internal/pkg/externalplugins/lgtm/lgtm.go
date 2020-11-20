@@ -32,12 +32,13 @@ var (
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(externalPluginsConfig *externalplugins.Configuration) func(
+func HelpProvider(epa *externalplugins.ConfigAgent) func(
 	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 		configInfo := map[string]string{}
+		cfg := epa.Config()
 		for _, repo := range enabledRepos {
-			opts := externalPluginsConfig.LgtmFor(repo.Org, repo.Repo)
+			opts := cfg.LgtmFor(repo.Org, repo.Repo)
 			var isConfigured bool
 			var configInfoStrings []string
 			configInfoStrings = append(configInfoStrings, "The plugin has the following configuration:<ul>")
