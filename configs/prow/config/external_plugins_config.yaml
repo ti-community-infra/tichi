@@ -58,7 +58,6 @@ ti-community-label:
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
     prefixes:
-      - status
       - type
 
 ti-community-autoresponder:
