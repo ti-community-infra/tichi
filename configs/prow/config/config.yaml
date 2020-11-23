@@ -23,20 +23,20 @@ orgs:
         description: For test
         members:
           - ti-community-prow-bot
-          - hi-rustin
         maintainers:
           - hi-rustin
         privacy: closed
       bots-maintainers:
         descripion: Bots maintainers
         members:
-          - hi-rustin
+          - AndreMouche
         maintainers:
           - hi-rustin
         repos:
           ti-community-prow: admin
           ti-challenge-bot: admin
           ti-community-bot: admin
+        privacy: closed
       bots-reviewers:
         descripion: Bots reviewers
         members:
@@ -47,6 +47,7 @@ orgs:
           ti-community-prow: write
           ti-challenge-bot: write
           ti-community-bot: write
+        privacy: closed
 
 branch-protection:
   enforce_admins: true # rules apply to admins too!

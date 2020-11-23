@@ -26,6 +26,7 @@ spec:
                 - --fix-org-members
                 - --fix-teams
                 - --fix-team-members
+                - --fix-team-repos
                 - --tokens=1200
                 - --confirm
               volumeMounts:
