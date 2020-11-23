@@ -36,6 +36,7 @@ ti-community-owners:
       - tidb-community-bots/ti-community-prow
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
+    default_require_lgtm: 1
     sig_endpoint: https://bots.tidb.io/ti-community-bot
   - repos:
       - tikv/pd
@@ -57,7 +58,6 @@ ti-community-label:
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
     prefixes:
-      - status
       - type
 
 ti-community-autoresponder:
@@ -82,6 +82,9 @@ ti-community-blunderbuss:
     max_request_count: 1
     exclude_reviewers:
       - ti-community-prow-bot
+      # Inactive reviewers
+      - sykp241095
+      - AndreMouche
   - repos:
       - tikv/pd
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners

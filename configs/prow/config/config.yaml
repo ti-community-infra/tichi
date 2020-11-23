@@ -96,6 +96,7 @@ branch-protection:
                   - "build (12.x, macos-latest)"
                   - "Semantic Pull Request"
                   - "codecov/project"
+                strict: true
         ti-challenge-bot:
           branches:
             master:
@@ -109,6 +110,7 @@ branch-protection:
                   - "build (12.x, macos-latest)"
                   - "build (12.x, windows-latest)"
                   - "Semantic Pull Request"
+                strict: true
 
 in_repo_config:
   enabled:
