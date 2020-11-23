@@ -56,6 +56,7 @@ func (s *Server) listOwnersForNonSig(org string, repo string,
 
 	var collaboratorsLogin []string
 	for _, collaborator := range collaborators {
+		// Only write and admin permission can lgtm and merge PR.
 		if collaborator.Permissions.Push || collaborator.Permissions.Admin {
 			collaboratorsLogin = append(collaboratorsLogin, collaborator.Login)
 		}
