@@ -24,7 +24,21 @@ orgs:
         members:
           - ti-community-prow-bot
           - hi-rustin
+        maintainers:
+          - hi-rustin
         privacy: closed
+      bots-maintainers:
+        descripion: Bots maintainers
+        members:
+          - hi-rustin
+        maintainers:
+          - hi-rustin
+      bots-reviewers:
+        descripion: Bots reviewers
+        members:
+          - Mini256
+        maintainers:
+          - hi-rustin
 
 branch-protection:
   enforce_admins: true # rules apply to admins too!
