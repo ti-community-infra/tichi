@@ -23,14 +23,13 @@ orgs:
         description: For test
         members:
           - ti-community-prow-bot
-          - hi-rustin
         maintainers:
           - hi-rustin
         privacy: closed
       bots-maintainers:
         descripion: Bots maintainers
         members:
-          - hi-rustin
+          - AndreMouche
         maintainers:
           - hi-rustin
         repos:
