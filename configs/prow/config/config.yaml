@@ -33,12 +33,20 @@ orgs:
           - hi-rustin
         maintainers:
           - hi-rustin
+        repos:
+          ti-community-prow: admin
+          ti-challenge-bot: admin
+          ti-community-bot: admin
       bots-reviewers:
         descripion: Bots reviewers
         members:
           - Mini256
         maintainers:
           - hi-rustin
+        repos:
+          ti-community-prow: write
+          ti-challenge-bot: write
+          ti-community-bot: write
 
 branch-protection:
   enforce_admins: true # rules apply to admins too!
