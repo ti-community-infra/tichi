@@ -12,8 +12,56 @@ import (
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/github"
-	"k8s.io/test-infra/prow/github/fakegithub"
 )
+
+type fakegithub struct {
+	PullRequests  map[int]*github.PullRequest
+	Collaborators []github.User
+}
+
+// GetPullRequest returns details about the PR.
+func (f *fakegithub) GetPullRequest(owner, repo string, number int) (*github.PullRequest, error) {
+	val, exists := f.PullRequests[number]
+	if !exists {
+		return nil, fmt.Errorf("pull request number %d does not exist", number)
+	}
+	return val, nil
+}
+
+// ListCollaborators lists the collaborators.
+func (f *fakegithub) ListCollaborators(org, repo string) ([]github.User, error) {
+	return f.Collaborators, nil
+}
+
+// ListTeams return a list of fake teams that correspond to the fake team members returned by ListTeamMembers.
+func (f *fakegithub) ListTeams(org string) ([]github.Team, error) {
+	return []github.Team{
+		{
+			ID:   0,
+			Name: "Admins",
+		},
+		{
+			ID:   42,
+			Name: "Leads",
+		},
+	}, nil
+}
+
+// ListTeamMembers return a fake team with a single "sig-lead" GitHub team member.
+func (f *fakegithub) ListTeamMembers(teamID int, role string) ([]github.TeamMember, error) {
+	if role != github.RoleAll {
+		return nil, fmt.Errorf("unsupported role %v (only all supported)", role)
+	}
+	teams := map[int][]github.TeamMember{
+		0:  {{Login: "default-sig-lead"}},
+		42: {{Login: "sig-lead"}},
+	}
+	members, ok := teams[teamID]
+	if !ok {
+		return []github.TeamMember{}, nil
+	}
+	return members, nil
+}
 
 func TestListOwners(t *testing.T) {
 	validSigRes := SigResponse{
@@ -55,7 +103,33 @@ func TestListOwners(t *testing.T) {
 		Message: listOwnersSuccessMessage,
 	}
 
-	collaborators := []string{"collab1", "collab2"}
+	collaborators := []github.User{
+		{
+			Login: "collab1",
+			Permissions: github.RepoPermissions{
+				Pull:  true,
+				Push:  false,
+				Admin: false,
+			},
+		},
+		{
+			Login: "collab2",
+			Permissions: github.RepoPermissions{
+				Pull:  true,
+				Push:  true,
+				Admin: false,
+			},
+		},
+		{
+			Login: "collab3",
+			Permissions: github.RepoPermissions{
+				Pull:  true,
+				Push:  true,
+				Admin: true,
+			},
+		},
+	}
+
 	org := "tidb-community-bots"
 	repoName := "test-dev"
 	sigName := "testing"
@@ -115,14 +189,18 @@ func TestListOwners(t *testing.T) {
 			exceptNeedsLgtm: 1,
 		},
 		{
-			name:             "non sig label with non permission collaborators",
-			sigRes:           &validSigRes,
-			exceptCommitters: []string{},
-			exceptReviewers:  []string{},
-			exceptNeedsLgtm:  lgtmTwo,
+			name:   "non sig label",
+			sigRes: &validSigRes,
+			exceptCommitters: []string{
+				"collab2", "collab3",
+			},
+			exceptReviewers: []string{
+				"collab2", "collab3",
+			},
+			exceptNeedsLgtm: lgtmTwo,
 		},
 		{
-			name:   "non sig label with non permission collaborators and require one lgtm",
+			name:   "non sig label and require one lgtm",
 			sigRes: &validSigRes,
 			labels: []github.Label{
 				{
@@ -130,9 +208,13 @@ func TestListOwners(t *testing.T) {
 				},
 			},
 			requireLgtmLabelPrefix: "require-LGT",
-			exceptCommitters:       []string{},
-			exceptReviewers:        []string{},
-			exceptNeedsLgtm:        1,
+			exceptCommitters: []string{
+				"collab2", "collab3",
+			},
+			exceptReviewers: []string{
+				"collab2", "collab3",
+			},
+			exceptNeedsLgtm: 1,
 		},
 		{
 			name:              "non sig label but use default sig name",
@@ -257,8 +339,7 @@ func TestListOwners(t *testing.T) {
 				}
 			})
 
-			fc := &fakegithub.FakeClient{
-				IssueComments: make(map[int][]github.IssueComment),
+			fc := &fakegithub{
 				PullRequests: map[int]*github.PullRequest{
 					pullNumber: {
 						Base: github.PullRequestBranch{
@@ -270,11 +351,6 @@ func TestListOwners(t *testing.T) {
 						User:   github.User{Login: "author"},
 						Number: 5,
 						State:  "open",
-					},
-				},
-				PullRequestChanges: map[int][]github.PullRequestChange{
-					pullNumber: {
-						{Filename: "doc/README.md"},
 					},
 				},
 				Collaborators: collaborators,
@@ -316,7 +392,14 @@ func TestListOwners(t *testing.T) {
 }
 
 func TestListOwnersFailed(t *testing.T) {
-	collaborators := []string{"collab1", "collab2"}
+	collaborators := []github.User{
+		{
+			Login: "collab1",
+		},
+		{
+			Login: "collab2",
+		},
+	}
 	org := "tidb-community-bots"
 	repoName := "test-dev"
 	sigName := "testing"
@@ -383,8 +466,7 @@ func TestListOwnersFailed(t *testing.T) {
 				}
 			})
 
-			fc := &fakegithub.FakeClient{
-				IssueComments: make(map[int][]github.IssueComment),
+			fc := &fakegithub{
 				PullRequests: map[int]*github.PullRequest{
 					pullNumber: {
 						Base: github.PullRequestBranch{
@@ -396,11 +478,6 @@ func TestListOwnersFailed(t *testing.T) {
 						User:   github.User{Login: "author"},
 						Number: 5,
 						State:  "open",
-					},
-				},
-				PullRequestChanges: map[int][]github.PullRequestChange{
-					pullNumber: {
-						{Filename: "doc/README.md"},
 					},
 				},
 				Collaborators: collaborators,
