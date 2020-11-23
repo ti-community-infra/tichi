@@ -77,7 +77,10 @@ ti-community-autoresponder:
 
 ti-community-blunderbuss:
   - repos:
+      - tidb-community-bots/test-live
       - tidb-community-bots/ti-community-prow
+      - tidb-community-bots/ti-community-bot
+      - tidb-community-bots/ti-challenge-bot
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
     max_request_count: 1
     exclude_reviewers:
