@@ -4,7 +4,7 @@ metadata:
   namespace: prow
   name: peribolos
 spec:
-  schedule: "30 12 * * *"  # Everyday 12:30.
+  schedule: "10 * * * *"  # Everyday 12:30.
   concurrencyPolicy: Forbid
   jobTemplate:
     metadata:
@@ -26,6 +26,7 @@ spec:
                 - --fix-org-members
                 - --fix-teams
                 - --fix-team-members
+                - --fix-team-repos
                 - --tokens=1200
                 - --confirm
               volumeMounts:

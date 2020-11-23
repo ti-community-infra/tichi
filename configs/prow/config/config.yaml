@@ -36,6 +36,7 @@ orgs:
           ti-community-prow: admin
           ti-challenge-bot: admin
           ti-community-bot: admin
+        privacy: closed
       bots-reviewers:
         descripion: Bots reviewers
         members:
@@ -46,6 +47,7 @@ orgs:
           ti-community-prow: write
           ti-challenge-bot: write
           ti-community-bot: write
+        privacy: closed
 
 branch-protection:
   enforce_admins: true # rules apply to admins too!
