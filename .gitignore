@@ -17,12 +17,8 @@
 # Tools
 bin/
 
+# IDE
 .idea
 
-configs/prow/cluster/github-token.yaml
-configs/prow/cluster/oauth-token.yaml
-configs/prow/cluster/oauth-cookie.yaml
-configs/prow/cluster/hmac-token.yaml
-configs/prow/cluster/gcs_secrets.yaml
-
+# Test coverage
 coverage.txt
