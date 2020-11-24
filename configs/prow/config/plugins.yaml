@@ -129,9 +129,9 @@ external_plugins:
         - pull_request
         - issue_comment
     - name: ti-community-tars
-        events:
-          - pull_request
-          - issue_comment
+      events:
+        - pull_request
+        - issue_comment
   tidb-community-bots/ti-community-bot:
     - name: ti-community-lgtm
       events:
@@ -152,9 +152,9 @@ external_plugins:
         - pull_request
         - issue_comment
     - name: ti-community-tars
-        events:
-          - pull_request
-          - issue_comment
+      events:
+        - pull_request
+        - issue_comment
   tidb-community-bots/ti-challenge-bot:
     - name: ti-community-lgtm
       events:
@@ -175,9 +175,9 @@ external_plugins:
         - pull_request
         - issue_comment
     - name: ti-community-tars
-        events:
-          - pull_request
-          - issue_comment
+      events:
+        - pull_request
+        - issue_comment
   tikv/community:
     - name: ti-community-lgtm
       events:
