@@ -115,6 +115,10 @@ ti-community-blunderbuss:
 ti-community-tars:
   - repos:
       - tidb-community-bots/test-live
+      - tidb-community-bots/ti-community-prow
+      - tidb-community-bots/ti-community-bot
+      - tidb-community-bots/ti-challenge-bot
+    only_when_label: "status/can-merge"
     message: "Your PR has out-of-dated, I have automatically updated it for you."
   - repos:
       - tikv/pd
