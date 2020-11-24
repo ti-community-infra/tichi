@@ -4,7 +4,7 @@
 
 在 TiDB 社区中，我们采用了多阶段 code review 的方式来进行协作。一个 PR 一般会经过多个人的 review，才能达到合并的基本条件。例如：当 PR 被第一个人 review 之后，会为该 PR 打上 `status/LGT1` 的标签。然后当 PR 被第二个 review 之后，会为该 PR 打上 `status/LGT2` 的标签。每个 sig 都会设置默认需要的 LGTM 的个数，一般为 2 个。
 
-ti-community-lgtm 用来根据权限自动的为 PR 添加 LGTM 对应 label 的插件。它会作为一个独立的服务部署，由 Prow Hook 将 GitHub 的 webhook 事件转发给该插件进行处理。
+ti-community-lgtm 是用来根据权限自动的为 PR 添加 LGTM 对应 label 的插件。它会作为一个独立的服务部署，由 Prow Hook 将 GitHub 的 webhook 事件转发给该插件进行处理。
 
 ## 权限设计
 
