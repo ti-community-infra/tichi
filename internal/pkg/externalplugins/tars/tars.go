@@ -54,10 +54,10 @@ type pullRequest struct {
 	Commits struct {
 		Nodes []struct {
 			Commit struct {
-				OID     githubql.GitObjectID
+				OID     githubql.GitObjectID `graphql:"oid"`
 				Parents struct {
 					Nodes []struct {
-						OID githubql.GitObjectID
+						OID githubql.GitObjectID `graphql:"oid"`
 					}
 				}
 			}
@@ -130,7 +130,7 @@ func HandlePullRequestEvent(log *logrus.Entry, ghc githubClient, pre *github.Pul
 		return nil
 	}
 
-	return handlePullReuqest(log, ghc, &pre.PullRequest, cfg)
+	return handlePullRequest(log, ghc, &pre.PullRequest, cfg)
 }
 
 // HandleIssueCommentEvent handles a GitHub issue comment event and update the PR
@@ -145,10 +145,10 @@ func HandleIssueCommentEvent(log *logrus.Entry, ghc githubClient, ice *github.Is
 		return err
 	}
 
-	return handlePullReuqest(log, ghc, pr, cfg)
+	return handlePullRequest(log, ghc, pr, cfg)
 }
 
-func handlePullReuqest(log *logrus.Entry, ghc githubClient,
+func handlePullRequest(log *logrus.Entry, ghc githubClient,
 	pr *github.PullRequest, cfg *externalplugins.Configuration) error {
 	if pr.Merged {
 		return nil
