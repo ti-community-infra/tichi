@@ -33,4 +33,6 @@ labels: config/labels.yaml
 clean:
 	rm -f cluster/github-token.yaml
 	rm -f cluster/hmac-token.yaml
+	rm -f cluster/oauth-token.yaml
+	rm -f cluster/oauth-cookie.yaml
 	rm -f cluster/gcs-token.yaml
