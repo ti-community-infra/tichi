@@ -502,6 +502,7 @@ func TestHandleAll(t *testing.T) {
 	testCases := []struct {
 		name       string
 		pr         *github.PullRequest
+		merged     bool
 		labels     []github.Label
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
@@ -591,10 +592,12 @@ func TestHandleAll(t *testing.T) {
 			expectComment:  true,
 			expectUpdate:   true,
 		},
-		// {
-		//	 name: "merged pr is ignored",
-		//	 pr:   getPullRequest(),
-		// },
+		{
+			name:      "merged pr is ignored",
+			pr:        getPullRequest(),
+			merged:    true,
+			prCommits: updatedPrCommits(),
+		},
 	}
 
 	oldSleep := sleep
@@ -611,6 +614,7 @@ func TestHandleAll(t *testing.T) {
 				graphPr.Repository.Owner.Login = "org"
 				graphPr.Author.Login = githubql.String(tc.pr.User.Login)
 				graphPr.BaseRef.Name = githubql.String(tc.pr.Base.Ref)
+				graphPr.Merged = githubql.Boolean(tc.merged)
 
 				lastCommit := tc.prCommits[len(tc.prCommits)-1]
 				graphCommit := struct {
