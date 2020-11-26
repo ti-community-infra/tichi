@@ -607,8 +607,10 @@ func TestHandleAll(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			var prs []pullRequest
+			// For now we only add one pr.
 			if tc.pr != nil {
 				graphPr := pullRequest{}
+				// Set the basic info.
 				graphPr.Number = githubql.Int(tc.pr.Number)
 				graphPr.Repository.Name = "repo"
 				graphPr.Repository.Owner.Login = "org"
@@ -616,6 +618,7 @@ func TestHandleAll(t *testing.T) {
 				graphPr.BaseRef.Name = githubql.String(tc.pr.Base.Ref)
 				graphPr.Merged = githubql.Boolean(tc.merged)
 
+				// Convert the commit.
 				lastCommit := tc.prCommits[len(tc.prCommits)-1]
 				graphCommit := struct {
 					Commit struct {
@@ -627,7 +630,6 @@ func TestHandleAll(t *testing.T) {
 						}
 					}
 				}{}
-
 				for _, parent := range lastCommit.Parents {
 					s := struct {
 						OID githubql.GitObjectID `graphql:"oid"`
@@ -637,6 +639,7 @@ func TestHandleAll(t *testing.T) {
 					graphCommit.Commit.Parents.Nodes = append(graphCommit.Commit.Parents.Nodes, s)
 				}
 
+				// Set the labels.
 				if len(tc.labels) != 0 {
 					tc.pr.Labels = tc.labels
 					for _, label := range tc.pr.Labels {
@@ -648,12 +651,12 @@ func TestHandleAll(t *testing.T) {
 						graphPr.Labels.Nodes = append(graphPr.Labels.Nodes, s)
 					}
 				}
-				graphPr.Commits.Nodes = append(graphPr.Commits.Nodes, graphCommit)
 
+				graphPr.Commits.Nodes = append(graphPr.Commits.Nodes, graphCommit)
 				prs = append(prs, graphPr)
 			}
 			fc := newFakeGithubClient(prs, tc.pr, tc.baseCommit, tc.prCommits, tc.outOfDate)
-			config := &plugins.Configuration{
+			cfg := &plugins.Configuration{
 				ExternalPlugins: map[string][]plugins.ExternalPlugin{"/": {{Name: PluginName}}},
 			}
 			externalConfig := &externalplugins.Configuration{}
@@ -664,7 +667,7 @@ func TestHandleAll(t *testing.T) {
 					OnlyWhenLabel: triggerLabel,
 				},
 			}
-			if err := HandleAll(logrus.WithField("plugin", PluginName), fc, config, externalConfig); err != nil {
+			if err := HandleAll(logrus.WithField("plugin", PluginName), fc, cfg, externalConfig); err != nil {
 				t.Fatalf("Unexpected error handling all prs: %v.", err)
 			}
 			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.expectUpdate)

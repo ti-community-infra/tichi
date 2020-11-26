@@ -276,6 +276,7 @@ func handleAll(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *extern
 		}
 	}
 
+	// Must have last commit.
 	if len(pr.Commits.Nodes) == 0 || len(pr.Commits.Nodes) != 1 {
 		return nil
 	}
