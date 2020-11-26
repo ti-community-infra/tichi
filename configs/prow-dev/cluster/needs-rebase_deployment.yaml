@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: prow
+  name: needs-rebase
+  labels:
+    app: needs-rebase
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: needs-rebase
+  template:
+    metadata:
+      labels:
+        app: needs-rebase
+    spec:
+      terminationGracePeriodSeconds: 180
+      containers:
+        - name: needs-rebase
+          image: gcr.io/k8s-prow/needs-rebase:v20201112-00537d1bb4
+          imagePullPolicy: Always
+          args:
+            - --dry-run=false
+            - --github-token-path=/etc/github/token
+            - --github-endpoint=http://ghproxy
+            - --github-endpoint=https://api.github.com
+          ports:
+            - name: http
+              containerPort: 8888
+          volumeMounts:
+            - name: hmac
+              mountPath: /etc/webhook
+              readOnly: true
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+            - name: plugins
+              mountPath: /etc/plugins
+              readOnly: true
+      volumes:
+        - name: hmac
+          secret:
+            secretName: hmac-token
+        - name: github-token
+          secret:
+            secretName: github-token
+        - name: plugins
+          configMap:
+            name: plugins

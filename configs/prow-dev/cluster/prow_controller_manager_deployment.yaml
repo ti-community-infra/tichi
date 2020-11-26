@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: prow
+  name: prow-controller-manager
+  labels:
+    app: prow-controller-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prow-controller-manager
+  template:
+    metadata:
+      labels:
+        app: prow-controller-manager
+    spec:
+      serviceAccountName: prow-controller-manager
+      containers:
+        - name: prow-controller-manager
+          args:
+            - --dry-run=false
+            - --config-path=/etc/config/config.yaml
+            - --github-token-path=/etc/github/token
+            - --github-endpoint=http://ghproxy
+            - --github-endpoint=https://api.github.com
+            - --enable-controller=plank
+          image: gcr.io/k8s-prow/prow-controller-manager:v20201112-00537d1bb4
+          volumeMounts:
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+            - name: config
+              mountPath: /etc/config
+              readOnly: true
+      volumes:
+        - name: github-token
+          secret:
+            secretName: github-token
+        - name: config
+          configMap:
+            name: config

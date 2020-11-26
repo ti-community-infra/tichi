@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: prow
+  name: ti-community-autoresponder
+  labels:
+    app: ti-community-autoresponder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ti-community-autoresponder
+  template:
+    metadata:
+      labels:
+        app: ti-community-autoresponder
+    spec:
+      serviceAccountName: "hook"
+      terminationGracePeriodSeconds: 180
+      containers:
+        - name: ti-community-autoresponder
+          image: rustinliu/ti-community-prow-autoresponder-plugin:v0.15.2
+          imagePullPolicy: Always
+          args:
+            - --dry-run=false
+            - --github-token-path=/etc/github/token
+            - --github-endpoint=http://ghproxy
+            - --github-endpoint=https://api.github.com
+          ports:
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - name: hmac
+              mountPath: /etc/webhook
+              readOnly: true
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+            - name: external-plugins-config
+              mountPath: /etc/plugins
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 3
+            timeoutSeconds: 600
+      volumes:
+        - name: hmac
+          secret:
+            secretName: hmac-token
+        - name: github-token
+          secret:
+            secretName: github-token
+        - name: external-plugins-config
+          configMap:
+            name: external-plugins-config
