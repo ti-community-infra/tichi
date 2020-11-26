@@ -1,0 +1,30 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  namespace: prow
+  name: prow
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: prow-dev-static-ip
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.allow-http: "false"
+spec:
+  rules:
+    - host: prow-dev.tidb.io
+      http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: deck
+              servicePort: 80
+          - path: /hook
+            backend:
+              serviceName: hook
+              servicePort: 8888
+          - path: /ti-community-owners/*
+            backend:
+              serviceName: ti-community-owners
+              servicePort: 80
+  tls:
+    - hosts:
+        - "*.tidb.io"
+      secretName: prow-tidb-io
