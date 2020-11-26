@@ -1,0 +1,81 @@
+config_updater:
+  maps:
+    configs/prow-dev/config/config.yaml:
+      name: config
+    configs/prow-dev/config/plugins.yaml:
+      name: plugins
+    configs/prow-dev/config/external_plugins_config.yaml:
+      name: external-plugins-config
+    configs/prow-dev/config/labels.yaml:
+      name: labels-config
+
+welcome:
+  - repos:
+      - tidb-community-bots
+    message_template: "Welcome @{{.AuthorLogin}}! <br><br>It looks like this is your first PR to <a href='https://github.com/{{.Org}}/{{.Repo}}'>{{.Org}}/{{.Repo}}</a> 🎉. <br><br>You will be prompted by a bot to use commands during the review process. Do not be afraid to follow the prompts! It is okay to experiment. [Here is the bot commands documentation](https://prow-dev.tidb.io/command-help). <br><br>You can also check if {{.Org}}/{{.Repo}} has [its own contribution guidelines](https://github.com/{{.Org}}/{{.Repo}}/tree/master/CONTRIBUTING.md). <br><br>We want to make sure your contribution gets all the attention it needs! <br><br>Thank you, and welcome to tidb community. :smiley:"
+
+size:
+  s: 10
+  m: 30
+  l: 90
+  xl: 270
+  xxl: 520
+
+require_matching_label:
+  - missing_label: needs-type
+    org: tidb-community-bots
+    repo: test-dev
+    issues: true
+    regexp: ^type/
+    missing_comment: |
+      There are no type labels on this issue. Please add an appropriate label by using one of the following commands:
+      - `/type <type-name>`
+
+triggers:
+  - repos:
+      - tidb-community-bots/test-dev
+    ignore_ok_to_test: true
+    only_org_members: false
+
+plugins:
+  tidb-community-bots/test-dev:
+    - assign
+    - branchcleaner
+    - size
+    - welcome
+    - wip
+    - lifecycle
+    - help
+    - hold
+
+external_plugins:
+  tidb-community-bots/test-dev:
+    - name: ti-community-lgtm
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request_review
+    - name: ti-community-merge
+      events:
+        - issue_comment
+        - pull_request_review_comment
+        - pull_request
+    - name: ti-community-label
+      events:
+        - issue_comment
+    - name: ti-community-autoresponder
+      events:
+        - issue_comment
+        - pull_request_review_comment
+    - name: needs-rebase
+      events:
+        - pull_request
+        - issue_comment
+    - name: ti-community-blunderbuss
+      events:
+        - pull_request
+        - issue_comment
+    - name: ti-community-tars
+      events:
+        - pull_request
+        - issue_comment
