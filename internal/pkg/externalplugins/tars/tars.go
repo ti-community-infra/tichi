@@ -45,6 +45,30 @@ type pullRequest struct {
 			Login githubql.String
 		}
 	}
+	Author struct {
+		Login githubql.String
+	}
+	BaseRef struct {
+		Name githubql.String
+	}
+	Commits struct {
+		Nodes []struct {
+			Commit struct {
+				OID     githubql.GitObjectID `graphql:"oid"`
+				Parents struct {
+					Nodes []struct {
+						OID githubql.GitObjectID `graphql:"oid"`
+					}
+				} `graphql:"parents(first:100)"`
+			}
+		}
+	} `graphql:"commits(last:1)"`
+	Labels struct {
+		Nodes []struct {
+			Name githubql.String
+		}
+	} `graphql:"labels(first:100)"`
+	Merged githubql.Boolean
 }
 
 type searchQuery struct {
@@ -106,7 +130,7 @@ func HandlePullRequestEvent(log *logrus.Entry, ghc githubClient, pre *github.Pul
 		return nil
 	}
 
-	return handle(log, ghc, &pre.PullRequest, cfg)
+	return handlePullRequest(log, ghc, &pre.PullRequest, cfg)
 }
 
 // HandleIssueCommentEvent handles a GitHub issue comment event and update the PR
@@ -121,10 +145,11 @@ func HandleIssueCommentEvent(log *logrus.Entry, ghc githubClient, ice *github.Is
 		return err
 	}
 
-	return handle(log, ghc, pr, cfg)
+	return handlePullRequest(log, ghc, pr, cfg)
 }
 
-func handle(log *logrus.Entry, ghc githubClient, pr *github.PullRequest, cfg *externalplugins.Configuration) error {
+func handlePullRequest(log *logrus.Entry, ghc githubClient,
+	pr *github.PullRequest, cfg *externalplugins.Configuration) error {
 	if pr.Merged {
 		return nil
 	}
@@ -204,7 +229,8 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		return err
 	}
 	log.Infof("Considering %d PRs.", len(prs))
-	for _, pr := range prs {
+	for i := range prs {
+		pr := prs[i]
 		org := string(pr.Repository.Owner.Login)
 		repo := string(pr.Repository.Name)
 		num := int(pr.Number)
@@ -214,16 +240,65 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 			"pr":   num,
 		})
 
-		pr, err := ghc.GetPullRequest(org, repo, num)
-		if err != nil {
-			l.WithError(err).Error("Error get PR.")
-		}
-		err = handle(l, ghc, pr, externalConfig)
+		err = handleAll(l, ghc, &pr, externalConfig)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
 		}
 	}
 	return nil
+}
+
+func handleAll(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *externalplugins.Configuration) error {
+	if pr.Merged {
+		return nil
+	}
+	// Before checking mergeability wait a few seconds to give github a chance to calculate it.
+	// This initial delay prevents us from always wasting the first API token.
+	sleep(time.Second * 5)
+
+	org := string(pr.Repository.Owner.Login)
+	repo := string(pr.Repository.Name)
+	number := int(pr.Number)
+	mergeable := false
+	tars := cfg.TarsFor(org, repo)
+
+	// If the OnlyWhenLabel configuration is set, the pr will only be updated if it has this label.
+	if len(tars.OnlyWhenLabel) != 0 {
+		hasTriggerLabel := false
+		for _, labelName := range pr.Labels.Nodes {
+			if string(labelName.Name) == tars.OnlyWhenLabel {
+				hasTriggerLabel = true
+			}
+		}
+		if !hasTriggerLabel {
+			log.Infof("Ignore PR %s/%s#%d without trigger label %s.", org, repo, number, tars.OnlyWhenLabel)
+			return nil
+		}
+	}
+
+	// Must have last commit.
+	if len(pr.Commits.Nodes) == 0 || len(pr.Commits.Nodes) != 1 {
+		return nil
+	}
+
+	// Check if we update the base into PR.
+	currentBaseCommit, err := ghc.GetSingleCommit(org, repo, string(pr.BaseRef.Name))
+	if err != nil {
+		return err
+	}
+	for _, prCommitParent := range pr.Commits.Nodes[0].Commit.Parents.Nodes {
+		if string(prCommitParent.OID) == currentBaseCommit.SHA {
+			mergeable = true
+		}
+	}
+
+	if mergeable {
+		return nil
+	}
+
+	lastCommitIndex := 0
+	lastCommitSHA := string(pr.Commits.Nodes[lastCommitIndex].Commit.OID)
+	return takeAction(log, ghc, org, repo, number, &lastCommitSHA, string(pr.Author.Login), tars.Message)
 }
 
 func search(ctx context.Context, log *logrus.Entry, ghc githubClient, q string) ([]pullRequest, error) {
