@@ -59,7 +59,7 @@ type pullRequest struct {
 					Nodes []struct {
 						OID githubql.GitObjectID `graphql:"oid"`
 					}
-				}
+				} `graphql:"parents(first:100)"`
 			}
 		}
 	} `graphql:"commits(last:1)"`

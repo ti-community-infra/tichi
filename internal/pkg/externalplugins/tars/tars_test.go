@@ -627,7 +627,7 @@ func TestHandleAll(t *testing.T) {
 							Nodes []struct {
 								OID githubql.GitObjectID `graphql:"oid"`
 							}
-						}
+						} `graphql:"parents(first:100)"`
 					}
 				}{}
 				for _, parent := range lastCommit.Parents {
