@@ -7,6 +7,7 @@
   - [ti-community-owners](./plugins/owners.md)
   - [ti-community-lgtm](./plugins/lgtm.md)
   - [ti-community-merge](./plugins/merge.md)
+  - [ti-community-tars](./plugins/tars.md)
   - [ti-community-label](./plugins/label.md)
 - [Workflows](./workflows.md)
   - [PR workflow](./workflows/pr.md)
