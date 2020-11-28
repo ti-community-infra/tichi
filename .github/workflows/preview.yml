@@ -1,6 +1,6 @@
 name: Surge PR Preview
 
-on: [pull_request_target, push]
+on: [ pull_request_target, push ]
 
 jobs:
   preview:
@@ -11,8 +11,9 @@ jobs:
         working-directory: ./docs
     steps:
       - uses: actions/checkout@v2
-      - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@v1
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+      - uses: peaceiris/actions-mdbook@v1
         with:
           mdbook-version: 'latest'
       - run: mdbook build
