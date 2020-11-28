@@ -35,7 +35,9 @@ ti-community-blunderbuss:
     pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
     max_request_count: 1
     exclude_reviewers:
+      # Bots
       - ti-community-prow-bot
+      - rustin-bot
       # Inactive reviewers
       - sykp241095
       - AndreMouche
