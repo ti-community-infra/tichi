@@ -1,6 +1,6 @@
 # [Tide](https://github.com/kubernetes/test-infra/tree/master/prow/tide)
 
-Tide 是 Prow 的一个组件，主要通过一些给定条件来管理 GitHub PR 池。它将自动重新检测符合条件的PR，并在它们通过检测时自动合并它们。
+Tide 是 Prow 的一个核心组件，主要通过一些给定条件来管理 GitHub PR 池。它将自动重新检测符合条件的PR，并在它们通过检测时自动合并它们。
 
 它具有一下特性：
 - 自动运行批处理测试，并在可能的情况下将多个 PR 合并在一起。（如果你不使用 Prow 的 CI，这个功能是失效的）
@@ -13,6 +13,44 @@ Tide 是 Prow 的一个组件，主要通过一些给定条件来管理 GitHub P
 - 有效地进行扩展，使具有单个 bot 令牌的单个实例可以为满足合并条件的数十个组织和存储库提供合并自动化。每个不同的 'org/repo:branch' 组合都定义了一个不干扰的合并池，因此合并仅影响同一分支中的其他 PR。
 - 提供可配置的合并模式（'merge', 'squash', or 'rebase'）。
 
+## Tide 合并规则
+
+从一个例子来看 Tide PR 合并的规则：
+
+```yaml
+tide:
+  merge_method:
+    pingcap/community: squash # 该仓库的合并方式为 squash。
+
+  queries:
+  - repos:
+    - pingcap/community
+    labels:
+    - status/can-merge # 该仓库的 PR 只有在被打上 status/can-merge 的标签时才能合并。
+    missingLabels:
+    # 该仓库的 PR 有以下的标签时，PR 不会被和合并。
+    - do-not-merge
+    - do-not-merge/hold
+    - do-not-merge/work-in-progress
+    - needs-rebase
+
+  context_options:
+    orgs:
+      pingcap:
+        repos:
+          community:
+            # 要求该仓库所有分支的 PR 都必须通过 license/cla 的 CI。
+            required-contexts:
+             - "license/cla"
+            branches:
+              master:
+                # 要求该仓库所有 master 的 PR 都必须通过 ig Info File Format 的 CI。
+                required-contexts:
+                - "Sig Info File Format"
+```
+
+当我们提交 PR 之后，Tide 会定期的去查询每个 PR 是否满足以上的条件。对于 pingcap/community 这个仓库来说，当你提交 PR 之后，Tide 就会每隔一分钟去检查一次你的 PR，查看 PR 的 label 和 CI 是否已经满足合并要求。
+
 ## Tide 在 TiDB 社区
 
 Tide 在 TiDB 社区使用基本正常，但是还是遇到了一个棘手的问题（**目前其他社区也还没解决该问题**）：
@@ -22,21 +60,20 @@ Tide 在 TiDB 社区使用基本正常，但是还是遇到了一个棘手的问
   
 这个时候两个 PR 都会以当前 master 作为 Base 分支进行测试，两个 PR 都会通过。但是一旦 PR1 先合并入 master 分支，第二个 PR 合并之后（因为测试也通过了），就会导致 master 出现找不到 `bifurcate` 的错误。
 
-目前正在致力于解决这个问题，我会在推荐的工作流中介绍如何解决该问题。
+我会在推荐的 PR 工作流中介绍如何解决该问题。
 
 **Kubernetes 社区目前没有这个问题，因为如果使用 Prow 的 CI 系统 Tide 会自动有最新的 master 作为 base 进行测试**。
 
-## 我怎么样才能让我的 PR 合并？
 
-如果你只是想让自己的 PR 合并，你看下面的文档就可以了。
+### Q&A
 
-### 从这几个地方获取 PR 状态
+#### 我在哪里可以找到我的 PR 状态？
+
+从这几个地方获取 PR 状态
 
 - PR 下面的 CI 状态上下文。状态要么告诉你的 PR 在合并池了，要么告诉你为什么它不在合并池中。 点击详情会跳转到 [Tide Dashboard](https://prow.tidb.io/tide)。例如：![example](https://user-images.githubusercontent.com/29879298/98230629-54037400-1f96-11eb-8a9c-1144905fbbd5.png)
 - 在 [PR status](https://prow.tidb.io/pr) 中，你的每一个 PR 都会有一个卡片，每个卡片都显示了测试结果和合并要求。（推荐使用）
 - 在 [Tide Dashboard](https://prow.tidb.io/tide) 中，显示每个合并池的状态,可以查看 Tide 当前正在做什么以及 PR 在重新检测队列中的位置。
-
-### Q&A
 
 #### 我的 PR 有没有在合并队列中？
 

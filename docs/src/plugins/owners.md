@@ -22,18 +22,18 @@
   - committers
   - reviewers
 
-在 TiDB 相关社区的协作过程中，**一个 PR 一般要经过多次 review 之后才能进行合并**。所以在这个服务中该要定义清楚每个 PR 需要的 `LGTM` 个数。你也可以在配置中指定 PR 要求 `LGTM` 个数的 label 前缀。owners 会自动采用要求的 `LGTM` 个数。
+在 TiDB 社区的协作过程中，**一个 PR 一般要经过多次 review 之后才能进行合并**。所以在这个服务中要定义清楚每个 PR 需要的 `LGTM` 个数。也可以在配置中指定 PR 要求 `LGTM` 个数的 label 前缀。owners 会自动从 label 中读取要求的 `LGTM` 个数。
 
 ## 实现思路
 
-为了实现以上描述的权限划分，最终决定采取 RESTFUL 接口来定义每个 PR 的权限。
+为了实现以上描述的权限划分，我们决定采取 RESTFUL 接口来定义每个 PR 的权限。
 
 接口路径：`/repos/:org/:repo/pulls/:number/owners`
 
-因为要基于 sig 来划分权限，所以要求这些 PR 中能够获取到当前 PR 所属的 sig。owners 会在当前 PR 中查找以 `sig/` 开头的标签，然后查找该 sig 的信息。最终根据获取到的实时的 sig 的信息生成 owners。
+因为要基于 sig 来划分权限，所以要求这些 PR 中能够获取到当前 PR 所属的 sig。owners 会在当前 PR 中查找以 `sig/` 开头的标签，然后查找该 sig 的信息。最终根据获取到的 sig 的信息生成 owners。
 
 但是可能确实存在一些特殊情况找不到对应的sig：
-- 一些模块暂时未划分清楚 sig：使用当前仓库的 collaborator
+- 一些模块暂时未划分清楚 sig：使用当前仓库的 collaborator（拥有 push 或者 admin 权限）
 - 一些小型仓库直接隶属于某个 sig: 支持为该仓库配置默认的 sig
 
 这样基本上就能够实现该服务。
