@@ -22,3 +22,6 @@ bin/
 
 # Test coverage
 coverage.txt
+
+# Mac OS X
+.DS_Store
