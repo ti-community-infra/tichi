@@ -83,4 +83,4 @@ tide:
       tidb-community-bots:
         repos:
           test-dev:
-            from-branch-protection: true
+            from-branch-protection: fase
