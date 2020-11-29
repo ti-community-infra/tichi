@@ -29,5 +29,15 @@ presubmits:
           args:
             - --confirm
             - --config=trusted
+          env:
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /creds/service-account.json
+          volumeMounts:
+          - name: creds
+            mountPath: /creds
+      volumes:
+        - name: creds
+          secret:
+            secretName: deployer-credentials
     annotations:
       description: deploys the configured version of prow by running scripts/deploy.sh
