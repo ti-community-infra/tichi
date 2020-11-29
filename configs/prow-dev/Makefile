@@ -18,6 +18,9 @@ gcs:
 prow: prow-namespace test-pods-namespace github hmac gcs
 	kubectl apply -f cluster
 
+cluster: prow-namespace test-pods-namespace
+	kubectl apply -f cluster
+
 plugins: config/plugins.yaml
 	kubectl create configmap plugins -n prow --from-file=plugins.yaml=config/plugins.yaml --dry-run -o yaml | kubectl replace configmap plugins -n prow -f -
 
