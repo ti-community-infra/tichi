@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="../components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li></ol></li><li class="chapter-item expanded "><a href="../plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="../plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="../plugins/merge.html"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="../plugins/label.html" class="active"><strong aria-hidden="true">3.4.</strong> ti-community-label</a></li></ol></li><li class="chapter-item expanded "><a href="../workflows.html"><strong aria-hidden="true">4.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workflows/pr.html"><strong aria-hidden="true">4.1.</strong> PR workflow</a></li><li class="chapter-item expanded "><a href="../workflows/label.html"><strong aria-hidden="true">4.2.</strong> Label workflow</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="../components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li></ol></li><li class="chapter-item expanded "><a href="../plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="../plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="../plugins/merge.html"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="../plugins/tars.html"><strong aria-hidden="true">3.4.</strong> ti-community-tars</a></li><li class="chapter-item expanded "><a href="../plugins/blunderbuss.html"><strong aria-hidden="true">3.5.</strong> ti-community-blunderbuss</a></li><li class="chapter-item expanded "><a href="../plugins/label.html" class="active"><strong aria-hidden="true">3.6.</strong> ti-community-label</a></li></ol></li><li class="chapter-item expanded "><a href="../workflows.html"><strong aria-hidden="true">4.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workflows/pr.html"><strong aria-hidden="true">4.1.</strong> PR workflow</a></li><li class="chapter-item expanded "><a href="../workflows/label.html"><strong aria-hidden="true">4.2.</strong> Label workflow</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -165,18 +165,18 @@
                     <main>
                         <h1><a class="header" href="#ti-community-label" id="ti-community-label">ti-community-label</a></h1>
 <h2><a class="header" href="#设计背景" id="设计背景">设计背景</a></h2>
-<p>在 TiDB 社区中，issues 和 PRs 都有大量的标签，我们在使用过程中比较混乱，很多 label 定义和分类的也不够清楚。目前的机器人只支持 <code>/label</code> 这样一个打标签的命令。这导致在使用该命令过程中很痛苦，因为很多时候标签会有分类的前缀，标签会比较长，使用时老是记不清楚标签。</p>
+<p>在 TiDB 社区中，Issue 和 PR 都有大量的标签，我们在使用过程中比较混乱，很多 label 定义和分类的也不够清楚。目前的机器人只支持 <code>/label</code> 这样一个打标签的命令。这导致在使用该命令过程中很痛苦，因为很多时候标签会有分类的前缀，标签会比较长，使用时老是记不清楚标签。</p>
 <p>ti-community-label 采取不一样的策略，该插件支持按照分类打标签。例如针对 <code>type</code> 这一类的 label，我们就可以使用 <code>/[remove-]type bug</code> 这样的命令，更加语义化的为 issue 或者 PR 打上或取消 <code>type/bug</code> 的标签。除此之外，我们也保留了 <code>/[remove-]label</code> 命令来打上或取消一些无法分类的标签。</p>
 <h2><a class="header" href="#权限设计" id="权限设计">权限设计</a></h2>
-<p>该插件主要负责的是为 issue 或者 PR 添加 label，所以我们将权限设置的比较宽松。GitHub 用户都可以使用该功能。</p>
-<h2><a class="header" href="#实现思路" id="实现思路">实现思路</a></h2>
+<p>该插件主要负责的是为 issue 或者 PR 添加 label，所以我们将权限设置的为GitHub 用户都可以使用该功能。</p>
+<h2><a class="header" href="#设计思路" id="设计思路">设计思路</a></h2>
 <p>该插件主要参考了 Kubernetes 的 label 插件设计，在它的基础上扩展，支持了为每个仓库自定义 label 前缀也就是分类。这样在使用过程中，大家就可以在自己的仓库分类整理自己的标签。</p>
 <p>除此之外，在实现该插件的过程中要注意：<strong>因为该插件权限设置的比较宽松，所以只能添加该仓库已经创建好的 label。不然有可能导致被恶意操作或者打上一些无用的标签。</strong></p>
 <h2><a class="header" href="#参数配置" id="参数配置">参数配置</a></h2>
 <table><thead><tr><th>参数名</th><th>类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>repos</td><td>[]string</td><td>配置生效仓库</td></tr>
-<tr><td>AdditionalLabels</td><td>[]string</td><td>额外的无法分类的 labels</td></tr>
-<tr><td>Prefixes</td><td>[]string</td><td>分类前缀</td></tr>
+<tr><td>additional_labels</td><td>[]string</td><td>额外的无法分类的 labels</td></tr>
+<tr><td>prefixes</td><td>[]string</td><td>分类前缀</td></tr>
 </tbody></table>
 <p>例如：</p>
 <pre><code class="language-yml">ti-community-label:
@@ -202,7 +202,7 @@
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="../plugins/merge.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../plugins/blunderbuss.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
@@ -220,7 +220,7 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="../plugins/merge.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../plugins/blunderbuss.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 

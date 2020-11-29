@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="../components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li></ol></li><li class="chapter-item expanded "><a href="../plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="../plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="../plugins/merge.html" class="active"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="../plugins/label.html"><strong aria-hidden="true">3.4.</strong> ti-community-label</a></li></ol></li><li class="chapter-item expanded "><a href="../workflows.html"><strong aria-hidden="true">4.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workflows/pr.html"><strong aria-hidden="true">4.1.</strong> PR workflow</a></li><li class="chapter-item expanded "><a href="../workflows/label.html"><strong aria-hidden="true">4.2.</strong> Label workflow</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="../components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li></ol></li><li class="chapter-item expanded "><a href="../plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="../plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="../plugins/merge.html" class="active"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="../plugins/tars.html"><strong aria-hidden="true">3.4.</strong> ti-community-tars</a></li><li class="chapter-item expanded "><a href="../plugins/blunderbuss.html"><strong aria-hidden="true">3.5.</strong> ti-community-blunderbuss</a></li><li class="chapter-item expanded "><a href="../plugins/label.html"><strong aria-hidden="true">3.6.</strong> ti-community-label</a></li></ol></li><li class="chapter-item expanded "><a href="../workflows.html"><strong aria-hidden="true">4.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workflows/pr.html"><strong aria-hidden="true">4.1.</strong> PR workflow</a></li><li class="chapter-item expanded "><a href="../workflows/label.html"><strong aria-hidden="true">4.2.</strong> Label workflow</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -168,7 +168,7 @@
 <p>在 TiDB 社区中，我们进行了多阶段的 code review 之后才能将代码合并。原来机器人会在 <strong>committer</strong> 使用 <code>/merge</code> 之后尝试重新运行所有测试之后合并。但是因为某些测试的不稳定，导致大量的合并失败重试，并且在重新合并时又需要将所有测试跑一遍。 <code>/merge</code> 作为一个一次性命令反复触发全部测试，导致整个合并周期变长。</p>
 <p>ti-community-merge 采取不一样的策略，<code>/merge</code> 只负责打上 <code>status/can-merge</code> 的标签，然后机器人在所有 CI 通过时，会自动的将 PR 合并。<strong>如果其中要求的一个不稳定测试没有通过，单独的运行重跑不稳定的测试即可</strong>。</p>
 <h2><a class="header" href="#权限设计" id="权限设计">权限设计</a></h2>
-<p>该插件主要负责在 code review 结束之后控制代码的合并，权限如下：</p>
+<p>该插件主要负责控制代码的合并，权限如下：</p>
 <ul>
 <li>
 <p><code>/merge</code> </p>
@@ -198,14 +198,14 @@
 </ul>
 </li>
 </ul>
-<h2><a class="header" href="#实现思路" id="实现思路">实现思路</a></h2>
-<p>想要实现该插件需要考虑到它作为合并 PR 的最后关卡，我们需要严格控制 <code>status/can-merge</code> 标签的使用。尽量保证当我们打上标签之后（<strong>请使用命令打标签，尽量不要手动操作去添加该标签，这是 PR 合并过程中最敏感的一个标签</strong>），确定所有的代码都是经过多人 review 有保障的。</p>
+<h2><a class="header" href="#设计思路" id="设计思路">设计思路</a></h2>
+<p>实现该插件需要考虑到它作为合并 PR 的最后关卡，我们需要严格控制 <code>status/can-merge</code> 标签的使用。尽量保证当我们打上标签之后（<strong>请使用命令打标签，不要手动操作去添加该标签，这是 PR 合并过程中最敏感的一个标签</strong>），确定所有的代码都是经过多人 review 有保障的。</p>
 <p>考虑这样一个情况，当我们的 committer 在 code review 之后打上 <code>status/can-merge</code> 标签，测试也通过了，这个时候一般情况下就可以合并了。但是如果 PR 的作者在机器人合并之前（机器人每隔 1 分钟尝试扫描合并一次）提交了新的代码，<strong>如果我们不去除自动 <code>status/can-merge</code> 标签，那这段新提交的代码就会在没有任何的 review 和保障之下测试通过之后合并</strong>。</p>
-<p>所以需要在有新的提交之后自动去除掉上一次通过 <code>/merge</code> 打上的标签。要求重新对该代码进行 code review。这样就保证了我们在 ti-community-lgtm 中不移除 lgtm 相关标签，但是也能在合并之前保证所有的代码都有 code review。</p>
+<p>所以需要在有新的提交之后自动去除掉上一次通过 <code>/merge</code> 打上的标签。要求重新对该代码进行 code review。这样就保证了我们在 ti-community-lgtm 中不移除 LGTM 相关标签，但是也能在合并之前保证所有的代码都有 code review。</p>
 <h2><a class="header" href="#参数配置" id="参数配置">参数配置</a></h2>
 <table><thead><tr><th>参数名</th><th>类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>repos</td><td>[]string</td><td>配置生效仓库</td></tr>
-<tr><td>store_tree_hash</td><td>bool</td><td>是否将打上 <code>status/can-merge</code> 标签时的提交 hash 存储下来，这样当我们如果只是将 master 通过 GitHub 合并进入当前 PR，那就可以保持住该标签</td></tr>
+<tr><td>store_tree_hash</td><td>bool</td><td>是否将打上 <code>status/can-merge</code> 标签时的提交 hash 存储下来，当我们如果只是将 master 通过 GitHub 按钮合并进入当前 PR，那就可以保持住该标签</td></tr>
 <tr><td>pull_owners_endpoint</td><td>string</td><td>PR owners RESTFUL 接口地址</td></tr>
 </tbody></table>
 <p>例如：</p>
@@ -248,7 +248,7 @@
                         
 
                         
-                            <a rel="next" href="../plugins/label.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../plugins/tars.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -266,7 +266,7 @@
                 
 
                 
-                    <a rel="next" href="../plugins/label.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../plugins/tars.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
