@@ -63,6 +63,7 @@ for s in {5..1}; do
 done
 
 # Apply
+pwd
 cd ../configs/prow-dev/
 make cluster
 echo "$(color-green 'SUCCESS'), Deployed"
