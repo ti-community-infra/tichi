@@ -4,7 +4,7 @@
 
 在 TiDB 社区中，因为一个 PR 会经过多人多阶段 review，所有我们希望能够在 PR 被创建的时候自动分配 reviewers。
 
-ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划分的权限自动分配 reviwers。除此之外，我们还需要考虑到如果 reviewers 长时间无回复时需要再次请求其他其他人 review  的情况，所以我们还支持了 `/auto-cc` 命令来触发再次分配 reviwers。
+ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划分的权限自动分配 reviwers。除此之外，我们还需要考虑到如果 reviewers 长时间无回复时需要再次请求其他人 review  的情况，所以我们还支持了 `/auto-cc` 命令来触发再次分配 reviwers。
 
 ## 权限设计
 
