@@ -28,9 +28,9 @@ ti-community-lgtm 是用来根据权限自动的为 PR 添加 LGTM 对应 label 
   - **PR author**
 
 
-## 实现思路
+## 设计思路
 
-想要实现该插件不仅要考虑到它作为 `/lgtm` 这样的评论命令，而且要考虑它作为 code review 的协作工具怎么和 GitHub 本身的 review 功能结合起来。**因为我们是在 GitHub 的基础上进行协作功能的拓展和增强，所以 GitHub 本身的设计逻辑和操作规范我们需要严格适配和遵循**。
+实现该插件不仅要考虑到它作为 `/lgtm` 这样的评论命令，而且要考虑它作为 code review 的协作工具怎么和 GitHub 本身的 review 功能结合起来。**因为我们是在 GitHub 的基础上进行协作功能的拓展和增强，所以 GitHub 本身的设计逻辑和操作规范我们需要严格适配和遵循**。
 
 在实现插件之前我们需要定义清楚如下三个事件：
 - Issue Comment
@@ -44,12 +44,12 @@ ti-community-lgtm 是用来根据权限自动的为 PR 添加 LGTM 对应 label 
 
 - 在 Issue Comment 中使用 `/lgtm [cancel]`
 - 在 Single Review Comment 中使用 `/lgtm [cancel]`
-- 使用 GitHub 本身 Approve/Request Changes 功能(**⚠️注意：为了遵循 GitHub Approve 功能的语义，我们忽略了其中的 Comment 功能，因为 GitHub 对它的语义定义就是没有显式的 Approve**)
+- 使用 GitHub 本身 Approve/Request Changes 功能(**⚠️注意：为了遵循 GitHub Approve 功能的语义，我们忽略了其中的 comment，因为 GitHub 对它的语义定义就是没有显式的 Approve**)
 
 **需要特别注意的是**：
 
 - 该命令必须以 `/` 开始
-- Approve 功能中的 comment 不会生效（使用 Approve 请直接点击 Approve/Request Changes，在 Comment 功能中使用 `/lgtm` 会被视为无效）
+- Approve 功能中的 comment 不会生效（使用 Approve 请直接点击 Approve/Request Changes）
 
 ## 参数配置
 
