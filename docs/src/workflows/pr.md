@@ -4,12 +4,12 @@
 
 在引入 Tide 之后 PR 的协作流程发生了一些变化，但是基本的大框架还是保留了下来。主要的调整发生在 PR 合并阶段，从原来一次性的 `/merge` 命令去触发机器人运行测试合并代码变成了 `/merge` 只负责打上 `status/can-merge` 标签。当 PR 的标签满足要求并且所有测试通过后，PR 将会自动合并无需人为干预。
 
-**⚠️ 注意：在阅读以下内容之前请先仔细阅读 [Tide](./../components/tide.md)、[ti-community-lgtm](./../plugins/lgtm.md)、[ti-community-tars](./../plugins/tars.md) 和 [ti-community-merge](./../plugins/merge.md) 章节内容**。
+**⚠️ 注意：在阅读以下内容之前请先仔细阅读 [Tide](./../components/tide.md)、[ti-community-lgtm](./../plugins/lgtm.md)、[ti-community-tars](./../plugins/tars.md)、[ti-community-blunderbuss](./../plugins/blunderbuss.md) 和 [ti-community-merge](./../plugins/merge.md) 章节内容**。
 
 ## PR 协作流程
 
 - 作者提交 PR
-- **第一阶段：** 自动为 PR 分配 reviewers (ti-community-blunderbuss 提供支持)
+- **第一阶段：** 自动为 PR 分配 reviewers ([ti-community-blunderbuss](./../plugins/blunderbuss.md) 提供支持)
   - 根据当前 PR 所属的 sig 进行自动分配 reviewers
   - 根据 ti-community-blunderbuss 配置随机选取多个 reviewers
 - **第二阶段：** reviewers review 代码 ([ti-community-lgtm](./../plugins/lgtm.md) 提供支持)

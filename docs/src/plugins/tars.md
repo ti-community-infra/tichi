@@ -36,6 +36,10 @@ ti-community-tars:
     message: "Your PR has out-of-dated, I have automatically updated it for you."
 ```
 
+## 参考文档
+
+- [代码实现](https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/tars)
+
 ## Q&A
 
 ### 多久会进行一次扫描？
