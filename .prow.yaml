@@ -3,7 +3,7 @@ presubmits:
     always_run: true
     decorate: true
     branches:
-      - main
+      - ^master$
     spec:
       containers:
         - image: gcr.io/k8s-prow/checkconfig:v20201124-061f85d859
@@ -15,3 +15,21 @@ presubmits:
             - --warnings=validate-urls
             - --warnings=unknown-fields
             - --warnings=duplicate-job-refs
+postsubmits:
+  - name: post-ti-community-prow-deploy-prow
+    run_if_changed: 'configs/prow-dev/cluster/'
+    decorate: true
+    branches:
+      - ^master$
+    max_concurrency: 1
+    spec:
+      serviceAccountName: deployer
+      containers:
+        - image: google/cloud-sdk:319.0.0
+          command:
+            - scripts/deploy.sh
+          args:
+            - --confirm
+            - --config=trusted
+    annotations:
+      description: deploys the configured version of prow by running scripts/deploy.sh
