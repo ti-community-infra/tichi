@@ -1,0 +1,17 @@
+presubmits:
+  - name: pull-ti-community-prow-validate-prow-yaml
+    always_run: true
+    decorate: true
+    branches:
+      - main
+    spec:
+      containers:
+        - image: gcr.io/k8s-prow/checkconfig:v20201124-061f85d859
+          command:
+            - /checkconfig
+          args:
+            - --plugin-config=configs/prow-dev/config/plugins.yaml
+            - --config-path=configs/prow-dev/config/config.yaml
+            - --warnings=validate-urls
+            - --warnings=unknown-fields
+            - --warnings=duplicate-job-refs
