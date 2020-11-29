@@ -3,7 +3,7 @@ presubmits:
     always_run: true
     decorate: true
     branches:
-      - master
+      - ^master$
     spec:
       containers:
         - image: gcr.io/k8s-prow/checkconfig:v20201124-061f85d859
