@@ -44,7 +44,7 @@ tide:
              - "license/cla"
             branches:
               master:
-                # 要求该仓库所有 master 的 PR 都必须通过 ig Info File Format 的 CI。
+                # 要求该仓库所有 master 的 PR 都必须通过 Sig Info File Format 的 CI。
                 required-contexts:
                 - "Sig Info File Format"
 ```
