@@ -15,6 +15,7 @@ presubmits:
             - --warnings=validate-urls
             - --warnings=unknown-fields
             - --warnings=duplicate-job-refs
+postsubmits:
   - name: post-ti-community-prow-deploy-prow
     run_if_changed: 'configs/prow-dev/cluster/'
     decorate: true
@@ -30,11 +31,11 @@ presubmits:
             - --confirm
             - --config=trusted
           env:
-          - name: GOOGLE_APPLICATION_CREDENTIALS
-            value: /creds/service-account.json
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /creds/service-account.json
           volumeMounts:
-          - name: creds
-            mountPath: /creds
+            - name: creds
+              mountPath: /creds
       volumes:
         - name: creds
           secret:
