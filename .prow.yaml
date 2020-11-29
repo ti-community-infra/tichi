@@ -1,7 +1,7 @@
 presubmits:
   - name: pull-ti-community-prow-validate-prow-yaml
     decorate: true
-    run_if_changed: '^(configs/prow-dev/*.yaml$)'
+    run_if_changed: 'configs/prow-dev/'
     branches:
       - ^master$
     spec:
