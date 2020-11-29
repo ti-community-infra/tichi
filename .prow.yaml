@@ -22,7 +22,6 @@ presubmits:
       - ^master$
     max_concurrency: 1
     spec:
-      serviceAccountName: ti-community-prow-bot
       containers:
         - image: google/cloud-sdk:319.0.0
           command:
