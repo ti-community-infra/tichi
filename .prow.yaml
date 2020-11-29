@@ -15,7 +15,6 @@ presubmits:
             - --warnings=validate-urls
             - --warnings=unknown-fields
             - --warnings=duplicate-job-refs
-postsubmits:
   - name: post-ti-community-prow-deploy-prow
     run_if_changed: 'configs/prow-dev/cluster/'
     decorate: true
