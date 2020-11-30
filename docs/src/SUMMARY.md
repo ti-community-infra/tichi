@@ -10,6 +10,8 @@
   - [ti-community-tars](./plugins/tars.md)
   - [ti-community-blunderbuss](./plugins/blunderbuss.md)
   - [ti-community-label](./plugins/label.md)
+- [Tools](./tools.md)
+  - [label_sync](./tools/label_sync.md)
 - [Workflows](./workflows.md)
   - [PR workflow](./workflows/pr.md)
   - [Label workflow](./workflows/label.md)
