@@ -69,7 +69,7 @@ repos: # 针对每个 repo 进行单独配置
         prowPlugin: ti-community-lgtm
         addedBy: prow
       - color: 0ffa16
-        description: Indicates a PR has been approved by an committer.
+        description: Indicates a PR has been approved by a committer.
         name: status/can-merge
         target: prs
         prowPlugin: ti-community-merge
