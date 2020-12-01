@@ -2,11 +2,11 @@
 
 ## 设计背景
 
-在 GitHub 的大型仓库上可能会存在多达上百个 labels，手动管理这些 labels 是个很大的负担。所以 Kubernetes 社区设计开发了 [label_sync](https://github.com/kubernetes/test-infra/tree/master/label_sync) 来自动化 label 的创建、修改和维护。
+在 GitHub 的大型仓库上可能会存在多达上百个 labels，手动维护这些 labels 是个很大的负担。所以 Kubernetes 社区设计开发了 [label_sync](https://github.com/kubernetes/test-infra/tree/master/label_sync) 来自动化 label 的创建、修改和维护。
 
 ## 设计思路
 
-实现该工具不仅要考虑到我们需要对新的 label 的创建，而且要考虑到旧的 label 可能需要迁移重命名等情况。所以 Kubernetes 社区在定义 label 时新增了一些字段来处理这些情况：
+实现该工具不仅要考虑到我们需要新建 label，而且要考虑到旧的 label 可能需要迁移维护等情况。所以 Kubernetes 社区在定义 label 时新增了一些字段来处理这些情况：
 
 | 参数名           | 类型       | 说明                              |
 | ---------------- | ---------- | --------------------------------- |
@@ -28,7 +28,7 @@
   - name: dead-label
     color: cccccc
     description: a dead label
-    target: previously
+    target: prs
     addedBy: humans
     deleteAfter: 2020-01-01T13:00:00Z
 ```
@@ -50,7 +50,7 @@ default: # default 将这些标签应用给所有的 repos
     - name: dead-label
       color: cccccc
       description: a dead label
-      target: previously
+      target: prs
       addedBy: humans
       deleteAfter: 2020-01-01T13:00:00Z
 repos: # 针对每个 repo 进行单独配置
