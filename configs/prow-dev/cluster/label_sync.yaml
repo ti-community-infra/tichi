@@ -17,7 +17,7 @@ spec:
             - name: label-sync
               image: gcr.io/k8s-prow/label_sync:v20201124-061f85d859
               args:
-                - --config=configs/prow-dev/config/labels.yaml
+                - --config=/etc/config/labels.yaml
                 - --confirm=true
                 - --only=tidb-community-bots/test-dev
                 - --token=/etc/github/token
@@ -25,8 +25,14 @@ spec:
                 - name: github-token
                   mountPath: /etc/github
                   readOnly: true
+                - name: config
+                  mountPath: /etc/config
+                  readOnly: true
           restartPolicy: Never
           volumes:
             - name: github-token
               secret:
                 secretName: github-token
+            - name: config
+              configMap:
+                name: labels-config
