@@ -190,6 +190,7 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 
 		// Ignore the exclude label.
 		if excludeLabelsSet.Has(labelToAdd) {
+			log.Infof("Ignore add exclude label: %s", labelToAdd)
 			continue
 		}
 
@@ -212,6 +213,7 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 
 		// Ignore the exclude label.
 		if excludeLabelsSet.Has(labelToRemove) {
+			log.Infof("Ignore remove exclude label: %s", labelToRemove)
 			continue
 		}
 
