@@ -32,6 +32,7 @@ func TestLabelIssueComment(t *testing.T) {
 		body             string
 		additionalLabels []string
 		prefixes         []string
+		excludeLabels    []string
 
 		expectedNewLabels     []string
 		expectedRemovedLabels []string
@@ -452,6 +453,28 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
 		},
+		{
+			name:                  "Add exclude label",
+			body:                  "/orchestrator foo",
+			prefixes:              []string{"orchestrator"},
+			repoLabels:            []string{"orchestrator/foo", "orchestrator/bar"},
+			issueLabels:           []string{"orchestrator/bar"},
+			excludeLabels:         []string{"orchestrator/foo"},
+			expectedNewLabels:     []string{},
+			expectedRemovedLabels: []string{},
+			expectedBotComment:    false,
+		},
+		{
+			name:                  "Remove exclude label",
+			body:                  "/remove-orchestrator foo",
+			prefixes:              []string{"orchestrator"},
+			repoLabels:            []string{"orchestrator/foo", "orchestrator/bar"},
+			issueLabels:           []string{"orchestrator/bar", "orchestrator/foo"},
+			excludeLabels:         []string{"orchestrator/foo"},
+			expectedNewLabels:     []string{},
+			expectedRemovedLabels: []string{},
+			expectedBotComment:    false,
+		},
 	}
 
 	for _, tc := range testcases {
@@ -496,6 +519,7 @@ func TestLabelIssueComment(t *testing.T) {
 				Repos:            []string{"org/repo"},
 				AdditionalLabels: tc.additionalLabels,
 				Prefixes:         tc.prefixes,
+				ExcludeLabels:    tc.excludeLabels,
 			}},
 		}
 		err := HandleIssueCommentEvent(fakeClient, e, cfg, logrus.WithField("plugin", PluginName))

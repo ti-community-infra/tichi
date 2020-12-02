@@ -210,6 +210,11 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 			continue
 		}
 
+		// Ignore the exclude label.
+		if excludeLabelsSet.Has(labelToRemove) {
+			continue
+		}
+
 		if err := gc.RemoveLabel(org, repo, e.Issue.Number, labelToRemove); err != nil {
 			log.WithError(err).Errorf("Github failed to remove the following label: %s", labelToRemove)
 		}
