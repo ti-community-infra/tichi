@@ -17,11 +17,10 @@ presubmits:
             - --warnings=duplicate-job-refs
   - name: post-ti-community-prow-label-sync
     decorate: true
-    labels:
-      app: label-sync
     run_if_changed: 'configs/prow-dev/config/labels.yaml'
     branches:
       - ^master$
+    max_concurrency: 1
     spec:
       containers:
         - name: label-sync
