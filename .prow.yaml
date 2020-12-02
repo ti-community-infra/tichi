@@ -17,7 +17,7 @@ presubmits:
             - --warnings=duplicate-job-refs
   - name: post-ti-community-prow-label-sync
     decorate: true
-    run_if_changed: 'configs/prow-dev/labels.yaml'
+    run_if_changed: 'configs/prow-dev/config/labels.yaml'
     branches:
       - ^master$
     spec:
