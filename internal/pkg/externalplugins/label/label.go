@@ -7,6 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
@@ -74,6 +75,7 @@ func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent,
 	opts := cfg.LabelFor(ice.Repo.Owner.Login, ice.Repo.Name)
 	var additionalLabels []string
 	var prefixes []string
+	var excludeLabels []string
 
 	if opts.AdditionalLabels != nil {
 		additionalLabels = opts.AdditionalLabels
@@ -81,7 +83,10 @@ func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent,
 	if opts.Prefixes != nil {
 		prefixes = opts.Prefixes
 	}
-	return handle(gc, log, additionalLabels, prefixes, ice)
+	if opts.ExcludeLabels != nil {
+		excludeLabels = opts.ExcludeLabels
+	}
+	return handle(gc, log, additionalLabels, prefixes, excludeLabels, ice)
 }
 
 // Get Labels from Regexp matches
@@ -117,7 +122,7 @@ func getLabelsFromGenericMatches(matches [][]string, additionalLabels []string) 
 }
 
 func handle(gc githubClient, log *logrus.Entry, additionalLabels,
-	prefixes []string, e *github.IssueCommentEvent) error {
+	prefixes, excludeLabels []string, e *github.IssueCommentEvent) error {
 	// arrange prefixes in the format "sig|kind|priority|..."
 	// so that they can be used to create labelRegex and removeLabelRegex
 	labelPrefixes := strings.Join(prefixes, "|")
@@ -156,6 +161,9 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 	for _, l := range repoLabels {
 		existingLabels[strings.ToLower(l.Name)] = l.Name
 	}
+
+	excludeLabelsSet := sets.NewString(excludeLabels...)
+
 	var (
 		nonexistent         []string
 		noSuchLabelsOnIssue []string
@@ -177,6 +185,11 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 
 		if _, ok := existingLabels[labelToAdd]; !ok {
 			nonexistent = append(nonexistent, labelToAdd)
+			continue
+		}
+
+		// Ignore the exclude label.
+		if excludeLabelsSet.Has(labelToAdd) {
 			continue
 		}
 

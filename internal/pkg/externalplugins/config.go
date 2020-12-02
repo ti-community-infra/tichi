@@ -81,6 +81,8 @@ type TiCommunityLabel struct {
 	// "status", "priority"," and "sig" label prefixes.
 	// Labels can be used with `/[remove-]<prefix> <target>` commands.
 	Prefixes []string `json:"prefixes,omitempty"`
+	// ExcludeLabels specifies labels that cannot be added by TiCommunityLabel.
+	ExcludeLabels []string `json:"exclude_labels,omitempty"`
 }
 
 // TiCommunityAutoresponder is the config for the blunderbuss plugin.
