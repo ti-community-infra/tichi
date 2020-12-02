@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>ti-community-blunderbuss - Prow in TiDB</title>
+        <title>label_sync - Prow in TiDB</title>
         
         
 
@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="../components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li></ol></li><li class="chapter-item expanded "><a href="../plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="../plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="../plugins/merge.html"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="../plugins/tars.html"><strong aria-hidden="true">3.4.</strong> ti-community-tars</a></li><li class="chapter-item expanded "><a href="../plugins/blunderbuss.html" class="active"><strong aria-hidden="true">3.5.</strong> ti-community-blunderbuss</a></li><li class="chapter-item expanded "><a href="../plugins/label.html"><strong aria-hidden="true">3.6.</strong> ti-community-label</a></li><li class="chapter-item expanded "><a href="../plugins/require-matching-label.html"><strong aria-hidden="true">3.7.</strong> require-matching-label</a></li></ol></li><li class="chapter-item expanded "><a href="../tools.html"><strong aria-hidden="true">4.</strong> Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../tools/label_sync.html"><strong aria-hidden="true">4.1.</strong> label_sync</a></li></ol></li><li class="chapter-item expanded "><a href="../workflows.html"><strong aria-hidden="true">5.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workflows/pr.html"><strong aria-hidden="true">5.1.</strong> PR workflow</a></li><li class="chapter-item expanded "><a href="../workflows/label.html"><strong aria-hidden="true">5.2.</strong> Label workflow</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="../components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li></ol></li><li class="chapter-item expanded "><a href="../plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="../plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="../plugins/merge.html"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="../plugins/tars.html"><strong aria-hidden="true">3.4.</strong> ti-community-tars</a></li><li class="chapter-item expanded "><a href="../plugins/blunderbuss.html"><strong aria-hidden="true">3.5.</strong> ti-community-blunderbuss</a></li><li class="chapter-item expanded "><a href="../plugins/label.html"><strong aria-hidden="true">3.6.</strong> ti-community-label</a></li><li class="chapter-item expanded "><a href="../plugins/require-matching-label.html"><strong aria-hidden="true">3.7.</strong> require-matching-label</a></li></ol></li><li class="chapter-item expanded "><a href="../tools.html"><strong aria-hidden="true">4.</strong> Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../tools/label_sync.html" class="active"><strong aria-hidden="true">4.1.</strong> label_sync</a></li></ol></li><li class="chapter-item expanded "><a href="../workflows.html"><strong aria-hidden="true">5.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workflows/pr.html"><strong aria-hidden="true">5.1.</strong> PR workflow</a></li><li class="chapter-item expanded "><a href="../workflows/label.html"><strong aria-hidden="true">5.2.</strong> Label workflow</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -163,56 +163,91 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#ti-community-blunderbuss" id="ti-community-blunderbuss">ti-community-blunderbuss</a></h1>
+                        <h1><a class="header" href="#label-sync" id="label-sync">label-sync</a></h1>
 <h2><a class="header" href="#设计背景" id="设计背景">设计背景</a></h2>
-<p>在 TiDB 社区中，因为一个 PR 会经过多人多阶段 review，所有我们希望能够在 PR 被创建的时候自动分配 reviewers。</p>
-<p>ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划分的权限自动分配 reviwers。除此之外，我们还需要考虑到如果 reviewers 长时间无回复时需要再次请求其他人 review  的情况，所以我们还支持了 <code>/auto-cc</code> 命令来触发再次分配 reviwers。</p>
-<h2><a class="header" href="#权限设计" id="权限设计">权限设计</a></h2>
-<p>该插件主要负责 reviewers 的自动分配，所以我们将权限设置为 GitHub 用户都可以使用该功能。</p>
+<p>在 GitHub 的大型仓库上可能会存在多达上百个 labels，手动维护这些 labels 是个很大的负担。所以 Kubernetes 社区设计开发了 <a href="https://github.com/kubernetes/test-infra/tree/master/label_sync">label_sync</a> 来自动化 label 的创建、修改和维护。</p>
 <h2><a class="header" href="#设计思路" id="设计思路">设计思路</a></h2>
-<p>该插件主要参考了 Kubernetes 的 blunderbuss 插件设计。在它的基础上，我们依托于 ti-community-owners 实现当前 PR 的 reviewers 自动分配。</p>
-<h2><a class="header" href="#参数配置" id="参数配置">参数配置</a></h2>
+<p>实现该工具不仅要考虑到我们需要新建 label，而且要考虑到旧的 label 可能需要迁移维护等情况。所以 Kubernetes 社区在定义 label 时新增了一些字段来处理这些情况：</p>
 <table><thead><tr><th>参数名</th><th>类型</th><th>说明</th></tr></thead><tbody>
-<tr><td>repos</td><td>[]string</td><td>配置生效仓库</td></tr>
-<tr><td>pull_owners_endpoint</td><td>string</td><td>PR owners RESTFUL 接口地址</td></tr>
-<tr><td>max_request_count</td><td>int</td><td>最多的分配人数</td></tr>
-<tr><td>exclude_reviewers</td><td>[]string</td><td>不参与自动分配的 reviwers（针对一些可能不活跃的 reviwers ）</td></tr>
+<tr><td>name</td><td>string</td><td>label 的名称</td></tr>
+<tr><td>color</td><td>string</td><td>label 的颜色</td></tr>
+<tr><td>description</td><td>string</td><td>label 的描述</td></tr>
+<tr><td>target</td><td>string</td><td>label 的生效目标：prs/issues/both</td></tr>
+<tr><td>prowPlugin</td><td>string</td><td>哪一个 prow plugin 添加这个 label</td></tr>
+<tr><td>isExternalPlugin</td><td>bool</td><td>是否为外部插件添加</td></tr>
+<tr><td>addedBy</td><td>string</td><td>谁可以添加</td></tr>
+<tr><td>previously</td><td>[]Label</td><td>迁移之前旧的 labels</td></tr>
+<tr><td>deleteAfter</td><td>*time.Time</td><td>label 多久以后删除</td></tr>
 </tbody></table>
+<p>通过对 label 的一些扩展，我们定义清楚了这些 label 的基本信息并且能够灵活的迁移维护 label。</p>
 <p>例如：</p>
-<pre><code class="language-yml">ti-community-blunderbuss:
-  - repos:
-      - tidb-community-bots/test-live
-    pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
-    max_request_count: 1
-    exclude_reviewers:
-      # Bots
-      - ti-community-prow-bot
-      - rustin-bot
-      # Inactive reviewers
-      - sykp241095
-      - AndreMouche
+<pre><code class="language-yaml">  - name: dead-label
+    color: cccccc
+    description: a dead label
+    target: prs
+    addedBy: humans
+    deleteAfter: 2020-01-01T13:00:00Z
+</code></pre>
+<h2><a class="header" href="#配置说明" id="配置说明">配置说明</a></h2>
+<p>例如：</p>
+<pre><code class="language-yaml">default: # default 将这些标签应用给所有的 repos
+  labels:
+    - name: priority/P0
+      color: red
+      description: P0 Priority
+      previously:
+      - color: blue
+        name: P0
+        description: P0 Priority
+    - name: dead-label
+      color: cccccc
+      description: a dead label
+      target: prs
+      addedBy: humans
+      deleteAfter: 2020-01-01T13:00:00Z
+repos: # 针对每个 repo 进行单独配置
+  pingcap/community:
+    labels:
+      - color: 00ff00
+        description: Indicates that a PR has LGTM 1.
+        name: status/LGT1
+        target: prs
+        prowPlugin: ti-community-lgtm
+        addedBy: prow
+      - color: 00ff00
+        description: Indicates that a PR has LGTM 2.
+        name: status/LGT2
+        target: prs
+        prowPlugin: ti-community-lgtm
+        addedBy: prow
+      - color: 0ffa16
+        description: Indicates a PR has been approved by a committer.
+        name: status/can-merge
+        target: prs
+        prowPlugin: ti-community-merge
+        addedBy: prow
 </code></pre>
 <h2><a class="header" href="#参考文档" id="参考文档">参考文档</a></h2>
 <ul>
-<li><a href="https://prow.tidb.io/command-help?repo=tidb-community-bots%2Fconfigs#auto_cc">command help</a></li>
-<li><a href="https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/blunderbuss">代码实现</a></li>
+<li><a href="https://github.com/kubernetes/test-infra/blob/master/label_sync/README.md">README</a></li>
+<li><a href="https://github.com/kubernetes/test-infra/tree/master/label_sync">代码实现</a></li>
 </ul>
 <h2><a class="header" href="#qa" id="qa">Q&amp;A</a></h2>
-<h3><a class="header" href="#如果我的-pr-更改了-sig-的-label-导致了-owners-中的-reviwers-发生了变动怎么办" id="如果我的-pr-更改了-sig-的-label-导致了-owners-中的-reviwers-发生了变动怎么办">如果我的 PR 更改了 sig 的 label 导致了 owners 中的 reviwers 发生了变动怎么办？</a></h3>
-<p>目前我们还未做这部分支持，我们后续会根据 label 的变化自动更换 reviwers 的请求。</p>
+<h3><a class="header" href="#这些-label-什么时候更新" id="这些-label-什么时候更新">这些 label 什么时候更新？</a></h3>
+<p>目前为一个<a href="https://github.com/tidb-community-bots/configs/blob/main/prow/cluster/label_sync.yaml">定时任务</a>，每小时的第 17 分钟尝试更新。</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="../plugins/tars.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../tools.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="../plugins/label.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../workflows.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -224,13 +259,13 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="../plugins/tars.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../tools.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a rel="next" href="../plugins/label.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../workflows.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 

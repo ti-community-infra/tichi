@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Workflows - Prow in TiDB</title>
+        <title>require-matching-label - Prow in TiDB</title>
         
         
 
@@ -18,28 +18,28 @@
         <meta name="theme-color" content="#ffffff" />
 
         
-        <link rel="icon" href="favicon.svg">
+        <link rel="icon" href="../favicon.svg">
         
         
-        <link rel="shortcut icon" href="favicon.png">
+        <link rel="shortcut icon" href="../favicon.png">
         
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
         
-        <link rel="stylesheet" href="css/print.css" media="print">
+        <link rel="stylesheet" href="../css/print.css" media="print">
         
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
         
-        <link rel="stylesheet" href="fonts/fonts.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
         
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
         
@@ -49,7 +49,7 @@
     <body>
         <!-- Provide site root to javascript -->
         <script type="text/javascript">
-            var path_to_root = "";
+            var path_to_root = "../";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
 
@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li></ol></li><li class="chapter-item expanded "><a href="plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="plugins/merge.html"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="plugins/tars.html"><strong aria-hidden="true">3.4.</strong> ti-community-tars</a></li><li class="chapter-item expanded "><a href="plugins/blunderbuss.html"><strong aria-hidden="true">3.5.</strong> ti-community-blunderbuss</a></li><li class="chapter-item expanded "><a href="plugins/label.html"><strong aria-hidden="true">3.6.</strong> ti-community-label</a></li><li class="chapter-item expanded "><a href="plugins/require-matching-label.html"><strong aria-hidden="true">3.7.</strong> require-matching-label</a></li></ol></li><li class="chapter-item expanded "><a href="tools.html"><strong aria-hidden="true">4.</strong> Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/label_sync.html"><strong aria-hidden="true">4.1.</strong> label_sync</a></li></ol></li><li class="chapter-item expanded "><a href="workflows.html" class="active"><strong aria-hidden="true">5.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="workflows/pr.html"><strong aria-hidden="true">5.1.</strong> PR workflow</a></li><li class="chapter-item expanded "><a href="workflows/label.html"><strong aria-hidden="true">5.2.</strong> Label workflow</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="../components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li></ol></li><li class="chapter-item expanded "><a href="../plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="../plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="../plugins/merge.html"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="../plugins/tars.html"><strong aria-hidden="true">3.4.</strong> ti-community-tars</a></li><li class="chapter-item expanded "><a href="../plugins/blunderbuss.html"><strong aria-hidden="true">3.5.</strong> ti-community-blunderbuss</a></li><li class="chapter-item expanded "><a href="../plugins/label.html"><strong aria-hidden="true">3.6.</strong> ti-community-label</a></li><li class="chapter-item expanded "><a href="../plugins/require-matching-label.html" class="active"><strong aria-hidden="true">3.7.</strong> require-matching-label</a></li></ol></li><li class="chapter-item expanded "><a href="../tools.html"><strong aria-hidden="true">4.</strong> Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../tools/label_sync.html"><strong aria-hidden="true">4.1.</strong> label_sync</a></li></ol></li><li class="chapter-item expanded "><a href="../workflows.html"><strong aria-hidden="true">5.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workflows/pr.html"><strong aria-hidden="true">5.1.</strong> PR workflow</a></li><li class="chapter-item expanded "><a href="../workflows/label.html"><strong aria-hidden="true">5.2.</strong> Label workflow</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -131,7 +131,7 @@
 
                     <div class="right-buttons">
                         
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
                         
@@ -163,21 +163,56 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#workflows" id="workflows">Workflows</a></h1>
-<p>在协作过程中，我们整理出了一些推荐的协作流程，使用这些流程进行协作会充分利用以上介绍的组件和插件的特性。</p>
+                        <h1><a class="header" href="#require-matching-label" id="require-matching-label">require-matching-label</a></h1>
+<h2><a class="header" href="#设计背景" id="设计背景">设计背景</a></h2>
+<p>在我们创建 Issue 或者提交 PR 时，有一些 label 是必须要添加的。比如针对 Issue 我们必须要打上 type/xxx 标签来区分该 Issue 属于什么类型。但是有些时候我们会忘了添加这些关键的标签，后续再去查找和添加这些 label 费时费力。所以我们希望能够自动化这个过程，督促大家尽快的添加相关 label。</p>
+<p><a href="https://github.com/kubernetes/test-infra/tree/master/prow/plugins/require-matching-label">require-matching-label</a> 通过正则的方式去匹配要求的 labels，<strong>当 labels 缺失时打上对应缺失标签或者回复评论</strong>。</p>
+<h2><a class="header" href="#设计思路" id="设计思路">设计思路</a></h2>
+<p>该插件由 Kubernetes 社区设计开发，他们在设计时，除了实现核心的根据正则去匹配 labels 之外，还考虑到了当 Issue 或者 PR 刚创建时可能会有自动化的工具去协助打上 labels，所以支持延时检测（默认为 5 秒）,在等待一段时间之后再去匹配和检测 labels 是否满足要求。</p>
+<h2><a class="header" href="#参数配置" id="参数配置">参数配置</a></h2>
+<table><thead><tr><th>参数名</th><th>类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>org</td><td>string</td><td>组织名</td></tr>
+<tr><td>repo</td><td>string</td><td>仓库名</td></tr>
+<tr><td>branch</td><td>string</td><td>分支</td></tr>
+<tr><td>prs</td><td>bool</td><td>是否应用于 PR</td></tr>
+<tr><td>issues</td><td>bool</td><td>是否应用于 Issue</td></tr>
+<tr><td>regexp</td><td>string</td><td>label 正则表达式</td></tr>
+<tr><td>missing_label</td><td>string</td><td>当找不到匹配的 label 时，打上该 label</td></tr>
+<tr><td>missing_comment</td><td>string</td><td>当找不到匹配的 label 时，回复该 comment</td></tr>
+<tr><td>grace_period</td><td>string</td><td>延迟检测时间（默认为 5 秒）</td></tr>
+</tbody></table>
+<p>例如：</p>
+<pre><code class="language-yaml">- missing_label: needs-sig
+  org: pingcap
+  repo: tidb
+  issues: true
+  regexp: ^(sig|wg)/
+  missing_comment: |
+    There are no sig labels on this issue. Please add an appropriate label by using one of the following commands:
+    - `/sig &lt;group-name&gt;`
+    - `/wg &lt;group-name&gt;`
+</code></pre>
+<h2><a class="header" href="#参考文档" id="参考文档">参考文档</a></h2>
+<ul>
+<li><a href="https://prow.tidb.io/plugins?repo=tidb-community-bots%2Fti-community-prow">require-matching-label doc</a></li>
+<li><a href="https://github.com/kubernetes/test-infra/tree/master/prow/plugins/require-matching-label">代码实现</a></li>
+</ul>
+<h2><a class="header" href="#qa" id="qa">Q&amp;A</a></h2>
+<h3><a class="header" href="#是否可以在-issue-或者-pr-创建一段时间之后再检查" id="是否可以在-issue-或者-pr-创建一段时间之后再检查">是否可以在 Issue 或者 PR 创建一段时间之后再检查？</a></h3>
+<p>可以，配置 grace_period 参数即可。<strong>默认为 5 秒</strong>。</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="tools/label_sync.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../plugins/label.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="workflows/pr.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../tools.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -189,13 +224,13 @@
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="tools/label_sync.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../plugins/label.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a rel="next" href="workflows/pr.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../tools.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
@@ -218,14 +253,14 @@
         
 
         
-        <script src="elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="mark.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="searcher.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
         
 
-        <script src="clipboard.min.js" type="text/javascript" charset="utf-8"></script>
-        <script src="highlight.js" type="text/javascript" charset="utf-8"></script>
-        <script src="book.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
 
         <!-- Custom JS scripts -->
         
