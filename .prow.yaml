@@ -23,8 +23,6 @@ presubmits:
     spec:
       containers:
         - image: gcr.io/k8s-prow/label_sync:v20201124-061f85d859
-          command:
-            - /label-sync
           args:
             - --config=configs/prow-dev/config/labels.yaml
             - --confirm=true
