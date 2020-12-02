@@ -42,7 +42,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 		for _, repo := range enabledRepos {
 			opts := cfg.LabelFor(repo.Org, repo.Repo)
 
-			var prefixConfigMsg, additionalLabelsConfigMsg string
+			var prefixConfigMsg, additionalLabelsConfigMsg, excludeLabelsConfigMsg string
 			if opts.Prefixes != nil {
 				prefixConfigMsg = fmt.Sprintf("The label plugin also includes commands based on %v prefixes.", opts.Prefixes)
 			}
@@ -50,7 +50,11 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 				additionalLabelsConfigMsg = fmt.Sprintf("%v labels can be used with the `/[remove-]label` command.",
 					opts.AdditionalLabels)
 			}
-			labelConfig[repo.String()] = prefixConfigMsg + additionalLabelsConfigMsg
+			if opts.ExcludeLabels != nil {
+				excludeLabelsConfigMsg = fmt.Sprintf("%v labels cannot be added by command.",
+					opts.ExcludeLabels)
+			}
+			labelConfig[repo.String()] = prefixConfigMsg + additionalLabelsConfigMsg + excludeLabelsConfigMsg
 		}
 
 		pluginHelp := &pluginhelp.PluginHelp{

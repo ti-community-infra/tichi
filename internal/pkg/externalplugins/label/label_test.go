@@ -557,6 +557,7 @@ func TestLabelIssueComment(t *testing.T) {
 func TestHelpProvider(t *testing.T) {
 	configInfoHasPrefixesPrefix := "The label plugin also includes commands based on"
 	configInfoHasAdditionalLabelsSuffix := "labels can be used with the `/[remove-]label` command."
+	configInfoHasExcludeLabelsSuffix := "labels cannot be added by command."
 	enabledRepos := []config.OrgRepo{
 		{Org: "org1", Repo: "repo"},
 		{Org: "org2", Repo: "repo"},
@@ -570,10 +571,11 @@ func TestHelpProvider(t *testing.T) {
 		configInfoExcludes []string
 	}{
 		{
-			name:               "Empty config",
-			config:             &externalplugins.Configuration{},
-			enabledRepos:       enabledRepos,
-			configInfoExcludes: []string{configInfoHasPrefixesPrefix, configInfoHasAdditionalLabelsSuffix},
+			name:         "Empty config",
+			config:       &externalplugins.Configuration{},
+			enabledRepos: enabledRepos,
+			configInfoExcludes: []string{configInfoHasPrefixesPrefix,
+				configInfoHasAdditionalLabelsSuffix, configInfoHasExcludeLabelsSuffix},
 		},
 		{
 			name: "Prefixes added",
@@ -586,8 +588,37 @@ func TestHelpProvider(t *testing.T) {
 				},
 			},
 			enabledRepos:       enabledRepos,
-			configInfoExcludes: []string{configInfoHasAdditionalLabelsSuffix},
 			configInfoIncludes: []string{configInfoHasPrefixesPrefix},
+			configInfoExcludes: []string{configInfoHasAdditionalLabelsSuffix, configInfoHasExcludeLabelsSuffix},
+		},
+		{
+			name: "Additional labels added",
+			config: &externalplugins.Configuration{
+				TiCommunityLabel: []externalplugins.TiCommunityLabel{
+					{
+						Repos:            []string{"org2/repo"},
+						AdditionalLabels: []string{"test/a"},
+					},
+				},
+			},
+			enabledRepos:       enabledRepos,
+			configInfoIncludes: []string{configInfoHasAdditionalLabelsSuffix},
+			configInfoExcludes: []string{configInfoHasPrefixesPrefix, configInfoHasExcludeLabelsSuffix},
+		},
+		{
+			name: "Exclude labels added",
+			config: &externalplugins.Configuration{
+				TiCommunityLabel: []externalplugins.TiCommunityLabel{
+					{
+						Repos:            []string{"org2/repo"},
+						AdditionalLabels: []string{"test/a"},
+						ExcludeLabels:    []string{"test/b"},
+					},
+				},
+			},
+			enabledRepos:       enabledRepos,
+			configInfoIncludes: []string{configInfoHasAdditionalLabelsSuffix, configInfoHasExcludeLabelsSuffix},
+			configInfoExcludes: []string{configInfoHasPrefixesPrefix},
 		},
 		{
 			name: "All configs enabled",
@@ -597,11 +628,13 @@ func TestHelpProvider(t *testing.T) {
 						Repos:            []string{"org2/repo"},
 						Prefixes:         []string{"test"},
 						AdditionalLabels: []string{"test/a"},
+						ExcludeLabels:    []string{"test/b"},
 					},
 				},
 			},
-			enabledRepos:       enabledRepos,
-			configInfoIncludes: []string{configInfoHasPrefixesPrefix, configInfoHasAdditionalLabelsSuffix},
+			enabledRepos: enabledRepos,
+			configInfoIncludes: []string{configInfoHasPrefixesPrefix,
+				configInfoHasAdditionalLabelsSuffix, configInfoHasAdditionalLabelsSuffix},
 		},
 	}
 	for _, c := range cases {
