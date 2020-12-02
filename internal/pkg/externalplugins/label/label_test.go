@@ -28,10 +28,12 @@ func formatLabels(labels ...string) []string {
 
 func TestLabelIssueComment(t *testing.T) {
 	type testCase struct {
-		name                  string
-		body                  string
-		extraLabels           []string
-		prefixes              []string
+		name             string
+		body             string
+		additionalLabels []string
+		prefixes         []string
+		excludeLabels    []string
+
 		expectedNewLabels     []string
 		expectedRemovedLabels []string
 		expectedBotComment    bool
@@ -323,7 +325,7 @@ func TestLabelIssueComment(t *testing.T) {
 		{
 			name:                  "Do nothing with empty /label command",
 			body:                  "/label",
-			extraLabels:           []string{"orchestrator/foo", "orchestrator/bar"},
+			additionalLabels:      []string{"orchestrator/foo", "orchestrator/bar"},
 			repoLabels:            []string{"orchestrator/foo"},
 			issueLabels:           []string{},
 			expectedNewLabels:     []string{},
@@ -332,7 +334,7 @@ func TestLabelIssueComment(t *testing.T) {
 		{
 			name:                  "Do nothing with empty /remove-label command",
 			body:                  "/remove-label",
-			extraLabels:           []string{"orchestrator/foo", "orchestrator/bar"},
+			additionalLabels:      []string{"orchestrator/foo", "orchestrator/bar"},
 			repoLabels:            []string{"orchestrator/foo"},
 			issueLabels:           []string{},
 			expectedNewLabels:     []string{},
@@ -341,7 +343,7 @@ func TestLabelIssueComment(t *testing.T) {
 		{
 			name:                  "Add custom label",
 			body:                  "/label orchestrator/foo",
-			extraLabels:           []string{"orchestrator/foo", "orchestrator/bar"},
+			additionalLabels:      []string{"orchestrator/foo", "orchestrator/bar"},
 			repoLabels:            []string{"orchestrator/foo"},
 			issueLabels:           []string{},
 			expectedNewLabels:     formatLabels("orchestrator/foo"),
@@ -350,7 +352,7 @@ func TestLabelIssueComment(t *testing.T) {
 		{
 			name:                  "Cannot add missing custom label",
 			body:                  "/label orchestrator/foo",
-			extraLabels:           []string{"orchestrator/jar", "orchestrator/bar"},
+			additionalLabels:      []string{"orchestrator/jar", "orchestrator/bar"},
 			repoLabels:            []string{"orchestrator/foo"},
 			issueLabels:           []string{},
 			expectedNewLabels:     []string{},
@@ -359,7 +361,7 @@ func TestLabelIssueComment(t *testing.T) {
 		{
 			name:                  "Remove custom label",
 			body:                  "/remove-label orchestrator/foo",
-			extraLabels:           []string{"orchestrator/foo", "orchestrator/bar"},
+			additionalLabels:      []string{"orchestrator/foo", "orchestrator/bar"},
 			repoLabels:            []string{"orchestrator/foo"},
 			issueLabels:           []string{"orchestrator/foo"},
 			expectedNewLabels:     []string{},
@@ -368,7 +370,7 @@ func TestLabelIssueComment(t *testing.T) {
 		{
 			name:                  "Cannot remove missing custom label",
 			body:                  "/remove-label orchestrator/jar",
-			extraLabels:           []string{"orchestrator/foo", "orchestrator/bar"},
+			additionalLabels:      []string{"orchestrator/foo", "orchestrator/bar"},
 			repoLabels:            []string{"orchestrator/foo"},
 			issueLabels:           []string{"orchestrator/foo"},
 			expectedNewLabels:     []string{},
@@ -378,7 +380,7 @@ func TestLabelIssueComment(t *testing.T) {
 			name:                  "Do nothing with empty custom prefixed label",
 			body:                  "/orchestrator",
 			prefixes:              []string{"orchestrator"},
-			extraLabels:           []string{},
+			additionalLabels:      []string{},
 			repoLabels:            []string{"orchestrator/foo"},
 			issueLabels:           []string{},
 			expectedNewLabels:     []string{},
@@ -388,7 +390,7 @@ func TestLabelIssueComment(t *testing.T) {
 			name:                  "Do nothing with empty remove custom prefixed label",
 			body:                  "/remove-orchestrator",
 			prefixes:              []string{"orchestrator"},
-			extraLabels:           []string{},
+			additionalLabels:      []string{},
 			repoLabels:            []string{"orchestrator/foo"},
 			issueLabels:           []string{},
 			expectedNewLabels:     []string{},
@@ -398,7 +400,7 @@ func TestLabelIssueComment(t *testing.T) {
 			name:                  "Add custom prefixed label",
 			body:                  "/orchestrator foo",
 			prefixes:              []string{"orchestrator"},
-			extraLabels:           []string{},
+			additionalLabels:      []string{},
 			repoLabels:            []string{"orchestrator/foo"},
 			issueLabels:           []string{},
 			expectedNewLabels:     formatLabels("orchestrator/foo"),
@@ -451,6 +453,28 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
 		},
+		{
+			name:                  "Add exclude label",
+			body:                  "/orchestrator foo",
+			prefixes:              []string{"orchestrator"},
+			repoLabels:            []string{"orchestrator/foo", "orchestrator/bar"},
+			issueLabels:           []string{"orchestrator/bar"},
+			excludeLabels:         []string{"orchestrator/foo"},
+			expectedNewLabels:     []string{},
+			expectedRemovedLabels: []string{},
+			expectedBotComment:    false,
+		},
+		{
+			name:                  "Remove exclude label",
+			body:                  "/remove-orchestrator foo",
+			prefixes:              []string{"orchestrator"},
+			repoLabels:            []string{"orchestrator/foo", "orchestrator/bar"},
+			issueLabels:           []string{"orchestrator/bar", "orchestrator/foo"},
+			excludeLabels:         []string{"orchestrator/foo"},
+			expectedNewLabels:     []string{},
+			expectedRemovedLabels: []string{},
+			expectedBotComment:    false,
+		},
 	}
 
 	for _, tc := range testcases {
@@ -493,8 +517,9 @@ func TestLabelIssueComment(t *testing.T) {
 		cfg := &externalplugins.Configuration{
 			TiCommunityLabel: []externalplugins.TiCommunityLabel{{
 				Repos:            []string{"org/repo"},
-				AdditionalLabels: tc.extraLabels,
+				AdditionalLabels: tc.additionalLabels,
 				Prefixes:         tc.prefixes,
+				ExcludeLabels:    tc.excludeLabels,
 			}},
 		}
 		err := HandleIssueCommentEvent(fakeClient, e, cfg, logrus.WithField("plugin", PluginName))
@@ -532,6 +557,7 @@ func TestLabelIssueComment(t *testing.T) {
 func TestHelpProvider(t *testing.T) {
 	configInfoHasPrefixesPrefix := "The label plugin also includes commands based on"
 	configInfoHasAdditionalLabelsSuffix := "labels can be used with the `/[remove-]label` command."
+	configInfoHasExcludeLabelsSuffix := "labels cannot be added by command."
 	enabledRepos := []config.OrgRepo{
 		{Org: "org1", Repo: "repo"},
 		{Org: "org2", Repo: "repo"},
@@ -545,10 +571,11 @@ func TestHelpProvider(t *testing.T) {
 		configInfoExcludes []string
 	}{
 		{
-			name:               "Empty config",
-			config:             &externalplugins.Configuration{},
-			enabledRepos:       enabledRepos,
-			configInfoExcludes: []string{configInfoHasPrefixesPrefix, configInfoHasAdditionalLabelsSuffix},
+			name:         "Empty config",
+			config:       &externalplugins.Configuration{},
+			enabledRepos: enabledRepos,
+			configInfoExcludes: []string{configInfoHasPrefixesPrefix,
+				configInfoHasAdditionalLabelsSuffix, configInfoHasExcludeLabelsSuffix},
 		},
 		{
 			name: "Prefixes added",
@@ -561,8 +588,37 @@ func TestHelpProvider(t *testing.T) {
 				},
 			},
 			enabledRepos:       enabledRepos,
-			configInfoExcludes: []string{configInfoHasAdditionalLabelsSuffix},
 			configInfoIncludes: []string{configInfoHasPrefixesPrefix},
+			configInfoExcludes: []string{configInfoHasAdditionalLabelsSuffix, configInfoHasExcludeLabelsSuffix},
+		},
+		{
+			name: "Additional labels added",
+			config: &externalplugins.Configuration{
+				TiCommunityLabel: []externalplugins.TiCommunityLabel{
+					{
+						Repos:            []string{"org2/repo"},
+						AdditionalLabels: []string{"test/a"},
+					},
+				},
+			},
+			enabledRepos:       enabledRepos,
+			configInfoIncludes: []string{configInfoHasAdditionalLabelsSuffix},
+			configInfoExcludes: []string{configInfoHasPrefixesPrefix, configInfoHasExcludeLabelsSuffix},
+		},
+		{
+			name: "Exclude labels added",
+			config: &externalplugins.Configuration{
+				TiCommunityLabel: []externalplugins.TiCommunityLabel{
+					{
+						Repos:            []string{"org2/repo"},
+						AdditionalLabels: []string{"test/a"},
+						ExcludeLabels:    []string{"test/b"},
+					},
+				},
+			},
+			enabledRepos:       enabledRepos,
+			configInfoIncludes: []string{configInfoHasAdditionalLabelsSuffix, configInfoHasExcludeLabelsSuffix},
+			configInfoExcludes: []string{configInfoHasPrefixesPrefix},
 		},
 		{
 			name: "All configs enabled",
@@ -572,11 +628,13 @@ func TestHelpProvider(t *testing.T) {
 						Repos:            []string{"org2/repo"},
 						Prefixes:         []string{"test"},
 						AdditionalLabels: []string{"test/a"},
+						ExcludeLabels:    []string{"test/b"},
 					},
 				},
 			},
-			enabledRepos:       enabledRepos,
-			configInfoIncludes: []string{configInfoHasPrefixesPrefix, configInfoHasAdditionalLabelsSuffix},
+			enabledRepos: enabledRepos,
+			configInfoIncludes: []string{configInfoHasPrefixesPrefix,
+				configInfoHasAdditionalLabelsSuffix, configInfoHasAdditionalLabelsSuffix},
 		},
 	}
 	for _, c := range cases {
