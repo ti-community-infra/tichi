@@ -18,11 +18,12 @@ ti-community-label 采取不一样的策略，该插件支持按照分类打标�
 
 ## 参数配置
 
-| 参数名            | 类型     | 说明                    |
-| ----------------- | -------- | ----------------------- |
-| repos             | []string | 配置生效仓库            |
-| additional_labels | []string | 额外的无法分类的 labels |
-| prefixes          | []string | 分类前缀                |
+| 参数名            | 类型     | 说明                                                                          |
+| ----------------- | -------- | ----------------------------------------------------------------------------- |
+| repos             | []string | 配置生效仓库                                                                  |
+| additional_labels | []string | 额外的无法分类的 labels                                                       |
+| prefixes          | []string | 分类前缀                                                                      |
+| exclude_labels    | []string | 一些不希望被该插件添加或移除的 labels （例如：一些只允许机器人操作的 labels） |
 
 例如：
 
@@ -31,10 +32,17 @@ ti-community-label:
   - repos:
       - tidb-community-bots/test-live
       - tidb-community-bots/ti-community-prow
+      - tidb-community-bots/prow-configs
       - tidb-community-bots/ti-community-bot
       - tidb-community-bots/ti-challenge-bot
     prefixes:
       - type
+      - status
+    additional_labels:
+      - 'help wanted'
+      - 'good first issue'
+    exclude_labels:
+      - 'status/can-merge'
 ```
 
 ## 参考文档
