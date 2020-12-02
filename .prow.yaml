@@ -15,6 +15,29 @@ presubmits:
             - --warnings=validate-urls
             - --warnings=unknown-fields
             - --warnings=duplicate-job-refs
+  - name: post-ti-community-prow-label-sync
+    decorate: true
+    run_if_changed: 'configs/prow-dev/labels.yaml'
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: gcr.io/k8s-prow/label_sync:v20201124-061f85d859
+          command:
+            - /label_sync
+          args:
+            - --config=configs/prow-dev/config/labels.yaml
+            - --confirm=true
+            - --only=tidb-community-bots/test-dev
+            - --token=/etc/github/token
+          volumeMounts:
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+    volumes:
+      - name: github-token
+        secret:
+          secretName: github-token
 postsubmits:
   - name: post-ti-community-prow-deploy-prow
     run_if_changed: 'configs/prow-dev/cluster/'
