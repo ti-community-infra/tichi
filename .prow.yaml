@@ -34,10 +34,10 @@ presubmits:
             - name: github-token
               mountPath: /etc/github
               readOnly: true
-    volumes:
-      - name: github-token
-        secret:
-          secretName: github-token
+      volumes:
+        - name: github-token
+          secret:
+            secretName: github-token
 postsubmits:
   - name: post-ti-community-prow-deploy-prow
     run_if_changed: 'configs/prow-dev/cluster/'
