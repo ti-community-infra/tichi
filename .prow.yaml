@@ -24,7 +24,8 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: gcr.io/k8s-prow/label_sync:v20201124-061f85d859
+        - name: label-sync
+          image: gcr.io/k8s-prow/label_sync:v20201124-061f85d859
           command:
             - /app/label_sync/app.binary
           args:
