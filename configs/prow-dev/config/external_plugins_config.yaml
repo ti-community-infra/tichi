@@ -21,6 +21,9 @@ ti-community-label:
       - tidb-community-bots/test-dev
     prefixes:
       - type
+      - status
+    exclude_labels:
+      - status/can-merge
 
 ti-community-autoresponder:
   - repos:
