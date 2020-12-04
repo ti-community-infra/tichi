@@ -11,8 +11,9 @@ extern crate log;
 struct Opts {
     org: String,
     repo: String,
+    #[clap(short, long)]
     token: String,
-    #[clap(default_value = "label.yaml")]
+    #[clap(short, long, default_value = "label.yaml")]
     output: String,
 }
 
@@ -43,7 +44,7 @@ pub async fn main() {
     let mut lables: Vec<models::Label> = vec![];
 
     info!("Start fetching labels");
-    let page = octocrab::instance()
+    let page = octocrab
         .issues(opts.org.clone(), opts.repo.clone())
         .list_labels_for_repo()
         .per_page(50)
@@ -69,4 +70,5 @@ pub async fn main() {
         .collect();
     info!("Write to file {}", opts.output);
     serde_yaml::to_writer(file, &lables).expect("Failed to write file");
+    info!("Dumping completed");
 }
