@@ -34,27 +34,27 @@ pub async fn main() {
         .build()
         .expect("Failed to build octocrab.");
 
-    info!("Open the file {}", opts.output);
+    info!("Open the file {}.", opts.output);
     let file = OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
         .open(opts.output.clone())
-        .expect("Failed to open file");
+        .expect("Failed to open file.");
     let mut lables: Vec<models::Label> = vec![];
 
-    info!("Start fetching labels");
+    info!("Start fetching labels.");
     let page = octocrab
         .issues(opts.org.clone(), opts.repo.clone())
         .list_labels_for_repo()
         .per_page(50)
         .send()
         .await
-        .expect("Failed to get label");
+        .expect("Failed to get labels.");
     lables.extend_from_slice(&page.items);
     let mut next_page = page.next;
     while let Some(page) =
-        (octocrab.get_page::<models::Label>(&next_page).await).expect("Failed to get label")
+        (octocrab.get_page::<models::Label>(&next_page).await).expect("Failed to get labels.")
     {
         next_page = page.next;
         lables.extend_from_slice(&page.items);
@@ -68,7 +68,7 @@ pub async fn main() {
             description: l.description.clone(),
         })
         .collect();
-    info!("Write to file {}", opts.output);
-    serde_yaml::to_writer(file, &lables).expect("Failed to write file");
-    info!("Dumping completed");
+    info!("Write to file {}.", opts.output);
+    serde_yaml::to_writer(file, &lables).expect("Failed to write file.");
+    info!("Dumping completed.");
 }
