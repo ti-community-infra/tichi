@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use clap::Clap;
 use octocrab::models;
 use serde::{Deserialize, Serialize};
@@ -22,6 +23,16 @@ struct Label {
     name: String,
     color: String,
     description: Option<String>,
+    target: Option<String>,
+    #[serde(rename = "prowPlugin")]
+    prow_plugin: Option<String>,
+    #[serde(rename = "isExternalPlugin")]
+    is_external_plugin: Option<bool>,
+    #[serde(rename = "addedBy")]
+    added_by: Option<String>,
+    previously: Option<String>,
+    #[serde(rename = "deleteAfter")]
+    delete_after: Option<DateTime<Utc>>,
 }
 
 #[tokio::main]
@@ -66,6 +77,12 @@ pub async fn main() {
             name: l.name.clone(),
             color: l.color.clone(),
             description: l.description.clone(),
+            target: None,
+            prow_plugin: None,
+            is_external_plugin: None,
+            added_by: None,
+            previously: None,
+            delete_after: None,
         })
         .collect();
     info!("Write to file {}.", opts.output);
