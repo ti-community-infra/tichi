@@ -24,15 +24,15 @@ fn send(event: Form<Event>) -> Result<String, Box<dyn std::error::Error>> {
 }
 
 fn send_hook(
-    address: &String,
-    event_type: &String,
-    hmac: &String,
-    payload: &String,
+    address: &str,
+    event_type: &str,
+    hmac: &str,
+    payload: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let client = reqwest::blocking::Client::new();
     let resp = client
         .post(address)
-        .body(payload.clone())
+        .body(payload.to_owned())
         .header("X-GitHub-Event", event_type)
         .header("X-GitHub-Delivery", "GUID")
         .header(
