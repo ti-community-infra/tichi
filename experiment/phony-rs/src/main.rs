@@ -2,15 +2,18 @@
 
 #[macro_use]
 extern crate rocket;
+#[macro_use]
+extern crate serde_derive;
 
 use hmac::{Hmac, Mac, NewMac};
-use rocket::request::Form;
+use rocket_contrib::json::Json;
+use rocket_contrib::serve::StaticFiles;
 use sha1::Sha1;
 
 // Create alias for HMAC-SHA1.
 type HmacSha1 = Hmac<Sha1>;
 
-#[derive(FromForm)]
+#[derive(Deserialize)]
 struct Event {
     address: String,
     event: String,
@@ -19,7 +22,7 @@ struct Event {
 }
 
 #[post("/send", data = "<event>")]
-fn send(event: Form<Event>) -> Result<String, Box<dyn std::error::Error>> {
+fn send(event: Json<Event>) -> Result<String, Box<dyn std::error::Error>> {
     send_hook(&event.address, &event.event, &event.hmac, &event.payload)
 }
 
@@ -63,5 +66,8 @@ fn sign_payload(payload: &[u8], key: &[u8]) -> String {
 }
 
 fn main() {
-    rocket::ignite().mount("/events", routes![send]).launch();
+    rocket::ignite()
+        .mount("/", StaticFiles::from("static"))
+        .mount("/events", routes![send])
+        .launch();
 }
