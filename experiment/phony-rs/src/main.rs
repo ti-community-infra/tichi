@@ -15,6 +15,8 @@ use sha1::Sha1;
 // Create alias for HMAC-SHA1.
 type HmacSha1 = Hmac<Sha1>;
 
+const SHA1_PREFIX: &'static str = "sha1";
+
 #[derive(Deserialize)]
 struct Event {
     address: String,
@@ -57,7 +59,7 @@ fn sign_payload(payload: &[u8], key: &[u8]) -> String {
 
     let sum = mac.finalize();
 
-    let mut signature = "sha1=".to_owned();
+    let mut signature = SHA1_PREFIX.to_owned();
     signature.push_str(&hex::encode(sum.into_bytes()));
     signature
 }
@@ -76,4 +78,21 @@ fn main() {
         .mount("/", StaticFiles::from("static"))
         .mount("/events", routes![send])
         .launch();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sign_payload() {
+        let cases = vec![
+            (b"test1", b"my secret and secure key"),
+            (b"test2", b"my secret and secure key"),
+        ];
+
+        for (payload, key) in cases {
+            assert!(sign_payload(payload, key).contains(SHA1_PREFIX))
+        }
+    }
 }
