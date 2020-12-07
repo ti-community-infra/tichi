@@ -6,6 +6,8 @@ extern crate rocket;
 extern crate serde_derive;
 
 use hmac::{Hmac, Mac, NewMac};
+use rocket::http::Status;
+use rocket::response::status;
 use rocket_contrib::json::Json;
 use rocket_contrib::serve::StaticFiles;
 use sha1::Sha1;
@@ -19,11 +21,6 @@ struct Event {
     event: String,
     hmac: String,
     payload: String,
-}
-
-#[post("/send", data = "<event>")]
-fn send(event: Json<Event>) -> Result<String, Box<dyn std::error::Error>> {
-    send_hook(&event.address, &event.event, &event.hmac, &event.payload)
 }
 
 fn send_hook(
@@ -48,7 +45,7 @@ fn send_hook(
         Ok(resp.text()?)
     } else {
         Ok(format!(
-            "Send event success but got a err from response: {}",
+            "Send event success but something wrong: {}",
             resp.text()?
         ))
     }
@@ -63,6 +60,15 @@ fn sign_payload(payload: &[u8], key: &[u8]) -> String {
     let mut signature = "sha1=".to_owned();
     signature.push_str(&hex::encode(sum.into_bytes()));
     signature
+}
+
+#[post("/send", data = "<event>")]
+fn send(event: Json<Event>) -> status::Custom<String> {
+    let result = send_hook(&event.address, &event.event, &event.hmac, &event.payload);
+    match result {
+        Err(e) => status::Custom(Status::InternalServerError, e.to_string()),
+        Ok(result) => status::Custom(Status::Ok, result),
+    }
 }
 
 fn main() {
