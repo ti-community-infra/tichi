@@ -153,9 +153,6 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 	if pr.Merged {
 		return nil
 	}
-	// Before checking mergeability wait a few seconds to give github a chance to calculate it.
-	// This initial delay prevents us from always wasting the first API token.
-	sleep(time.Second * 5)
 
 	org := pr.Base.Repo.Owner.Login
 	repo := pr.Base.Repo.Name
@@ -252,9 +249,6 @@ func handleAll(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *extern
 	if pr.Merged {
 		return nil
 	}
-	// Before checking mergeability wait a few seconds to give github a chance to calculate it.
-	// This initial delay prevents us from always wasting the first API token.
-	sleep(time.Second * 5)
 
 	org := string(pr.Repository.Owner.Login)
 	repo := string(pr.Repository.Name)
@@ -335,9 +329,9 @@ func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, 
 	if err != nil {
 		return err
 	}
-	hasMessage := len(message) != 0
+	needsReply := len(message) != 0
 
-	if hasMessage {
+	if needsReply {
 		err = ghc.DeleteStaleComments(org, repo, num, nil, shouldPrune(botName, message))
 		if err != nil {
 			return err
@@ -349,7 +343,10 @@ func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, 
 	if err != nil {
 		return err
 	}
-	if hasMessage {
+	if needsReply {
+		// Delay the reply because we may trigger the test in the reply.
+		// See: https://github.com/tidb-community-bots/ti-community-prow/issues/181.
+		sleep(time.Second * 5)
 		msg := externalplugins.FormatSimpleResponse(author, message)
 		return ghc.CreateComment(org, repo, num, msg)
 	}
