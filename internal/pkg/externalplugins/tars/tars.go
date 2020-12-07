@@ -344,7 +344,7 @@ func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, 
 		return err
 	}
 	if needsReply {
-		// Delay the reply because we may trigger the test in the response.
+		// Delay the reply because we may trigger the test in the reply.
 		// See: https://github.com/tidb-community-bots/ti-community-prow/issues/181.
 		sleep(time.Second * 5)
 		msg := externalplugins.FormatSimpleResponse(author, message)
