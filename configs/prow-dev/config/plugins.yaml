@@ -37,6 +37,16 @@ triggers:
     ignore_ok_to_test: true
     only_org_members: false
 
+repo_milestone:
+  tidb-community-bots/test-dev:
+    maintainers_id: 4300209
+    maintainers_team: bots-maintainers
+    maintainers_friendly_name: Robots Maintainers
+
+milestone_applier:
+  tidb-community-bots/test-dev:
+    master: v0.1.0
+
 plugins:
   tidb-community-bots/test-dev:
     - assign
@@ -47,6 +57,8 @@ plugins:
     - lifecycle
     - help
     - hold
+    - milestone
+    - milestoneapplier
 
 external_plugins:
   tidb-community-bots/test-dev:
