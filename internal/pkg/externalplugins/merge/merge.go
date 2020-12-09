@@ -19,18 +19,13 @@ import (
 // PluginName will register into prow.
 const PluginName = "ti-community-merge"
 
-// canMergeLabel is the name of the merge label applied by the merge plugin
-const canMergeLabel = "status/can-merge"
-
 const githubUpdateCommitter = "web-flow"
 
 var (
 	addCanMergeLabelNotification   = "Can merge label has been added.  <details>Git tree hash: %s</details>"
 	addCanMergeLabelNotificationRe = regexp.MustCompile(fmt.Sprintf(addCanMergeLabelNotification, "(.*)"))
 	configInfoStoreTreeHash        = `Guaranteed commits does not remove can merge label.`
-
-	// LabelPrefix is the name of the lgtm label applied by the lgtm plugin
-	LabelPrefix = "status/LGT"
+	
 	// CanMergeRe is the regex that matches merge comments
 	CanMergeRe = regexp.MustCompile(`(?mi)^/merge\s*$`)
 	// CanMergeCancelRe is the regex that matches merge cancel comments
@@ -61,13 +56,13 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 		}
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: "The ti-community-merge plugin manages the application and " +
-				"removal of the '" + canMergeLabel + "' label which is typically used to gate merging.",
+				"removal of the '" + externalplugins.CanMergeLabel + "' label which is typically used to gate merging.",
 			Config: configInfo,
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
 			Usage:       "/merge [cancel] or GitHub Review action",
-			Description: "Adds or removes the '" + canMergeLabel + "' label which is typically used to gate merging.",
+			Description: "Adds or removes the '" + externalplugins.CanMergeLabel + "' label which is typically used to gate merging.",
 			Featured:    true,
 			WhoCanUse:   "Collaborators on the repository. '/merge cancel' can be used additionally by the PR author.",
 			Examples: []string{
@@ -190,7 +185,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	}
 	hasCanMerge := false
 	for _, label := range labels {
-		if label.Name == canMergeLabel {
+		if label.Name == externalplugins.CanMergeLabel {
 			hasCanMerge = true
 		}
 	}
@@ -232,7 +227,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 		}
 	}
 
-	if err := gc.RemoveLabel(org, repo, number, canMergeLabel); err != nil {
+	if err := gc.RemoveLabel(org, repo, number, externalplugins.CanMergeLabel); err != nil {
 		return fmt.Errorf("failed removing can merge label: %v", err)
 	}
 
@@ -297,17 +292,17 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 	}
 	hasCanMerge := false
 	for _, label := range labels {
-		if label.Name == canMergeLabel {
+		if label.Name == externalplugins.CanMergeLabel {
 			hasCanMerge = true
 		}
 	}
 
-	isSatisfy := isLGTMSatisfy(LabelPrefix, labels, owners.NeedsLgtm)
+	isSatisfy := isLGTMSatisfy(externalplugins.LabelPrefix, labels, owners.NeedsLgtm)
 
 	// Remove the label if necessary, we're done after this.
 	if hasCanMerge && !wantMerge {
-		log.Info("Removing '" + canMergeLabel + "' label.")
-		if err := gc.RemoveLabel(org, repoName, number, canMergeLabel); err != nil {
+		log.Info("Removing '" + externalplugins.CanMergeLabel + "' label.")
+		if err := gc.RemoveLabel(org, repoName, number, externalplugins.CanMergeLabel); err != nil {
 			return err
 		}
 		if opts.StoreTreeHash {
@@ -317,8 +312,8 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 		}
 	} else if !hasCanMerge && wantMerge {
 		if isSatisfy {
-			log.Info("Adding '" + canMergeLabel + "' label.")
-			if err := gc.AddLabel(org, repoName, number, canMergeLabel); err != nil {
+			log.Info("Adding '" + externalplugins.CanMergeLabel + "' label.")
+			if err := gc.AddLabel(org, repoName, number, externalplugins.CanMergeLabel); err != nil {
 				return err
 			}
 			if opts.StoreTreeHash {
@@ -342,7 +337,7 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 				return strings.Contains(comment.Body, removeCanMergeLabelNoti)
 			})
 		} else {
-			resp := fmt.Sprintf("adding '"+canMergeLabel+"' to this PR must have %d LGTMs", owners.NeedsLgtm)
+			resp := fmt.Sprintf("adding '"+externalplugins.CanMergeLabel+"' to this PR must have %d LGTMs", owners.NeedsLgtm)
 			log.Infof("Reply to /merge request with comment: \"%s\"", resp)
 			return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 		}
