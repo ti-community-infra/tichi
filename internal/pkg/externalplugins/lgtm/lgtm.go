@@ -259,7 +259,8 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		log.WithError(err).Error("Failed to get issue labels.")
 	}
 
-	currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LabelPrefix, labels, reviewersAndNeedsLGTM.NeedsLgtm)
+	currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LgtmLabelPrefix, labels,
+		reviewersAndNeedsLGTM.NeedsLgtm)
 
 	// Remove the label if necessary, we're done after this.
 	if currentLabel != "" && !wantLGTM {

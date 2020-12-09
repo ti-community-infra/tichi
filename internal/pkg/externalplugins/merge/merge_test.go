@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	lgtmOne = fmt.Sprintf("%s%d", externalplugins.LabelPrefix, 1)
-	lgtmTwo = fmt.Sprintf("%s%d", externalplugins.LabelPrefix, 2)
+	lgtmOne = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 1)
+	lgtmTwo = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 2)
 )
 
 type fakeOwnersClient struct {
@@ -998,7 +998,7 @@ func TestGetCurrentLabelNumber(t *testing.T) {
 	// scopelint:ignore
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			isSatisfy := isLGTMSatisfy(externalplugins.LabelPrefix, tc.labels, tc.needsLgtm)
+			isSatisfy := isLGTMSatisfy(externalplugins.LgtmLabelPrefix, tc.labels, tc.needsLgtm)
 
 			if isSatisfy != tc.isSatisfy {
 				t.Fatalf("satisify mismatch: got %v, want %v", isSatisfy, tc.isSatisfy)

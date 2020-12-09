@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	lgtmOne = fmt.Sprintf("%s%d", externalplugins.LabelPrefix, 1)
-	lgtmTwo = fmt.Sprintf("%s%d", externalplugins.LabelPrefix, 2)
+	lgtmOne = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 1)
+	lgtmTwo = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 2)
 )
 
 type fakeOwnersClient struct {
@@ -575,7 +575,7 @@ func TestGetCurrentAndNextLabel(t *testing.T) {
 	// scopelint:ignore
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LabelPrefix, tc.labels, tc.needsLgtm)
+			currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LgtmLabelPrefix, tc.labels, tc.needsLgtm)
 
 			if currentLabel != tc.exceptCurrentLabel {
 				t.Fatalf("currentLabel mismatch: got %v, want %v", currentLabel, tc.exceptCurrentLabel)

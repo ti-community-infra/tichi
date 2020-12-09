@@ -25,7 +25,7 @@ var (
 	addCanMergeLabelNotification   = "Can merge label has been added.  <details>Git tree hash: %s</details>"
 	addCanMergeLabelNotificationRe = regexp.MustCompile(fmt.Sprintf(addCanMergeLabelNotification, "(.*)"))
 	configInfoStoreTreeHash        = `Guaranteed commits does not remove can merge label.`
-	
+
 	// CanMergeRe is the regex that matches merge comments
 	CanMergeRe = regexp.MustCompile(`(?mi)^/merge\s*$`)
 	// CanMergeCancelRe is the regex that matches merge cancel comments
@@ -61,10 +61,11 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
-			Usage:       "/merge [cancel] or GitHub Review action",
-			Description: "Adds or removes the '" + externalplugins.CanMergeLabel + "' label which is typically used to gate merging.",
-			Featured:    true,
-			WhoCanUse:   "Collaborators on the repository. '/merge cancel' can be used additionally by the PR author.",
+			Usage: "/merge [cancel] or GitHub Review action",
+			Description: "Adds or removes the '" + externalplugins.CanMergeLabel + "' label which is typically " +
+				"used to gate merging.",
+			Featured:  true,
+			WhoCanUse: "Collaborators on the repository. '/merge cancel' can be used additionally by the PR author.",
 			Examples: []string{
 				"/merge",
 				"/merge cancel"},
@@ -297,7 +298,7 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 		}
 	}
 
-	isSatisfy := isLGTMSatisfy(externalplugins.LabelPrefix, labels, owners.NeedsLgtm)
+	isSatisfy := isLGTMSatisfy(externalplugins.LgtmLabelPrefix, labels, owners.NeedsLgtm)
 
 	// Remove the label if necessary, we're done after this.
 	if hasCanMerge && !wantMerge {
