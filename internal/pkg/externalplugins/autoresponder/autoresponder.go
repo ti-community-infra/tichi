@@ -37,7 +37,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 			var isConfigured bool
 			var configInfoStrings []string
 
-			configInfoStrings = append(configInfoStrings, "The plugin has the following configuration:<ul>")
+			configInfoStrings = append(configInfoStrings, "The plugin has these configurations:<ul>")
 
 			if len(opts.AutoResponds) != 0 {
 				isConfigured = true
@@ -111,7 +111,7 @@ func handle(cfg *externalplugins.Configuration, rc reviewCtx, gc githubClient, l
 		regex := regexp.MustCompile(autoRespond.Regex)
 		if regex.MatchString(body) {
 			resp := autoRespond.Message
-			log.Infof("Commenting with \"%s\".", resp)
+			log.Infof("Commenting \"%s\".", resp)
 			err := gc.CreateComment(owner, repo, rc.number, externalplugins.FormatSimpleResponse(rc.author, resp))
 			// When we got an err direly return.
 			if err != nil {

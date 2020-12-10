@@ -99,7 +99,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 			var isConfigured bool
 			var configInfoStrings []string
 
-			configInfoStrings = append(configInfoStrings, "The plugin has the following configuration:<ul>")
+			configInfoStrings = append(configInfoStrings, "The plugin has these configurations:<ul>")
 
 			if len(opts.Message) != 0 {
 				isConfigured = true
