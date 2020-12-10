@@ -87,9 +87,9 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 			shouldToggle: false,
 		},
 		{
-			name:         "lgtm cancel by author",
+			name:         "lgtm cancel by reviewer collab2",
 			body:         "/lgtm cancel",
-			commenter:    "author",
+			commenter:    "collab2",
 			currentLabel: lgtmOne,
 			isCancel:     true,
 			shouldToggle: true,

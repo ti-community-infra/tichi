@@ -43,7 +43,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 			opts := cfg.BlunderbussFor(repo.Org, repo.Repo)
 			var isConfigured bool
 			var configInfoStrings []string
-			configInfoStrings = append(configInfoStrings, "The plugin has the following configuration:<ul>")
+			configInfoStrings = append(configInfoStrings, "The plugin has these configurations:<ul>")
 			if opts.MaxReviewerCount > 0 {
 				configInfoStrings = append(configInfoStrings, "<li>"+configString(opts.MaxReviewerCount)+"</li>")
 				isConfigured = true

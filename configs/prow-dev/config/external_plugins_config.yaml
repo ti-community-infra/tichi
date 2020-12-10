@@ -31,6 +31,8 @@ ti-community-autoresponder:
     auto_responds:
       - regex: "(?mi)^/ping\\s*$"
         message: "pong"
+      - regex: "(?m)(?<!/)LGTM"
+        message: "Please use `/lgtm` instead of `LGTM`."
 
 ti-community-blunderbuss:
   - repos:
@@ -49,4 +51,4 @@ ti-community-tars:
   - repos:
       - tidb-community-bots/test-dev
     only_when_label: "status/can-merge"
-    message: "Your PR has out-of-dated, I have automatically updated it for you."
+    message: "Your PR is out-of-date, I have automatically updated it for you."
