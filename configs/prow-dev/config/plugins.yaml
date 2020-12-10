@@ -91,3 +91,7 @@ external_plugins:
       events:
         - pull_request
         - issue_comment
+    - name: cherrypick
+      events:
+        - pull_request
+        - issue_comment
