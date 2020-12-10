@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	lgtmOne = fmt.Sprintf("%s%d", LabelPrefix, 1)
-	lgtmTwo = fmt.Sprintf("%s%d", LabelPrefix, 2)
+	lgtmOne = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 1)
+	lgtmTwo = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 2)
 )
 
 type fakeOwnersClient struct {
@@ -175,7 +175,7 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			body:             "/merge ",
 			commenter:        "collab2",
 			currentLGTMLabel: lgtmTwo,
-			canMergeLabel:    canMergeLabel,
+			canMergeLabel:    externalplugins.CanMergeLabel,
 			shouldToggle:     false,
 			shouldComment:    false,
 		},
@@ -184,7 +184,7 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			body:             "/merge ",
 			commenter:        "not-in-the-org",
 			currentLGTMLabel: lgtmTwo,
-			canMergeLabel:    canMergeLabel,
+			canMergeLabel:    externalplugins.CanMergeLabel,
 			shouldToggle:     false,
 			shouldComment:    true,
 		},
@@ -283,18 +283,18 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 				if tc.canMergeLabel != "" {
 					if tc.isCancel {
 						if len(fc.IssueLabelsRemoved) != 1 {
-							t.Error("should have removed " + canMergeLabel + ".")
+							t.Error("should have removed " + externalplugins.CanMergeLabel + ".")
 						}
 					}
 				} else {
 					if !tc.isCancel {
 						if len(fc.IssueLabelsAdded) == 0 {
-							t.Error("should have added " + canMergeLabel + ".")
+							t.Error("should have added " + externalplugins.CanMergeLabel + ".")
 						}
 					}
 				}
 			} else if len(fc.IssueLabelsRemoved) > 0 {
-				t.Error("should not have removed " + canMergeLabel + ".")
+				t.Error("should not have removed " + externalplugins.CanMergeLabel + ".")
 			}
 
 			if tc.shouldComment && len(fc.IssueComments[5]) != 1 {
@@ -380,18 +380,18 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 				if tc.canMergeLabel != "" {
 					if tc.isCancel {
 						if len(fc.IssueLabelsRemoved) != 1 {
-							t.Error("should have removed " + canMergeLabel + ".")
+							t.Error("should have removed " + externalplugins.CanMergeLabel + ".")
 						}
 					}
 				} else {
 					if !tc.isCancel {
 						if len(fc.IssueLabelsAdded) == 0 {
-							t.Error("should have added " + canMergeLabel + ".")
+							t.Error("should have added " + externalplugins.CanMergeLabel + ".")
 						}
 					}
 				}
 			} else if len(fc.IssueLabelsRemoved) > 0 {
-				t.Error("should not have removed " + canMergeLabel + ".")
+				t.Error("should not have removed " + externalplugins.CanMergeLabel + ".")
 			}
 
 			if tc.shouldComment && len(fc.IssueComments[5]) != 1 {
@@ -596,7 +596,7 @@ func TestHandlePullRequest(t *testing.T) {
 					},
 				},
 			},
-			IssueLabelsRemoved: []string{canMergeLabel},
+			IssueLabelsRemoved: []string{externalplugins.CanMergeLabel},
 			issueComments: map[int][]github.IssueComment{
 				101: {
 					{
@@ -676,7 +676,7 @@ func TestHandlePullRequest(t *testing.T) {
 					},
 				},
 			},
-			IssueLabelsRemoved: []string{canMergeLabel},
+			IssueLabelsRemoved: []string{externalplugins.CanMergeLabel},
 			issueComments: map[int][]github.IssueComment{
 				101: {
 					{
@@ -749,7 +749,7 @@ func TestHandlePullRequest(t *testing.T) {
 				IssueLabelsAdded: c.IssueLabelsAdded,
 				CommitMap:        c.prCommits,
 			}
-			fakeGitHub.IssueLabelsAdded = append(fakeGitHub.IssueLabelsAdded, prName+":"+canMergeLabel)
+			fakeGitHub.IssueLabelsAdded = append(fakeGitHub.IssueLabelsAdded, prName+":"+externalplugins.CanMergeLabel)
 			commit := github.SingleCommit{}
 			commit.Commit.Tree.SHA = treeSHA
 			fakeGitHub.Commits[SHA] = commit
@@ -920,7 +920,7 @@ func TestRemoveTreeHashComment(t *testing.T) {
 		},
 		Collaborators: []string{"collab1", "collab2"},
 	}
-	fc.IssueLabelsAdded = []string{"kubernetes/kubernetes#101:" + canMergeLabel}
+	fc.IssueLabelsAdded = []string{"kubernetes/kubernetes#101:" + externalplugins.CanMergeLabel}
 	fp := &fakePruner{
 		GitHubClient:  fc,
 		IssueComments: fc.IssueComments[101],
@@ -998,7 +998,7 @@ func TestGetCurrentLabelNumber(t *testing.T) {
 	// scopelint:ignore
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			isSatisfy := isLGTMSatisfy(LabelPrefix, tc.labels, tc.needsLgtm)
+			isSatisfy := isLGTMSatisfy(externalplugins.LgtmLabelPrefix, tc.labels, tc.needsLgtm)
 
 			if isSatisfy != tc.isSatisfy {
 				t.Fatalf("satisify mismatch: got %v, want %v", isSatisfy, tc.isSatisfy)

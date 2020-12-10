@@ -22,8 +22,6 @@ const PluginName = "ti-community-lgtm"
 var (
 	configInfoReviewActsAsLgtm = `Reviews of "approve" or "request changes" act as adding or removing LGTM.`
 
-	// LabelPrefix is the name of the lgtm label applied by the lgtm plugin
-	LabelPrefix = "status/LGT"
 	// LGTMRe is the regex that matches lgtm comments
 	LGTMRe = regexp.MustCompile(`(?mi)^/lgtm\s*$`)
 	// LGTMCancelRe is the regex that matches lgtm cancel comments
@@ -261,7 +259,8 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		log.WithError(err).Error("Failed to get issue labels.")
 	}
 
-	currentLabel, nextLabel := getCurrentAndNextLabel(LabelPrefix, labels, reviewersAndNeedsLGTM.NeedsLgtm)
+	currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LgtmLabelPrefix, labels,
+		reviewersAndNeedsLGTM.NeedsLgtm)
 
 	// Remove the label if necessary, we're done after this.
 	if currentLabel != "" && !wantLGTM {

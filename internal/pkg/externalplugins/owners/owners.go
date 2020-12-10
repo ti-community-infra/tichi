@@ -22,8 +22,6 @@ const (
 )
 
 const (
-	// sigPrefix is a default sig label prefix.
-	sigPrefix = "sig/"
 	// listOwnersSuccessMessage returns on success.
 	listOwnersSuccessMessage = "List all owners success."
 	lgtmTwo                  = 2
@@ -189,8 +187,8 @@ func (s *Server) ListOwners(org string, repo string, number int,
 func getSigNameByLabel(labels []github.Label) string {
 	var sigName string
 	for _, label := range labels {
-		if strings.HasPrefix(label.Name, sigPrefix) {
-			sigName = strings.TrimPrefix(label.Name, sigPrefix)
+		if strings.HasPrefix(label.Name, tiexternalplugins.SigPrefix) {
+			sigName = strings.TrimPrefix(label.Name, tiexternalplugins.SigPrefix)
 			return sigName
 		}
 	}
