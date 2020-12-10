@@ -4,36 +4,42 @@ import { BASE_URL, COMMITTER, REVIEWER } from "@/utils/constant";
 import style from "./owners.module.scss";
 import { IOwnerTypeData } from "@/types/owners";
 
+const { Meta } = Card;
+
 export default function Owner({ data }) {
   const detailData: Partial<IOwnerTypeData> = data.data;
-  const committerItmes = detailData.committers
-    ? detailData.committers.map((item) => (
-        <p key={item} className={style.items}>
-          {item}
-        </p>
-      ))
-    : null;
-  const reviewItems = detailData.reviewers
-    ? detailData.reviewers.map((item) => (
-        <p key={item} className={style.items}>
-          {item}
-        </p>
-      ))
-    : null;
-  const renderItem = (item: Array<React.ReactElement> | null, key: string) => {
-    return item ? (
-      <Card title={key} className={style.container}>
-        {item}
+  const renderItem = (items: Array<string>) => {
+    return items.map((item) => (
+      <Card
+        className={style.container}
+        cover={<img alt="pic" src={`https://github.com/${item}.png`} />}
+      >
+        <a href={`https://github.com/${item}`}>{item}</a>
       </Card>
-    ) : null;
+    ));
   };
+
+  const reviewItems = detailData.reviewers
+    ? renderItem(detailData.reviewers)
+    : null;
+  const committerItmes = detailData.committers
+    ? renderItem(detailData.committers)
+    : null;
   return (
     <>
       <p className={style.header}>needsLGTM: {detailData.needsLGTM}</p>
-      <div className={style.wrapper}>
-        {renderItem(committerItmes, COMMITTER)}
-        {renderItem(reviewItems, REVIEWER)}
-      </div>
+      {reviewItems ? (
+        <>
+          <p className={style.people}>{REVIEWER}</p>
+          <div className={style.wrapper}>{reviewItems}</div>
+        </>
+      ) : null}
+      {committerItmes ? (
+        <>
+          <p className={style.people}>{COMMITTER}</p>
+          <div className={style.wrapper}>{committerItmes}</div>
+        </>
+      ) : null}
     </>
   );
 }
