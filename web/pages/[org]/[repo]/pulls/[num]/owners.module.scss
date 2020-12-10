@@ -1,0 +1,19 @@
+.header {
+  margin: 20px auto;
+  text-align: center;
+  font-size: 30px;
+}
+.wrapper {
+  padding: 20px;
+  display: flex;
+  justify-content: space-around;
+  .container {
+    width: 30vw;
+    border: 1px solid #000;
+    .items {
+      height: 20px;
+      line-height: 20px;
+      font-size: 18px;
+    }
+  }
+}
