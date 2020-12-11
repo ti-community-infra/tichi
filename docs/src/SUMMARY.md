@@ -15,4 +15,3 @@
   - [label_sync](./tools/label_sync.md)
 - [Workflows](./workflows.md)
   - [PR workflow](./workflows/pr.md)
-  - [Label workflow](./workflows/label.md)
