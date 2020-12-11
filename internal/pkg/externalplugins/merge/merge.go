@@ -62,10 +62,10 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
-			Usage:       "/merge [cancel] or triggers by github review action.",
+			Usage:       "/merge [cancel] or triggers by GitHub review action.",
 			Description: "Start or cancel a merge process.",
 			Featured:    true,
-			WhoCanUse:   "Collaborators of this repository. Additionally, PR author can use '/merge cancel'.",
+			WhoCanUse:   "Collaborators of this repository. Additionally, the PR author can use '/merge cancel'.",
 			Examples: []string{
 				"/merge",
 				"/merge cancel"},

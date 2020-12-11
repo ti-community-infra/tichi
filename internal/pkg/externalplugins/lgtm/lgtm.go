@@ -56,8 +56,8 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
-			Usage:       "/lgtm [cancel] or triggers by github review action.",
-			Description: "Add or remove the 'status/LGT{number}' label.",
+			Usage:       "/lgtm [cancel] or triggers by GitHub review action.",
+			Description: "Add or remove the 'status/LGT{number}' label. Additionally, the PR author can use '/merge cancel'.",
 			Featured:    true,
 			WhoCanUse:   "Collaborators of this repository.",
 			Examples: []string{
@@ -245,9 +245,9 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
-	// Not reviewers but want to remove LGTM.
-	if !reviewers.Has(author) && !wantLGTM {
-		resp := "`/lgtm cancel` is only allowed for the reviewers in [list](" + url + ")."
+	// Not author or reviewers but want to remove LGTM.
+	if !reviewers.Has(author) && !isAuthor && !wantLGTM {
+		resp := "`/lgtm cancel` is only allowed for the PR author or the reviewers in [list](" + url + ")."
 		log.Infof("Reply /lgtm cancel request in comment: \"%s\"", resp)
 		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
