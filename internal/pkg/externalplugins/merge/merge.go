@@ -22,10 +22,10 @@ const PluginName = "ti-community-merge"
 const githubUpdateCommitter = "web-flow"
 
 var (
-	addCanMergeLabelNotification = "This pull request has been accepted and has started to merge. " +
+	addCanMergeLabelNotification = "This pull request has been accepted and will be merged it if all tests pass. " +
 		"<details>Commit hash: %s</details>"
 	addCanMergeLabelNotificationRe = regexp.MustCompile(fmt.Sprintf(addCanMergeLabelNotification, "(.*)"))
-	configInfoStoreTreeHash        = `New commits will not remove the 'can-merge' label.`
+	configInfoStoreTreeHash        = `New commits will not remove the 'can-merge' label.`	
 
 	// CanMergeRe is the regex that matches merge comments
 	CanMergeRe = regexp.MustCompile(`(?mi)^/merge\s*$`)
