@@ -60,7 +60,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: "The label plugin provides commands that add or remove certain types of labels. " +
 				"For example, the labels like 'status/*', 'sig/*' and bare lables can be " +
-				"managed by using `/label status`, `/label sig` and `/label label`.",
+				"managed by using `/status`, `/sig` and `/label`.",
 			Config: labelConfig,
 		}
 		pluginHelp.AddCommand(pluginhelp.Command{

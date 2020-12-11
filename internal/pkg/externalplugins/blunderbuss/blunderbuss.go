@@ -76,7 +76,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 			Featured:    false,
 			Description: "Manually request reviews from reviewers for a PR.",
 			Examples:    []string{"/auto-cc"},
-			WhoCanUse:   "Anyone",
+			WhoCanUse:   "Everyone",
 		})
 		return pluginHelp, nil
 	}
