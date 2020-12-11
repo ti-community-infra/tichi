@@ -97,7 +97,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li></ol></li><li class="chapter-item expanded "><a href="plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="plugins/merge.html"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="plugins/tars.html"><strong aria-hidden="true">3.4.</strong> ti-community-tars</a></li><li class="chapter-item expanded "><a href="plugins/blunderbuss.html"><strong aria-hidden="true">3.5.</strong> ti-community-blunderbuss</a></li><li class="chapter-item expanded "><a href="plugins/label.html"><strong aria-hidden="true">3.6.</strong> ti-community-label</a></li><li class="chapter-item expanded "><a href="plugins/require-matching-label.html"><strong aria-hidden="true">3.7.</strong> require-matching-label</a></li></ol></li><li class="chapter-item expanded "><a href="tools.html"><strong aria-hidden="true">4.</strong> Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/label_sync.html"><strong aria-hidden="true">4.1.</strong> label_sync</a></li></ol></li><li class="chapter-item expanded "><a href="workflows.html"><strong aria-hidden="true">5.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="workflows/pr.html"><strong aria-hidden="true">5.1.</strong> PR workflow</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li></ol></li><li class="chapter-item expanded "><a href="plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="plugins/merge.html"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="plugins/tars.html"><strong aria-hidden="true">3.4.</strong> ti-community-tars</a></li><li class="chapter-item expanded "><a href="plugins/blunderbuss.html"><strong aria-hidden="true">3.5.</strong> ti-community-blunderbuss</a></li><li class="chapter-item expanded "><a href="plugins/label.html"><strong aria-hidden="true">3.6.</strong> ti-community-label</a></li><li class="chapter-item expanded "><a href="plugins/require-matching-label.html"><strong aria-hidden="true">3.7.</strong> require-matching-label</a></li><li class="chapter-item expanded "><a href="plugins/hold.html"><strong aria-hidden="true">3.8.</strong> hold</a></li><li class="chapter-item expanded "><a href="plugins/wip.html"><strong aria-hidden="true">3.9.</strong> wip</a></li></ol></li><li class="chapter-item expanded "><a href="tools.html"><strong aria-hidden="true">4.</strong> Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="tools/label_sync.html"><strong aria-hidden="true">4.1.</strong> label_sync</a></li></ol></li><li class="chapter-item expanded "><a href="workflows.html"><strong aria-hidden="true">5.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="workflows/pr.html"><strong aria-hidden="true">5.1.</strong> PR workflow</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -636,12 +636,44 @@
 <h2><a class="header" href="#qa-7" id="qa-7">Q&amp;A</a></h2>
 <h3><a class="header" href="#是否可以在-issue-或者-pr-创建一段时间之后再检查" id="是否可以在-issue-或者-pr-创建一段时间之后再检查">是否可以在 Issue 或者 PR 创建一段时间之后再检查？</a></h3>
 <p>可以，配置 grace_period 参数即可。<strong>默认为 5 秒</strong>。</p>
+<h1><a class="header" href="#hold" id="hold">hold</a></h1>
+<h2><a class="header" href="#设计背景-7" id="设计背景-7">设计背景</a></h2>
+<p>在我们在做 Code Review 的过程中，可能会出现 PR 的改动没有问题，但是该 PR 会产生比较大的副作用需要其他人也参与进来评估的情况。</p>
+<p><a href="https://github.com/kubernetes/test-infra/tree/master/prow/plugins/hold">hold</a> 通过命令在 PR 上添加或移除 <code>do-not-merge/hold</code> 标签来配合 <a href="plugins/../components/tide.html">Tide</a> 阻止 PR 的合并。</p>
+<h2><a class="header" href="#设计思路-7" id="设计思路-7">设计思路</a></h2>
+<p>该插件由 Kubernetes 社区设计开发，实现十分简单，就是通过 <code>/hold [cancel]</code> 添加或移除 <code>do-not-merge/hold</code> 标签来控制 PR 的合并。</p>
+<h2><a class="header" href="#参数配置-7" id="参数配置-7">参数配置</a></h2>
+<p>无特殊配置</p>
+<h2><a class="header" href="#参考文档-6" id="参考文档-6">参考文档</a></h2>
+<ul>
+<li><a href="https://prow.tidb.io/command-help#hold">command-help</a></li>
+<li><a href="https://github.com/kubernetes/test-infra/tree/master/prow/plugins/hold">代码实现</a></li>
+</ul>
+<h2><a class="header" href="#qa-8" id="qa-8">Q&amp;A</a></h2>
+<h3><a class="header" href="#应该什么时候使用该功能" id="应该什么时候使用该功能">应该什么时候使用该功能？</a></h3>
+<p>代码本身没问题，你觉得可以同意这些改动，但是这些改动可能有一些副作用，需要更多人来仔细评估这些副作用的时候使用该功能。</p>
+<h1><a class="header" href="#wipwork-in-process" id="wipwork-in-process">wip(Work In Process)</a></h1>
+<h2><a class="header" href="#设计背景-8" id="设计背景-8">设计背景</a></h2>
+<p>在我们提交 PR 时，可能对于一些比较复杂问题的修复，我们需要多次提交修改才能完成 PR。在我们还在修改 PR 的过程中，我们希望 reviewers 不要来做 Code Review。</p>
+<p><a href="https://github.com/kubernetes/test-infra/tree/master/prow/plugins/wip">wip</a> 通过检测 PR 是否处于 draft 状态或 PR 标题上是否包含 <code>WIP</code> 来添加或移除 <code>do-not-merge/work-in-progress</code> 标签来配合 <a href="plugins/../components/tide.html">Tide</a> 阻止 PR 的合并。</p>
+<h2><a class="header" href="#设计思路-8" id="设计思路-8">设计思路</a></h2>
+<p>该插件由 Kubernetes 社区设计开发，实现十分简单，当我们的 PR 处于 draft 状态或 PR 标题上包含 <code>WIP</code> 时自动添加 <code>do-not-merge/work-in-progress</code> 标签。</p>
+<h2><a class="header" href="#参数配置-8" id="参数配置-8">参数配置</a></h2>
+<p>无特殊配置</p>
+<h2><a class="header" href="#参考文档-7" id="参考文档-7">参考文档</a></h2>
+<ul>
+<li><a href="https://prow.tidb.io/plugins?repo=tidb-community-bots%2Fti-community-prow">wip doc</a></li>
+<li><a href="https://github.com/kubernetes/test-infra/tree/master/prow/plugins/wip">代码实现</a></li>
+</ul>
+<h2><a class="header" href="#qa-9" id="qa-9">Q&amp;A</a></h2>
+<h3><a class="header" href="#它会跟着我-pr-的状态或标题的变化自动添加和移除-do-not-mergework-in-progress-标签吗" id="它会跟着我-pr-的状态或标题的变化自动添加和移除-do-not-mergework-in-progress-标签吗">它会跟着我 PR 的状态或标题的变化自动添加和移除 <code>do-not-merge/work-in-progress</code> 标签吗？</a></h3>
+<p>会，当你的 PR 不是 draft 状态或者标题不包含 <code>WIP</code> 时，它会自动移除该标签。</p>
 <h1><a class="header" href="#tools" id="tools">Tools</a></h1>
 <p>Kubernetes 社区不仅依托于 Prow 开发了大量的协作插件，还开发了很多具有生产力的社区工具。</p>
 <h1><a class="header" href="#label-sync" id="label-sync">label-sync</a></h1>
-<h2><a class="header" href="#设计背景-7" id="设计背景-7">设计背景</a></h2>
+<h2><a class="header" href="#设计背景-9" id="设计背景-9">设计背景</a></h2>
 <p>在 GitHub 的大型仓库上可能会存在多达上百个 labels，手动维护这些 labels 是个很大的负担。所以 Kubernetes 社区设计开发了 <a href="https://github.com/kubernetes/test-infra/tree/master/label_sync">label_sync</a> 来自动化 label 的创建、修改和维护。</p>
-<h2><a class="header" href="#设计思路-7" id="设计思路-7">设计思路</a></h2>
+<h2><a class="header" href="#设计思路-9" id="设计思路-9">设计思路</a></h2>
 <p>实现该工具不仅要考虑到我们需要新建 label，而且要考虑到旧的 label 可能需要迁移维护等情况。所以 Kubernetes 社区在定义 label 时新增了一些字段来处理这些情况：</p>
 <table><thead><tr><th>参数名</th><th>类型</th><th>说明</th></tr></thead><tbody>
 <tr><td>name</td><td>string</td><td>label 的名称</td></tr>
@@ -702,18 +734,18 @@ repos: # 针对每个 repo 进行单独配置
         prowPlugin: ti-community-merge
         addedBy: prow
 </code></pre>
-<h2><a class="header" href="#参考文档-6" id="参考文档-6">参考文档</a></h2>
+<h2><a class="header" href="#参考文档-8" id="参考文档-8">参考文档</a></h2>
 <ul>
 <li><a href="https://github.com/kubernetes/test-infra/blob/master/label_sync/README.md">README</a></li>
 <li><a href="https://github.com/kubernetes/test-infra/tree/master/label_sync">代码实现</a></li>
 </ul>
-<h2><a class="header" href="#qa-8" id="qa-8">Q&amp;A</a></h2>
+<h2><a class="header" href="#qa-10" id="qa-10">Q&amp;A</a></h2>
 <h3><a class="header" href="#这些-label-什么时候更新" id="这些-label-什么时候更新">这些 label 什么时候更新？</a></h3>
 <p>目前为一个<a href="https://github.com/tidb-community-bots/configs/blob/main/prow/cluster/label_sync.yaml">定时任务</a>，每小时的第 17 分钟尝试更新。</p>
 <h1><a class="header" href="#workflows" id="workflows">Workflows</a></h1>
 <p>在协作过程中，我们整理出了一些推荐的协作流程，使用这些流程进行协作会充分利用以上介绍的组件和插件的特性。</p>
 <h1><a class="header" href="#pr-workflow" id="pr-workflow">PR workflow</a></h1>
-<h2><a class="header" href="#设计背景-8" id="设计背景-8">设计背景</a></h2>
+<h2><a class="header" href="#设计背景-10" id="设计背景-10">设计背景</a></h2>
 <p>在引入 Tide 之后 PR 的协作流程发生了一些变化，但是基本的大框架还是保留了下来。主要的调整发生在 PR 合并阶段，从原来一次性的 <code>/merge</code> 命令去触发机器人运行测试合并代码变成了 <code>/merge</code> 只负责打上 <code>status/can-merge</code> 标签。当 PR 的标签满足要求并且所有测试通过后，PR 将会自动合并无需人为干预。</p>
 <p><strong>⚠️ 注意：在阅读以下内容之前请先仔细阅读 <a href="workflows/./../components/tide.html">Tide</a>、<a href="workflows/./../plugins/lgtm.html">ti-community-lgtm</a>、<a href="workflows/./../plugins/tars.html">ti-community-tars</a>、<a href="workflows/./../plugins/blunderbuss.html">ti-community-blunderbuss</a> 和 <a href="workflows/./../plugins/merge.html">ti-community-merge</a> 章节内容</strong>。</p>
 <h2><a class="header" href="#pr-协作流程" id="pr-协作流程">PR 协作流程</a></h2>
@@ -784,7 +816,7 @@ repos: # 针对每个 repo 进行单独配置
 <li>PR 合并当前 master 到 PR 导致 <code>status/can-merge</code> 标签消失</li>
 </ol>
 <p><strong>第一个问题使用 <a href="workflows/./../plugins/tars.html">ti-community-tars</a> 自动更新就可以解决。第二个问题因为我们可以识别到使用 GitHub 更新按钮更新 master 到 PR 的提交的 committer 为 <code>web-flow</code>，所以可以根据 committer 来判断是否信任该提交。</strong></p>
-<h2><a class="header" href="#qa-9" id="qa-9">Q&amp;A</a></h2>
+<h2><a class="header" href="#qa-11" id="qa-11">Q&amp;A</a></h2>
 <h3><a class="header" href="#为什么我自己-rebase-或者-squash-提交会导致-statuscan-merge-被移除" id="为什么我自己-rebase-或者-squash-提交会导致-statuscan-merge-被移除">为什么我自己 rebase 或者 squash 提交会导致 <code>status/can-merge</code> 被移除？</a></h3>
 <p><strong>因为我们目前存储的是打上 <code>status/can-merge</code> 标签时你 PR 中的最后一个提交的 hash</strong>。当你 rebase 之后整个 hash 都会发生变化，所以会自动取消标签。当你自己 squash 的时候，因为我们存储的是最后一个提交的 hash 不是第一个提交的 hash，这样还是会导致 hash 对不上自动取消标签。</p>
 
