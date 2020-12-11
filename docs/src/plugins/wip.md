@@ -21,6 +21,6 @@
 
 ## Q&A
 
-### 它会跟着我 PR 的状态或标题的变化自动添加和移除 `do-not-merge/wip` 标签吗？
+### 它会跟着我 PR 的状态或标题的变化自动添加和移除 `do-not-merge/work-in-progress` 标签吗？
 
 会，当你的 PR 不是 draft 状态或者标题不包含 `WIP` 时，它会自动移除该标签。
