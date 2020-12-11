@@ -22,7 +22,7 @@ const PluginName = "ti-community-merge"
 const githubUpdateCommitter = "web-flow"
 
 var (
-	addCanMergeLabelNotification = "This pull request has been accepted and will be merged if all tests pass. " +
+	addCanMergeLabelNotification = "This pull request has been accepted and ready to merge. " +
 		"<details>Commit hash: %s</details>"
 	addCanMergeLabelNotificationRe = regexp.MustCompile(fmt.Sprintf(addCanMergeLabelNotification, "(.*)"))
 	configInfoStoreTreeHash        = `New commits will not remove the 'can-merge' label.`
