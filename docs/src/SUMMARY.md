@@ -11,6 +11,8 @@
   - [ti-community-blunderbuss](./plugins/blunderbuss.md)
   - [ti-community-label](./plugins/label.md)
   - [require-matching-label](./plugins/require-matching-label.md)
+  - [hold](./plugins/hold.md)
+  - [wip](./plugins/wip.md)
 - [Tools](./tools.md)
   - [label_sync](./tools/label_sync.md)
 - [Workflows](./workflows.md)
