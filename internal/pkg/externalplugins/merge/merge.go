@@ -25,7 +25,7 @@ var (
 	addCanMergeLabelNotification = "This pull request has been accepted and will be merged if all tests pass. " +
 		"<details>Commit hash: %s</details>"
 	addCanMergeLabelNotificationRe = regexp.MustCompile(fmt.Sprintf(addCanMergeLabelNotification, "(.*)"))
-	configInfoStoreTreeHash        = `New commits will not remove the 'can-merge' label.`	
+	configInfoStoreTreeHash        = `New commits will not remove the 'can-merge' label.`
 
 	// CanMergeRe is the regex that matches merge comments
 	CanMergeRe = regexp.MustCompile(`(?mi)^/merge\s*$`)
