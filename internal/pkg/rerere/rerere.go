@@ -3,6 +3,7 @@ package rerere
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -59,6 +60,7 @@ func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 	if err != nil {
 		return err
 	}
+	log.Infof("String resting on %s/%s/branches/%s", org, repo, options.RetestingBranch)
 	for i := 0; i < options.Retry; i++ {
 		// Init client form current dir.
 		client, err := gc.ClientFromDir(org, repo, "")
@@ -66,46 +68,55 @@ func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 			return err
 		}
 		// Force push to retesting branch.
+		// TODO: force push cannot trigger CI again.
 		err = client.PushToCentral(options.RetestingBranch, true)
 		if err != nil {
 			return err
 		}
-
-		lastCommit, err := ghc.GetSingleCommit(org, repo, options.RetestingBranch)
-		if err != nil {
-			log.Warnf("Get %s last commit failed", options.RetestingBranch)
-			continue
-		}
-
-		passedContexts := sets.String{}
-		lastCommitRef := lastCommit.SHA
-		// List all status.
-		statuses, err := ghc.ListStatuses(org, repo, lastCommitRef)
-		if err != nil {
-			log.Warnf("List %s statuses failed", lastCommitRef)
-			continue
-		}
-		for _, status := range statuses {
-			if status.State == github.StatusSuccess {
-				passedContexts.Insert(status.Context)
-			}
-		}
-		// List all check runs.
-		checkRun, err := ghc.ListCheckRuns(org, repo, lastCommitRef)
-		if err != nil {
-			log.Warnf("List %s check runs failed", lastCommitRef)
-			continue
-		}
-		for _, runs := range checkRun.CheckRuns {
-			if runs.Status == checkRunStatusCompleted {
-				passedContexts.Insert(runs.Name)
-			}
-		}
-
-		// All required contexts passed.
-		if passedContexts.HasAll(options.Contexts.StringSet().List()...) {
+		// TODO: improve this sleep.
+		time.Sleep(options.Timeout)
+		err = checkContexts(ghc, options.Contexts, options.RetestingBranch, org, repo)
+		if err == nil {
 			return nil
 		}
+		log.WithError(err).Warn("Retesting failed")
 	}
+	log.Warnf("Retry %d times failed", options.Retry)
 	return errors.New("retesting failed")
+}
+
+func checkContexts(ghc githubClient, contexts prowflagutil.Strings, retestingBranch string, org string, repo string) error {
+	lastCommit, err := ghc.GetSingleCommit(org, repo, retestingBranch)
+	if err != nil {
+		return fmt.Errorf("get %s last commit failed: %v", retestingBranch, err)
+	}
+
+	passedContexts := sets.String{}
+	lastCommitRef := lastCommit.SHA
+	// List all status.
+	statuses, err := ghc.ListStatuses(org, repo, lastCommitRef)
+	if err != nil {
+		return fmt.Errorf("list %s statuses failed: %v", retestingBranch, err)
+	}
+	for _, status := range statuses {
+		if status.State == github.StatusSuccess {
+			passedContexts.Insert(status.Context)
+		}
+	}
+	// List all check runs.
+	checkRun, err := ghc.ListCheckRuns(org, repo, lastCommitRef)
+	if err != nil {
+		return fmt.Errorf("list %s check runs failed: %v", retestingBranch, err)
+	}
+	for _, runs := range checkRun.CheckRuns {
+		if runs.Status == checkRunStatusCompleted {
+			passedContexts.Insert(runs.Name)
+		}
+	}
+
+	// All required contexts passed.
+	if passedContexts.HasAll(contexts.StringSet().List()...) {
+		return nil
+	}
+	return errors.New(fmt.Sprintf("some contexts still not passed %v", contexts.StringSet().Difference(passedContexts)))
 }
