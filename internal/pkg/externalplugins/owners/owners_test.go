@@ -48,7 +48,7 @@ func (f *fakegithub) ListTeams(org string) ([]github.Team, error) {
 }
 
 // ListTeamMembers return a fake team with a single "sig-lead" GitHub team member.
-func (f *fakegithub) ListTeamMembers(teamID int, role string) ([]github.TeamMember, error) {
+func (f *fakegithub) ListTeamMembers(_ string, teamID int, role string) ([]github.TeamMember, error) {
 	if role != github.RoleAll {
 		return nil, fmt.Errorf("unsupported role %v (only all supported)", role)
 	}

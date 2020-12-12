@@ -109,7 +109,10 @@ func main() {
 		return
 	}
 
-	rerere.Retesting(log, githubClient, git.ClientFactoryFrom(gitClient), &o.retesting)
+	err = rerere.Retesting(log, githubClient, git.ClientFactoryFrom(gitClient), &o.retesting, owner, repo)
+	if err != nil {
+		logrus.WithError(err).Fatal("Error retesting.")
+	}
 
 	interrupts.OnInterrupt(func() {
 		if err := gitClient.Clean(); err != nil {

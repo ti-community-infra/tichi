@@ -31,7 +31,7 @@ type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
 	ListCollaborators(org, repo string) ([]github.User, error)
 	ListTeams(org string) ([]github.Team, error)
-	ListTeamMembers(id int, role string) ([]github.TeamMember, error)
+	ListTeamMembers(org string, id int, role string) ([]github.TeamMember, error)
 }
 
 type Server struct {
@@ -223,7 +223,7 @@ func getTrustTeamMembers(log *logrus.Entry, gc githubClient, org, trustTeam stri
 		if teams, err := gc.ListTeams(org); err == nil {
 			for _, teamInOrg := range teams {
 				if strings.Compare(teamInOrg.Name, trustTeam) == 0 {
-					if members, err := gc.ListTeamMembers(teamInOrg.ID, github.RoleAll); err == nil {
+					if members, err := gc.ListTeamMembers(org, teamInOrg.ID, github.RoleAll); err == nil {
 						var membersLogin []string
 						for _, member := range members {
 							membersLogin = append(membersLogin, member.Login)
