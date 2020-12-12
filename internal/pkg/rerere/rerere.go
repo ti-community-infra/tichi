@@ -85,7 +85,8 @@ func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 	return errors.New("retesting failed")
 }
 
-func checkContexts(ghc githubClient, contexts prowflagutil.Strings, retestingBranch string, org string, repo string) error {
+func checkContexts(ghc githubClient, contexts prowflagutil.Strings,
+	retestingBranch string, org string, repo string) error {
 	lastCommit, err := ghc.GetSingleCommit(org, repo, retestingBranch)
 	if err != nil {
 		return fmt.Errorf("get %s last commit failed: %v", retestingBranch, err)
@@ -118,5 +119,6 @@ func checkContexts(ghc githubClient, contexts prowflagutil.Strings, retestingBra
 	if passedContexts.HasAll(contexts.StringSet().List()...) {
 		return nil
 	}
-	return errors.New(fmt.Sprintf("some contexts still not passed %v", contexts.StringSet().Difference(passedContexts)))
+	return fmt.Errorf("some contexts still not passed %v",
+		contexts.StringSet().Difference(passedContexts))
 }
