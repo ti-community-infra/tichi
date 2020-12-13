@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -12,8 +13,7 @@ import (
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
-	"k8s.io/test-infra/prow/git/v2"
-	"k8s.io/test-infra/prow/interrupts"
+	"k8s.io/test-infra/prow/pod-utils/downwardapi"
 )
 
 const (
@@ -27,11 +27,12 @@ type options struct {
 	labels prowflagutil.Strings
 
 	github    prowflagutil.GitHubOptions
+	git       prowflagutil.GitOptions
 	retesting rerere.RetestingOptions
 }
 
 func (o *options) Validate() error {
-	for idx, group := range []flagutil.OptionGroup{&o.github, &o.retesting} {
+	for idx, group := range []flagutil.OptionGroup{&o.github, &o.git, &o.retesting} {
 		if err := group.Validate(o.dryRun); err != nil {
 			return fmt.Errorf("%d: %w", idx, err)
 		}
@@ -45,7 +46,7 @@ func gatherOptions() options {
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	fs.BoolVar(&o.dryRun, "dry-run", true, "Dry run for testing. Uses API tokens but does not mutate.")
 	fs.Var(&o.labels, "labels", "Labels specifies the PR that can be tested.")
-	for _, group := range []flagutil.OptionGroup{&o.github, &o.retesting} {
+	for _, group := range []flagutil.OptionGroup{&o.github, &o.git, &o.retesting} {
 		group.AddFlags(fs)
 	}
 	_ = fs.Parse(os.Args[1:])
@@ -62,6 +63,17 @@ func main() {
 	logrus.SetLevel(logrus.DebugLevel)
 	log := logrus.StandardLogger().WithField("plugin", "rerere")
 
+	// Get job spec.
+	rawJobSpec := os.Getenv(downwardapi.JobSpecEnv)
+	if len(rawJobSpec) == 0 {
+		logrus.Fatal("Error getting job spec.")
+	}
+	spec := &downwardapi.JobSpec{}
+	err := json.Unmarshal([]byte(rawJobSpec), spec)
+	if err != nil {
+		logrus.WithError(err).Fatal("Error unmarshal job spec.")
+	}
+
 	secretAgent := &secret.Agent{}
 	if err := secretAgent.Start([]string{o.github.TokenPath}); err != nil {
 		logrus.WithError(err).Fatal("Error starting secrets agent.")
@@ -71,7 +83,8 @@ func main() {
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting GitHub client.")
 	}
-	gitClient, err := o.github.GitClient(secretAgent, o.dryRun)
+
+	gitClient, err := o.git.GitClient(githubClient, secretAgent.GetTokenGenerator(o.github.TokenPath), nil, o.dryRun)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting Git client.")
 	}
@@ -79,15 +92,15 @@ func main() {
 	// Get pr info.
 	owner := os.Getenv(repoOwnerEnv)
 	if len(owner) == 0 {
-		logrus.WithError(err).Fatal("Error getting repo owner.")
+		logrus.Fatal("Error getting repo owner.")
 	}
 	repo := os.Getenv(repoNameEnv)
 	if len(repo) == 0 {
-		logrus.WithError(err).Fatal("Error getting repo name.")
+		logrus.Fatal("Error getting repo name.")
 	}
 	pullNumber := os.Getenv(pullNumberEnv)
 	if len(pullNumber) == 0 {
-		logrus.WithError(err).Fatal("Error getting pull number.")
+		logrus.Fatal("Error getting pull number.")
 	}
 	number, err := strconv.Atoi(pullNumber)
 	if err != nil {
@@ -109,15 +122,8 @@ func main() {
 		return
 	}
 
-	err = rerere.Retesting(log, githubClient, git.ClientFactoryFrom(gitClient), &o.retesting, owner, repo)
+	err = rerere.Retesting(log, githubClient, gitClient, &o.retesting, owner, repo, spec)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error retesting.")
 	}
-
-	interrupts.OnInterrupt(func() {
-		if err := gitClient.Clean(); err != nil {
-			logrus.WithError(err).Error("Could not clean up git client cache.")
-		}
-	})
-	defer interrupts.WaitForGracefulShutdown()
 }

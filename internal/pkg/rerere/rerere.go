@@ -1,9 +1,11 @@
 package rerere
 
 import (
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -11,16 +13,27 @@ import (
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
 	"k8s.io/test-infra/prow/git/v2"
 	"k8s.io/test-infra/prow/github"
+	"k8s.io/test-infra/prow/pod-utils/downwardapi"
 )
 
 const (
-	DefaultRetestingBranch = "rerere"
-	DefaultRetestingTimes  = 3
-	DefaultTimeOut         = time.Minute * 15
-	DefaultCheckPeriod     = time.Minute * 5
+	DefaultRetestingBranch      = "rerere"
+	DefaultRetestingTimes       = 3
+	DefaultTimeOut              = time.Minute * 15
+	DefaultCheckPeriod          = time.Minute * 5
+	DefaultRetestingLogFileName = ".rerere.json"
 )
 
 const checkRunStatusCompleted = "completed"
+
+var check = checkContexts
+
+type RetestingLog struct {
+	Job               *downwardapi.JobSpec `json:"job,omitempty"`
+	Options           *RetestingOptions    `json:"options,omitempty"`
+	CurrentRetryTimes int                  `json:"current_retry_times,omitempty"`
+	Time              time.Time            `json:"time,omitempty"`
+}
 
 // RetestingOptions holds options for retesting.
 type RetestingOptions struct {
@@ -56,7 +69,7 @@ type githubClient interface {
 }
 
 func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
-	options *RetestingOptions, org string, repo string) error {
+	options *RetestingOptions, org string, repo string, spec *downwardapi.JobSpec) error {
 	log.Infof("String resting on %s/%s/branches/%s", org, repo, options.RetestingBranch)
 	for i := 0; i < options.Retry; i++ {
 		// Init client form current dir.
@@ -64,18 +77,50 @@ func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 		if err != nil {
 			return err
 		}
+
+		// First time retesting we need to checkout the retesting branch.
+		if i == 0 {
+			err = client.CheckoutNewBranch(options.RetestingBranch)
+			if err != nil {
+				return err
+			}
+		}
+
+		// Log with commit.
+		retestingLog := RetestingLog{
+			Job:               spec,
+			Options:           options,
+			CurrentRetryTimes: i + 1,
+			Time:              time.Now(),
+		}
+		rawLog, err := json.Marshal(retestingLog)
+		if err != nil {
+			return err
+		}
+		err = ioutil.WriteFile(DefaultRetestingLogFileName, rawLog, 0600)
+		if err != nil {
+			return err
+		}
+		// TODO: waiting bug fix See: https://github.com/kubernetes/test-infra/pull/20222.
+		//err = client.Commit(fmt.Sprintf("Retesing %v", options.Contexts), string(rawLog))
+		//if err != nil {
+		//	return err
+		//}
+
 		// Force push to retesting branch.
-		// TODO: force push cannot trigger CI again.
 		err = client.PushToCentral(options.RetestingBranch, true)
 		if err != nil {
 			return err
 		}
+
+		// Start retesting.
 		startTime := time.Now()
 		ticker := time.NewTicker(DefaultCheckPeriod)
 		for t := range ticker.C {
 			log.Infof("Check contexts at %v", t)
-			err = checkContexts(ghc, options.Contexts, options.RetestingBranch, org, repo)
+			err = check(log, ghc, options.Contexts, options.RetestingBranch, org, repo)
 			if err == nil {
+				ticker.Stop()
 				return nil
 			}
 			log.WithError(err).Warn("Retesting failed")
@@ -87,10 +132,11 @@ func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 		}
 	}
 	log.Warnf("Retry %d times failed", options.Retry)
+
 	return errors.New("retesting failed")
 }
 
-func checkContexts(ghc githubClient, contexts prowflagutil.Strings,
+func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.Strings,
 	retestingBranch string, org string, repo string) error {
 	lastCommit, err := ghc.GetSingleCommit(org, repo, retestingBranch)
 	if err != nil {
@@ -106,6 +152,7 @@ func checkContexts(ghc githubClient, contexts prowflagutil.Strings,
 	}
 	for _, status := range statuses {
 		if status.State == github.StatusSuccess {
+			log.Infof("%s context passed", status.Context)
 			passedContexts.Insert(status.Context)
 		}
 	}
@@ -116,6 +163,7 @@ func checkContexts(ghc githubClient, contexts prowflagutil.Strings,
 	}
 	for _, runs := range checkRun.CheckRuns {
 		if runs.Status == checkRunStatusCompleted {
+			log.Infof("%s runs passed", runs.Name)
 			passedContexts.Insert(runs.Name)
 		}
 	}
@@ -125,5 +173,5 @@ func checkContexts(ghc githubClient, contexts prowflagutil.Strings,
 		return nil
 	}
 	return fmt.Errorf("some contexts still not passed %v",
-		contexts.StringSet().Difference(passedContexts))
+		contexts.StringSet().Difference(passedContexts).List())
 }
