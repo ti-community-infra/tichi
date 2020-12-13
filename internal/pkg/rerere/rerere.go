@@ -17,6 +17,7 @@ const (
 	DefaultRetestingBranch = "rerere"
 	DefaultRetestingTimes  = 3
 	DefaultTimeOut         = time.Minute * 15
+	DefaultCheckPeriod     = time.Minute * 5
 )
 
 const checkRunStatusCompleted = "completed"
@@ -56,10 +57,6 @@ type githubClient interface {
 
 func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 	options *RetestingOptions, org string, repo string) error {
-	err := gc.Clean()
-	if err != nil {
-		return err
-	}
 	log.Infof("String resting on %s/%s/branches/%s", org, repo, options.RetestingBranch)
 	for i := 0; i < options.Retry; i++ {
 		// Init client form current dir.
@@ -73,13 +70,21 @@ func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 		if err != nil {
 			return err
 		}
-		// TODO: improve this sleep.
-		time.Sleep(options.Timeout)
-		err = checkContexts(ghc, options.Contexts, options.RetestingBranch, org, repo)
-		if err == nil {
-			return nil
+		startTime := time.Now()
+		ticker := time.NewTicker(DefaultCheckPeriod)
+		for t := range ticker.C {
+			log.Infof("Check contexts at %v", t)
+			err = checkContexts(ghc, options.Contexts, options.RetestingBranch, org, repo)
+			if err == nil {
+				return nil
+			}
+			log.WithError(err).Warn("Retesting failed")
+			if t.Sub(startTime) > DefaultTimeOut {
+				log.WithError(err).Warnf("Retesting timeout at %v", t)
+				ticker.Stop()
+				break
+			}
 		}
-		log.WithError(err).Warn("Retesting failed")
 	}
 	log.Warnf("Retry %d times failed", options.Retry)
 	return errors.New("retesting failed")
