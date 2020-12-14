@@ -101,7 +101,7 @@ func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 		if err != nil {
 			return err
 		}
-		err = client.Commit(fmt.Sprintf("Retesing %v", options.Contexts), string(rawLog))
+		err = client.Commit(fmt.Sprintf("Retesing %v", options.Contexts.Strings()), string(rawLog))
 		if err != nil {
 			return err
 		}
