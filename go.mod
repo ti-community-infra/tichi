@@ -14,6 +14,6 @@ require (
 	github.com/tidb-community-bots/prow-github v1.2.5
 	gotest.tools v2.2.0+incompatible
 	k8s.io/apimachinery v0.19.3
-	k8s.io/test-infra v0.0.0-20201212125926-4f526c22f191
+	k8s.io/test-infra v0.0.0-20201213233927-7f0580dce9c7
 	sigs.k8s.io/yaml v1.2.0
 )

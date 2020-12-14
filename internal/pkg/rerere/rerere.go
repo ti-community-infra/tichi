@@ -101,11 +101,10 @@ func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 		if err != nil {
 			return err
 		}
-		// TODO: waiting bug fix See: https://github.com/kubernetes/test-infra/pull/20222.
-		// err = client.Commit(fmt.Sprintf("Retesing %v", options.Contexts), string(rawLog))
-		// if err != nil {
-		//	 return err
-		// }
+		err = client.Commit(fmt.Sprintf("Retesing %v", options.Contexts), string(rawLog))
+		if err != nil {
+			return err
+		}
 
 		// Force push to retesting branch.
 		err = client.PushToCentral(options.RetestingBranch, true)
