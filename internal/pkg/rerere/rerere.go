@@ -47,7 +47,7 @@ type RetestingOptions struct {
 func (o *RetestingOptions) AddFlags(fs *flag.FlagSet) {
 	fs.StringVar(&o.RetestingBranch, "retesting-branch", DefaultRetestingBranch, "Retesting target branch.")
 	fs.IntVar(&o.Retry, "retry", DefaultRetestingTimes, "Retry testing times.")
-	fs.Var(&o.Contexts, "contexts", "Required contexts that must be green to merge.")
+	fs.Var(&o.Contexts, "requireContexts", "Required requireContexts that must be green to merge.")
 	fs.DurationVar(&o.Timeout, "timeout", DefaultTimeOut, "Test timeout time.")
 }
 
@@ -57,7 +57,7 @@ func (o *RetestingOptions) Validate(bool) error {
 	}
 	contexts := o.Contexts.Strings()
 	if len(contexts) == 0 {
-		return errors.New("--contexts must contain at least one context")
+		return errors.New("--requireContexts must contain at least one context")
 	}
 	return nil
 }
@@ -116,7 +116,7 @@ func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 		startTime := time.Now()
 		ticker := time.NewTicker(DefaultCheckPeriod)
 		for t := range ticker.C {
-			log.Infof("Check contexts at %v", t)
+			log.Infof("Check requireContexts at %v", t)
 			err = check(log, ghc, options.Contexts, options.RetestingBranch, org, repo)
 			if err == nil {
 				ticker.Stop()
@@ -167,10 +167,10 @@ func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.St
 		}
 	}
 
-	// All required contexts passed.
+	// All required requireContexts passed.
 	if passedContexts.HasAll(contexts.StringSet().List()...) {
 		return nil
 	}
-	return fmt.Errorf("some contexts still not passed %v",
+	return fmt.Errorf("some of the required contexts are still not passed: %v",
 		contexts.StringSet().Difference(passedContexts).List())
 }
