@@ -65,7 +65,7 @@ func main() {
 
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	logrus.SetLevel(logrus.DebugLevel)
-	log := logrus.StandardLogger().WithField("server", "rerere")
+	log := logrus.StandardLogger().WithField("component", "rerere")
 
 	// Get job spec.
 	rawJobSpec := os.Getenv(downwardapi.JobSpecEnv)
