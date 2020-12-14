@@ -11,22 +11,24 @@ import (
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/sets"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
-	"k8s.io/test-infra/prow/git/v2"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pod-utils/downwardapi"
 )
 
 const (
-	DefaultRetestingBranch      = "rerere"
-	DefaultRetestingTimes       = 3
-	DefaultTimeOut              = time.Minute * 15
-	DefaultCheckPeriod          = time.Minute * 5
-	DefaultRetestingLogFileName = ".rerere.json"
+	defaultRetestingBranch      = "rerere"
+	defaultRetestingTimes       = 3
+	defaultTimeOut              = time.Minute * 15
+	defaultRetestingLogFileName = ".rerere.json"
 )
 
 const checkRunStatusCompleted = "completed"
 
+type mockCheck = func(log *logrus.Entry, ghc githubClient,
+	contexts prowflagutil.Strings, retestingBranch string, org string, repo string) error
+
 var check = checkContexts
+var defaultCheckPeriod = time.Minute * 5
 
 type RetestingLog struct {
 	Job               *downwardapi.JobSpec `json:"job,omitempty"`
@@ -45,10 +47,10 @@ type RetestingOptions struct {
 
 // AddFlags injects retesting options into the given FlagSet.
 func (o *RetestingOptions) AddFlags(fs *flag.FlagSet) {
-	fs.StringVar(&o.RetestingBranch, "retesting-branch", DefaultRetestingBranch, "Retesting target branch.")
-	fs.IntVar(&o.Retry, "retry", DefaultRetestingTimes, "Retry testing times.")
+	fs.StringVar(&o.RetestingBranch, "retesting-branch", defaultRetestingBranch, "Retesting target branch.")
+	fs.IntVar(&o.Retry, "retry", defaultRetestingTimes, "Retry testing times.")
 	fs.Var(&o.Contexts, "requireContexts", "Required requireContexts that must be green to merge.")
-	fs.DurationVar(&o.Timeout, "timeout", DefaultTimeOut, "Test timeout time.")
+	fs.DurationVar(&o.Timeout, "timeout", defaultTimeOut, "Test timeout time.")
 }
 
 func (o *RetestingOptions) Validate(bool) error {
@@ -68,19 +70,19 @@ type githubClient interface {
 	ListCheckRuns(org, repo, ref string) (*github.CheckRunList, error)
 }
 
-func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
+type gitRepoClient interface {
+	CheckoutNewBranch(branch string) error
+	Commit(title, body string) error
+	PushToCentral(branch string, force bool) error
+}
+
+func Retesting(log *logrus.Entry, ghc githubClient, client gitRepoClient,
 	options *RetestingOptions, org string, repo string, spec *downwardapi.JobSpec) error {
 	log.Infof("String resting on %s/%s/branches/%s", org, repo, options.RetestingBranch)
 	for i := 0; i < options.Retry; i++ {
-		// Init client form current dir.
-		client, err := gc.ClientFromDir(org, repo, "")
-		if err != nil {
-			return err
-		}
-
 		// First time retesting we need to checkout the retesting branch.
 		if i == 0 {
-			err = client.CheckoutNewBranch(options.RetestingBranch)
+			err := client.CheckoutNewBranch(options.RetestingBranch)
 			if err != nil {
 				return err
 			}
@@ -97,7 +99,7 @@ func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 		if err != nil {
 			return err
 		}
-		err = ioutil.WriteFile(DefaultRetestingLogFileName, rawLog, 0600)
+		err = ioutil.WriteFile(defaultRetestingLogFileName, rawLog, 0600)
 		if err != nil {
 			return err
 		}
@@ -114,7 +116,7 @@ func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 
 		// Start retesting.
 		startTime := time.Now()
-		ticker := time.NewTicker(DefaultCheckPeriod)
+		ticker := time.NewTicker(defaultCheckPeriod)
 		for t := range ticker.C {
 			log.Infof("Check requireContexts at %v", t)
 			err = check(log, ghc, options.Contexts, options.RetestingBranch, org, repo)
@@ -123,7 +125,7 @@ func Retesting(log *logrus.Entry, ghc githubClient, gc git.ClientFactory,
 				return nil
 			}
 			log.WithError(err).Warn("Retesting failed")
-			if t.Sub(startTime) > DefaultTimeOut {
+			if t.Sub(startTime) > options.Timeout {
 				log.WithError(err).Warnf("Retesting timeout at %v", t)
 				ticker.Stop()
 				break

@@ -122,7 +122,13 @@ func main() {
 		return
 	}
 
-	err = rerere.Retesting(log, githubClient, gitClient, &o.retesting, owner, repo, spec)
+	// Init client form current dir.
+	client, err := gitClient.ClientFromDir(owner, repo, "")
+	if err != nil {
+		logrus.WithError(err).Fatal("Error init git client form current dir.")
+	}
+
+	err = rerere.Retesting(log, githubClient, client, &o.retesting, owner, repo, spec)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error retesting.")
 	}
