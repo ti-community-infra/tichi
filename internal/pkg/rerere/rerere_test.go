@@ -111,7 +111,7 @@ func TestCheckContexts(t *testing.T) {
 			expectError: "some of the required contexts are still not passed: [test2]",
 		},
 		{
-			name:            "statuses all passed",
+			name:            "all statuses passed",
 			org:             "org",
 			repo:            "repo",
 			requireContexts: []string{"test1", "test2"},
@@ -125,7 +125,7 @@ func TestCheckContexts(t *testing.T) {
 			},
 		},
 		{
-			name:            "check runs all passed",
+			name:            "all check runs passed",
 			org:             "org",
 			repo:            "repo",
 			requireContexts: []string{"test1", "test2"},
@@ -147,6 +147,7 @@ func TestCheckContexts(t *testing.T) {
 	for _, test := range tests {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
+			// Init the fake github client.
 			lastCommits := make(map[string]github.RepositoryCommit)
 			lastCommits[testRef(tc.org, tc.repo, tc.branch)] = github.RepositoryCommit{SHA: SHA}
 
@@ -161,8 +162,10 @@ func TestCheckContexts(t *testing.T) {
 				statuses:     statuses,
 				checkRunList: checkRunList,
 			}
+
 			err := checkContexts(logrus.WithField("rerere", "testing"),
 				&ghc, prowflagutil.NewStrings(tc.requireContexts...), tc.branch, tc.org, tc.repo)
+
 			if err != nil {
 				if len(tc.expectError) == 0 {
 					t.Errorf("unexpected error: '%v'", err)
@@ -189,7 +192,7 @@ func TestRetesting(t *testing.T) {
 		expectError         string
 	}{
 		{
-			name: "once",
+			name: "once pass",
 			options: RetestingOptions{
 				RetestingBranch: "rerere",
 				Retry:           3,
@@ -207,7 +210,7 @@ func TestRetesting(t *testing.T) {
 			expectPushTimes:     1,
 		},
 		{
-			name: "two times",
+			name: "retry twice to pass",
 			options: RetestingOptions{
 				RetestingBranch: "rerere",
 				Retry:           3,
@@ -235,7 +238,7 @@ func TestRetesting(t *testing.T) {
 			expectPushTimes:     2,
 		},
 		{
-			name: "three times",
+			name: "retry three times to pass",
 			options: RetestingOptions{
 				RetestingBranch: "rerere",
 				Retry:           3,
@@ -263,7 +266,7 @@ func TestRetesting(t *testing.T) {
 			expectPushTimes:     3,
 		},
 		{
-			name: "all timeout",
+			name: "all retries time out",
 			options: RetestingOptions{
 				RetestingBranch: "rerere",
 				Retry:           3,
@@ -302,6 +305,7 @@ func TestRetesting(t *testing.T) {
 			// Mock the check.
 			check = tc.run()
 			gc := fgc{}
+			// Setup the check period.
 			defaultCheckPeriod = time.Nanosecond * 1
 
 			err := Retesting(logrus.WithField("rerere", "testing"), nil, &gc, &tc.options, org, repo, nil)
@@ -329,6 +333,7 @@ func TestRetesting(t *testing.T) {
 		})
 	}
 
+	// Remove the log file after testing.
 	_ = os.Remove(defaultRetestingLogFileName)
 }
 
@@ -360,7 +365,7 @@ func TestRetestingOptionsValidate(t *testing.T) {
 			expectError: "--requireContexts must contain at least one context",
 		},
 		{
-			name: "valid",
+			name: "valid options",
 			options: RetestingOptions{
 				RetestingBranch: "rerere",
 				Retry:           1,
@@ -374,6 +379,7 @@ func TestRetestingOptionsValidate(t *testing.T) {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.options.Validate(true)
+
 			if err != nil {
 				if len(tc.expectError) == 0 {
 					t.Errorf("unexpected error: '%v'", err)

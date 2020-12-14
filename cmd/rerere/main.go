@@ -17,8 +17,11 @@ import (
 )
 
 const (
-	repoOwnerEnv  = "REPO_OWNER"
-	repoNameEnv   = "REPO_NAME"
+	// repoOwnerEnv specifies the repo's owner from the environment variable.
+	repoOwnerEnv = "REPO_OWNER"
+	// repoOwnerEnv specifies the repo's name from the environment variable.
+	repoNameEnv = "REPO_NAME"
+	// repoOwnerEnv specifies the pull's number from the environment variable.
 	pullNumberEnv = "PULL_NUMBER"
 )
 
@@ -31,7 +34,8 @@ type options struct {
 	retesting rerere.RetestingOptions
 }
 
-func (o *options) Validate() error {
+// validate validates options.
+func (o *options) validate() error {
 	for idx, group := range []flagutil.OptionGroup{&o.github, &o.git, &o.retesting} {
 		if err := group.Validate(o.dryRun); err != nil {
 			return fmt.Errorf("%d: %w", idx, err)
@@ -55,13 +59,13 @@ func gatherOptions() options {
 
 func main() {
 	o := gatherOptions()
-	if err := o.Validate(); err != nil {
+	if err := o.validate(); err != nil {
 		logrus.Fatalf("Invalid options: %v", err)
 	}
 
 	logrus.SetFormatter(&logrus.JSONFormatter{})
 	logrus.SetLevel(logrus.DebugLevel)
-	log := logrus.StandardLogger().WithField("plugin", "rerere")
+	log := logrus.StandardLogger().WithField("server", "rerere")
 
 	// Get job spec.
 	rawJobSpec := os.Getenv(downwardapi.JobSpecEnv)
@@ -128,6 +132,7 @@ func main() {
 		logrus.WithError(err).Fatal("Error init git client form current dir.")
 	}
 
+	// Retesting it.
 	err = rerere.Retesting(log, githubClient, client, &o.retesting, owner, repo, spec)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error retesting.")

@@ -16,20 +16,29 @@ import (
 )
 
 const (
-	defaultRetestingBranch      = "rerere"
-	defaultRetestingTimes       = 3
-	defaultTimeOut              = time.Minute * 15
+	// defaultRetestingBranch specifies the default branch used for retesting.
+	defaultRetestingBranch = "rerere"
+	// defaultRetestingTimes specifies the default number of retries.
+	defaultRetestingTimes = 3
+	// defaultTimeOut specifies the default timeout of test.
+	defaultTimeOut = time.Minute * 15
+	// defaultRetestingLogFileName specifies the default retry log file name.
 	defaultRetestingLogFileName = ".rerere.json"
 )
 
+// defaultCheckPeriod specifies the default period for test ticker.
+var defaultCheckPeriod = time.Minute * 5
+
+// checkRunStatusCompleted means the check run passed.
 const checkRunStatusCompleted = "completed"
 
+// Mock check for test.
 type mockCheck = func(log *logrus.Entry, ghc githubClient,
 	contexts prowflagutil.Strings, retestingBranch string, org string, repo string) error
 
 var check = checkContexts
-var defaultCheckPeriod = time.Minute * 5
 
+// RetestingLog specifies the details of this test.
 type RetestingLog struct {
 	Job               *downwardapi.JobSpec `json:"job,omitempty"`
 	Options           *RetestingOptions    `json:"options,omitempty"`
@@ -53,6 +62,7 @@ func (o *RetestingOptions) AddFlags(fs *flag.FlagSet) {
 	fs.DurationVar(&o.Timeout, "timeout", defaultTimeOut, "Test timeout time.")
 }
 
+// Validate validates retry times and contexts.
 func (o *RetestingOptions) Validate(bool) error {
 	if o.Retry <= 0 {
 		return errors.New("--retry must more than zero")
@@ -76,9 +86,10 @@ type gitRepoClient interface {
 	PushToCentral(branch string, force bool) error
 }
 
+// Retesting drives the current code to the test branch and keeps checking the test results.
 func Retesting(log *logrus.Entry, ghc githubClient, client gitRepoClient,
 	options *RetestingOptions, org string, repo string, spec *downwardapi.JobSpec) error {
-	log.Infof("String resting on %s/%s/branches/%s", org, repo, options.RetestingBranch)
+	log.Infof("String resting on %s/%s/branches/%s.", org, repo, options.RetestingBranch)
 	for i := 0; i < options.Retry; i++ {
 		// First time retesting we need to checkout the retesting branch.
 		if i == 0 {
@@ -88,7 +99,7 @@ func Retesting(log *logrus.Entry, ghc githubClient, client gitRepoClient,
 			}
 		}
 
-		// Log with commit.
+		// Commit the retry log file.
 		retestingLog := RetestingLog{
 			Job:               spec,
 			Options:           options,
@@ -103,12 +114,16 @@ func Retesting(log *logrus.Entry, ghc githubClient, client gitRepoClient,
 		if err != nil {
 			return err
 		}
-		err = client.Commit(fmt.Sprintf("Retesing %v", options.Contexts.Strings()), string(rawLog))
+
+		contexts := options.Contexts.Strings()
+		log.Infof("Retesting %v.", contexts)
+		err = client.Commit(fmt.Sprintf("Retesting %v", contexts), string(rawLog))
 		if err != nil {
 			return err
 		}
 
 		// Force push to retesting branch.
+		log.Infof("Push to %v.", options.RetestingBranch)
 		err = client.PushToCentral(options.RetestingBranch, true)
 		if err != nil {
 			return err
@@ -118,25 +133,27 @@ func Retesting(log *logrus.Entry, ghc githubClient, client gitRepoClient,
 		startTime := time.Now()
 		ticker := time.NewTicker(defaultCheckPeriod)
 		for t := range ticker.C {
-			log.Infof("Check requireContexts at %v", t)
+			log.Infof("Check requireContexts at %v.", t)
 			err = check(log, ghc, options.Contexts, options.RetestingBranch, org, repo)
 			if err == nil {
+				log.Infof("All contexts passed.")
 				ticker.Stop()
 				return nil
 			}
-			log.WithError(err).Warn("Retesting failed")
+			log.WithError(err).Warn("Retesting failed.")
 			if t.Sub(startTime) > options.Timeout {
-				log.WithError(err).Warnf("Retesting timeout at %v", t)
+				log.WithError(err).Warnf("Retesting timeout at %v.", t)
 				ticker.Stop()
 				break
 			}
 		}
 	}
-	log.Warnf("Retry %d times failed", options.Retry)
+	log.Warnf("Retry %d times failed.", options.Retry)
 
 	return errors.New("retesting failed")
 }
 
+// checkContexts checks if all the tests have passed.
 func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.Strings,
 	retestingBranch string, org string, repo string) error {
 	lastCommit, err := ghc.GetSingleCommit(org, repo, retestingBranch)
@@ -153,7 +170,7 @@ func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.St
 	}
 	for _, status := range statuses {
 		if status.State == github.StatusSuccess {
-			log.Infof("%s context passed", status.Context)
+			log.Infof("%s context passed.", status.Context)
 			passedContexts.Insert(status.Context)
 		}
 	}
@@ -164,7 +181,7 @@ func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.St
 	}
 	for _, runs := range checkRun.CheckRuns {
 		if runs.Status == checkRunStatusCompleted {
-			log.Infof("%s runs passed", runs.Name)
+			log.Infof("%s runs passed.", runs.Name)
 			passedContexts.Insert(runs.Name)
 		}
 	}
