@@ -37,7 +37,7 @@ spec:
               mountPath: /etc/github
               readOnly: true
             - name: external-plugins-config
-              mountPath: /etc/external-plugins-config
+              mountPath: /etc/external_plugins_config
               readOnly: true
           livenessProbe:
             httpGet:
