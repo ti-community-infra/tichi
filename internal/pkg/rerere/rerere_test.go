@@ -3,6 +3,7 @@ package rerere
 import (
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -327,6 +328,8 @@ func TestRetesting(t *testing.T) {
 			}
 		})
 	}
+
+	_ = os.Remove(defaultRetestingLogFileName)
 }
 
 func TestRetestingOptionsValidate(t *testing.T) {
