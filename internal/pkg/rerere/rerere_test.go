@@ -40,17 +40,17 @@ type fgc struct {
 	pushTimes     int
 }
 
-func (f *fgc) CheckoutNewBranch(branch string) error {
+func (f *fgc) CheckoutNewBranch(_ string) error {
 	f.checkoutTimes++
 	return nil
 }
 
-func (f *fgc) Commit(title, body string) error {
+func (f *fgc) Commit(_, _ string) error {
 	f.commitNum++
 	return nil
 }
 
-func (f *fgc) PushToCentral(branch string, force bool) error {
+func (f *fgc) PushToCentral(_ string, _ bool) error {
 	f.pushTimes++
 	return nil
 }
@@ -65,7 +65,7 @@ func TestCheckContexts(t *testing.T) {
 		statuses        []github.Status
 		checkRun        github.CheckRunList
 
-		exceptError string
+		expectError string
 	}{
 		{
 			name:            "non passed contexts",
@@ -80,7 +80,7 @@ func TestCheckContexts(t *testing.T) {
 				Total:     0,
 				CheckRuns: []github.CheckRun{},
 			},
-			exceptError: "some of the required contexts are still not passed: [test1 test2]",
+			expectError: "some of the required contexts are still not passed: [test1 test2]",
 		},
 		{
 			name:            "one passed status",
@@ -95,7 +95,7 @@ func TestCheckContexts(t *testing.T) {
 				Total:     0,
 				CheckRuns: []github.CheckRun{},
 			},
-			exceptError: "some of the required contexts are still not passed: [test2]",
+			expectError: "some of the required contexts are still not passed: [test2]",
 		},
 		{
 			name:            "one passed check run",
@@ -107,7 +107,7 @@ func TestCheckContexts(t *testing.T) {
 				Total:     0,
 				CheckRuns: []github.CheckRun{{Name: "test1", Status: checkRunStatusCompleted}},
 			},
-			exceptError: "some of the required contexts are still not passed: [test2]",
+			expectError: "some of the required contexts are still not passed: [test2]",
 		},
 		{
 			name:            "statuses all passed",
@@ -163,10 +163,14 @@ func TestCheckContexts(t *testing.T) {
 			err := checkContexts(logrus.WithField("rerere", "testing"),
 				&ghc, prowflagutil.NewStrings(tc.requireContexts...), tc.branch, tc.org, tc.repo)
 			if err != nil {
-				if len(tc.exceptError) == 0 {
+				if len(tc.expectError) == 0 {
 					t.Errorf("unexpected error: '%v'", err)
-				} else if err.Error() != tc.exceptError {
-					t.Errorf("expected error '%v', but it is '%v'", tc.exceptError, err)
+				} else if err.Error() != tc.expectError {
+					t.Errorf("expected error '%v', but it is '%v'", tc.expectError, err)
+				}
+			} else {
+				if len(tc.expectError) != 0 {
+					t.Errorf("expected error: '%v', but it is nil", tc.expectError)
 				}
 			}
 		})
@@ -178,10 +182,10 @@ func TestRetesting(t *testing.T) {
 		name                string
 		options             RetestingOptions
 		run                 func() mockCheck
-		exceptCheckoutTimes int
-		exceptCommitNum     int
-		exceptPushTimes     int
-		exceptError         string
+		expectCheckoutTimes int
+		expectCommitNum     int
+		expectPushTimes     int
+		expectError         string
 	}{
 		{
 			name: "once",
@@ -197,9 +201,9 @@ func TestRetesting(t *testing.T) {
 					return nil
 				}
 			},
-			exceptCheckoutTimes: 1,
-			exceptCommitNum:     1,
-			exceptPushTimes:     1,
+			expectCheckoutTimes: 1,
+			expectCommitNum:     1,
+			expectPushTimes:     1,
 		},
 		{
 			name: "two times",
@@ -225,9 +229,9 @@ func TestRetesting(t *testing.T) {
 					return next()
 				}
 			},
-			exceptCheckoutTimes: 1,
-			exceptCommitNum:     2,
-			exceptPushTimes:     2,
+			expectCheckoutTimes: 1,
+			expectCommitNum:     2,
+			expectPushTimes:     2,
 		},
 		{
 			name: "three times",
@@ -253,9 +257,9 @@ func TestRetesting(t *testing.T) {
 					return next()
 				}
 			},
-			exceptCheckoutTimes: 1,
-			exceptCommitNum:     3,
-			exceptPushTimes:     3,
+			expectCheckoutTimes: 1,
+			expectCommitNum:     3,
+			expectPushTimes:     3,
 		},
 		{
 			name: "all timeout",
@@ -281,10 +285,10 @@ func TestRetesting(t *testing.T) {
 					return next()
 				}
 			},
-			exceptCheckoutTimes: 1,
-			exceptCommitNum:     3,
-			exceptPushTimes:     3,
-			exceptError:         "retesting failed",
+			expectCheckoutTimes: 1,
+			expectCommitNum:     3,
+			expectPushTimes:     3,
+			expectError:         "retesting failed",
 		},
 	}
 
@@ -302,20 +306,81 @@ func TestRetesting(t *testing.T) {
 			err := Retesting(logrus.WithField("rerere", "testing"), nil, &gc, &tc.options, org, repo, nil)
 
 			if err != nil {
-				if len(tc.exceptError) == 0 {
+				if len(tc.expectError) == 0 {
 					t.Errorf("unexpected error: '%v'", err)
-				} else if err.Error() != tc.exceptError {
-					t.Errorf("expected error '%v', but it is '%v'", tc.exceptError, err)
+				} else if err.Error() != tc.expectError {
+					t.Errorf("expected error '%v', but it is '%v'", tc.expectError, err)
+				}
+			} else {
+				if len(tc.expectError) != 0 {
+					t.Errorf("expected error: '%v', but it is nil", tc.expectError)
 				}
 			}
-			if gc.checkoutTimes != tc.exceptCheckoutTimes {
-				t.Errorf("expected checkout '%d' times, but it is '%d' times", tc.exceptCheckoutTimes, gc.checkoutTimes)
+			if gc.checkoutTimes != tc.expectCheckoutTimes {
+				t.Errorf("expected checkout '%d' times, but it is '%d' times", tc.expectCheckoutTimes, gc.checkoutTimes)
 			}
-			if gc.commitNum != tc.exceptCommitNum {
-				t.Errorf("expected commit '%d' times, but it is '%d' times", tc.exceptCommitNum, gc.commitNum)
+			if gc.commitNum != tc.expectCommitNum {
+				t.Errorf("expected commit '%d' times, but it is '%d' times", tc.expectCommitNum, gc.commitNum)
 			}
-			if gc.pushTimes != tc.exceptPushTimes {
-				t.Errorf("expected push '%d' times, but it is '%d' times", tc.exceptPushTimes, gc.pushTimes)
+			if gc.pushTimes != tc.expectPushTimes {
+				t.Errorf("expected push '%d' times, but it is '%d' times", tc.expectPushTimes, gc.pushTimes)
+			}
+		})
+	}
+}
+
+func TestRetestingOptionsValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		options RetestingOptions
+
+		expectError string
+	}{
+		{
+			name: "invalid retry times",
+			options: RetestingOptions{
+				RetestingBranch: "rerere",
+				Retry:           -1,
+				Contexts:        prowflagutil.NewStrings("test"),
+				Timeout:         0,
+			},
+			expectError: "--retry must more than zero",
+		},
+		{
+			name: "invalid contexts",
+			options: RetestingOptions{
+				RetestingBranch: "rerere",
+				Retry:           1,
+				Contexts:        prowflagutil.NewStrings(),
+				Timeout:         0,
+			},
+			expectError: "--requireContexts must contain at least one context",
+		},
+		{
+			name: "valid",
+			options: RetestingOptions{
+				RetestingBranch: "rerere",
+				Retry:           1,
+				Contexts:        prowflagutil.NewStrings("test"),
+				Timeout:         0,
+			},
+		},
+	}
+
+	for _, test := range tests {
+		tc := test
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.options.Validate(true)
+			if err != nil {
+				if len(tc.expectError) == 0 {
+					t.Errorf("unexpected error: '%v'", err)
+				} else if err.Error() != tc.expectError {
+					t.Errorf("expected error '%v', but it is '%v'", tc.expectError, err)
+				}
+			} else {
+				if len(tc.expectError) != 0 {
+					t.Errorf("expected error: '%v', but it is nil", tc.expectError)
+				}
 			}
 		})
 	}

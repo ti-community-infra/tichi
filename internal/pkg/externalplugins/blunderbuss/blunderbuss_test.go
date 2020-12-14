@@ -65,7 +65,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		maxReviewersCount int
 		excludeReviewers  []string
 
-		exceptReviewerCount int
+		expectReviewerCount int
 	}{
 		{
 			name:                "no-auto-cc comment",
@@ -74,7 +74,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			isPR:                true,
 			body:                "uh oh",
 			maxReviewersCount:   1,
-			exceptReviewerCount: 0,
+			expectReviewerCount: 0,
 		},
 		{
 			name:                "comment with a valid command in an open PR triggers auto-assignment",
@@ -83,7 +83,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			isPR:                true,
 			body:                "/auto-cc",
 			maxReviewersCount:   1,
-			exceptReviewerCount: 1,
+			expectReviewerCount: 1,
 		},
 		{
 			name:                "comment with an invalid command in an open PR will not trigger auto-assignment",
@@ -92,7 +92,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			isPR:                true,
 			body:                "/automatic-review",
 			maxReviewersCount:   1,
-			exceptReviewerCount: 0,
+			expectReviewerCount: 0,
 		},
 		{
 			name:                "comment with a valid command in a closed PR will not trigger auto-assignment",
@@ -101,7 +101,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			isPR:                true,
 			body:                "/auto-cc",
 			maxReviewersCount:   2,
-			exceptReviewerCount: 0,
+			expectReviewerCount: 0,
 		},
 		{
 			name:                "comment deleted from an open PR will not trigger auto-assignment",
@@ -110,7 +110,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			isPR:                true,
 			body:                "/auto-cc",
 			maxReviewersCount:   2,
-			exceptReviewerCount: 0,
+			expectReviewerCount: 0,
 		},
 		{
 			name:                "comment with valid command in an open issue will not trigger auto-assignment",
@@ -119,7 +119,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			isPR:                false,
 			body:                "/auto-cc",
 			maxReviewersCount:   2,
-			exceptReviewerCount: 0,
+			expectReviewerCount: 0,
 		},
 		{
 			name:       "comment with a valid command in an open PR triggers auto-assignment and exclude some reviewers",
@@ -131,7 +131,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 				"collab2",
 			},
 			maxReviewersCount:   2,
-			exceptReviewerCount: 1,
+			expectReviewerCount: 1,
 		},
 	}
 
@@ -177,8 +177,8 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			continue
 		}
 
-		if len(fc.requested) != tc.exceptReviewerCount {
-			t.Fatalf("reviewers count mismatch: got %v, want %v", len(fc.requested), tc.exceptReviewerCount)
+		if len(fc.requested) != tc.expectReviewerCount {
+			t.Fatalf("reviewers count mismatch: got %v, want %v", len(fc.requested), tc.expectReviewerCount)
 		}
 	}
 }
@@ -191,28 +191,28 @@ func TestHandlePullRequest(t *testing.T) {
 		maxReviewersCount int
 		excludeReviewers  []string
 
-		exceptReviewerCount int
+		expectReviewerCount int
 	}{
 		{
 			name:                "PR opened",
 			action:              github.PullRequestActionOpened,
 			body:                "/auto-cc",
 			maxReviewersCount:   2,
-			exceptReviewerCount: 2,
+			expectReviewerCount: 2,
 		},
 		{
 			name:                "PR opened with /cc command",
 			action:              github.PullRequestActionOpened,
 			body:                "/cc",
 			maxReviewersCount:   2,
-			exceptReviewerCount: 0,
+			expectReviewerCount: 0,
 		},
 		{
 			name:                "PR closed",
 			action:              github.PullRequestActionClosed,
 			body:                "/auto-cc",
 			maxReviewersCount:   2,
-			exceptReviewerCount: 0,
+			expectReviewerCount: 0,
 		},
 		{
 			name:              "PR opened with exclude reviewers",
@@ -223,7 +223,7 @@ func TestHandlePullRequest(t *testing.T) {
 				"collab2",
 			},
 
-			exceptReviewerCount: 1,
+			expectReviewerCount: 1,
 		},
 	}
 
@@ -275,8 +275,8 @@ func TestHandlePullRequest(t *testing.T) {
 			continue
 		}
 
-		if len(fc.requested) != tc.exceptReviewerCount {
-			t.Fatalf("reviewers count mismatch: got %v, want %v", len(fc.requested), tc.exceptReviewerCount)
+		if len(fc.requested) != tc.expectReviewerCount {
+			t.Fatalf("reviewers count mismatch: got %v, want %v", len(fc.requested), tc.expectReviewerCount)
 		}
 	}
 }
@@ -288,7 +288,7 @@ func TestGetReviewers(t *testing.T) {
 		reviewers        []string
 		excludeReviewers []string
 
-		exceptReviewers []string
+		expectReviewers []string
 	}{
 		{
 			name:   "non exclude reviewers",
@@ -296,7 +296,7 @@ func TestGetReviewers(t *testing.T) {
 			reviewers: []string{
 				"author", "reviewers1", "reviewers2", "reviewers3",
 			},
-			exceptReviewers: []string{
+			expectReviewers: []string{
 				"reviewers1", "reviewers2", "reviewers3",
 			},
 		},
@@ -309,7 +309,7 @@ func TestGetReviewers(t *testing.T) {
 			excludeReviewers: []string{
 				"reviewers2",
 			},
-			exceptReviewers: []string{
+			expectReviewers: []string{
 				"reviewers1", "reviewers3",
 			},
 		},
@@ -318,8 +318,8 @@ func TestGetReviewers(t *testing.T) {
 	for _, tc := range testcases {
 		reviewers := getReviewers(tc.author, tc.reviewers, tc.excludeReviewers, logrus.WithField("plugin", PluginName))
 		sort.Strings(reviewers)
-		sort.Strings(tc.exceptReviewers)
-		if !reflect.DeepEqual(reviewers, tc.exceptReviewers) {
+		sort.Strings(tc.expectReviewers)
+		if !reflect.DeepEqual(reviewers, tc.expectReviewers) {
 			t.Errorf("[%s] expected the requested reviewers to be %q, but got %q.", tc.name, tc.excludeReviewers, reviewers)
 		}
 	}

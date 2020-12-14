@@ -723,7 +723,7 @@ func TestShouldPrune(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			shouldPrune := f(tc.comment)
 			if shouldPrune != tc.shouldPrune {
-				t.Errorf("Mismatch should prune except %v, but got %v.", tc.shouldPrune, shouldPrune)
+				t.Errorf("Mismatch should prune expect %v, but got %v.", tc.shouldPrune, shouldPrune)
 			}
 		})
 	}
