@@ -38,7 +38,7 @@ func (c *fakeGitHubClient) RequestReview(org, repo string, number int, logins []
 	return nil
 }
 
-func (c *fakeGitHubClient) GetPullRequest(org, repo string, num int) (*github.PullRequest, error) {
+func (c *fakeGitHubClient) GetPullRequest(_, _ string, _ int) (*github.PullRequest, error) {
 	return c.pr, nil
 }
 
