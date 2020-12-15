@@ -44,9 +44,3 @@ ti-community-blunderbuss:
       # Inactive reviewers
       - sykp241095
       - AndreMouche
-
-ti-community-tars:
-  - repos:
-      - tidb-community-bots/test-dev
-    only_when_label: "status/can-merge"
-    message: "Your PR has out-of-dated, I have automatically updated it for you."
