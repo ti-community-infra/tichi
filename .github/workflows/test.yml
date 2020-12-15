@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - rerere
   pull_request:
     branches:
       - master

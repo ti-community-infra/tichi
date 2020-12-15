@@ -58,6 +58,7 @@ type RetestingOptions struct {
 func (o *RetestingOptions) AddFlags(fs *flag.FlagSet) {
 	fs.StringVar(&o.RetestingBranch, "retesting-branch", defaultRetestingBranch, "Retesting target branch.")
 	fs.IntVar(&o.Retry, "retry", defaultRetestingTimes, "Retry testing times.")
+	// TODO: it should be require-contexts.
 	fs.Var(&o.Contexts, "requireContexts", "Required requireContexts that must be green to merge.")
 	fs.DurationVar(&o.Timeout, "timeout", defaultTimeOut, "Test timeout time.")
 }
