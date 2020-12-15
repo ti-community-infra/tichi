@@ -48,18 +48,17 @@ type RetestingLog struct {
 
 // RetestingOptions holds options for retesting.
 type RetestingOptions struct {
-	RetestingBranch string
-	Retry           int
-	Contexts        prowflagutil.Strings
-	Timeout         time.Duration
+	RetestingBranch string               `json:"retesting-branch,omitempty"`
+	Retry           int                  `json:"retry,omitempty"`
+	Contexts        prowflagutil.Strings `json:"require_contexts,omitempty"`
+	Timeout         time.Duration        `json:"timeout,omitempty"`
 }
 
 // AddFlags injects retesting options into the given FlagSet.
 func (o *RetestingOptions) AddFlags(fs *flag.FlagSet) {
 	fs.StringVar(&o.RetestingBranch, "retesting-branch", defaultRetestingBranch, "Retesting target branch.")
 	fs.IntVar(&o.Retry, "retry", defaultRetestingTimes, "Retry testing times.")
-	// TODO: it should be require-contexts.
-	fs.Var(&o.Contexts, "requireContexts", "Required requireContexts that must be green to merge.")
+	fs.Var(&o.Contexts, "require-contexts", "Required requireContexts that must be green to merge.")
 	fs.DurationVar(&o.Timeout, "timeout", defaultTimeOut, "Test timeout time.")
 }
 
