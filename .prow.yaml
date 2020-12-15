@@ -31,8 +31,8 @@ presubmits:
             - --github-token-path=/etc/github/token
             - --dry-run=false
             - --github-endpoint=https://api.github.com
-            - --requireContexts=build
-            - --requireContexts=lint
+            - --require-contexts=build
+            - --require-contexts=lint
             - --labels=status/can-merge
           volumeMounts:
             - name: github-token
