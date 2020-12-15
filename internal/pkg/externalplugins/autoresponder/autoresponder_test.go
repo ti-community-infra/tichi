@@ -18,7 +18,7 @@ func TestAutoRespondIssueAndReviewComment(t *testing.T) {
 		body                string
 		responds            []externalplugins.AutoRespond
 		shouldComment       bool
-		exceptCommentNumber int
+		expectCommentNumber int
 	}{
 		{
 			name: "non-matching comment",
@@ -41,7 +41,7 @@ func TestAutoRespondIssueAndReviewComment(t *testing.T) {
 				},
 			},
 			shouldComment:       true,
-			exceptCommentNumber: 1,
+			expectCommentNumber: 1,
 		},
 		{
 			name: "matching comment with trailing space",
@@ -53,7 +53,7 @@ func TestAutoRespondIssueAndReviewComment(t *testing.T) {
 				},
 			},
 			shouldComment:       true,
-			exceptCommentNumber: 1,
+			expectCommentNumber: 1,
 		},
 		{
 			name: "matching comment with multiple auto responds",
@@ -75,7 +75,7 @@ func TestAutoRespondIssueAndReviewComment(t *testing.T) {
 				},
 			},
 			shouldComment:       true,
-			exceptCommentNumber: 2,
+			expectCommentNumber: 2,
 		},
 	}
 
@@ -119,8 +119,8 @@ func TestAutoRespondIssueAndReviewComment(t *testing.T) {
 					t.Errorf("didn't expect error from lgtmComment: %v", err)
 				}
 
-				if testcase.shouldComment && len(fc.IssueComments[5]) != testcase.exceptCommentNumber {
-					t.Errorf("comments number mismatch: got %v, want %v", len(fc.IssueComments[5]), testcase.exceptCommentNumber)
+				if testcase.shouldComment && len(fc.IssueComments[5]) != testcase.expectCommentNumber {
+					t.Errorf("comments number mismatch: got %v, want %v", len(fc.IssueComments[5]), testcase.expectCommentNumber)
 				}
 			}
 
@@ -166,8 +166,8 @@ func TestAutoRespondIssueAndReviewComment(t *testing.T) {
 					t.Errorf("didn't expect error from lgtmComment: %v", err)
 				}
 
-				if testcase.shouldComment && len(fc.IssueComments[5]) != testcase.exceptCommentNumber {
-					t.Errorf("comments number mismatch: got %v, want %v", len(fc.IssueComments[5]), testcase.exceptCommentNumber)
+				if testcase.shouldComment && len(fc.IssueComments[5]) != testcase.expectCommentNumber {
+					t.Errorf("comments number mismatch: got %v, want %v", len(fc.IssueComments[5]), testcase.expectCommentNumber)
 				}
 			}
 		})

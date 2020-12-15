@@ -17,10 +17,10 @@ func TestLoadOwners(t *testing.T) {
 		name             string
 		ownersURL        string
 		data             OwnersResponse
-		exceptCommitters []string
-		exceptReviewers  []string
-		exceptNeedsLgtm  int
-		exceptError      bool
+		expectCommitters []string
+		expectReviewers  []string
+		expectNeedsLgtm  int
+		expectError      bool
 	}{
 		{
 			name: "valid pull owners URL(use mock URL)",
@@ -36,13 +36,13 @@ func TestLoadOwners(t *testing.T) {
 				},
 				Message: "Test",
 			},
-			exceptCommitters: []string{
+			expectCommitters: []string{
 				"Rustin-Liu",
 			},
-			exceptReviewers: []string{
+			expectReviewers: []string{
 				"Rustin-Liu",
 			},
-			exceptNeedsLgtm: 2,
+			expectNeedsLgtm: 2,
 		},
 		{
 			name:      "invalid pull owners URL",
@@ -59,14 +59,14 @@ func TestLoadOwners(t *testing.T) {
 				},
 				Message: "Test",
 			},
-			exceptCommitters: []string{
+			expectCommitters: []string{
 				"Rustin-Liu",
 			},
-			exceptReviewers: []string{
+			expectReviewers: []string{
 				"Rustin-Liu",
 			},
-			exceptNeedsLgtm: 2,
-			exceptError:     true,
+			expectNeedsLgtm: 2,
+			expectError:     true,
 		},
 	}
 	org := "tidb-community-bots"
@@ -88,7 +88,7 @@ func TestLoadOwners(t *testing.T) {
 			pattern := fmt.Sprintf(testOwnersURLFmt, org, repoName, number)
 			mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
 				if req.Method != "GET" {
-					t.Errorf("Except 'Get' got '%s'", req.Method)
+					t.Errorf("expect 'Get' got '%s'", req.Method)
 				}
 				reqBodyBytes := new(bytes.Buffer)
 				err := json.NewEncoder(reqBodyBytes).Encode(testCase.data)
@@ -106,7 +106,7 @@ func TestLoadOwners(t *testing.T) {
 
 			owners, err := client.LoadOwners(testCase.ownersURL, org, repoName, number)
 			if err != nil {
-				if !testCase.exceptError {
+				if !testCase.expectError {
 					t.Errorf("unexpected error: '%v'", err)
 				} else {
 					// It should have a error, so skip follow assert.
@@ -114,16 +114,16 @@ func TestLoadOwners(t *testing.T) {
 				}
 			}
 
-			if len(owners.Committers) != len(testCase.exceptCommitters) {
-				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", owners.Committers, testCase.exceptCommitters)
+			if len(owners.Committers) != len(testCase.expectCommitters) {
+				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", owners.Committers, testCase.expectCommitters)
 			}
 
-			if len(owners.Reviewers) != len(testCase.exceptReviewers) {
-				t.Errorf("Different reviewers: Got \"%v\" expected \"%v\"", owners.Reviewers, testCase.exceptReviewers)
+			if len(owners.Reviewers) != len(testCase.expectReviewers) {
+				t.Errorf("Different reviewers: Got \"%v\" expected \"%v\"", owners.Reviewers, testCase.expectReviewers)
 			}
 
-			if owners.NeedsLgtm != testCase.exceptNeedsLgtm {
-				t.Errorf("Different LGTM: Got \"%v\" expected \"%v\"", owners.NeedsLgtm, testCase.exceptNeedsLgtm)
+			if owners.NeedsLgtm != testCase.expectNeedsLgtm {
+				t.Errorf("Different LGTM: Got \"%v\" expected \"%v\"", owners.NeedsLgtm, testCase.expectNeedsLgtm)
 			}
 
 			testServer.Close()
@@ -136,16 +136,16 @@ func TestLoadOwnersFailed(t *testing.T) {
 		name        string
 		ownersURL   string
 		invalidData bool
-		exceptError string
+		expectError string
 	}{
 		{
 			name:        "get data form url failed(use mock URL)",
-			exceptError: "could not get a owners",
+			expectError: "could not get a owners",
 		},
 		{
 			name:        "parse data failed(use mock URL)",
 			invalidData: true,
-			exceptError: "unexpected end of JSON input",
+			expectError: "unexpected end of JSON input",
 		},
 	}
 	org := "tidb-community-bots"
@@ -167,7 +167,7 @@ func TestLoadOwnersFailed(t *testing.T) {
 			pattern := fmt.Sprintf(testOwnersURLFmt, org, repoName, number)
 			mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
 				if req.Method != "GET" {
-					t.Errorf("Except 'Get' got '%s'", req.Method)
+					t.Errorf("expect 'Get' got '%s'", req.Method)
 				}
 				// If set invalid data true, we need response a invalid data.
 				if testCase.invalidData {
@@ -185,9 +185,9 @@ func TestLoadOwnersFailed(t *testing.T) {
 
 			_, err := client.LoadOwners(testCase.ownersURL, org, repoName, number)
 			if err == nil {
-				t.Errorf("expected error '%v', but it is nil", testCase.exceptError)
-			} else if err.Error() != testCase.exceptError {
-				t.Errorf("expected error '%v', but it is '%v'", testCase.exceptError, err)
+				t.Errorf("expected error '%v', but it is nil", testCase.expectError)
+			} else if err.Error() != testCase.expectError {
+				t.Errorf("expected error '%v', but it is '%v'", testCase.expectError, err)
 			}
 
 			testServer.Close()

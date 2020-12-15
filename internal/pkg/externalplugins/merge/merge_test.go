@@ -744,13 +744,13 @@ func TestHandlePullRequest(t *testing.T) {
 						},
 					},
 				},
-				Commits:          make(map[string]github.SingleCommit),
+				Commits:          make(map[string]github.RepositoryCommit),
 				Collaborators:    []string{"collab"},
 				IssueLabelsAdded: c.IssueLabelsAdded,
 				CommitMap:        c.prCommits,
 			}
 			fakeGitHub.IssueLabelsAdded = append(fakeGitHub.IssueLabelsAdded, prName+":"+externalplugins.CanMergeLabel)
-			commit := github.SingleCommit{}
+			commit := github.RepositoryCommit{}
 			commit.Commit.Tree.SHA = treeSHA
 			fakeGitHub.Commits[SHA] = commit
 
@@ -836,7 +836,7 @@ func TestAddTreeHashComment(t *testing.T) {
 		body:   "/merge",
 	}
 	fc := &fakegithub.FakeClient{
-		Commits:       make(map[string]github.SingleCommit),
+		Commits:       make(map[string]github.RepositoryCommit),
 		IssueComments: map[int][]github.IssueComment{},
 		PullRequests: map[int]*github.PullRequest{
 			101: {
@@ -859,7 +859,7 @@ func TestAddTreeHashComment(t *testing.T) {
 	}
 	fc.IssueLabelsAdded = []string{prName + ":" + lgtmTwo}
 
-	commit := github.SingleCommit{}
+	commit := github.RepositoryCommit{}
 	commit.Commit.Tree.SHA = treeSHA
 	fc.Commits[SHA] = commit
 
@@ -1085,7 +1085,7 @@ func TestAllGuaranteed(t *testing.T) {
 		name             string
 		lastCanMergeSha  string
 		commits          []github.RepositoryCommit
-		exceptGuaranteed bool
+		expectGuaranteed bool
 	}{
 		{
 			name:            "Only one commit",
@@ -1095,7 +1095,7 @@ func TestAllGuaranteed(t *testing.T) {
 					SHA: treeSHA,
 				},
 			},
-			exceptGuaranteed: true,
+			expectGuaranteed: true,
 		},
 		{
 			name:            "All authored commits",
@@ -1108,7 +1108,7 @@ func TestAllGuaranteed(t *testing.T) {
 					SHA: treeSHA,
 				},
 			},
-			exceptGuaranteed: true,
+			expectGuaranteed: true,
 		},
 		{
 			name:            "Guaranteed by github",
@@ -1127,7 +1127,7 @@ func TestAllGuaranteed(t *testing.T) {
 					},
 				},
 			},
-			exceptGuaranteed: true,
+			expectGuaranteed: true,
 		},
 		{
 			name:            "New commit not guaranteed",
@@ -1143,7 +1143,7 @@ func TestAllGuaranteed(t *testing.T) {
 					SHA: "some-sha",
 				},
 			},
-			exceptGuaranteed: false,
+			expectGuaranteed: false,
 		},
 		{
 			name:            "New commit and github update",
@@ -1165,7 +1165,7 @@ func TestAllGuaranteed(t *testing.T) {
 					SHA: "some-sha",
 				},
 			},
-			exceptGuaranteed: false,
+			expectGuaranteed: false,
 		},
 	}
 
@@ -1173,8 +1173,8 @@ func TestAllGuaranteed(t *testing.T) {
 		t.Run(testcase.name, func(t *testing.T) {
 			isGuaranteed := isAllGuaranteed(testcase.commits, testcase.lastCanMergeSha, logrus.WithField("plugin", PluginName))
 
-			if isGuaranteed != testcase.exceptGuaranteed {
-				t.Fatalf("=guarantee mismatch: got %v, want %v", isGuaranteed, testcase.exceptGuaranteed)
+			if isGuaranteed != testcase.expectGuaranteed {
+				t.Fatalf("=guarantee mismatch: got %v, want %v", isGuaranteed, testcase.expectGuaranteed)
 			}
 		})
 	}

@@ -520,22 +520,22 @@ func TestGetCurrentAndNextLabel(t *testing.T) {
 		name               string
 		labels             []github.Label
 		needsLgtm          int
-		exceptCurrentLabel string
-		exceptNextLabel    string
+		expectCurrentLabel string
+		expectNextLabel    string
 	}{
 		{
 			name:               "Current no LGTM, needs 1 LGTM",
 			labels:             []github.Label{},
 			needsLgtm:          1,
-			exceptCurrentLabel: "",
-			exceptNextLabel:    lgtmOne,
+			expectCurrentLabel: "",
+			expectNextLabel:    lgtmOne,
 		},
 		{
 			name:               "Current no LGTM, needs 2 LGTM",
 			labels:             []github.Label{},
 			needsLgtm:          2,
-			exceptCurrentLabel: "",
-			exceptNextLabel:    lgtmOne,
+			expectCurrentLabel: "",
+			expectNextLabel:    lgtmOne,
 		},
 		{
 			name: "Current LGT1, needs 1 LGTM",
@@ -545,8 +545,8 @@ func TestGetCurrentAndNextLabel(t *testing.T) {
 				},
 			},
 			needsLgtm:          1,
-			exceptCurrentLabel: lgtmOne,
-			exceptNextLabel:    "",
+			expectCurrentLabel: lgtmOne,
+			expectNextLabel:    "",
 		},
 		{
 			name: "Current LGT1, needs 2 LGTM",
@@ -556,8 +556,8 @@ func TestGetCurrentAndNextLabel(t *testing.T) {
 				},
 			},
 			needsLgtm:          2,
-			exceptCurrentLabel: lgtmOne,
-			exceptNextLabel:    lgtmTwo,
+			expectCurrentLabel: lgtmOne,
+			expectNextLabel:    lgtmTwo,
 		},
 		{
 			name: "Current LGT2, needs 2 LGTM",
@@ -567,8 +567,8 @@ func TestGetCurrentAndNextLabel(t *testing.T) {
 				},
 			},
 			needsLgtm:          2,
-			exceptCurrentLabel: lgtmTwo,
-			exceptNextLabel:    "",
+			expectCurrentLabel: lgtmTwo,
+			expectNextLabel:    "",
 		},
 	}
 
@@ -577,12 +577,12 @@ func TestGetCurrentAndNextLabel(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LgtmLabelPrefix, tc.labels, tc.needsLgtm)
 
-			if currentLabel != tc.exceptCurrentLabel {
-				t.Fatalf("currentLabel mismatch: got %v, want %v", currentLabel, tc.exceptCurrentLabel)
+			if currentLabel != tc.expectCurrentLabel {
+				t.Fatalf("currentLabel mismatch: got %v, want %v", currentLabel, tc.expectCurrentLabel)
 			}
 
-			if nextLabel != tc.exceptNextLabel {
-				t.Fatalf("nextLabel mismatch: got %v, want %v", nextLabel, tc.exceptNextLabel)
+			if nextLabel != tc.expectNextLabel {
+				t.Fatalf("nextLabel mismatch: got %v, want %v", nextLabel, tc.expectNextLabel)
 			}
 		})
 	}
