@@ -17,7 +17,9 @@ presubmits:
             - --warnings=duplicate-job-refs
   - name: pull-ti-community-prow-rerere
     decorate: true
-    always_run: true
+    trigger: "(?mi)^/merge\\s*$"
+    rerun_command: "/merge"
+    max_concurrency: 1
     branches:
       - ^master$
     spec:
