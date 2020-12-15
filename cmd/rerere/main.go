@@ -70,50 +70,50 @@ func main() {
 	// Get job spec.
 	rawJobSpec := os.Getenv(downwardapi.JobSpecEnv)
 	if len(rawJobSpec) == 0 {
-		logrus.Fatal("Error getting job spec.")
+		log.Fatal("Error getting job spec.")
 	}
 	spec := &downwardapi.JobSpec{}
 	err := json.Unmarshal([]byte(rawJobSpec), spec)
 	if err != nil {
-		logrus.WithError(err).Fatal("Error unmarshal job spec.")
+		log.WithError(err).Fatal("Error unmarshal job spec.")
 	}
 
 	secretAgent := &secret.Agent{}
 	if err := secretAgent.Start([]string{o.github.TokenPath}); err != nil {
-		logrus.WithError(err).Fatal("Error starting secrets agent.")
+		log.WithError(err).Fatal("Error starting secrets agent.")
 	}
 
 	githubClient, err := o.github.GitHubClient(secretAgent, o.dryRun)
 	if err != nil {
-		logrus.WithError(err).Fatal("Error getting GitHub client.")
+		log.WithError(err).Fatal("Error getting GitHub client.")
 	}
 
 	gitClient, err := o.git.GitClient(githubClient, secretAgent.GetTokenGenerator(o.github.TokenPath), nil, o.dryRun)
 	if err != nil {
-		logrus.WithError(err).Fatal("Error getting Git client.")
+		log.WithError(err).Fatal("Error getting Git client.")
 	}
 
 	// Get pr info.
 	owner := os.Getenv(repoOwnerEnv)
 	if len(owner) == 0 {
-		logrus.Fatal("Error getting repo owner.")
+		log.Fatal("Error getting repo owner.")
 	}
 	repo := os.Getenv(repoNameEnv)
 	if len(repo) == 0 {
-		logrus.Fatal("Error getting repo name.")
+		log.Fatal("Error getting repo name.")
 	}
 	pullNumber := os.Getenv(pullNumberEnv)
 	if len(pullNumber) == 0 {
-		logrus.Fatal("Error getting pull number.")
+		log.Fatal("Error getting pull number.")
 	}
 	number, err := strconv.Atoi(pullNumber)
 	if err != nil {
-		logrus.WithError(err).Fatal("Error convert pull number.")
+		log.WithError(err).Fatal("Error convert pull number.")
 	}
 
 	pr, err := githubClient.GetPullRequest(owner, repo, number)
 	if err != nil {
-		logrus.WithError(err).Fatal("Error get pull request.")
+		log.WithError(err).Fatal("Error get pull request.")
 	}
 
 	var prLabels []string
@@ -123,18 +123,18 @@ func main() {
 	// All the labels match.
 	labels := sets.NewString(prLabels...)
 	if !labels.HasAll(o.labels.Strings()...) {
-		return
+		log.Fatalf("Missing label %v.", o.labels.StringSet().Difference(labels).List())
 	}
 
 	// Init client form current dir.
 	client, err := gitClient.ClientFromDir(owner, repo, "")
 	if err != nil {
-		logrus.WithError(err).Fatal("Error init git client form current dir.")
+		log.WithError(err).Fatal("Error init git client form current dir.")
 	}
 
 	// Retesting it.
 	err = rerere.Retesting(log, githubClient, client, &o.retesting, owner, repo, spec)
 	if err != nil {
-		logrus.WithError(err).Fatal("Error retesting.")
+		log.WithError(err).Fatal("Error retesting.")
 	}
 }
