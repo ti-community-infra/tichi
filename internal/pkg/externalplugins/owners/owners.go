@@ -168,12 +168,33 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		return nil, err
 	}
 
+	branchName := pull.Base.Ref
+	branchConfig := opts.Branches[branchName]
+
 	// When we cannot find the require label from the PR, try to use the default require lgtm.
 	if requireLgtm == 0 {
-		requireLgtm = opts.DefaultRequireLgtm
+		if branchConfig.DefaultRequireLgtm != 0 {
+			requireLgtm = branchConfig.DefaultRequireLgtm
+		} else {
+			requireLgtm = opts.DefaultRequireLgtm
+		}
 	}
 
-	trustTeamMembers := getTrustTeamMembers(s.Log, s.Gc, org, opts.OwnersTrustTeam)
+	// Notice: If the branch of the PR has extra trust team config, it will override the repository config.
+	var trustTeams []string
+
+	if len(branchConfig.TrustedTeams) != 0 {
+		trustTeams = branchConfig.TrustedTeams
+	} else {
+		trustTeams = opts.TrustTeams
+	}
+
+	var trustTeamMembers []string
+
+	for _, trustTeam := range trustTeams {
+		members := getTrustTeamMembers(s.Log, s.Gc, org, trustTeam)
+		trustTeamMembers = append(trustTeamMembers, members...)
+	}
 
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
 	if sigName == "" {

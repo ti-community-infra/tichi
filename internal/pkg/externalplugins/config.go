@@ -62,8 +62,17 @@ type TiCommunityOwners struct {
 	// WARNING: This disables the security mechanism that prevents a malicious member (or
 	// compromised GitHub account) from merging arbitrary code. Use with caution.
 	//
-	// OwnersTrustTeam specifies the GitHub team whose members are trusted.
-	OwnersTrustTeam string `json:"trusted_team_for_owners,omitempty"`
+	// TrustTeams specifies the GitHub team whose members are trusted.
+	TrustTeams []string `json:"trusted_teams,omitempty"`
+	// Branches specifies the branch level configuration that will override the repository
+	// level configuration.
+	Branches map[string]TiCommunityOwnerBranchConfig `json:"branches,omitempty"`
+}
+
+// TiCommunityOwnerBranches is
+type TiCommunityOwnerBranchConfig struct {
+	DefaultRequireLgtm int      `json:"default_require_lgtm,omitempty"`
+	TrustedTeams       []string `json:"trusted_teams"`
 }
 
 // TiCommunityLabel is the config for the label plugin.

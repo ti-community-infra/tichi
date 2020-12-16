@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -141,9 +143,10 @@ func TestListOwners(t *testing.T) {
 		sigRes                 *SigResponse
 		labels                 []github.Label
 		useDefaultSigName      bool
-		trustTeam              string
+		trustTeams             []string
 		defaultRequireLgtm     int
 		requireLgtmLabelPrefix string
+		pluginConfig           tiexternalplugins.TiCommunityOwners
 
 		expectCommitters []string
 		expectReviewers  []string
@@ -275,6 +278,7 @@ func TestListOwners(t *testing.T) {
 					Name: "sig/testing",
 				},
 			},
+			trustTeams: []string{"Leads"},
 			expectCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
@@ -287,8 +291,79 @@ func TestListOwners(t *testing.T) {
 				// Team members.
 				"sig-lead",
 			},
-			trustTeam:       "Leads",
 			expectNeedsLgtm: lgtmTwo,
+		},
+		{
+			name:   "set owners config for the branch of the current PR",
+			sigRes: &validSigRes,
+			labels: []github.Label{
+				{
+					Name: "sig/testing",
+				},
+			},
+			trustTeams: []string{"Leads"},
+			pluginConfig: tiexternalplugins.TiCommunityOwners{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				DefaultRequireLgtm: 2,
+				TrustTeams:         []string{"Leads"},
+				Branches: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
+					"master": {
+						DefaultRequireLgtm: 3,
+						TrustedTeams: []string{
+							"Admins",
+						},
+					},
+				},
+			},
+			expectCommitters: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2",
+				// Team members.
+				"default-sig-lead",
+			},
+			expectReviewers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2", "reviewer1", "reviewer2",
+				// Team members.
+				"default-sig-lead",
+			},
+			expectNeedsLgtm: 3,
+		},
+		{
+			name:   "set owners config for another branch of the current PR",
+			sigRes: &validSigRes,
+			labels: []github.Label{
+				{
+					Name: "sig/testing",
+				},
+			},
+			trustTeams: []string{"Leads"},
+			pluginConfig: tiexternalplugins.TiCommunityOwners{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				DefaultRequireLgtm: 2,
+				TrustTeams:         []string{"Leads"},
+				Branches: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
+					"release": {
+						DefaultRequireLgtm: 3,
+						TrustedTeams: []string{
+							"Admins",
+						},
+					},
+				},
+			},
+			expectCommitters: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2",
+				// Team members.
+				"sig-lead",
+			},
+			expectReviewers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2", "reviewer1", "reviewer2",
+				// Team members.
+				"sig-lead",
+			},
+			expectNeedsLgtm: 2,
 		},
 	}
 
@@ -299,26 +374,36 @@ func TestListOwners(t *testing.T) {
 			testServer := httptest.NewServer(mux)
 
 			config := &tiexternalplugins.Configuration{}
-			owners := tiexternalplugins.TiCommunityOwners{
-				Repos:              []string{"tidb-community-bots/test-dev"},
-				SigEndpoint:        testServer.URL,
-				DefaultRequireLgtm: testCase.defaultRequireLgtm,
-			}
+			repoConfig := tiexternalplugins.TiCommunityOwners{}
 
-			if testCase.useDefaultSigName {
-				owners.DefaultSigName = sigName
-			}
+			// Use the configuration defined in the test case preferentially.
+			if len(testCase.pluginConfig.Repos) > 0 {
+				repoConfig = testCase.pluginConfig
+				repoConfig.SigEndpoint = testServer.URL
+			} else {
+				defaultRepoConfig := tiexternalplugins.TiCommunityOwners{
+					Repos:              []string{"tidb-community-bots/test-dev"},
+					SigEndpoint:        testServer.URL,
+					DefaultRequireLgtm: testCase.defaultRequireLgtm,
+				}
 
-			if testCase.trustTeam != "" {
-				owners.OwnersTrustTeam = testCase.trustTeam
-			}
+				if testCase.useDefaultSigName {
+					defaultRepoConfig.DefaultSigName = sigName
+				}
 
-			if testCase.requireLgtmLabelPrefix != "" {
-				owners.RequireLgtmLabelPrefix = testCase.requireLgtmLabelPrefix
+				if len(testCase.trustTeams) > 0 {
+					defaultRepoConfig.TrustTeams = testCase.trustTeams
+				}
+
+				if testCase.requireLgtmLabelPrefix != "" {
+					defaultRepoConfig.RequireLgtmLabelPrefix = testCase.requireLgtmLabelPrefix
+				}
+
+				repoConfig = defaultRepoConfig
 			}
 
 			config.TiCommunityOwners = []tiexternalplugins.TiCommunityOwners{
-				owners,
+				repoConfig,
 			}
 
 			// URL pattern.
@@ -376,11 +461,19 @@ func TestListOwners(t *testing.T) {
 				t.Errorf("unexpected error: '%v'", err)
 			}
 
-			if len(res.Data.Committers) != len(testCase.expectCommitters) {
+			sort.Strings(res.Data.Committers)
+			sort.Strings(testCase.expectCommitters)
+
+			if len(res.Data.Committers) != len(testCase.expectCommitters) ||
+				!reflect.DeepEqual(res.Data.Committers, testCase.expectCommitters) {
 				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", res.Data.Committers, testCase.expectCommitters)
 			}
 
-			if len(res.Data.Reviewers) != len(testCase.expectReviewers) {
+			sort.Strings(res.Data.Reviewers)
+			sort.Strings(testCase.expectReviewers)
+
+			if len(res.Data.Reviewers) != len(testCase.expectReviewers) ||
+				!reflect.DeepEqual(res.Data.Reviewers, testCase.expectReviewers) {
 				t.Errorf("Different reviewers: Got \"%v\" expected \"%v\"", res.Data.Reviewers, testCase.expectReviewers)
 			}
 
