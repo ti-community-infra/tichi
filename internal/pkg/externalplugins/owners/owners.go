@@ -189,19 +189,20 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		trustTeams = opts.TrustTeams
 	}
 
-	var trustTeamMembers []string
+	// Avoid duplication when one user exists in multiple trusted teams.
+	trustTeamMembers := sets.String{}
 
 	for _, trustTeam := range trustTeams {
 		members := getTrustTeamMembers(s.Log, s.Gc, org, trustTeam)
-		trustTeamMembers = append(trustTeamMembers, members...)
+		trustTeamMembers.Insert(members...)
 	}
 
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
 	if sigName == "" {
-		return s.listOwnersForNonSig(org, repo, trustTeamMembers, requireLgtm)
+		return s.listOwnersForNonSig(org, repo, trustTeamMembers.List(), requireLgtm)
 	}
 
-	return s.listOwnersForSig(sigName, opts, trustTeamMembers, requireLgtm)
+	return s.listOwnersForSig(sigName, opts, trustTeamMembers.List(), requireLgtm)
 }
 
 // getSigNameByLabel returns the name of sig when the label prefix matches.
