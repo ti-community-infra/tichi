@@ -2,7 +2,7 @@
 
 ## 设计背景
 
-设计 owners 主要是为了 ti-community-lgtm 和 ti-community-merge 服务，在 Kubernetes 社区中，他们使用 [OWNERS](https://github.com/kubernetes/test-infra/blob/master/OWNERS) 文件定义权限，在该文件中指定了当前目录及子目录的 reviewers 和 approvers。但是目前 TiDB 社区已经依赖于社区先前的 [Bot](https://github.com/pingcap-incubator/cherry-bot) 运行了很长一段时间。大家在先前的 Bot 的使用过程中摸索出了一套协作机制。如果直接采用 Kubernetes 社区的机制会带来非常高的学习成本，水土不服。
+设计 owners 主要是为 ti-community-lgtm 和 ti-community-merge 服务，在 Kubernetes 社区中，他们使用 [OWNERS](https://github.com/kubernetes/test-infra/blob/master/OWNERS) 文件定义权限，在该文件中指定了当前目录及子目录的 reviewers 和 approvers。但是目前 TiDB 社区已经依赖于社区先前的 [Bot](https://github.com/pingcap-incubator/cherry-bot) 运行了很长一段时间。大家在先前的 Bot 的使用过程中摸索出了一套协作机制。如果直接采用 Kubernetes 社区的机制会带来非常高的学习成本，水土不服。
 
 所以决定研发一个适合当前 TiDB 社区协作模式的权限控制服务，基于目前 TiDB 社区的 [sig](https://github.com/pingcap/community) 架构定义了每个 PR 的权限。
 
@@ -42,14 +42,22 @@
 
 ## 参数配置
 
-| 参数名                    | 类型     | 说明                                          |
-| ------------------------- | -------- | --------------------------------------------- |
-| repos                     | []string | 配置生效仓库                                  |
-| sig_endpoint              | string   | 获取 sig 信息 RESTFUL 接口地址                |
-| default_sig_name          | string   | 为该仓库设置默认 sig 名字                     |
-| default_require_lgtm      | int      | 为该仓库设置默认需要的 lgtm 个数              |
-| require_lgtm_label_prefix | string   | 指定当前 PR 需要的 lgtm 个数                  |
-| trusted_team_for_owners   | string   | 信任的 GitHub team（一般为 maintainers team） |
+| 参数名                     | 类型                     | 说明                                                             |
+| ------------------------- | ----------------------- | ---------------------------------------------------------------- |
+| repos                     | []string                | 配置生效仓库                                                       |
+| sig_endpoint              | string                  | 获取 sig 信息 RESTFUL 接口地址                                     |
+| default_sig_name          | string                  | 为该仓库设置默认 sig 名字                                           |
+| default_require_lgtm      | int                     | 为该仓库设置默认需要的 lgtm 个数                                     |
+| require_lgtm_label_prefix | string                  | 插件支持通过标签指定当前 PR 需要的 lgtm 个数，该选项用于设置相关标签的前缀 |
+| trusted_teams             | []string                | 信任的 GitHub team 名称列表（一般为 maintainers team）               |
+| branches                  | map[string]BranchConfig | 分支粒度的参数配置, map结构的key是分支名称，对分支的配置会覆盖对仓库的配置 |
+
+### BranchConfig
+
+| 参数名                     | 类型      | 说明                                 |
+| ------------------------- | -------- | ------------------------------------ |
+| default_require_lgtm      | int      | 为该分支设置默认需要的 lgtm 个数         |
+| trusted_teams             | []string | 为该分支设置信任的 GitHub team          |
 
 例如：
 
@@ -62,6 +70,14 @@ ti-community-owners:
       - tidb-community-bots/ti-challenge-bot
     sig_endpoint: https://bots.tidb.io/ti-community-bot
     require_lgtm_label_prefix: require/LGT
+    trusted_teams:
+      - bots-maintainers
+      - bots-reviewers
+    branchs:
+      release:
+        default_require_lgtm: 2
+        trusted_teams:
+          - bots-maintainers
 ```
 
 ## Q&A
