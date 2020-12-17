@@ -168,12 +168,13 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		return nil, err
 	}
 
+	// Get the configuration according to the name of the branch which the current PR belongs to.
 	branchName := pull.Base.Ref
-	branchConfig := opts.Branches[branchName]
+	branchConfig, hasBranchConfig := opts.Branches[branchName]
 
 	// When we cannot find the require label from the PR, try to use the default require lgtm.
 	if requireLgtm == 0 {
-		if branchConfig.DefaultRequireLgtm != 0 {
+		if hasBranchConfig && branchConfig.DefaultRequireLgtm != 0 {
 			requireLgtm = branchConfig.DefaultRequireLgtm
 		} else {
 			requireLgtm = opts.DefaultRequireLgtm
@@ -183,8 +184,10 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	// Notice: If the branch of the PR has extra trust team config, it will override the repository config.
 	var trustTeams []string
 
-	if len(branchConfig.TrustedTeams) != 0 {
-		trustTeams = branchConfig.TrustedTeams
+	// Notice: If the configuration of the trust team gives an empty slice (not nil slice), the plugin
+	// will consider that the branch does not trust any team.
+	if hasBranchConfig && branchConfig.TrustTeams != nil {
+		trustTeams = branchConfig.TrustTeams
 	} else {
 		trustTeams = opts.TrustTeams
 	}

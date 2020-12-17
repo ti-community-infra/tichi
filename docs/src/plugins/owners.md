@@ -50,9 +50,10 @@
 | default_require_lgtm      | int                     | 为该仓库设置默认需要的 lgtm 个数                 |
 | require_lgtm_label_prefix | string                  | 指定当前 PR 需要的 lgtm 个数                    |
 | trusted_teams             | []string                | 信任的 GitHub team（一般为 maintainers team）   |
-| branches                  | map[string]BranchConfig | 分支粒度的参数配置, map结构的key是分支名称，对分支的设置会覆盖对仓库中的配置 |
+| branches                  | map[string]BranchConfig | 分支粒度的参数配置, map结构的key是分支名称，对分支的配置会覆盖对仓库的配置 |
 
 ### BranchConfig
+
 | 参数名                     | 类型      | 说明                                 |
 | ------------------------- | -------- | ------------------------------------ |
 | default_require_lgtm      | int      | 为该分支设置默认需要的 lgtm 个数         |

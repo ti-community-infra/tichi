@@ -45,7 +45,7 @@ type TiCommunityMerge struct {
 	PullOwnersEndpoint string `json:"pull_owners_endpoint,omitempty"`
 }
 
-// TiCommunityMerge specifies a configuration for a single owners.
+// TiCommunityOwners specifies a configuration for a single ti community owners plugin.
 //
 // The configuration for the owners plugin is defined as a list of these structures.
 type TiCommunityOwners struct {
@@ -62,17 +62,19 @@ type TiCommunityOwners struct {
 	// WARNING: This disables the security mechanism that prevents a malicious member (or
 	// compromised GitHub account) from merging arbitrary code. Use with caution.
 	//
-	// TrustTeams specifies the GitHub team whose members are trusted.
+	// TrustTeams specifies the GitHub teams whose members are trusted.
 	TrustTeams []string `json:"trusted_teams,omitempty"`
 	// Branches specifies the branch level configuration that will override the repository
 	// level configuration.
 	Branches map[string]TiCommunityOwnerBranchConfig `json:"branches,omitempty"`
 }
 
-// TiCommunityOwnerBranches is
+// TiCommunityOwnerBranchConfig is the branch level configuration of the owners plugin.
 type TiCommunityOwnerBranchConfig struct {
-	DefaultRequireLgtm int      `json:"default_require_lgtm,omitempty"`
-	TrustedTeams       []string `json:"trusted_teams"`
+	// DefaultRequireLgtm specifies the default require lgtm number of the branch.
+	DefaultRequireLgtm int `json:"default_require_lgtm,omitempty"`
+	// TrustTeams specifies the GitHub teams whose members are trusted by the branch.
+	TrustTeams []string `json:"trusted_teams,omitempty"`
 }
 
 // TiCommunityLabel is the config for the label plugin.

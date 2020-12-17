@@ -15,15 +15,6 @@ ti-community-owners:
       - tidb-community-bots/test-dev
     default_require_lgtm: 1
     sig_endpoint: https://bots.tidb.io/ti-community-bot
-    trusted_teams:
-      - bots-maintainers
-      - bots-reviewers
-    branchs:
-      release:
-        default_require_lgtm: 2
-        trusted_teams:
-          - bots-maintainers
-
 
 ti-community-label:
   - repos:

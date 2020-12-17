@@ -46,6 +46,10 @@ func (f *fakegithub) ListTeams(org string) ([]github.Team, error) {
 			ID:   42,
 			Name: "Leads",
 		},
+		{
+			ID:   60,
+			Name: "Releasers",
+		},
 	}, nil
 }
 
@@ -57,6 +61,7 @@ func (f *fakegithub) ListTeamMembers(_ string, teamID int, role string) ([]githu
 	teams := map[int][]github.TeamMember{
 		0:  {{Login: "default-sig-lead"}},
 		42: {{Login: "sig-lead"}},
+		60: {{Login: "sig-lead"}, {Login: "default-sig-lead"}},
 	}
 	members, ok := teams[teamID]
 	if !ok {
@@ -146,7 +151,7 @@ func TestListOwners(t *testing.T) {
 		trustTeams             []string
 		defaultRequireLgtm     int
 		requireLgtmLabelPrefix string
-		pluginConfig           tiexternalplugins.TiCommunityOwners
+		branchesConfig         map[string]tiexternalplugins.TiCommunityOwnerBranchConfig
 
 		expectCommitters []string
 		expectReviewers  []string
@@ -294,25 +299,23 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: lgtmTwo,
 		},
 		{
-			name:   "set owners config for the branch of the current PR",
+			name:   "owners plugin config contains branch config",
 			sigRes: &validSigRes,
 			labels: []github.Label{
 				{
 					Name: "sig/testing",
 				},
 			},
-			trustTeams: []string{"Leads"},
-			pluginConfig: tiexternalplugins.TiCommunityOwners{
-				Repos:              []string{"tidb-community-bots/test-dev"},
-				DefaultRequireLgtm: 2,
-				TrustTeams:         []string{"Leads"},
-				Branches: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
-					"master": {
-						DefaultRequireLgtm: 3,
-						TrustedTeams: []string{
-							"Admins",
-						},
-					},
+			defaultRequireLgtm: 2,
+			trustTeams:         []string{"Leads"},
+			branchesConfig: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
+				"master": {
+					DefaultRequireLgtm: 3,
+					TrustTeams:         []string{"Admins"},
+				},
+				"release": {
+					DefaultRequireLgtm: 4,
+					TrustTeams:         []string{"Releasers"},
 				},
 			},
 			expectCommitters: []string{
@@ -330,38 +333,25 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: 3,
 		},
 		{
-			name:   "set owners config for another branch of the current PR",
+			name:   "owners plugin config contains multiple trusted teams",
 			sigRes: &validSigRes,
 			labels: []github.Label{
 				{
 					Name: "sig/testing",
 				},
 			},
-			trustTeams: []string{"Leads"},
-			pluginConfig: tiexternalplugins.TiCommunityOwners{
-				Repos:              []string{"tidb-community-bots/test-dev"},
-				DefaultRequireLgtm: 2,
-				TrustTeams:         []string{"Leads"},
-				Branches: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
-					"release": {
-						DefaultRequireLgtm: 3,
-						TrustedTeams: []string{
-							"Admins",
-						},
-					},
-				},
-			},
+			trustTeams: []string{"Leads", "Admins", "Releasers"},
 			expectCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 				// Team members.
-				"sig-lead",
+				"sig-lead", "default-sig-lead",
 			},
 			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 				// Team members.
-				"sig-lead",
+				"sig-lead", "default-sig-lead",
 			},
 			expectNeedsLgtm: 2,
 		},
@@ -374,32 +364,26 @@ func TestListOwners(t *testing.T) {
 			testServer := httptest.NewServer(mux)
 
 			config := &tiexternalplugins.Configuration{}
-			repoConfig := tiexternalplugins.TiCommunityOwners{}
+			repoConfig := tiexternalplugins.TiCommunityOwners{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				SigEndpoint:        testServer.URL,
+				DefaultRequireLgtm: testCase.defaultRequireLgtm,
+			}
 
-			// Use the configuration defined in the test case preferentially.
-			if len(testCase.pluginConfig.Repos) > 0 {
-				repoConfig = testCase.pluginConfig
-				repoConfig.SigEndpoint = testServer.URL
-			} else {
-				defaultRepoConfig := tiexternalplugins.TiCommunityOwners{
-					Repos:              []string{"tidb-community-bots/test-dev"},
-					SigEndpoint:        testServer.URL,
-					DefaultRequireLgtm: testCase.defaultRequireLgtm,
-				}
+			if testCase.useDefaultSigName {
+				repoConfig.DefaultSigName = sigName
+			}
 
-				if testCase.useDefaultSigName {
-					defaultRepoConfig.DefaultSigName = sigName
-				}
+			if testCase.trustTeams != nil {
+				repoConfig.TrustTeams = testCase.trustTeams
+			}
 
-				if len(testCase.trustTeams) > 0 {
-					defaultRepoConfig.TrustTeams = testCase.trustTeams
-				}
+			if testCase.requireLgtmLabelPrefix != "" {
+				repoConfig.RequireLgtmLabelPrefix = testCase.requireLgtmLabelPrefix
+			}
 
-				if testCase.requireLgtmLabelPrefix != "" {
-					defaultRepoConfig.RequireLgtmLabelPrefix = testCase.requireLgtmLabelPrefix
-				}
-
-				repoConfig = defaultRepoConfig
+			if testCase.branchesConfig != nil {
+				repoConfig.Branches = testCase.branchesConfig
 			}
 
 			config.TiCommunityOwners = []tiexternalplugins.TiCommunityOwners{
