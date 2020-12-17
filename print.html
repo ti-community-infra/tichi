@@ -261,7 +261,7 @@
 <p>在 TiDB 的社区中，我们使用了大量来自 Kubernetes 社区的插件，也根据 TiDB 的社区实践定制开发了大量的插件。 </p>
 <h1><a class="header" href="#ti-community-owners" id="ti-community-owners">ti-community-owners</a></h1>
 <h2><a class="header" href="#设计背景" id="设计背景">设计背景</a></h2>
-<p>设计 owners 主要是为了 ti-community-lgtm 和 ti-community-merge 服务，在 Kubernetes 社区中，他们使用 <a href="https://github.com/kubernetes/test-infra/blob/master/OWNERS">OWNERS</a> 文件定义权限，在该文件中指定了当前目录及子目录的 reviewers 和 approvers。但是目前 TiDB 社区已经依赖于社区先前的 <a href="https://github.com/pingcap-incubator/cherry-bot">Bot</a> 运行了很长一段时间。大家在先前的 Bot 的使用过程中摸索出了一套协作机制。如果直接采用 Kubernetes 社区的机制会带来非常高的学习成本，水土不服。</p>
+<p>设计 owners 主要是为 ti-community-lgtm 和 ti-community-merge 服务，在 Kubernetes 社区中，他们使用 <a href="https://github.com/kubernetes/test-infra/blob/master/OWNERS">OWNERS</a> 文件定义权限，在该文件中指定了当前目录及子目录的 reviewers 和 approvers。但是目前 TiDB 社区已经依赖于社区先前的 <a href="https://github.com/pingcap-incubator/cherry-bot">Bot</a> 运行了很长一段时间。大家在先前的 Bot 的使用过程中摸索出了一套协作机制。如果直接采用 Kubernetes 社区的机制会带来非常高的学习成本，水土不服。</p>
 <p>所以决定研发一个适合当前 TiDB 社区协作模式的权限控制服务，基于目前 TiDB 社区的 <a href="https://github.com/pingcap/community">sig</a> 架构定义了每个 PR 的权限。</p>
 <h2><a class="header" href="#权限设计" id="权限设计">权限设计</a></h2>
 <p>基于目前 TiDB 的 sig 的设计，将权限划分如下：</p>
@@ -302,8 +302,14 @@
 <tr><td>sig_endpoint</td><td>string</td><td>获取 sig 信息 RESTFUL 接口地址</td></tr>
 <tr><td>default_sig_name</td><td>string</td><td>为该仓库设置默认 sig 名字</td></tr>
 <tr><td>default_require_lgtm</td><td>int</td><td>为该仓库设置默认需要的 lgtm 个数</td></tr>
-<tr><td>require_lgtm_label_prefix</td><td>string</td><td>指定当前 PR 需要的 lgtm 个数</td></tr>
-<tr><td>trusted_team_for_owners</td><td>string</td><td>信任的 GitHub team（一般为 maintainers team）</td></tr>
+<tr><td>require_lgtm_label_prefix</td><td>string</td><td>插件支持通过标签指定当前 PR 需要的 lgtm 个数，该选项用于设置相关标签的前缀</td></tr>
+<tr><td>trusted_teams</td><td>[]string</td><td>信任的 GitHub team 名称列表（一般为 maintainers team）</td></tr>
+<tr><td>branches</td><td>map[string]BranchConfig</td><td>分支粒度的参数配置, map结构的key是分支名称，对分支的配置会覆盖对仓库的配置</td></tr>
+</tbody></table>
+<h3><a class="header" href="#branchconfig" id="branchconfig">BranchConfig</a></h3>
+<table><thead><tr><th>参数名</th><th>类型</th><th>说明</th></tr></thead><tbody>
+<tr><td>default_require_lgtm</td><td>int</td><td>为该分支设置默认需要的 lgtm 个数</td></tr>
+<tr><td>trusted_teams</td><td>[]string</td><td>为该分支设置信任的 GitHub team</td></tr>
 </tbody></table>
 <p>例如：</p>
 <pre><code class="language-yml">ti-community-owners:
@@ -314,6 +320,14 @@
       - tidb-community-bots/ti-challenge-bot
     sig_endpoint: https://bots.tidb.io/ti-community-bot
     require_lgtm_label_prefix: require/LGT
+    trusted_teams:
+      - bots-maintainers
+      - bots-reviewers
+    branchs:
+      release:
+        default_require_lgtm: 2
+        trusted_teams:
+          - bots-maintainers
 </code></pre>
 <h2><a class="header" href="#qa-1" id="qa-1">Q&amp;A</a></h2>
 <h3><a class="header" href="#如何查看当前-pr-的权限" id="如何查看当前-pr-的权限">如何查看当前 PR 的权限？</a></h3>
