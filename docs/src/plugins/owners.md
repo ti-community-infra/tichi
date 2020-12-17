@@ -42,14 +42,14 @@
 
 ## 参数配置
 
-| 参数名                     | 类型                     | 说明                                          |
-| ------------------------- | ----------------------- | --------------------------------------------- |
-| repos                     | []string                | 配置生效仓库                                   |
-| sig_endpoint              | string                  | 获取 sig 信息 RESTFUL 接口地址                  |
-| default_sig_name          | string                  | 为该仓库设置默认 sig 名字                       |
-| default_require_lgtm      | int                     | 为该仓库设置默认需要的 lgtm 个数                 |
-| require_lgtm_label_prefix | string                  | 指定当前 PR 需要的 lgtm 个数                    |
-| trusted_teams             | []string                | 信任的 GitHub team（一般为 maintainers team）   |
+| 参数名                     | 类型                     | 说明                                                             |
+| ------------------------- | ----------------------- | ---------------------------------------------------------------- |
+| repos                     | []string                | 配置生效仓库                                                       |
+| sig_endpoint              | string                  | 获取 sig 信息 RESTFUL 接口地址                                     |
+| default_sig_name          | string                  | 为该仓库设置默认 sig 名字                                           |
+| default_require_lgtm      | int                     | 为该仓库设置默认需要的 lgtm 个数                                     |
+| require_lgtm_label_prefix | string                  | 插件支持通过标签指定当前 PR 需要的 lgtm 个数，该选项用于设置相关标签的前缀 |
+| trusted_teams             | []string                | 信任的 GitHub team 名称列表（一般为 maintainers team）               |
 | branches                  | map[string]BranchConfig | 分支粒度的参数配置, map结构的key是分支名称，对分支的配置会覆盖对仓库的配置 |
 
 ### BranchConfig
