@@ -59,9 +59,19 @@ func (f *fakegithub) ListTeamMembers(_ string, teamID int, role string) ([]githu
 		return nil, fmt.Errorf("unsupported role %v (only all supported)", role)
 	}
 	teams := map[int][]github.TeamMember{
-		0:  {{Login: "default-sig-lead"}},
-		42: {{Login: "sig-lead"}},
-		60: {{Login: "sig-lead"}, {Login: "default-sig-lead"}},
+		0: {
+			{Login: "admin1"},
+			{Login: "admin2"},
+		},
+		42: {
+			{Login: "sig-leader1"},
+			{Login: "sig-leader2"},
+		},
+		60: {
+			{Login: "admin1"},
+			{Login: "releaser1"},
+			{Login: "releaser2"},
+		},
 	}
 	members, ok := teams[teamID]
 	if !ok {
@@ -288,13 +298,13 @@ func TestListOwners(t *testing.T) {
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 				// Team members.
-				"sig-lead",
+				"sig-leader1", "sig-leader2",
 			},
 			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 				// Team members.
-				"sig-lead",
+				"sig-leader1", "sig-leader2",
 			},
 			expectNeedsLgtm: lgtmTwo,
 		},
@@ -322,13 +332,13 @@ func TestListOwners(t *testing.T) {
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 				// Team members.
-				"default-sig-lead",
+				"admin1", "admin2",
 			},
 			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 				// Team members.
-				"default-sig-lead",
+				"admin1", "admin2",
 			},
 			expectNeedsLgtm: 3,
 		},
@@ -345,13 +355,15 @@ func TestListOwners(t *testing.T) {
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 				// Team members.
-				"sig-lead", "default-sig-lead",
+				"admin1", "admin2", "sig-leader1", "sig-leader2",
+				"releaser1", "releaser2",
 			},
 			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 				// Team members.
-				"sig-lead", "default-sig-lead",
+				"admin1", "admin2", "sig-leader1", "sig-leader2",
+				"releaser1", "releaser2",
 			},
 			expectNeedsLgtm: 2,
 		},
