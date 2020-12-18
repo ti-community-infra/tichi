@@ -101,6 +101,25 @@ func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *githu
 	return handle(cfg, rc, gc, log)
 }
 
+func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
+	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	// Only consider open PRs and submit actions.
+	if pullReviewEvent.PullRequest.State != "open" || pullReviewEvent.Action != github.ReviewActionSubmitted {
+		return nil
+	}
+
+	rc := reviewCtx{
+		repo:    pullReviewEvent.Repo,
+		author:  pullReviewEvent.Review.User.Login,
+		body:    pullReviewEvent.Review.Body,
+		htmlURL: pullReviewEvent.Review.HTMLURL,
+		number:  pullReviewEvent.PullRequest.Number,
+	}
+
+	// Use common handler to do the rest.
+	return handle(cfg, rc, gc, log)
+}
+
 func handle(cfg *externalplugins.Configuration, rc reviewCtx, gc githubClient, log *logrus.Entry) error {
 	owner := rc.repo.Owner.Login
 	repo := rc.repo.Name

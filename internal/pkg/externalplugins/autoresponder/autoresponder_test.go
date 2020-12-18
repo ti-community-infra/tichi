@@ -1,4 +1,3 @@
-//nolint:scopelint
 package autoresponder
 
 import (
@@ -82,8 +81,9 @@ func TestAutoRespondIssueAndReviewComment(t *testing.T) {
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 
 	for _, testcase := range testcases {
-		t.Run(testcase.name, func(t *testing.T) {
-			t.Logf("Running scenario %s", testcase.name)
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			t.Logf("Running scenario %s", tc.name)
 			// Test issue comment.
 			{
 				fc := &fakegithub.FakeClient{
@@ -100,7 +100,7 @@ func TestAutoRespondIssueAndReviewComment(t *testing.T) {
 						}{},
 					},
 					Comment: github.IssueComment{
-						Body:    testcase.body,
+						Body:    tc.body,
 						User:    github.User{Login: "user"},
 						HTMLURL: "<url>",
 					},
@@ -111,16 +111,16 @@ func TestAutoRespondIssueAndReviewComment(t *testing.T) {
 				cfg.TiCommunityAutoresponder = []externalplugins.TiCommunityAutoresponder{
 					{
 						Repos:        []string{"org/repo"},
-						AutoResponds: testcase.responds,
+						AutoResponds: tc.responds,
 					},
 				}
 
 				if err := HandleIssueCommentEvent(fc, e, cfg, logrus.WithField("plugin", PluginName)); err != nil {
-					t.Errorf("didn't expect error from lgtmComment: %v", err)
+					t.Errorf("didn't expect error from %s: %v", PluginName, err)
 				}
 
-				if testcase.shouldComment && len(fc.IssueComments[5]) != testcase.expectCommentNumber {
-					t.Errorf("comments number mismatch: got %v, want %v", len(fc.IssueComments[5]), testcase.expectCommentNumber)
+				if tc.shouldComment && len(fc.IssueComments[5]) != tc.expectCommentNumber {
+					t.Errorf("comments number mismatch: got %v, want %v", len(fc.IssueComments[5]), tc.expectCommentNumber)
 				}
 			}
 
@@ -146,7 +146,7 @@ func TestAutoRespondIssueAndReviewComment(t *testing.T) {
 				e := &github.ReviewCommentEvent{
 					Action: github.ReviewCommentActionCreated,
 					Comment: github.ReviewComment{
-						Body:    testcase.body,
+						Body:    tc.body,
 						User:    github.User{Login: "user"},
 						HTMLURL: "<url>",
 					},
@@ -158,17 +158,165 @@ func TestAutoRespondIssueAndReviewComment(t *testing.T) {
 				cfg.TiCommunityAutoresponder = []externalplugins.TiCommunityAutoresponder{
 					{
 						Repos:        []string{"org/repo"},
-						AutoResponds: testcase.responds,
+						AutoResponds: tc.responds,
 					},
 				}
 
 				if err := HandlePullReviewCommentEvent(fc, e, cfg, logrus.WithField("plugin", PluginName)); err != nil {
-					t.Errorf("didn't expect error from lgtmComment: %v", err)
+					t.Errorf("didn't expect error from %s: %v", PluginName, err)
 				}
 
-				if testcase.shouldComment && len(fc.IssueComments[5]) != testcase.expectCommentNumber {
-					t.Errorf("comments number mismatch: got %v, want %v", len(fc.IssueComments[5]), testcase.expectCommentNumber)
+				if tc.shouldComment && len(fc.IssueComments[5]) != tc.expectCommentNumber {
+					t.Errorf("comments number mismatch: got %v, want %v", len(fc.IssueComments[5]), tc.expectCommentNumber)
 				}
+			}
+		})
+	}
+}
+
+func TestAutoRespondReview(t *testing.T) {
+	var testcases = []struct {
+		name                string
+		body                string
+		action              github.ReviewEventAction
+		responds            []externalplugins.AutoRespond
+		shouldComment       bool
+		expectCommentNumber int
+	}{
+		{
+			name:   "non-matching comment",
+			body:   "uh oh",
+			action: github.ReviewActionSubmitted,
+			responds: []externalplugins.AutoRespond{
+				{
+					Regex:   `(?mi)^/merge\s*$`,
+					Message: "Got a merge command.",
+				},
+			},
+			shouldComment: false,
+		},
+		{
+			name:   "matching comment",
+			body:   "/merge",
+			action: github.ReviewActionSubmitted,
+			responds: []externalplugins.AutoRespond{
+				{
+					Regex:   `(?mi)^/merge\s*$`,
+					Message: "Got a merge command.",
+				},
+			},
+			shouldComment:       true,
+			expectCommentNumber: 1,
+		},
+		{
+			name:   "matching comment with trailing space",
+			body:   "/merge \r",
+			action: github.ReviewActionSubmitted,
+			responds: []externalplugins.AutoRespond{
+				{
+					Regex:   "(?mi)^/merge\\s*$",
+					Message: "Got a merge command.",
+				},
+			},
+			shouldComment:       true,
+			expectCommentNumber: 1,
+		},
+		{
+			name: "matching comment with multiple auto responds",
+			body: `/merge
+
+                           /test`,
+			action: github.ReviewActionSubmitted,
+			responds: []externalplugins.AutoRespond{
+				{
+					Regex:   "(?mi)^/merge\\s*$",
+					Message: "Got a merge command.",
+				},
+				{
+					Regex:   `/test`,
+					Message: "Got a test command.",
+				},
+				{
+					Regex:   `/foo`,
+					Message: "Got a foo command.",
+				},
+			},
+			shouldComment:       true,
+			expectCommentNumber: 2,
+		},
+		{
+			name:   "edited action",
+			body:   "/merge",
+			action: github.ReviewActionEdited,
+			responds: []externalplugins.AutoRespond{
+				{
+					Regex:   `(?mi)^/merge\s*$`,
+					Message: "Got a merge command.",
+				},
+			},
+			shouldComment: false,
+		},
+		{
+			name:   "dismissed action",
+			body:   "/merge",
+			action: github.ReviewActionDismissed,
+			responds: []externalplugins.AutoRespond{
+				{
+					Regex:   `(?mi)^/merge\s*$`,
+					Message: "Got a merge command.",
+				},
+			},
+			shouldComment: false,
+		},
+	}
+
+	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
+
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			fc := &fakegithub.FakeClient{
+				IssueComments: make(map[int][]github.IssueComment),
+				PullRequests: map[int]*github.PullRequest{
+					5: {
+						Base: github.PullRequestBranch{
+							Ref: "master",
+						},
+						Head: github.PullRequestBranch{
+							SHA: SHA,
+						},
+						User:   github.User{Login: "author"},
+						Number: 5,
+						State:  "open",
+					},
+				},
+			}
+
+			e := &github.ReviewEvent{
+				Action:      tc.action,
+				Repo:        github.Repo{Owner: github.User{Login: "org"}, Name: "repo"},
+				PullRequest: *fc.PullRequests[5],
+				Review: github.Review{
+					Body:    tc.body,
+					User:    github.User{Login: "user"},
+					HTMLURL: "<url>",
+				},
+			}
+
+			cfg := &externalplugins.Configuration{}
+			cfg.TiCommunityAutoresponder = []externalplugins.TiCommunityAutoresponder{
+				{
+					Repos:        []string{"org/repo"},
+					AutoResponds: tc.responds,
+				},
+			}
+
+			if err := HandlePullReviewEvent(fc, e, cfg, logrus.WithField("plugin", PluginName)); err != nil {
+				t.Errorf("didn't expect error from %s: %v", PluginName, err)
+			}
+
+			if tc.shouldComment && len(fc.IssueComments[5]) != tc.expectCommentNumber {
+				t.Errorf("comments number mismatch: got %v, want %v", len(fc.IssueComments[5]), tc.expectCommentNumber)
 			}
 		})
 	}
@@ -212,7 +360,8 @@ func TestHelpProvider(t *testing.T) {
 			configInfoIncludes: []string{":"},
 		},
 	}
-	for _, c := range cases {
+	for _, testcase := range cases {
+		c := testcase
 		t.Run(c.name, func(t *testing.T) {
 			epa := &externalplugins.ConfigAgent{}
 			epa.Set(c.config)

@@ -159,6 +159,17 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
+	case "pull_request_review":
+		var pullReviewEvent github.ReviewEvent
+		if err := json.Unmarshal(payload, &pullReviewEvent); err != nil {
+			return err
+		}
+		go func() {
+			if err := autoresponder.HandlePullReviewEvent(s.gc, &pullReviewEvent, config, l); err != nil {
+				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
+			}
+		}()
+
 	default:
 		s.log.Debugf("received an event of type %q but didn't ask for it", eventType)
 	}
