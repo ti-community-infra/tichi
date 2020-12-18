@@ -169,8 +169,8 @@
 <h2><a class="header" href="#关于-prow" id="关于-prow">关于 Prow</a></h2>
 <p><a href="https://github.com/kubernetes/test-infra/tree/master/prow">Prow</a> 是一个基于 Kubernetes 的 CI/CD 平台。CI 任务可以被各种类型的事件触发并且反馈状态给不同的服务。除了执行任务，Prow 通过 <code>/foo</code> 风格命令以及自动PR合并的策略提供 GitHub 自动化。</p>
 <h2><a class="header" href="#在-tidb-社区的应用" id="在-tidb-社区的应用">在 TiDB 社区的应用</a></h2>
-<p>在 <a href="https://github.com/tidb-community-bots/ti-community-prow">ti-community-prow</a> 中，主要利用 Prow 提供的 GitHub 自动化功能，希望实现 <a href="https://github.com/pingcap/tidb">TiDB</a> 社区的协作流程高度自动化和标准化。</p>
-<p>因为 Prow 具有良好的<a href="https://github.com/kubernetes/test-infra/tree/master/prow/plugins">扩展性</a>，可以按照自己的社区实践规范编写和定制插件。TiDB 社区基于这个特性定制了一批自己的<a href="https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins">插件</a>。</p>
+<p>在 <a href="https://github.com/ti-community-infra/ti-community-prow">ti-community-prow</a> 中，主要利用 Prow 提供的 GitHub 自动化功能，希望实现 <a href="https://github.com/pingcap/tidb">TiDB</a> 社区的协作流程高度自动化和标准化。</p>
+<p>因为 Prow 具有良好的<a href="https://github.com/kubernetes/test-infra/tree/master/prow/plugins">扩展性</a>，可以按照自己的社区实践规范编写和定制插件。TiDB 社区基于这个特性定制了一批自己的<a href="https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins">插件</a>。</p>
 <h2><a class="header" href="#关于本书" id="关于本书">关于本书</a></h2>
 <p>编写本书的目的：一方面是希望本书作为一本手册能够让 TiDB 相关社区的协作者查阅，另外一方面也希望能够作为一个使用 Prow 的例子供其他社区参考。</p>
 <h1><a class="header" href="#core-components" id="core-components">Core components</a></h1>
@@ -314,10 +314,10 @@
 <p>例如：</p>
 <pre><code class="language-yml">ti-community-owners:
   - repos:
-      - tidb-community-bots/test-live
-      - tidb-community-bots/ti-community-prow
-      - tidb-community-bots/ti-community-bot
-      - tidb-community-bots/ti-challenge-bot
+      - ti-community-infra/test-live
+      - ti-community-infra/ti-community-prow
+      - ti-community-infra/ti-community-bot
+      - ti-community-infra/ti-challenge-bot
     sig_endpoint: https://bots.tidb.io/ti-community-bot
     require_lgtm_label_prefix: require/LGT
     trusted_teams:
@@ -331,7 +331,7 @@
 </code></pre>
 <h2><a class="header" href="#qa-1" id="qa-1">Q&amp;A</a></h2>
 <h3><a class="header" href="#如何查看当前-pr-的权限" id="如何查看当前-pr-的权限">如何查看当前 PR 的权限？</a></h3>
-<p>直接通过与 GitHub 一致的 RESTFUL 接口查看，例如：<a href="https://prow.tidb.io/ti-community-owners/repos/tidb-community-bots/test-dev/pulls/179/owners">tidb-community-bots/test-dev/pulls/179</a></p>
+<p>直接通过与 GitHub 一致的 RESTFUL 接口查看，例如：<a href="https://prow.tidb.io/ti-community-owners/repos/ti-community-infra/test-dev/pulls/179/owners">ti-community-infra/test-dev/pulls/179</a></p>
 <h1><a class="header" href="#ti-community-lgtm" id="ti-community-lgtm">ti-community-lgtm</a></h1>
 <h2><a class="header" href="#设计背景-1" id="设计背景-1">设计背景</a></h2>
 <p>在 TiDB 社区中，我们采用了多阶段 code review 的方式来进行协作。一个 PR 一般会经过多个人的 review，才能达到合并的基本条件。例如：当 PR 被第一个人 review 之后，会为该 PR 打上 <code>status/LGT1</code> 的标签。然后当 PR 被第二个 review 之后，会为该 PR 打上 <code>status/LGT2</code> 的标签。每个 sig 都会设置默认需要的 LGTM 的个数，一般为 2 个。</p>
@@ -400,10 +400,10 @@
 <p>例如：</p>
 <pre><code class="language-yml">ti-community-lgtm:
   - repos:
-      - tidb-community-bots/test-live
-      - tidb-community-bots/ti-community-prow
-      - tidb-community-bots/ti-community-bot
-      - tidb-community-bots/ti-challenge-bot
+      - ti-community-infra/test-live
+      - ti-community-infra/ti-community-prow
+      - ti-community-infra/ti-community-bot
+      - ti-community-infra/ti-challenge-bot
       - tikv/pd
     review_acts_as_lgtm: true
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners # 你可以定义不同的获取 owners 的链接
@@ -415,8 +415,8 @@
 </code></pre>
 <h2><a class="header" href="#参考文档" id="参考文档">参考文档</a></h2>
 <ul>
-<li><a href="https://prow.tidb.io/command-help?repo=tidb-community-bots%2Ftest-live#lgtm">command help</a></li>
-<li><a href="https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/lgtm">代码实现</a></li>
+<li><a href="https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftest-live#lgtm">command help</a></li>
+<li><a href="https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/lgtm">代码实现</a></li>
 </ul>
 <h2><a class="header" href="#qa-2" id="qa-2">Q&amp;A</a></h2>
 <h3><a class="header" href="#为什么我在使用-github-的-review-功能中的-comment-时填写-lgtm-无效" id="为什么我在使用-github-的-review-功能中的-comment-时填写-lgtm-无效">为什么我在使用 GitHub 的 Review 功能中的 Comment 时填写 <code>/lgtm</code> 无效？</a></h3>
@@ -477,10 +477,10 @@
 <p>例如：</p>
 <pre><code class="language-yml">ti-community-merge:
   - repos:
-      - tidb-community-bots/test-live
-      - tidb-community-bots/ti-community-prow
-      - tidb-community-bots/ti-community-bot
-      - tidb-community-bots/ti-challenge-bot
+      - ti-community-infra/test-live
+      - ti-community-infra/ti-community-prow
+      - ti-community-infra/ti-community-bot
+      - ti-community-infra/ti-challenge-bot
       - tikv/pd
     store_tree_hash: true
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
@@ -492,8 +492,8 @@
 </code></pre>
 <h2><a class="header" href="#参考文档-1" id="参考文档-1">参考文档</a></h2>
 <ul>
-<li><a href="https://prow.tidb.io/command-help?repo=tidb-community-bots%2Ftest-live#merge">command help</a></li>
-<li><a href="https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/merge">代码实现</a></li>
+<li><a href="https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftest-live#merge">command help</a></li>
+<li><a href="https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/merge">代码实现</a></li>
 </ul>
 <h2><a class="header" href="#qa-3" id="qa-3">Q&amp;A</a></h2>
 <h3><a class="header" href="#我可不可以-merge-自己的-pr" id="我可不可以-merge-自己的-pr">我可不可以 <code>/merge</code> 自己的 PR?</a></h3>
@@ -524,13 +524,13 @@
 <p>例如：</p>
 <pre><code class="language-yaml">ti-community-tars:
   - repos:
-      - tidb-community-bots/test-dev
+      - ti-community-infra/test-dev
     only_when_label: &quot;status/can-merge&quot;
     message: &quot;Your PR has out-of-dated, I have automatically updated it for you.&quot;
 </code></pre>
 <h2><a class="header" href="#参考文档-2" id="参考文档-2">参考文档</a></h2>
 <ul>
-<li><a href="https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/tars">代码实现</a></li>
+<li><a href="https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/tars">代码实现</a></li>
 </ul>
 <h2><a class="header" href="#qa-4" id="qa-4">Q&amp;A</a></h2>
 <h3><a class="header" href="#多久会进行一次扫描" id="多久会进行一次扫描">多久会进行一次扫描？</a></h3>
@@ -553,7 +553,7 @@
 <p>例如：</p>
 <pre><code class="language-yml">ti-community-blunderbuss:
   - repos:
-      - tidb-community-bots/test-live
+      - ti-community-infra/test-live
     pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
     max_request_count: 1
     exclude_reviewers:
@@ -566,8 +566,8 @@
 </code></pre>
 <h2><a class="header" href="#参考文档-3" id="参考文档-3">参考文档</a></h2>
 <ul>
-<li><a href="https://prow.tidb.io/command-help?repo=tidb-community-bots%2Fconfigs#auto_cc">command help</a></li>
-<li><a href="https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/blunderbuss">代码实现</a></li>
+<li><a href="https://prow.tidb.io/command-help?repo=ti-community-infra%2Fconfigs#auto_cc">command help</a></li>
+<li><a href="https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/blunderbuss">代码实现</a></li>
 </ul>
 <h2><a class="header" href="#qa-5" id="qa-5">Q&amp;A</a></h2>
 <h3><a class="header" href="#如果我的-pr-更改了-sig-的-label-导致了-owners-中的-reviwers-发生了变动怎么办" id="如果我的-pr-更改了-sig-的-label-导致了-owners-中的-reviwers-发生了变动怎么办">如果我的 PR 更改了 sig 的 label 导致了 owners 中的 reviwers 发生了变动怎么办？</a></h3>
@@ -591,11 +591,11 @@
 <p>例如：</p>
 <pre><code class="language-yml">ti-community-label:
   - repos:
-      - tidb-community-bots/test-live
-      - tidb-community-bots/ti-community-prow
-      - tidb-community-bots/prow-configs
-      - tidb-community-bots/ti-community-bot
-      - tidb-community-bots/ti-challenge-bot
+      - ti-community-infra/test-live
+      - ti-community-infra/ti-community-prow
+      - ti-community-infra/prow-configs
+      - ti-community-infra/ti-community-bot
+      - ti-community-infra/ti-challenge-bot
     prefixes:
       - type
       - status
@@ -607,8 +607,8 @@
 </code></pre>
 <h2><a class="header" href="#参考文档-4" id="参考文档-4">参考文档</a></h2>
 <ul>
-<li><a href="https://prow.tidb.io/command-help?repo=tidb-community-bots%2Fti-community-prow#type">command help</a></li>
-<li><a href="https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/merge">代码实现</a></li>
+<li><a href="https://prow.tidb.io/command-help?repo=ti-community-infra%2Fti-community-prow#type">command help</a></li>
+<li><a href="https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/merge">代码实现</a></li>
 </ul>
 <h2><a class="header" href="#qa-6" id="qa-6">Q&amp;A</a></h2>
 <h3><a class="header" href="#为什么我使用该功能添加标签没有反应" id="为什么我使用该功能添加标签没有反应">为什么我使用该功能添加标签没有反应？</a></h3>
@@ -644,7 +644,7 @@
 </code></pre>
 <h2><a class="header" href="#参考文档-5" id="参考文档-5">参考文档</a></h2>
 <ul>
-<li><a href="https://prow.tidb.io/plugins?repo=tidb-community-bots%2Fti-community-prow">require-matching-label doc</a></li>
+<li><a href="https://prow.tidb.io/plugins?repo=ti-community-infra%2Fti-community-prow">require-matching-label doc</a></li>
 <li><a href="https://github.com/kubernetes/test-infra/tree/master/prow/plugins/require-matching-label">代码实现</a></li>
 </ul>
 <h2><a class="header" href="#qa-7" id="qa-7">Q&amp;A</a></h2>
@@ -676,7 +676,7 @@
 <p>无特殊配置</p>
 <h2><a class="header" href="#参考文档-7" id="参考文档-7">参考文档</a></h2>
 <ul>
-<li><a href="https://prow.tidb.io/plugins?repo=tidb-community-bots%2Fti-community-prow">wip doc</a></li>
+<li><a href="https://prow.tidb.io/plugins?repo=ti-community-infra%2Fti-community-prow">wip doc</a></li>
 <li><a href="https://github.com/kubernetes/test-infra/tree/master/prow/plugins/wip">代码实现</a></li>
 </ul>
 <h2><a class="header" href="#qa-9" id="qa-9">Q&amp;A</a></h2>
@@ -755,7 +755,7 @@ repos: # 针对每个 repo 进行单独配置
 </ul>
 <h2><a class="header" href="#qa-10" id="qa-10">Q&amp;A</a></h2>
 <h3><a class="header" href="#这些-label-什么时候更新" id="这些-label-什么时候更新">这些 label 什么时候更新？</a></h3>
-<p>目前为一个<a href="https://github.com/tidb-community-bots/configs/blob/main/prow/cluster/label_sync.yaml">定时任务</a>，每小时的第 17 分钟尝试更新。</p>
+<p>目前为一个<a href="https://github.com/ti-community-infra/configs/blob/main/prow/cluster/label_sync.yaml">定时任务</a>，每小时的第 17 分钟尝试更新。</p>
 <h1><a class="header" href="#workflows" id="workflows">Workflows</a></h1>
 <p>在协作过程中，我们整理出了一些推荐的协作流程，使用这些流程进行协作会充分利用以上介绍的组件和插件的特性。</p>
 <h1><a class="header" href="#pr-workflow" id="pr-workflow">PR workflow</a></h1>

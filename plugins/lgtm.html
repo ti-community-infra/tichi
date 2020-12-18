@@ -231,10 +231,10 @@
 <p>例如：</p>
 <pre><code class="language-yml">ti-community-lgtm:
   - repos:
-      - tidb-community-bots/test-live
-      - tidb-community-bots/ti-community-prow
-      - tidb-community-bots/ti-community-bot
-      - tidb-community-bots/ti-challenge-bot
+      - ti-community-infra/test-live
+      - ti-community-infra/ti-community-prow
+      - ti-community-infra/ti-community-bot
+      - ti-community-infra/ti-challenge-bot
       - tikv/pd
     review_acts_as_lgtm: true
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners # 你可以定义不同的获取 owners 的链接
@@ -246,8 +246,8 @@
 </code></pre>
 <h2><a class="header" href="#参考文档" id="参考文档">参考文档</a></h2>
 <ul>
-<li><a href="https://prow.tidb.io/command-help?repo=tidb-community-bots%2Ftest-live#lgtm">command help</a></li>
-<li><a href="https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/lgtm">代码实现</a></li>
+<li><a href="https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftest-live#lgtm">command help</a></li>
+<li><a href="https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/lgtm">代码实现</a></li>
 </ul>
 <h2><a class="header" href="#qa" id="qa">Q&amp;A</a></h2>
 <h3><a class="header" href="#为什么我在使用-github-的-review-功能中的-comment-时填写-lgtm-无效" id="为什么我在使用-github-的-review-功能中的-comment-时填写-lgtm-无效">为什么我在使用 GitHub 的 Review 功能中的 Comment 时填写 <code>/lgtm</code> 无效？</a></h3>

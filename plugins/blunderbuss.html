@@ -181,7 +181,7 @@
 <p>例如：</p>
 <pre><code class="language-yml">ti-community-blunderbuss:
   - repos:
-      - tidb-community-bots/test-live
+      - ti-community-infra/test-live
     pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
     max_request_count: 1
     exclude_reviewers:
@@ -194,8 +194,8 @@
 </code></pre>
 <h2><a class="header" href="#参考文档" id="参考文档">参考文档</a></h2>
 <ul>
-<li><a href="https://prow.tidb.io/command-help?repo=tidb-community-bots%2Fconfigs#auto_cc">command help</a></li>
-<li><a href="https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/blunderbuss">代码实现</a></li>
+<li><a href="https://prow.tidb.io/command-help?repo=ti-community-infra%2Fconfigs#auto_cc">command help</a></li>
+<li><a href="https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/blunderbuss">代码实现</a></li>
 </ul>
 <h2><a class="header" href="#qa" id="qa">Q&amp;A</a></h2>
 <h3><a class="header" href="#如果我的-pr-更改了-sig-的-label-导致了-owners-中的-reviwers-发生了变动怎么办" id="如果我的-pr-更改了-sig-的-label-导致了-owners-中的-reviwers-发生了变动怎么办">如果我的 PR 更改了 sig 的 label 导致了 owners 中的 reviwers 发生了变动怎么办？</a></h3>
