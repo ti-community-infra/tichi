@@ -169,7 +169,26 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
-
+	case "pull_request":
+		var pullRequestEvent github.PullRequestEvent
+		if err := json.Unmarshal(payload, &pullRequestEvent); err != nil {
+			return err
+		}
+		go func() {
+			if err := autoresponder.HandlePullRequestEvent(s.gc, &pullRequestEvent, config, l); err != nil {
+				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
+			}
+		}()
+	case "issues":
+		var issueEvent github.IssueEvent
+		if err := json.Unmarshal(payload, &issueEvent); err != nil {
+			return err
+		}
+		go func() {
+			if err := autoresponder.HandleIssueEvent(s.gc, &issueEvent, config, l); err != nil {
+				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
+			}
+		}()
 	default:
 		s.log.Debugf("received an event of type %q but didn't ask for it", eventType)
 	}
