@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	tiexternalplugins "github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
-	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins/label"
+	tiexternalplugins "github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins/label"
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"

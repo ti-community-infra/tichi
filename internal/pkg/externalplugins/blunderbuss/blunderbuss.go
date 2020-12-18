@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
-	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/ownersclient"
+	"github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/ti-community-prow/internal/pkg/ownersclient"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
@@ -56,7 +56,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 		yamlSnippet, err := plugins.CommentMap.GenYaml(&externalplugins.Configuration{
 			TiCommunityBlunderbuss: []externalplugins.TiCommunityBlunderbuss{
 				{
-					Repos:              []string{"tidb-community-bots/test-dev"},
+					Repos:              []string{"ti-community-infra/test-dev"},
 					MaxReviewerCount:   2,
 					ExcludeReviewers:   []string{},
 					PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",

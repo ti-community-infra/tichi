@@ -64,10 +64,10 @@
 ```yml
 ti-community-owners:
   - repos:
-      - tidb-community-bots/test-live
-      - tidb-community-bots/ti-community-prow
-      - tidb-community-bots/ti-community-bot
-      - tidb-community-bots/ti-challenge-bot
+      - ti-community-infra/test-live
+      - ti-community-infra/ti-community-prow
+      - ti-community-infra/ti-community-bot
+      - ti-community-infra/ti-challenge-bot
     sig_endpoint: https://bots.tidb.io/ti-community-bot
     require_lgtm_label_prefix: require/LGT
     trusted_teams:
@@ -84,4 +84,4 @@ ti-community-owners:
 
 ### 如何查看当前 PR 的权限？
 
-直接通过与 GitHub 一致的 RESTFUL 接口查看，例如：[tidb-community-bots/test-dev/pulls/179](https://prow.tidb.io/ti-community-owners/repos/tidb-community-bots/test-dev/pulls/179/owners)
+直接通过与 GitHub 一致的 RESTFUL 接口查看，例如：[ti-community-infra/test-dev/pulls/179](https://prow.tidb.io/ti-community-owners/repos/ti-community-infra/test-dev/pulls/179/owners)

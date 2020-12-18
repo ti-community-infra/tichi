@@ -94,7 +94,7 @@ default:
       prowPlugin: help
       addedBy: everyone
 repos:
-  tidb-community-bots/test-dev:
+  ti-community-infra/test-dev:
     labels:
       - color: e11d21
         description: Categorizes issue or PR as related to a bug.

@@ -21,20 +21,20 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "https pull owners URL",
 			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
-				Repos:       []string{"tidb-community-bots/test-dev"},
+				Repos:       []string{"ti-community-infra/test-dev"},
 				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			autoresponders: &TiCommunityAutoresponder{
-				Repos: []string{"tidb-community-bots/test-dev"},
+				Repos: []string{"ti-community-infra/test-dev"},
 				AutoResponds: []AutoRespond{
 					{
 						Regex:   `(?mi)^/merge\s*$`,
@@ -43,7 +43,7 @@ func TestValidateConfig(t *testing.T) {
 				},
 			},
 			blunderbuss: &TiCommunityBlunderbuss{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				MaxReviewerCount:   2,
 				ExcludeReviewers:   []string{},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
@@ -53,20 +53,20 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "http pull owners URL",
 			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
-				Repos:       []string{"tidb-community-bots/test-dev"},
+				Repos:       []string{"ti-community-infra/test-dev"},
 				SigEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			autoresponders: &TiCommunityAutoresponder{
-				Repos: []string{"tidb-community-bots/test-dev"},
+				Repos: []string{"ti-community-infra/test-dev"},
 				AutoResponds: []AutoRespond{
 					{
 						Regex:   `(?mi)^/merge\s*$`,
@@ -75,7 +75,7 @@ func TestValidateConfig(t *testing.T) {
 				},
 			},
 			blunderbuss: &TiCommunityBlunderbuss{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				MaxReviewerCount:   2,
 				ExcludeReviewers:   []string{},
 				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
@@ -85,20 +85,20 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "invalid lgtm pull owners URL",
 			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "http/bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
-				Repos:       []string{"tidb-community-bots/test-dev"},
+				Repos:       []string{"ti-community-infra/test-dev"},
 				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			autoresponders: &TiCommunityAutoresponder{
-				Repos: []string{"tidb-community-bots/test-dev"},
+				Repos: []string{"ti-community-infra/test-dev"},
 				AutoResponds: []AutoRespond{
 					{
 						Regex:   `(?mi)^/merge\s*$`,
@@ -107,7 +107,7 @@ func TestValidateConfig(t *testing.T) {
 				},
 			},
 			blunderbuss: &TiCommunityBlunderbuss{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				MaxReviewerCount:   2,
 				ExcludeReviewers:   []string{},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
@@ -117,20 +117,20 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "invalid merge pull owners URL",
 			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				PullOwnersEndpoint: "http/bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
-				Repos:       []string{"tidb-community-bots/test-dev"},
+				Repos:       []string{"ti-community-infra/test-dev"},
 				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			autoresponders: &TiCommunityAutoresponder{
-				Repos: []string{"tidb-community-bots/test-dev"},
+				Repos: []string{"ti-community-infra/test-dev"},
 				AutoResponds: []AutoRespond{
 					{
 						Regex:   `(?mi)^/merge\s*$`,
@@ -139,7 +139,7 @@ func TestValidateConfig(t *testing.T) {
 				},
 			},
 			blunderbuss: &TiCommunityBlunderbuss{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				MaxReviewerCount:   2,
 				ExcludeReviewers:   []string{},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
@@ -149,20 +149,20 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "invalid owners sig endpoint",
 			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
-				Repos:       []string{"tidb-community-bots/test-dev"},
+				Repos:       []string{"ti-community-infra/test-dev"},
 				SigEndpoint: "https/bots.tidb.io/ti-community-bot",
 			},
 			autoresponders: &TiCommunityAutoresponder{
-				Repos: []string{"tidb-community-bots/test-dev"},
+				Repos: []string{"ti-community-infra/test-dev"},
 				AutoResponds: []AutoRespond{
 					{
 						Regex:   `(?mi)^/merge\s*$`,
@@ -171,7 +171,7 @@ func TestValidateConfig(t *testing.T) {
 				},
 			},
 			blunderbuss: &TiCommunityBlunderbuss{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				MaxReviewerCount:   2,
 				ExcludeReviewers:   []string{},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
@@ -181,20 +181,20 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "invalid blunderbuss regex",
 			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
-				Repos:       []string{"tidb-community-bots/test-dev"},
+				Repos:       []string{"ti-community-infra/test-dev"},
 				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			autoresponders: &TiCommunityAutoresponder{
-				Repos: []string{"tidb-community-bots/test-dev"},
+				Repos: []string{"ti-community-infra/test-dev"},
 				AutoResponds: []AutoRespond{
 					{
 						Regex:   "?[)",
@@ -203,7 +203,7 @@ func TestValidateConfig(t *testing.T) {
 				},
 			},
 			blunderbuss: &TiCommunityBlunderbuss{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				MaxReviewerCount:   2,
 				ExcludeReviewers:   []string{},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
@@ -213,20 +213,20 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "invalid blunderbuss pull owners",
 			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
-				Repos:       []string{"tidb-community-bots/test-dev"},
+				Repos:       []string{"ti-community-infra/test-dev"},
 				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			autoresponders: &TiCommunityAutoresponder{
-				Repos: []string{"tidb-community-bots/test-dev"},
+				Repos: []string{"ti-community-infra/test-dev"},
 				AutoResponds: []AutoRespond{
 					{
 						Regex:   `(?mi)^/merge\s*$`,
@@ -235,7 +235,7 @@ func TestValidateConfig(t *testing.T) {
 				},
 			},
 			blunderbuss: &TiCommunityBlunderbuss{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				MaxReviewerCount:   2,
 				ExcludeReviewers:   []string{},
 				PullOwnersEndpoint: "https/bots.tidb.io/ti-community-bot",
@@ -245,20 +245,20 @@ func TestValidateConfig(t *testing.T) {
 		{
 			name: "invalid blunderbuss max reviewer count",
 			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			owners: &TiCommunityOwners{
-				Repos:       []string{"tidb-community-bots/test-dev"},
+				Repos:       []string{"ti-community-infra/test-dev"},
 				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			autoresponders: &TiCommunityAutoresponder{
-				Repos: []string{"tidb-community-bots/test-dev"},
+				Repos: []string{"ti-community-infra/test-dev"},
 				AutoResponds: []AutoRespond{
 					{
 						Regex:   `(?mi)^/merge\s*$`,
@@ -267,7 +267,7 @@ func TestValidateConfig(t *testing.T) {
 				},
 			},
 			blunderbuss: &TiCommunityBlunderbuss{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				MaxReviewerCount:   -1,
 				ExcludeReviewers:   []string{},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
@@ -321,27 +321,27 @@ func TestLgtmFor(t *testing.T) {
 		{
 			name: "Full name",
 			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name: "Only org",
 			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots"},
+				Repos:              []string{"ti-community-infra"},
 				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name:        "Can not find",
 			lgtm:        &TiCommunityLgtm{},
-			org:         "tidb-community-bots1",
+			org:         "ti-community-infra1",
 			repo:        "test-dev1",
 			expectEmpty: &TiCommunityLgtm{},
 		},
@@ -374,25 +374,25 @@ func TestMergeFor(t *testing.T) {
 		{
 			name: "Full name",
 			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name: "Only org",
 			merge: &TiCommunityMerge{
-				Repos:              []string{"tidb-community-bots"},
+				Repos:              []string{"ti-community-infra"},
 				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name:        "Can not find",
 			merge:       &TiCommunityMerge{},
-			org:         "tidb-community-bots1",
+			org:         "ti-community-infra1",
 			repo:        "test-dev1",
 			expectEmpty: &TiCommunityMerge{},
 		},
@@ -426,25 +426,25 @@ func TestOwnersFor(t *testing.T) {
 		{
 			name: "Full name",
 			owners: &TiCommunityOwners{
-				Repos:       []string{"tidb-community-bots/test-dev"},
+				Repos:       []string{"ti-community-infra/test-dev"},
 				SigEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name: "Only org",
 			owners: &TiCommunityOwners{
-				Repos:       []string{"tidb-community-bots"},
+				Repos:       []string{"ti-community-infra"},
 				SigEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name:        "Can not find",
 			owners:      &TiCommunityOwners{},
-			org:         "tidb-community-bots1",
+			org:         "ti-community-infra1",
 			repo:        "test-dev1",
 			expectEmpty: &TiCommunityOwners{},
 		},
@@ -478,25 +478,25 @@ func TestLabelFor(t *testing.T) {
 		{
 			name: "Full name",
 			label: &TiCommunityLabel{
-				Repos:    []string{"tidb-community-bots/test-dev"},
+				Repos:    []string{"ti-community-infra/test-dev"},
 				Prefixes: []string{"status"},
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name: "Only org",
 			label: &TiCommunityLabel{
-				Repos:    []string{"tidb-community-bots"},
+				Repos:    []string{"ti-community-infra"},
 				Prefixes: []string{"status"},
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name:        "Can not find",
 			label:       &TiCommunityLabel{},
-			org:         "tidb-community-bots1",
+			org:         "ti-community-infra1",
 			repo:        "test-dev1",
 			expectEmpty: &TiCommunityLabel{},
 		},
@@ -530,7 +530,7 @@ func TestAutoresponderFor(t *testing.T) {
 		{
 			name: "Full name",
 			autoresponder: &TiCommunityAutoresponder{
-				Repos: []string{"tidb-community-bots/test-dev"},
+				Repos: []string{"ti-community-infra/test-dev"},
 				AutoResponds: []AutoRespond{
 					{
 						Regex:   `(?mi)^/merge\s*$`,
@@ -538,13 +538,13 @@ func TestAutoresponderFor(t *testing.T) {
 					},
 				},
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name: "Only org",
 			autoresponder: &TiCommunityAutoresponder{
-				Repos: []string{"tidb-community-bots"},
+				Repos: []string{"ti-community-infra"},
 				AutoResponds: []AutoRespond{
 					{
 						Regex:   `(?mi)^/merge\s*$`,
@@ -552,13 +552,13 @@ func TestAutoresponderFor(t *testing.T) {
 					},
 				},
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name:          "Can not find",
 			autoresponder: &TiCommunityAutoresponder{},
-			org:           "tidb-community-bots1",
+			org:           "ti-community-infra1",
 			repo:          "test-dev1",
 			expectEmpty:   &TiCommunityAutoresponder{},
 		},
@@ -592,29 +592,29 @@ func TestBlunderbussFor(t *testing.T) {
 		{
 			name: "Full name",
 			blunderbuss: &TiCommunityBlunderbuss{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				MaxReviewerCount:   2,
 				ExcludeReviewers:   []string{},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name: "Only org",
 			blunderbuss: &TiCommunityBlunderbuss{
-				Repos:              []string{"tidb-community-bots"},
+				Repos:              []string{"ti-community-infra"},
 				MaxReviewerCount:   2,
 				ExcludeReviewers:   []string{},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name:        "Can not find",
 			blunderbuss: &TiCommunityBlunderbuss{},
-			org:         "tidb-community-bots1",
+			org:         "ti-community-infra1",
 			repo:        "test-dev1",
 			expectEmpty: &TiCommunityBlunderbuss{},
 		},
@@ -648,27 +648,27 @@ func TestTarsFor(t *testing.T) {
 		{
 			name: "Full name",
 			tars: &TiCommunityTars{
-				Repos:         []string{"tidb-community-bots/test-dev"},
+				Repos:         []string{"ti-community-infra/test-dev"},
 				Message:       "updated",
 				OnlyWhenLabel: "trigger-update",
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name: "Only org",
 			tars: &TiCommunityTars{
-				Repos:         []string{"tidb-community-bots"},
+				Repos:         []string{"ti-community-infra"},
 				Message:       "updated",
 				OnlyWhenLabel: "trigger-update",
 			},
-			org:  "tidb-community-bots",
+			org:  "ti-community-infra",
 			repo: "test-dev",
 		},
 		{
 			name:        "Can not find",
 			tars:        &TiCommunityTars{},
-			org:         "tidb-community-bots1",
+			org:         "ti-community-infra1",
 			repo:        "test-dev1",
 			expectEmpty: &TiCommunityTars{},
 		},

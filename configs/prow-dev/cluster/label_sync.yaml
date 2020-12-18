@@ -19,7 +19,7 @@ spec:
               args:
                 - --config=/etc/config/labels.yaml
                 - --confirm=true
-                - --only=tidb-community-bots/test-dev
+                - --only=ti-community-infra/test-dev
                 - --token=/etc/github/token
               volumeMounts:
                 - name: github-token

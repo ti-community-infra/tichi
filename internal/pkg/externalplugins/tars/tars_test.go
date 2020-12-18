@@ -11,8 +11,8 @@ import (
 
 	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
+	"github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
 	"github.com/tidb-community-bots/prow-github/pkg/github"
-	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/plugins"
 )

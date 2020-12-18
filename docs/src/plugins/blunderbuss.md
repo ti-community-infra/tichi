@@ -28,7 +28,7 @@ ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划
 ```yml
 ti-community-blunderbuss:
   - repos:
-      - tidb-community-bots/test-live
+      - ti-community-infra/test-live
     pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
     max_request_count: 1
     exclude_reviewers:
@@ -42,8 +42,8 @@ ti-community-blunderbuss:
 
 ## 参考文档
 
-- [command help](https://prow.tidb.io/command-help?repo=tidb-community-bots%2Fconfigs#auto_cc)
-- [代码实现](https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/blunderbuss)
+- [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Fconfigs#auto_cc)
+- [代码实现](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/blunderbuss)
 
 ## Q&A
 

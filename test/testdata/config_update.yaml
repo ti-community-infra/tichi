@@ -1,5 +1,5 @@
 ti-community-lgtm:
   - repos:
-      - tidb-community-bots/test-dev
+      - ti-community-infra/test-dev
     review_acts_as_lgtm: false
     pull_owners_endpoint: https://test

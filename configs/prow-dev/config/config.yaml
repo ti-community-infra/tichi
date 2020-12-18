@@ -5,7 +5,7 @@ log_level: debug
 branch-protection:
   enforce_admins: true # rules apply to admins too!
   orgs:
-    tidb-community-bots:
+    ti-community-infra:
       repos:
         test-dev:
           branches:
@@ -18,7 +18,7 @@ branch-protection:
 
 in_repo_config:
   enabled:
-    tidb-community-bots/test-dev: true
+    ti-community-infra/test-dev: true
 
 deck:
   spyglass:
@@ -64,13 +64,13 @@ tide:
   sync_period: 1m
 
   merge_method:
-    tidb-community-bots/test-dev: squash
+    ti-community-infra/test-dev: squash
 
   target_url: https://prow-dev.tidb.io/tide
 
   queries:
     - repos:
-        - tidb-community-bots/test-dev
+        - ti-community-infra/test-dev
       labels:
         - status/can-merge
       missingLabels:
@@ -80,7 +80,7 @@ tide:
 
   context_options:
     orgs:
-      tidb-community-bots:
+      ti-community-infra:
         repos:
           test-dev:
             from-branch-protection: true

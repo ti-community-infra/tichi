@@ -1,4 +1,4 @@
-module github.com/tidb-community-bots/ti-community-prow
+module github.com/ti-community-infra/ti-community-prow
 
 go 1.15
 

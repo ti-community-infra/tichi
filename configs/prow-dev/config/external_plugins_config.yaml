@@ -1,24 +1,24 @@
 ti-community-lgtm:
   - repos:
-      - tidb-community-bots/test-dev
+      - ti-community-infra/test-dev
     review_acts_as_lgtm: true
     pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
 
 ti-community-merge:
   - repos:
-      - tidb-community-bots/test-dev
+      - ti-community-infra/test-dev
     store_tree_hash: true
     pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
 
 ti-community-owners:
   - repos:
-      - tidb-community-bots/test-dev
+      - ti-community-infra/test-dev
     default_require_lgtm: 1
     sig_endpoint: https://bots.tidb.io/ti-community-bot
 
 ti-community-label:
   - repos:
-      - tidb-community-bots/test-dev
+      - ti-community-infra/test-dev
     prefixes:
       - type
       - status
@@ -27,7 +27,7 @@ ti-community-label:
 
 ti-community-autoresponder:
   - repos:
-      - tidb-community-bots/test-dev
+      - ti-community-infra/test-dev
     auto_responds:
       - regex: "(?mi)^/ping\\s*$"
         message: "pong"
@@ -36,7 +36,7 @@ ti-community-autoresponder:
 
 ti-community-blunderbuss:
   - repos:
-      - tidb-community-bots/test-dev
+      - ti-community-infra/test-dev
     pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
     max_request_count: 1
     exclude_reviewers:

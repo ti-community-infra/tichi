@@ -31,14 +31,14 @@ ti-community-tars 就是为了解决该问题而设计，它会在 PR 有回复�
 ```yaml
 ti-community-tars:
   - repos:
-      - tidb-community-bots/test-dev
+      - ti-community-infra/test-dev
     only_when_label: "status/can-merge"
     message: "Your PR has out-of-dated, I have automatically updated it for you."
 ```
 
 ## 参考文档
 
-- [代码实现](https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/tars)
+- [代码实现](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/tars)
 
 ## Q&A
 

@@ -46,10 +46,10 @@ ti-community-merge 采取不一样的策略，`/merge` 只负责打上 `status/c
 ```yml
 ti-community-merge:
   - repos:
-      - tidb-community-bots/test-live
-      - tidb-community-bots/ti-community-prow
-      - tidb-community-bots/ti-community-bot
-      - tidb-community-bots/ti-challenge-bot
+      - ti-community-infra/test-live
+      - ti-community-infra/ti-community-prow
+      - ti-community-infra/ti-community-bot
+      - ti-community-infra/ti-challenge-bot
       - tikv/pd
     store_tree_hash: true
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
@@ -62,8 +62,8 @@ ti-community-merge:
 
 ## 参考文档
 
-- [command help](https://prow.tidb.io/command-help?repo=tidb-community-bots%2Ftest-live#merge)
-- [代码实现](https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/merge)
+- [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftest-live#merge)
+- [代码实现](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/merge)
 
 ## Q&A
 

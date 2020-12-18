@@ -11,7 +11,7 @@ config_updater:
 
 welcome:
   - repos:
-      - tidb-community-bots
+      - ti-community-infra
     message_template: "Welcome @{{.AuthorLogin}}! <br><br>It looks like this is your first PR to <a href='https://github.com/{{.Org}}/{{.Repo}}'>{{.Org}}/{{.Repo}}</a> 🎉. <br><br>I'm the bot to help you request reviewrs, add labels and more, See [available commands](https://prow-dev.tidb.io/command-help). <br><br>We want to make sure your contribution gets all the attention it needs! <br><br> <br><br>Thank you, and welcome to {{.Org}}/{{.Repo}}. :smiley:"
 
 size:
@@ -23,7 +23,7 @@ size:
 
 require_matching_label:
   - missing_label: needs-type
-    org: tidb-community-bots
+    org: ti-community-infra
     repo: test-dev
     issues: true
     regexp: ^type/
@@ -33,21 +33,21 @@ require_matching_label:
 
 triggers:
   - repos:
-      - tidb-community-bots/test-dev
+      - ti-community-infra/test-dev
     only_org_members: false
 
 repo_milestone:
-  tidb-community-bots/test-dev:
+  ti-community-infra/test-dev:
     maintainers_id: 4300209
     maintainers_team: bots-maintainers
     maintainers_friendly_name: Robots Maintainers
 
 milestone_applier:
-  tidb-community-bots/test-dev:
+  ti-community-infra/test-dev:
     master: v0.1.0
 
 plugins:
-  tidb-community-bots/test-dev:
+  ti-community-infra/test-dev:
     - assign
     - branchcleaner
     - size
@@ -61,7 +61,7 @@ plugins:
     - trigger
 
 external_plugins:
-  tidb-community-bots/test-dev:
+  ti-community-infra/test-dev:
     - name: ti-community-lgtm
       events:
         - issue_comment
