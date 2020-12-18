@@ -106,7 +106,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	// Wait a few seconds to allow other automation plugin to apply labels.
 	gracePeriod := 5 * time.Second
 
-	if opts.GracePeriodDuration != 0 {
+	if opts.GracePeriodDuration <= 0 {
 		gracePeriod = time.Duration(opts.GracePeriodDuration) * time.Second
 	}
 
