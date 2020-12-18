@@ -64,10 +64,10 @@ ti-community-lgtm 是用来根据权限自动的为 PR 添加 LGTM 对应 label 
 ```yml
 ti-community-lgtm:
   - repos:
-      - tidb-community-bots/test-live
-      - tidb-community-bots/ti-community-prow
-      - tidb-community-bots/ti-community-bot
-      - tidb-community-bots/ti-challenge-bot
+      - ti-community-infra/test-live
+      - ti-community-infra/ti-community-prow
+      - ti-community-infra/ti-community-bot
+      - ti-community-infra/ti-challenge-bot
       - tikv/pd
     review_acts_as_lgtm: true
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners # 你可以定义不同的获取 owners 的链接
@@ -80,8 +80,8 @@ ti-community-lgtm:
 
 ## 参考文档
 
-- [command help](https://prow.tidb.io/command-help?repo=tidb-community-bots%2Ftest-live#lgtm)
-- [代码实现](https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/lgtm)
+- [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftest-live#lgtm)
+- [代码实现](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/lgtm)
 
 ## Q&A
 

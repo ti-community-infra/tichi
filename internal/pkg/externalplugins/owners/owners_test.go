@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
-	tiexternalplugins "github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
+	tiexternalplugins "github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/github"
 )
 
@@ -147,7 +147,7 @@ func TestListOwners(t *testing.T) {
 		},
 	}
 
-	org := "tidb-community-bots"
+	org := "ti-community-infra"
 	repoName := "test-dev"
 	sigName := "testing"
 	pullNumber := 1
@@ -377,7 +377,7 @@ func TestListOwners(t *testing.T) {
 
 			config := &tiexternalplugins.Configuration{}
 			repoConfig := tiexternalplugins.TiCommunityOwners{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				SigEndpoint:        testServer.URL,
 				DefaultRequireLgtm: testCase.defaultRequireLgtm,
 			}
@@ -489,7 +489,7 @@ func TestListOwnersFailed(t *testing.T) {
 			Login: "collab2",
 		},
 	}
-	org := "tidb-community-bots"
+	org := "ti-community-infra"
 	repoName := "test-dev"
 	sigName := "testing"
 	pullNumber := 1
@@ -532,7 +532,7 @@ func TestListOwnersFailed(t *testing.T) {
 			config := &tiexternalplugins.Configuration{}
 			config.TiCommunityOwners = []tiexternalplugins.TiCommunityOwners{
 				{
-					Repos:       []string{"tidb-community-bots/test-dev"},
+					Repos:       []string{"ti-community-infra/test-dev"},
 					SigEndpoint: testServer.URL,
 				},
 			}

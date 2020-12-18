@@ -30,11 +30,11 @@ ti-community-label 采取不一样的策略，该插件支持按照分类打标�
 ```yml
 ti-community-label:
   - repos:
-      - tidb-community-bots/test-live
-      - tidb-community-bots/ti-community-prow
-      - tidb-community-bots/prow-configs
-      - tidb-community-bots/ti-community-bot
-      - tidb-community-bots/ti-challenge-bot
+      - ti-community-infra/test-live
+      - ti-community-infra/ti-community-prow
+      - ti-community-infra/prow-configs
+      - ti-community-infra/ti-community-bot
+      - ti-community-infra/ti-challenge-bot
     prefixes:
       - type
       - status
@@ -47,8 +47,8 @@ ti-community-label:
 
 ## 参考文档
 
-- [command help](https://prow.tidb.io/command-help?repo=tidb-community-bots%2Fti-community-prow#type)
-- [代码实现](https://github.com/tidb-community-bots/ti-community-prow/tree/master/internal/pkg/externalplugins/merge)
+- [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Fti-community-prow#type)
+- [代码实现](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/merge)
 
 ## Q&A
 

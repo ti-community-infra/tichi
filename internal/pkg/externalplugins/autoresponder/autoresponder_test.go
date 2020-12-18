@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
-	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/github/fakegithub"

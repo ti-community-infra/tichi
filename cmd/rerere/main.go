@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/sirupsen/logrus"
-	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/rerere"
+	"github.com/ti-community-infra/ti-community-prow/internal/pkg/rerere"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"

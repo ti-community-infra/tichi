@@ -85,4 +85,4 @@ repos: # 针对每个 repo 进行单独配置
 
 ### 这些 label 什么时候更新？
 
-目前为一个[定时任务](https://github.com/tidb-community-bots/configs/blob/main/prow/cluster/label_sync.yaml)，每小时的第 17 分钟尝试更新。
+目前为一个[定时任务](https://github.com/ti-community-infra/configs/blob/main/prow/cluster/label_sync.yaml)，每小时的第 17 分钟尝试更新。

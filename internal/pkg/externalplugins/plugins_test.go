@@ -14,7 +14,7 @@ func TestGetConfig(t *testing.T) {
 	}{
 		{
 			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-dev"},
+				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
@@ -22,7 +22,7 @@ func TestGetConfig(t *testing.T) {
 		},
 		{
 			lgtm: &TiCommunityLgtm{
-				Repos:              []string{"tidb-community-bots/test-live"},
+				Repos:              []string{"ti-community-infra/test-live"},
 				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},

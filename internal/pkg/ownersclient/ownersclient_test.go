@@ -69,7 +69,7 @@ func TestLoadOwners(t *testing.T) {
 			expectError:     true,
 		},
 	}
-	org := "tidb-community-bots"
+	org := "ti-community-infra"
 	repoName := "test-dev"
 	number := 1
 
@@ -148,7 +148,7 @@ func TestLoadOwnersFailed(t *testing.T) {
 			expectError: "unexpected end of JSON input",
 		},
 	}
-	org := "tidb-community-bots"
+	org := "ti-community-infra"
 	repoName := "test-dev"
 	number := 1
 

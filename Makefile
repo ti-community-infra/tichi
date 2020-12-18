@@ -17,7 +17,7 @@ GOTEST          := $(GO) test
 
 PACKAGE_LIST  := go list ./...
 PACKAGES  := $$($(PACKAGE_LIST))
-PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/tidb-community-bots/$(PROJECT)/||'
+PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/ti-community-infra/$(PROJECT)/||'
 FILES     := $$(find $$($(PACKAGE_DIRECTORIES)) -name "*.go")
 
 

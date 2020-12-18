@@ -9,8 +9,8 @@ import (
 
 	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
+	"github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
 	"github.com/tidb-community-bots/prow-github/pkg/github"
-	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/pluginhelp"
 	"k8s.io/test-infra/prow/plugins"
@@ -345,7 +345,7 @@ func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, 
 	}
 	if needsReply {
 		// Delay the reply because we may trigger the test in the reply.
-		// See: https://github.com/tidb-community-bots/ti-community-prow/issues/181.
+		// See: https://github.com/ti-community-infra/ti-community-prow/issues/181.
 		sleep(time.Second * 5)
 		msg := externalplugins.FormatSimpleResponse(author, message)
 		return ghc.CreateComment(org, repo, num, msg)
