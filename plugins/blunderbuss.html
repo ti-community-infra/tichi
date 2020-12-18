@@ -166,7 +166,7 @@
                         <h1><a class="header" href="#ti-community-blunderbuss" id="ti-community-blunderbuss">ti-community-blunderbuss</a></h1>
 <h2><a class="header" href="#设计背景" id="设计背景">设计背景</a></h2>
 <p>在 TiDB 社区中，因为一个 PR 会经过多人多阶段 review，所有我们希望能够在 PR 被创建的时候自动分配 reviewers。</p>
-<p>ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划分的权限自动分配 reviwers。除此之外，我们还需要考虑到如果 reviewers 长时间无回复时需要再次请求其他人 review  的情况，所以我们还支持了 <code>/auto-cc</code> 命令来触发再次分配 reviwers。</p>
+<p>ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划分的权限自动分配 reviewers。除此之外，我们还需要考虑到如果 reviewers 长时间无回复时需要再次请求其他人 review  的情况，所以我们还支持了 <code>/auto-cc</code> 命令来触发再次分配 reviewers。</p>
 <h2><a class="header" href="#权限设计" id="权限设计">权限设计</a></h2>
 <p>该插件主要负责 reviewers 的自动分配，所以我们将权限设置为 GitHub 用户都可以使用该功能。</p>
 <h2><a class="header" href="#设计思路" id="设计思路">设计思路</a></h2>
@@ -176,7 +176,8 @@
 <tr><td>repos</td><td>[]string</td><td>配置生效仓库</td></tr>
 <tr><td>pull_owners_endpoint</td><td>string</td><td>PR owners RESTFUL 接口地址</td></tr>
 <tr><td>max_request_count</td><td>int</td><td>最多的分配人数</td></tr>
-<tr><td>exclude_reviewers</td><td>[]string</td><td>不参与自动分配的 reviwers（针对一些可能不活跃的 reviwers ）</td></tr>
+<tr><td>exclude_reviewers</td><td>[]string</td><td>不参与自动分配的 reviewers（针对一些可能不活跃的 reviewers ）</td></tr>
+<tr><td>grace_period_duration</td><td>int</td><td>配置等待其它插件添加 sig 标签的等待时间，单位为秒，默认为 5 秒</td></tr>
 </tbody></table>
 <p>例如：</p>
 <pre><code class="language-yml">ti-community-blunderbuss:
@@ -191,6 +192,7 @@
       # Inactive reviewers
       - sykp241095
       - AndreMouche
+    grace_period_duration: 5
 </code></pre>
 <h2><a class="header" href="#参考文档" id="参考文档">参考文档</a></h2>
 <ul>
@@ -198,8 +200,8 @@
 <li><a href="https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/blunderbuss">代码实现</a></li>
 </ul>
 <h2><a class="header" href="#qa" id="qa">Q&amp;A</a></h2>
-<h3><a class="header" href="#如果我的-pr-更改了-sig-的-label-导致了-owners-中的-reviwers-发生了变动怎么办" id="如果我的-pr-更改了-sig-的-label-导致了-owners-中的-reviwers-发生了变动怎么办">如果我的 PR 更改了 sig 的 label 导致了 owners 中的 reviwers 发生了变动怎么办？</a></h3>
-<p>目前我们还未做这部分支持，我们后续会根据 label 的变化自动更换 reviwers 的请求。</p>
+<h3><a class="header" href="#如果我的-pr-更改了-sig-的-label-导致了-owners-中的-reviewers-发生了变动怎么办" id="如果我的-pr-更改了-sig-的-label-导致了-owners-中的-reviewers-发生了变动怎么办">如果我的 PR 更改了 sig 的 label 导致了 owners 中的 reviewers 发生了变动怎么办？</a></h3>
+<p>目前我们还未做这部分支持，我们后续会根据 label 的变化自动更换 reviewers 的请求。</p>
 
                     </main>
 
