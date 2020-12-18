@@ -20,7 +20,8 @@ import (
 const PluginName = "ti-community-lgtm"
 
 var (
-	configInfoReviewActsAsLgtm = `Reviews of "approve" or "request changes" act as adding or removing LGTM.`
+	configInfoReviewActsAsLgtm = "'Approve' review action will add a LGTM " +
+		"and 'Request Changes' review action will remove the LGTM."
 
 	// LGTMRe is the regex that matches lgtm comments
 	LGTMRe = regexp.MustCompile(`(?mi)^/lgtm\s*$`)
@@ -39,7 +40,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 			opts := cfg.LgtmFor(repo.Org, repo.Repo)
 			var isConfigured bool
 			var configInfoStrings []string
-			configInfoStrings = append(configInfoStrings, "The plugin has the following configuration:<ul>")
+			configInfoStrings = append(configInfoStrings, "The plugin has these configurations:<ul>")
 			if opts.ReviewActsAsLgtm {
 				configInfoStrings = append(configInfoStrings, "<li>"+configInfoReviewActsAsLgtm+"</li>")
 				isConfigured = true
@@ -50,16 +51,15 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 			}
 		}
 		pluginHelp := &pluginhelp.PluginHelp{
-			Description: "The ti-community-lgtm plugin manages the application and " +
-				"removal of the 'status/LGT{number}' (Looks Good To Me) label which is typically used to gate merging.",
-			Config: configInfo,
+			Description: "The ti-community-lgtm plugin manages the 'status/LGT{number}' (Looks Good To Me) label.",
+			Config:      configInfo,
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
-			Usage:       "/lgtm [cancel] or GitHub Review action",
-			Description: "Adds or removes the 'status/LGT{number}' label which is typically used to gate merging.",
+			Usage:       "/lgtm [cancel] or triggers by GitHub review action.",
+			Description: "Add or remove the 'status/LGT{number}' label. Additionally, the PR author can use '/lgtm cancel'.",
 			Featured:    true,
-			WhoCanUse:   "Collaborators on the repository. '/lgtm cancel' can be used additionally by the PR author.",
+			WhoCanUse:   "Collaborators of this repository. Additionally, the PR author can use '/lgtm cancel'.",
 			Examples: []string{
 				"/lgtm",
 				"/lgtm cancel",
@@ -218,8 +218,8 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	// Author cannot LGTM own PR, comment and abort.
 	isAuthor := author == issueAuthor
 	if isAuthor && wantLGTM {
-		resp := "you cannot LGTM your own PR."
-		log.Infof("Commenting with \"%s\".", resp)
+		resp := "you cannot `/lgtm` your own PR."
+		log.Infof("Commenting \"%s\".", resp)
 		return gc.CreateComment(rc.repo.Owner.Login, rc.repo.Name, rc.number,
 			externalplugins.FormatResponseRaw(rc.body, rc.htmlURL, rc.author, resp))
 	}
@@ -237,17 +237,17 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		reviewers.Insert(reviewer)
 	}
 
-	// Not reviewers but want add LGTM.
+	// Not reviewers but want to add LGTM.
 	if !reviewers.Has(author) && wantLGTM {
-		resp := "adding LGTM is restricted to reviewers in [list](" + url + ")."
-		log.Infof("Reply to /lgtm request with comment: \"%s\"", resp)
+		resp := "`/lgtm` is only allowed for the reviewers in [list](" + url + ")."
+		log.Infof("Reply /lgtm request in comment: \"%s\"", resp)
 		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
-	// Not author or reviewers but want remove LGTM.
+	// Not author or reviewers but want to remove LGTM.
 	if !reviewers.Has(author) && !isAuthor && !wantLGTM {
-		resp := "removing LGTM is restricted to reviewers in [list](" + url + ") or PR author."
-		log.Infof("Reply to /lgtm cancel request with comment: \"%s\"", resp)
+		resp := "`/lgtm cancel` is only allowed for the PR author or the reviewers in [list](" + url + ")."
+		log.Infof("Reply /lgtm cancel request in comment: \"%s\"", resp)
 		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 

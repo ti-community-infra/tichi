@@ -31,6 +31,8 @@ ti-community-autoresponder:
     auto_responds:
       - regex: "(?mi)^/ping\\s*$"
         message: "pong"
+      - regex: "(?m)(?<!/)LGTM"
+        message: "Please use `/lgtm` instead of `LGTM`."
 
 ti-community-blunderbuss:
   - repos:

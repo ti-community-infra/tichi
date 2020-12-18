@@ -59,15 +59,15 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: "The label plugin provides commands that add or remove certain types of labels. " +
-				"Labels of the following types can be manipulated: 'status/*'," +
-				" 'sig/*', and 'type/*'. More labels can be configured to be used via the /label command.",
+				"For example, the labels like 'status/*', 'sig/*' and bare lables can be " +
+				"managed by using `/status`, `/sig` and `/label`.",
 			Config: labelConfig,
 		}
 		pluginHelp.AddCommand(pluginhelp.Command{
-			Usage:       "/[remove-](status|sig|kind|label) <target>",
-			Description: "Applies or removes a label from one of the recognized types of labels.",
+			Usage:       "/[remove-](status|sig|type|label|component) <target>",
+			Description: "Add or remove a label of the given type.",
 			Featured:    false,
-			WhoCanUse:   "Anyone can trigger this command on a PR.",
+			WhoCanUse:   "Everyone can trigger this command.",
 			Examples:    []string{"/type bug", "/remove-sig engine", "/sig engine"},
 		})
 		return pluginHelp, nil

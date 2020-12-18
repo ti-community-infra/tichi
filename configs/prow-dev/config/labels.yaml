@@ -84,7 +84,7 @@ default:
         - name: help-wanted
       target: issues
       prowPlugin: help
-      addedBy: anyone
+      addedBy: everyone
     - color: 7057ff
       description: Denotes an issue ready for a new contributor, according to the "help wanted" guidelines.
       name: 'good first issue'
@@ -92,7 +92,7 @@ default:
         - name: for-new-contributors
       target: issues
       prowPlugin: help
-      addedBy: anyone
+      addedBy: everyone
 repos:
   tidb-community-bots/test-dev:
     labels:
@@ -104,7 +104,7 @@ repos:
         target: both
         prowPlugin: ti-community-label
         isExternalPlugin: true
-        addedBy: anyone
+        addedBy: everyone
       - color: c7def8
         description: Categorizes issue or PR as related to a new feature.
         name: type/feature
@@ -114,4 +114,4 @@ repos:
         target: both
         prowPlugin: ti-community-label
         isExternalPlugin: true
-        addedBy: anyone
+        addedBy: everyone

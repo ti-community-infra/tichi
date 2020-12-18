@@ -48,7 +48,7 @@ func (s *Server) listOwnersForNonSig(org string, repo string,
 	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	collaborators, err := s.Gc.ListCollaborators(org, repo)
 	if err != nil {
-		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed get collaborators.")
+		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed to get collaborators.")
 		return nil, err
 	}
 
@@ -82,7 +82,7 @@ func (s *Server) listOwnersForSig(sigName string,
 	// Get sig info.
 	res, err := s.Client.Get(url)
 	if err != nil {
-		s.Log.WithField("url", url).WithError(err).Error("Failed get sig info.")
+		s.Log.WithField("url", url).WithError(err).Error("Failed to get sig info.")
 		return nil, err
 	}
 	defer func() {
@@ -90,7 +90,7 @@ func (s *Server) listOwnersForSig(sigName string,
 	}()
 
 	if res.StatusCode != 200 {
-		s.Log.WithField("url", url).WithError(err).Error("Failed get sig info.")
+		s.Log.WithField("url", url).WithError(err).Error("Failed to get sig info.")
 		return nil, errors.New("could not get a sig")
 	}
 
@@ -101,7 +101,7 @@ func (s *Server) listOwnersForSig(sigName string,
 	}
 	var sigRes SigResponse
 	if err := json.Unmarshal(body, &sigRes); err != nil {
-		s.Log.WithField("body", body).WithError(err).Error("Failed unmarshal body.")
+		s.Log.WithField("body", body).WithError(err).Error("Failed to unmarshal body.")
 		return nil, err
 	}
 
@@ -149,7 +149,7 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	// Get pull request.
 	pull, err := s.Gc.GetPullRequest(org, repo, number)
 	if err != nil {
-		s.Log.WithField("pullNumber", number).WithError(err).Error("Failed get pull request.")
+		s.Log.WithField("pullNumber", number).WithError(err).Error("Failed to get pull request.")
 		return nil, err
 	}
 
@@ -164,7 +164,7 @@ func (s *Server) ListOwners(org string, repo string, number int,
 
 	requireLgtm, err := getRequireLgtmByLabel(pull.Labels, opts.RequireLgtmLabelPrefix)
 	if err != nil {
-		s.Log.WithField("pullNumber", number).WithError(err).Error("Failed parse require lgtm.")
+		s.Log.WithField("pullNumber", number).WithError(err).Error("Failed to parse require lgtm.")
 		return nil, err
 	}
 
