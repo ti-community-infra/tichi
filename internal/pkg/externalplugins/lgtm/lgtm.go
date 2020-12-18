@@ -59,7 +59,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 			Usage:       "/lgtm [cancel] or triggers by GitHub review action.",
 			Description: "Add or remove the 'status/LGT{number}' label. Additionally, the PR author can use '/lgtm cancel'.",
 			Featured:    true,
-			WhoCanUse:   "Collaborators of this repository.",
+			WhoCanUse:   "Collaborators of this repository. Additionally, the PR author can use '/lgtm cancel'.",
 			Examples: []string{
 				"/lgtm",
 				"/lgtm cancel",
