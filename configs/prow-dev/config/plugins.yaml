@@ -12,7 +12,7 @@ config_updater:
 welcome:
   - repos:
       - tidb-community-bots
-    message_template: "Welcome @{{.AuthorLogin}}! <br><br>It looks like this is your first PR to <a href='https://github.com/{{.Org}}/{{.Repo}}'>{{.Org}}/{{.Repo}}</a> 🎉. <br><br>I'm the bot to assist you in requsting reviewrs, tagging labels and more. See [available commands](https://prow-dev.tidb.io/command-help). <br><br>Welcome to ti-community. :smiley:"
+    message_template: "Welcome @{{.AuthorLogin}}! <br><br>It looks like this is your first PR to <a href='https://github.com/{{.Org}}/{{.Repo}}'>{{.Org}}/{{.Repo}}</a> 🎉. <br><br>I'm the bot to help you request reviewrs, add labels and more, See [available commands](https://prow-dev.tidb.io/command-help). <br><br>We want to make sure your contribution gets all the attention it needs! <br><br> <br><br>Thank you, and welcome to {{.Org}}/{{.Repo}}. :smiley:"
 
 size:
   s: 10
