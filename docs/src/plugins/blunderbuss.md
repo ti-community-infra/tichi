@@ -4,7 +4,7 @@
 
 在 TiDB 社区中，因为一个 PR 会经过多人多阶段 review，所有我们希望能够在 PR 被创建的时候自动分配 reviewers。
 
-ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划分的权限自动分配 reviwers。除此之外，我们还需要考虑到如果 reviewers 长时间无回复时需要再次请求其他人 review  的情况，所以我们还支持了 `/auto-cc` 命令来触发再次分配 reviwers。
+ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划分的权限自动分配 reviewers。除此之外，我们还需要考虑到如果 reviewers 长时间无回复时需要再次请求其他人 review  的情况，所以我们还支持了 `/auto-cc` 命令来触发再次分配 reviewers。
 
 ## 权限设计
 
@@ -21,7 +21,8 @@ ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划
 | repos                | []string | 配置生效仓库                                                |
 | pull_owners_endpoint | string   | PR owners RESTFUL 接口地址                                  |
 | max_request_count    | int      | 最多的分配人数                                              |
-| exclude_reviewers    | []string | 不参与自动分配的 reviwers（针对一些可能不活跃的 reviwers ） |
+| exclude_reviewers    | []string | 不参与自动分配的 reviewers（针对一些可能不活跃的 reviewers ）   |
+| grace_period_duration| int      | 配置等待其它插件添加 sig 标签的等待时间，单位为秒，默认为 5 秒    |
 
 例如：
 
@@ -38,6 +39,7 @@ ti-community-blunderbuss:
       # Inactive reviewers
       - sykp241095
       - AndreMouche
+    grace_period_duration: 5
 ```
 
 ## 参考文档
@@ -47,6 +49,6 @@ ti-community-blunderbuss:
 
 ## Q&A
 
-### 如果我的 PR 更改了 sig 的 label 导致了 owners 中的 reviwers 发生了变动怎么办？
+### 如果我的 PR 更改了 sig 的 label 导致了 owners 中的 reviewers 发生了变动怎么办？
 
-目前我们还未做这部分支持，我们后续会根据 label 的变化自动更换 reviwers 的请求。
+目前我们还未做这部分支持，我们后续会根据 label 的变化自动更换 reviewers 的请求。

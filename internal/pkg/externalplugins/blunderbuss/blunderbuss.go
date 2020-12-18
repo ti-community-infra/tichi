@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
@@ -20,11 +21,15 @@ import (
 const (
 	// PluginName defines this plugin's registered name.
 	PluginName = "ti-community-blunderbuss"
+	// DefaultGracePeriodDuration define the time to wait before requesting a review (default five seconds).
+	DefaultGracePeriodDuration = 5
 )
 
 var (
 	match = regexp.MustCompile(`(?mi)^/auto-cc\s*$`)
 )
+
+var sleep = time.Sleep
 
 type githubClient interface {
 	RequestReview(org, repo string, number int, logins []string) error
@@ -101,6 +106,15 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	}
 	repo := &pe.Repo
 	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
+
+	// Wait a few seconds to allow other automation plugin to apply labels.
+	gracePeriod := DefaultGracePeriodDuration * time.Second
+
+	if opts.GracePeriodDuration != 0 {
+		gracePeriod = time.Duration(opts.GracePeriodDuration) * time.Second
+	}
+
+	sleep(gracePeriod)
 
 	return handle(
 		gc,

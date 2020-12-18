@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
@@ -226,6 +227,11 @@ func TestHandlePullRequest(t *testing.T) {
 			expectReviewerCount: 1,
 		},
 	}
+
+	// Mock the sleep function
+	oldSleep := sleep
+	sleep = func(time.Duration) {}
+	defer func() { sleep = oldSleep }()
 
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	for _, tc := range testcases {

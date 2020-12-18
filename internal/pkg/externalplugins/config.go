@@ -123,6 +123,9 @@ type TiCommunityBlunderbuss struct {
 	ExcludeReviewers []string `json:"exclude_reviewers,omitempty"`
 	// PullOwnersEndpoint specifies the URL of the reviewer of pull request.
 	PullOwnersEndpoint string `json:"pull_owners_endpoint,omitempty"`
+	// GracePeriodDuration specifies the waiting time before the plugin requests a review,
+	// defaults to 5 means that the plugin will wait 5 seconds for the sig label to be added.
+	GracePeriodDuration int `json:"grace_period_duration,omitempty"`
 }
 
 // TiCommunityTars is the config for the tars plugin.
@@ -366,6 +369,9 @@ func validateBlunderbuss(blunderbusses []TiCommunityBlunderbuss) error {
 		}
 		if blunderbuss.MaxReviewerCount <= 0 {
 			return errors.New("max reviewer count must more than 0")
+		}
+		if blunderbuss.GracePeriodDuration < 0 {
+			return errors.New("grace period duration must not less than 0")
 		}
 	}
 
