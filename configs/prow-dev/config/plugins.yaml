@@ -34,7 +34,6 @@ require_matching_label:
 triggers:
   - repos:
       - tidb-community-bots/test-dev
-    ignore_ok_to_test: true
     only_org_members: false
 
 repo_milestone:
@@ -59,6 +58,7 @@ plugins:
     - hold
     - milestone
     - milestoneapplier
+    - trigger
 
 external_plugins:
   tidb-community-bots/test-dev:
@@ -87,11 +87,7 @@ external_plugins:
       events:
         - pull_request
         - issue_comment
-    - name: ti-community-tars
-      events:
-        - pull_request
-        - issue_comment
-    - name: cherrypick
+    - name: cherrypicker
       events:
         - pull_request
         - issue_comment

@@ -15,6 +15,33 @@ presubmits:
             - --warnings=validate-urls
             - --warnings=unknown-fields
             - --warnings=duplicate-job-refs
+  - name: pull-ti-community-prow-rerere
+    decorate: true
+    trigger: "(?mi)^/merge\\s*$"
+    rerun_command: "/merge"
+    max_concurrency: 1
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: rustinliu/rerere-component:latest
+          command:
+            - rerere
+          args:
+            - --github-token-path=/etc/github/token
+            - --dry-run=false
+            - --github-endpoint=https://api.github.com
+            - --require-contexts=build
+            - --require-contexts=lint
+            - --labels=status/can-merge
+          volumeMounts:
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+      volumes:
+        - name: github-token
+          secret:
+            secretName: github-token
 postsubmits:
   - name: post-ti-community-prow-deploy-prow
     run_if_changed: 'configs/prow-dev/cluster/'

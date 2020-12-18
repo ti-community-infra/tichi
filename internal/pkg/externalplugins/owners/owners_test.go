@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
+	"sort"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -44,17 +46,32 @@ func (f *fakegithub) ListTeams(org string) ([]github.Team, error) {
 			ID:   42,
 			Name: "Leads",
 		},
+		{
+			ID:   60,
+			Name: "Releasers",
+		},
 	}, nil
 }
 
 // ListTeamMembers return a fake team with a single "sig-lead" GitHub team member.
-func (f *fakegithub) ListTeamMembers(teamID int, role string) ([]github.TeamMember, error) {
+func (f *fakegithub) ListTeamMembers(_ string, teamID int, role string) ([]github.TeamMember, error) {
 	if role != github.RoleAll {
 		return nil, fmt.Errorf("unsupported role %v (only all supported)", role)
 	}
 	teams := map[int][]github.TeamMember{
-		0:  {{Login: "default-sig-lead"}},
-		42: {{Login: "sig-lead"}},
+		0: {
+			{Login: "admin1"},
+			{Login: "admin2"},
+		},
+		42: {
+			{Login: "sig-leader1"},
+			{Login: "sig-leader2"},
+		},
+		60: {
+			{Login: "admin1"},
+			{Login: "releaser1"},
+			{Login: "releaser2"},
+		},
 	}
 	members, ok := teams[teamID]
 	if !ok {
@@ -141,13 +158,14 @@ func TestListOwners(t *testing.T) {
 		sigRes                 *SigResponse
 		labels                 []github.Label
 		useDefaultSigName      bool
-		trustTeam              string
+		trustTeams             []string
 		defaultRequireLgtm     int
 		requireLgtmLabelPrefix string
+		branchesConfig         map[string]tiexternalplugins.TiCommunityOwnerBranchConfig
 
-		exceptCommitters []string
-		exceptReviewers  []string
-		exceptNeedsLgtm  int
+		expectCommitters []string
+		expectReviewers  []string
+		expectNeedsLgtm  int
 	}{
 		{
 			name:   "has one sig label",
@@ -157,15 +175,15 @@ func TestListOwners(t *testing.T) {
 					Name: "sig/testing",
 				},
 			},
-			exceptCommitters: []string{
+			expectCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 			},
-			exceptReviewers: []string{
+			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			exceptNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: lgtmTwo,
 		},
 		{
 			name:   "has one sig label and require one lgtm",
@@ -178,26 +196,26 @@ func TestListOwners(t *testing.T) {
 				},
 			},
 			requireLgtmLabelPrefix: "require-LGT",
-			exceptCommitters: []string{
+			expectCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 			},
-			exceptReviewers: []string{
+			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			exceptNeedsLgtm: 1,
+			expectNeedsLgtm: 1,
 		},
 		{
 			name:   "non sig label",
 			sigRes: &validSigRes,
-			exceptCommitters: []string{
+			expectCommitters: []string{
 				"collab2", "collab3",
 			},
-			exceptReviewers: []string{
+			expectReviewers: []string{
 				"collab2", "collab3",
 			},
-			exceptNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: lgtmTwo,
 		},
 		{
 			name:   "non sig label and require one lgtm",
@@ -208,27 +226,27 @@ func TestListOwners(t *testing.T) {
 				},
 			},
 			requireLgtmLabelPrefix: "require-LGT",
-			exceptCommitters: []string{
+			expectCommitters: []string{
 				"collab2", "collab3",
 			},
-			exceptReviewers: []string{
+			expectReviewers: []string{
 				"collab2", "collab3",
 			},
-			exceptNeedsLgtm: 1,
+			expectNeedsLgtm: 1,
 		},
 		{
 			name:              "non sig label but use default sig name",
 			sigRes:            &validSigRes,
 			useDefaultSigName: true,
-			exceptCommitters: []string{
+			expectCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 			},
-			exceptReviewers: []string{
+			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			exceptNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: lgtmTwo,
 		},
 		{
 			name:              "non sig label but use default sig name and require one lgtm",
@@ -240,15 +258,15 @@ func TestListOwners(t *testing.T) {
 				},
 			},
 			requireLgtmLabelPrefix: "require-LGT",
-			exceptCommitters: []string{
+			expectCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 			},
-			exceptReviewers: []string{
+			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			exceptNeedsLgtm: 1,
+			expectNeedsLgtm: 1,
 		},
 		{
 			name:                   "non sig label but use default sig name and default require two lgtm",
@@ -257,15 +275,15 @@ func TestListOwners(t *testing.T) {
 			labels:                 []github.Label{},
 			requireLgtmLabelPrefix: "require-LGT",
 			defaultRequireLgtm:     2,
-			exceptCommitters: []string{
+			expectCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 			},
-			exceptReviewers: []string{
+			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			exceptNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: lgtmTwo,
 		},
 		{
 			name:   "has one sig label and a trust team",
@@ -275,20 +293,79 @@ func TestListOwners(t *testing.T) {
 					Name: "sig/testing",
 				},
 			},
-			exceptCommitters: []string{
+			trustTeams: []string{"Leads"},
+			expectCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 				// Team members.
-				"sig-lead",
+				"sig-leader1", "sig-leader2",
 			},
-			exceptReviewers: []string{
+			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 				// Team members.
-				"sig-lead",
+				"sig-leader1", "sig-leader2",
 			},
-			trustTeam:       "Leads",
-			exceptNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: lgtmTwo,
+		},
+		{
+			name:   "owners plugin config contains branch config",
+			sigRes: &validSigRes,
+			labels: []github.Label{
+				{
+					Name: "sig/testing",
+				},
+			},
+			defaultRequireLgtm: 2,
+			trustTeams:         []string{"Leads"},
+			branchesConfig: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
+				"master": {
+					DefaultRequireLgtm: 3,
+					TrustTeams:         []string{"Admins"},
+				},
+				"release": {
+					DefaultRequireLgtm: 4,
+					TrustTeams:         []string{"Releasers"},
+				},
+			},
+			expectCommitters: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2",
+				// Team members.
+				"admin1", "admin2",
+			},
+			expectReviewers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2", "reviewer1", "reviewer2",
+				// Team members.
+				"admin1", "admin2",
+			},
+			expectNeedsLgtm: 3,
+		},
+		{
+			name:   "owners plugin config contains multiple trusted teams",
+			sigRes: &validSigRes,
+			labels: []github.Label{
+				{
+					Name: "sig/testing",
+				},
+			},
+			trustTeams: []string{"Leads", "Admins", "Releasers"},
+			expectCommitters: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2",
+				// Team members.
+				"admin1", "admin2", "sig-leader1", "sig-leader2",
+				"releaser1", "releaser2",
+			},
+			expectReviewers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2", "reviewer1", "reviewer2",
+				// Team members.
+				"admin1", "admin2", "sig-leader1", "sig-leader2",
+				"releaser1", "releaser2",
+			},
+			expectNeedsLgtm: 2,
 		},
 	}
 
@@ -299,33 +376,37 @@ func TestListOwners(t *testing.T) {
 			testServer := httptest.NewServer(mux)
 
 			config := &tiexternalplugins.Configuration{}
-			owners := tiexternalplugins.TiCommunityOwners{
+			repoConfig := tiexternalplugins.TiCommunityOwners{
 				Repos:              []string{"tidb-community-bots/test-dev"},
 				SigEndpoint:        testServer.URL,
 				DefaultRequireLgtm: testCase.defaultRequireLgtm,
 			}
 
 			if testCase.useDefaultSigName {
-				owners.DefaultSigName = sigName
+				repoConfig.DefaultSigName = sigName
 			}
 
-			if testCase.trustTeam != "" {
-				owners.OwnersTrustTeam = testCase.trustTeam
+			if testCase.trustTeams != nil {
+				repoConfig.TrustTeams = testCase.trustTeams
 			}
 
 			if testCase.requireLgtmLabelPrefix != "" {
-				owners.RequireLgtmLabelPrefix = testCase.requireLgtmLabelPrefix
+				repoConfig.RequireLgtmLabelPrefix = testCase.requireLgtmLabelPrefix
+			}
+
+			if testCase.branchesConfig != nil {
+				repoConfig.Branches = testCase.branchesConfig
 			}
 
 			config.TiCommunityOwners = []tiexternalplugins.TiCommunityOwners{
-				owners,
+				repoConfig,
 			}
 
 			// URL pattern.
 			pattern := fmt.Sprintf(SigEndpointFmt, sigName)
 			mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
 				if req.Method != "GET" {
-					t.Errorf("Except 'Get' got '%s'", req.Method)
+					t.Errorf("expect 'Get' got '%s'", req.Method)
 				}
 				reqBodyBytes := new(bytes.Buffer)
 				err := json.NewEncoder(reqBodyBytes).Encode(testCase.sigRes)
@@ -376,16 +457,24 @@ func TestListOwners(t *testing.T) {
 				t.Errorf("unexpected error: '%v'", err)
 			}
 
-			if len(res.Data.Committers) != len(testCase.exceptCommitters) {
-				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", res.Data.Committers, testCase.exceptCommitters)
+			sort.Strings(res.Data.Committers)
+			sort.Strings(testCase.expectCommitters)
+
+			if len(res.Data.Committers) != len(testCase.expectCommitters) ||
+				!reflect.DeepEqual(res.Data.Committers, testCase.expectCommitters) {
+				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", res.Data.Committers, testCase.expectCommitters)
 			}
 
-			if len(res.Data.Reviewers) != len(testCase.exceptReviewers) {
-				t.Errorf("Different reviewers: Got \"%v\" expected \"%v\"", res.Data.Reviewers, testCase.exceptReviewers)
+			sort.Strings(res.Data.Reviewers)
+			sort.Strings(testCase.expectReviewers)
+
+			if len(res.Data.Reviewers) != len(testCase.expectReviewers) ||
+				!reflect.DeepEqual(res.Data.Reviewers, testCase.expectReviewers) {
+				t.Errorf("Different reviewers: Got \"%v\" expected \"%v\"", res.Data.Reviewers, testCase.expectReviewers)
 			}
 
-			if res.Data.NeedsLgtm != testCase.exceptNeedsLgtm {
-				t.Errorf("Different LGTM: Got \"%v\" expected \"%v\"", res.Data.NeedsLgtm, testCase.exceptNeedsLgtm)
+			if res.Data.NeedsLgtm != testCase.expectNeedsLgtm {
+				t.Errorf("Different LGTM: Got \"%v\" expected \"%v\"", res.Data.NeedsLgtm, testCase.expectNeedsLgtm)
 			}
 		})
 	}
@@ -410,7 +499,7 @@ func TestListOwnersFailed(t *testing.T) {
 		name        string
 		labels      []github.Label
 		invalidData bool
-		exceptError string
+		expectError string
 	}{
 		{
 			name: "has one sig label",
@@ -420,7 +509,7 @@ func TestListOwnersFailed(t *testing.T) {
 				},
 			},
 			invalidData: true,
-			exceptError: "unexpected end of JSON input",
+			expectError: "unexpected end of JSON input",
 		},
 		{
 			name: "non sig label",
@@ -430,7 +519,7 @@ func TestListOwnersFailed(t *testing.T) {
 				},
 			},
 			invalidData: false,
-			exceptError: "could not get a sig",
+			expectError: "could not get a sig",
 		},
 	}
 
@@ -452,7 +541,7 @@ func TestListOwnersFailed(t *testing.T) {
 			pattern := fmt.Sprintf(SigEndpointFmt, sigName)
 			mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
 				if req.Method != "GET" {
-					t.Errorf("Except 'Get' got '%s'", req.Method)
+					t.Errorf("expect 'Get' got '%s'", req.Method)
 				}
 
 				if testCase.invalidData {
@@ -499,9 +588,9 @@ func TestListOwnersFailed(t *testing.T) {
 
 			_, err := ownersServer.ListOwners(org, repoName, pullNumber, config)
 			if err == nil {
-				t.Errorf("expected error '%v', but it is nil", testCase.exceptError)
-			} else if err.Error() != testCase.exceptError {
-				t.Errorf("expected error '%v', but it is '%v'", testCase.exceptError, err)
+				t.Errorf("expected error '%v', but it is nil", testCase.expectError)
+			} else if err.Error() != testCase.expectError {
+				t.Errorf("expected error '%v', but it is '%v'", testCase.expectError, err)
 			}
 
 			testServer.Close()
@@ -517,7 +606,7 @@ func TestGetSigNameByLabel(t *testing.T) {
 	testCases := []struct {
 		name          string
 		labels        []github.Label
-		exceptSigName string
+		expectSigName string
 	}{
 		{
 			name: "has one sig label",
@@ -531,7 +620,7 @@ func TestGetSigNameByLabel(t *testing.T) {
 					Name: sigLabel,
 				},
 			},
-			exceptSigName: "testing",
+			expectSigName: "testing",
 		},
 		{
 			name: "non sig label",
@@ -542,7 +631,7 @@ func TestGetSigNameByLabel(t *testing.T) {
 					Name: testLabel2,
 				},
 			},
-			exceptSigName: "",
+			expectSigName: "",
 		},
 	}
 
@@ -550,8 +639,8 @@ func TestGetSigNameByLabel(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			sigName := getSigNameByLabel(testCase.labels)
 
-			if sigName != testCase.exceptSigName {
-				t.Errorf("expected sig '%s', but it is '%s'", testCase.exceptSigName, sigName)
+			if sigName != testCase.expectSigName {
+				t.Errorf("expected sig '%s', but it is '%s'", testCase.expectSigName, sigName)
 			}
 		})
 	}
@@ -562,8 +651,8 @@ func TestGetRequireLgtmByLabel(t *testing.T) {
 		name                   string
 		labels                 []github.Label
 		requireLgtmLabelPrefix string
-		exceptLgtm             int
-		exceptErr              string
+		expectLgtm             int
+		expectErr              string
 	}{
 		{
 			name: "No require",
@@ -573,7 +662,7 @@ func TestGetRequireLgtmByLabel(t *testing.T) {
 				},
 			},
 			requireLgtmLabelPrefix: "require/LGT",
-			exceptLgtm:             0,
+			expectLgtm:             0,
 		}, {
 			name: "Require one lgtm",
 			labels: []github.Label{
@@ -584,7 +673,7 @@ func TestGetRequireLgtmByLabel(t *testing.T) {
 				},
 			},
 			requireLgtmLabelPrefix: "require/LGT",
-			exceptLgtm:             1,
+			expectLgtm:             1,
 		}, {
 			name: "Require two lgtm",
 			labels: []github.Label{
@@ -595,7 +684,7 @@ func TestGetRequireLgtmByLabel(t *testing.T) {
 				},
 			},
 			requireLgtmLabelPrefix: "require-LGT",
-			exceptLgtm:             2,
+			expectLgtm:             2,
 		},
 		{
 			name: "Wrong require",
@@ -607,8 +696,8 @@ func TestGetRequireLgtmByLabel(t *testing.T) {
 				},
 			},
 			requireLgtmLabelPrefix: "require-LGT",
-			exceptLgtm:             0,
-			exceptErr:              "strconv.Atoi: parsing \"abcde\": invalid syntax",
+			expectLgtm:             0,
+			expectErr:              "strconv.Atoi: parsing \"abcde\": invalid syntax",
 		},
 	}
 
@@ -616,12 +705,12 @@ func TestGetRequireLgtmByLabel(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			requireLgtm, err := getRequireLgtmByLabel(testCase.labels, testCase.requireLgtmLabelPrefix)
 
-			if requireLgtm != testCase.exceptLgtm {
-				t.Errorf("expected lgtm '%d', but it is '%d'", testCase.exceptLgtm, requireLgtm)
+			if requireLgtm != testCase.expectLgtm {
+				t.Errorf("expected lgtm '%d', but it is '%d'", testCase.expectLgtm, requireLgtm)
 			}
 
-			if err != nil && err.Error() != testCase.exceptErr {
-				t.Errorf("expected err '%v', but it is '%v'", testCase.exceptErr, err)
+			if err != nil && err.Error() != testCase.expectErr {
+				t.Errorf("expected err '%v', but it is '%v'", testCase.expectErr, err)
 			}
 		})
 	}

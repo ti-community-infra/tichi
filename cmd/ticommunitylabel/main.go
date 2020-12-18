@@ -48,7 +48,7 @@ func gatherOptions() options {
 	fs := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	fs.IntVar(&o.port, "port", 80, "Port to listen on.")
 	fs.StringVar(&o.externalPluginsConfig, "external-plugins-config",
-		"/etc/plugins/external_plugins_config.yaml", "Path to external plugin config file.")
+		"/etc/external_plugins_config/external_plugins_config.yaml", "Path to external plugin config file.")
 	fs.BoolVar(&o.dryRun, "dry-run", true, "Dry run for testing. Uses API tokens but does not mutate.")
 	fs.StringVar(&o.webhookSecretFile, "hmac-secret-file",
 		"/etc/webhook/hmac", "Path to the file containing the GitHub HMAC secret.")

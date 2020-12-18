@@ -31,7 +31,7 @@ type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
 	ListCollaborators(org, repo string) ([]github.User, error)
 	ListTeams(org string) ([]github.Team, error)
-	ListTeamMembers(id int, role string) ([]github.TeamMember, error)
+	ListTeamMembers(org string, id int, role string) ([]github.TeamMember, error)
 }
 
 type Server struct {
@@ -168,19 +168,44 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		return nil, err
 	}
 
+	// Get the configuration according to the name of the branch which the current PR belongs to.
+	branchName := pull.Base.Ref
+	branchConfig, hasBranchConfig := opts.Branches[branchName]
+
 	// When we cannot find the require label from the PR, try to use the default require lgtm.
 	if requireLgtm == 0 {
-		requireLgtm = opts.DefaultRequireLgtm
+		if hasBranchConfig && branchConfig.DefaultRequireLgtm != 0 {
+			requireLgtm = branchConfig.DefaultRequireLgtm
+		} else {
+			requireLgtm = opts.DefaultRequireLgtm
+		}
 	}
 
-	trustTeamMembers := getTrustTeamMembers(s.Log, s.Gc, org, opts.OwnersTrustTeam)
+	// Notice: If the branch of the PR has extra trust team config, it will override the repository config.
+	var trustTeams []string
+
+	// Notice: If the configuration of the trust team gives an empty slice (not nil slice), the plugin
+	// will consider that the branch does not trust any team.
+	if hasBranchConfig && branchConfig.TrustTeams != nil {
+		trustTeams = branchConfig.TrustTeams
+	} else {
+		trustTeams = opts.TrustTeams
+	}
+
+	// Avoid duplication when one user exists in multiple trusted teams.
+	trustTeamMembers := sets.String{}
+
+	for _, trustTeam := range trustTeams {
+		members := getTrustTeamMembers(s.Log, s.Gc, org, trustTeam)
+		trustTeamMembers.Insert(members...)
+	}
 
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
 	if sigName == "" {
-		return s.listOwnersForNonSig(org, repo, trustTeamMembers, requireLgtm)
+		return s.listOwnersForNonSig(org, repo, trustTeamMembers.List(), requireLgtm)
 	}
 
-	return s.listOwnersForSig(sigName, opts, trustTeamMembers, requireLgtm)
+	return s.listOwnersForSig(sigName, opts, trustTeamMembers.List(), requireLgtm)
 }
 
 // getSigNameByLabel returns the name of sig when the label prefix matches.
@@ -223,7 +248,7 @@ func getTrustTeamMembers(log *logrus.Entry, gc githubClient, org, trustTeam stri
 		if teams, err := gc.ListTeams(org); err == nil {
 			for _, teamInOrg := range teams {
 				if strings.Compare(teamInOrg.Name, trustTeam) == 0 {
-					if members, err := gc.ListTeamMembers(teamInOrg.ID, github.RoleAll); err == nil {
+					if members, err := gc.ListTeamMembers(org, teamInOrg.ID, github.RoleAll); err == nil {
 						var membersLogin []string
 						for _, member := range members {
 							membersLogin = append(membersLogin, member.Login)

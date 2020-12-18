@@ -70,6 +70,15 @@ builds:
     main: ./cmd/ticommunityblunderbuss/main.go
     env:
       - CGO_ENABLED=0
+  - id: "rerere"
+    binary: rerere
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/rerere/main.go
+    env:
+      - CGO_ENABLED=0
 source:
   enabled: true
 checksum:
@@ -154,3 +163,12 @@ dockers:
       - "rustinliu/ti-community-prow-blunderbuss-plugin:{{ .Tag }}"
       - "rustinliu/ti-community-prow-blunderbuss-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/blunderbuss/Dockerfile
+  - binaries:
+      - rerere
+    builds:
+      - rerere
+    image_templates:
+      - "rustinliu/rerere-component:latest"
+      - "rustinliu/rerere-component:{{ .Tag }}"
+      - "rustinliu/rerere-component:{{ .Major }}"
+    dockerfile: ./deployments/components/rerere/Dockerfile
