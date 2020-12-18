@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/tidb-community-bots/ti-community-prow/internal/pkg/externalplugins"
@@ -101,6 +102,15 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	}
 	repo := &pe.Repo
 	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
+
+	// Wait a few seconds to allow other automation plugin to apply labels.
+	gracePeriod := 5 * time.Second
+
+	if opts.GracePeriodDuration != 0 {
+		gracePeriod = time.Duration(opts.GracePeriodDuration) * time.Second
+	}
+
+	time.Sleep(gracePeriod)
 
 	return handle(
 		gc,
