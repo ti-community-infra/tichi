@@ -370,6 +370,9 @@ func validateBlunderbuss(blunderbusses []TiCommunityBlunderbuss) error {
 		if blunderbuss.MaxReviewerCount <= 0 {
 			return errors.New("max reviewer count must more than 0")
 		}
+		if blunderbuss.GracePeriodDuration < 0 {
+			return errors.New("grace period duration must not less than 0")
+		}
 	}
 
 	return nil
