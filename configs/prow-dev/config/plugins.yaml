@@ -8,7 +8,7 @@ config_updater:
       name: external-plugins-config
     configs/prow-dev/config/labels.yaml:
       name: labels-config
-    config/jobs/**/*.yaml:
+    configs/prow-dev/jobs/**/*.yaml:
       name: job-config
       gzip: true
 
