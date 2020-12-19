@@ -8,6 +8,9 @@ config_updater:
       name: external-plugins-config
     configs/prow-dev/config/labels.yaml:
       name: labels-config
+    config/jobs/**/*.yaml:
+      name: job-config
+      gzip: true
 
 size:
   s: 10
@@ -54,6 +57,8 @@ plugins:
     - milestone
     - milestoneapplier
     - trigger
+  ti-community-infra/ti-community-prow:
+    - config-updater
 
 external_plugins:
   ti-community-infra/test-dev:

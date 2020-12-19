@@ -3,4 +3,4 @@ cluster/github-token.yaml
 cluster/oauth-token.yaml
 cluster/oauth-cookie.yaml
 cluster/hmac-token.yaml
-cluster/gcs_secrets.yaml
+cluster/gcs-secrets.yaml
