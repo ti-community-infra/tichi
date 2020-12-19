@@ -12,6 +12,7 @@ presubmits:
           args:
             - --plugin-config=configs/prow-dev/config/plugins.yaml
             - --config-path=configs/prow-dev/config/config.yaml
+            - --job-config-path=configs/prow-dev/jobs
             - --warnings=validate-urls
             - --warnings=unknown-fields
             - --warnings=duplicate-job-refs
