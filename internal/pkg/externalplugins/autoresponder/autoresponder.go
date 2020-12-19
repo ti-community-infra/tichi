@@ -101,6 +101,70 @@ func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *githu
 	return handle(cfg, rc, gc, log)
 }
 
+// HandlePullReviewEvent handles a GitHub pull request review event and auto respond it.
+func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
+	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	// Only consider open PRs and submit actions.
+	if pullReviewEvent.PullRequest.State != "open" || pullReviewEvent.Action != github.ReviewActionSubmitted {
+		return nil
+	}
+
+	rc := reviewCtx{
+		repo:    pullReviewEvent.Repo,
+		author:  pullReviewEvent.Review.User.Login,
+		body:    pullReviewEvent.Review.Body,
+		htmlURL: pullReviewEvent.Review.HTMLURL,
+		number:  pullReviewEvent.PullRequest.Number,
+	}
+
+	// Use common handler to do the rest.
+	return handle(cfg, rc, gc, log)
+}
+
+// HandlePullRequestEvent handles a GitHub pull request event and auto respond it.
+func HandlePullRequestEvent(gc githubClient, pullRequestEvent *github.PullRequestEvent,
+	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	// Only consider open PRs and opened/edited actions.
+	if pullRequestEvent.PullRequest.State != "open" ||
+		(pullRequestEvent.Action != github.PullRequestActionOpened &&
+			pullRequestEvent.Action != github.PullRequestActionEdited) {
+		return nil
+	}
+
+	rc := reviewCtx{
+		repo:    pullRequestEvent.Repo,
+		author:  pullRequestEvent.PullRequest.User.Login,
+		body:    pullRequestEvent.PullRequest.Body,
+		htmlURL: pullRequestEvent.PullRequest.HTMLURL,
+		number:  pullRequestEvent.PullRequest.Number,
+	}
+
+	// Use common handler to do the rest.
+	return handle(cfg, rc, gc, log)
+}
+
+// HandleIssueEvent handles a GitHub issue event and auto respond it.
+func HandleIssueEvent(gc githubClient, issueEvent *github.IssueEvent,
+	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	// Only consider open issues and opened/edited actions.
+	if issueEvent.Issue.State != "open" ||
+		(issueEvent.Action != github.IssueActionOpened &&
+			issueEvent.Action != github.IssueActionEdited) {
+		return nil
+	}
+
+	rc := reviewCtx{
+		repo:    issueEvent.Repo,
+		author:  issueEvent.Issue.User.Login,
+		body:    issueEvent.Issue.Body,
+		htmlURL: issueEvent.Issue.HTMLURL,
+		number:  issueEvent.Issue.Number,
+	}
+
+	// Use common handler to do the rest.
+	return handle(cfg, rc, gc, log)
+}
+
 func handle(cfg *externalplugins.Configuration, rc reviewCtx, gc githubClient, log *logrus.Entry) error {
 	owner := rc.repo.Owner.Login
 	repo := rc.repo.Name
