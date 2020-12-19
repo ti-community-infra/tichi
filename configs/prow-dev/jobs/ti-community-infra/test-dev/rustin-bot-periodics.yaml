@@ -1,5 +1,5 @@
 periodics:
-  - name: periodic-ti-community-infra-close
+  - name: periodic-test-dev-close
     interval: 1h
     decorate: true
     annotations:
@@ -11,7 +11,7 @@ periodics:
             - /app/robots/commenter/app.binary
           args:
             - |-
-              --query=org:ti-community-infra
+              --query=repo:ti-community-infra/test-dev
               -label:lifecycle/frozen
               label:lifecycle/rotten
             - --updated=720h
@@ -35,7 +35,7 @@ periodics:
           secret:
             secretName: github-token
 
-  - name: periodic-ti-community-infra-rotten
+  - name: periodic-test-dev-rotten
     interval: 1h
     decorate: true
     annotations:
@@ -47,7 +47,7 @@ periodics:
             - /app/robots/commenter/app.binary
           args:
             - |-
-              --query=org:ti-community-infra
+              --query=repo:ti-community-infra/test-dev
               -label:lifecycle/frozen
               label:lifecycle/stale
               -label:lifecycle/rotten
@@ -74,7 +74,7 @@ periodics:
           secret:
             secretName: github-token
 
-  - name: periodic-ti-community-infra-stale
+  - name: periodic-test-dev-stale
     interval: 1h
     decorate: true
     annotations:
@@ -86,7 +86,7 @@ periodics:
             - /app/robots/commenter/app.binary
           args:
             - |-
-              --query=org:ti-community-infra
+              --query=repo:ti-community-infra/test-dev
               -label:lifecycle/frozen
               -label:lifecycle/stale
               -label:lifecycle/rotten
