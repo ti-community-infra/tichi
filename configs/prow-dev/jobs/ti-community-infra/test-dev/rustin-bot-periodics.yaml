@@ -21,7 +21,7 @@ periodics:
               Reopen the issue with `/reopen`.
               Mark the issue as fresh with `/remove-lifecycle rotten`.
 
-              Send feedback to sig-community-infra or [hi-rustin](https://github.com/hi-rustin).
+              Send feedback to [sig-community-infra](https://slack.tidb.io/invite?team=tidb-community&channel=sig-community-infra) or [hi-rustin](https://github.com/hi-rustin).
               /close
             - --template
             - --ceiling=10
@@ -60,7 +60,7 @@ periodics:
 
               If this issue is safe to close now please do so with `/close`.
 
-              Send feedback to sig-community-infra or [hi-rustin](https://github.com/hi-rustin).
+              Send feedback to [sig-community-infra](https://slack.tidb.io/invite?team=tidb-community&channel=sig-community-infra) or [hi-rustin](https://github.com/hi-rustin).
               /lifecycle rotten
             - --template
             - --ceiling=10
@@ -99,7 +99,7 @@ periodics:
 
               If this issue is safe to close now please do so with `/close`.
 
-              Send feedback to sig-community-infra or [hi-rustin](https://github.com/hi-rustin).
+              Send feedback to [sig-community-infra](https://slack.tidb.io/invite?team=tidb-community&channel=sig-community-infra) or [hi-rustin](https://github.com/hi-rustin).
               /lifecycle stale
             - --template
             - --ceiling=10
