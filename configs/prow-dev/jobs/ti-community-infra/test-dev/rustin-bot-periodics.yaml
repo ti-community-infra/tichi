@@ -91,7 +91,7 @@ periodics:
               -label:lifecycle/stale
               -label:lifecycle/rotten
             - --updated=2160h
-            - --token=/etc/token/bot-github-token
+            - --token=/etc/github/token
             - |-
               --comment=Issues go stale after 90d of inactivity.
               Mark the issue as fresh with `/remove-lifecycle stale`.
