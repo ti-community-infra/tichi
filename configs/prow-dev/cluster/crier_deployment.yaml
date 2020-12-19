@@ -29,6 +29,7 @@ spec:
             - --github-token-path=/etc/github/token
             - --github-workers=10
             - --kubernetes-blob-storage-workers=10
+            - --job-config-path=/etc/job-config
           volumeMounts:
             - name: config
               mountPath: /etc/config
@@ -38,6 +39,9 @@ spec:
               readOnly: true
             - name: gcs-credentials
               mountPath: /etc/gcs-credentials
+              readOnly: true
+            - name: job-config
+              mountPath: /etc/job-config
               readOnly: true
       volumes:
         - name: config
@@ -49,3 +53,6 @@ spec:
         - name: gcs-credentials
           secret:
             secretName: gcs-credentials
+        - name: job-config
+          configMap:
+            name: job-config

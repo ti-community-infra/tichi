@@ -30,6 +30,7 @@ spec:
             - --github-endpoint=https://api.github.com
             - --gcs-credentials-file=/etc/gcs-credentials/service-account.json
             - --status-path=gs://prow-dev-tidb-logs/status-reconciler-status
+            - --job-config-path=/etc/job-config
           volumeMounts:
             - name: github-token
               mountPath: /etc/github
@@ -42,6 +43,9 @@ spec:
               readOnly: true
             - name: gcs-credentials
               mountPath: /etc/gcs-credentials
+              readOnly: true
+            - name: job-config
+              mountPath: /etc/job-config
               readOnly: true
       volumes:
         - name: github-token
@@ -56,3 +60,6 @@ spec:
         - name: gcs-credentials
           secret:
             secretName: gcs-credentials
+        - name: job-config
+          configMap:
+            name: job-config

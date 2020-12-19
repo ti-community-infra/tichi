@@ -37,6 +37,7 @@ spec:
             - --plugin-config=/etc/plugins/plugins.yaml
             - --spyglass=true
             - --dry-run=true
+            - --job-config-path=/etc/job-config
           ports:
             - name: http
               containerPort: 8080
@@ -52,6 +53,9 @@ spec:
               readOnly: true
             - name: gcs-credentials
               mountPath: /etc/gcs-credentials
+              readOnly: true
+            - name: job-config
+              mountPath: /etc/job-config
               readOnly: true
           livenessProbe:
             httpGet:
@@ -79,3 +83,6 @@ spec:
         - name: gcs-credentials
           secret:
             secretName: gcs-credentials
+        - name: job-config
+          configMap:
+            name: job-config
