@@ -1,0 +1,27 @@
+.header {
+  margin: 20px auto;
+  text-align: center;
+  font-size: 30px;
+}
+.people {
+  text-align: center;
+  font-size: 24px;
+}
+
+.wrapper {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 40px;
+  .container {
+    margin: 20px;
+    img {
+      width: 150px;
+      height: 150px;
+    }
+    a {
+      display: block;
+    }
+  }
+}
