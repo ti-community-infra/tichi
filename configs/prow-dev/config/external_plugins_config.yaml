@@ -15,7 +15,7 @@ ti-community-owners:
       - ti-community-infra/test-dev
     default_require_lgtm: 1
     sig_endpoint: https://bots.tidb.io/ti-community-bot
-    branchs:
+    branches:
       try:
         default_require_lgtm: 2
         trusted_teams:
