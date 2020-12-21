@@ -79,6 +79,9 @@ external_plugins:
       events:
         - issue_comment
         - pull_request_review_comment
+        - pull_request-review
+        - pull_request
+        - issues
     - name: needs-rebase
       events:
         - pull_request
