@@ -73,7 +73,7 @@ ti-community-owners:
     trusted_teams:
       - bots-maintainers
       - bots-reviewers
-    branchs:
+    branches:
       release:
         default_require_lgtm: 2
         trusted_teams:
