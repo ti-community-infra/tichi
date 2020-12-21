@@ -370,6 +370,7 @@ func validateBlunderbuss(blunderbusses []TiCommunityBlunderbuss) error {
 		if blunderbuss.MaxReviewerCount <= 0 {
 			return errors.New("max reviewer count must more than 0")
 		}
+		// TODO: We should add a setDefaults func to Configuration instead of just using the default values in the plugin.
 		if blunderbuss.GracePeriodDuration < 0 {
 			return errors.New("grace period duration must not less than 0")
 		}
