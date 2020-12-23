@@ -496,13 +496,13 @@ func TestMergeReviewCommentWithMergeNoti(t *testing.T) {
 			Repo:        github.Repo{Owner: github.User{Login: "org"}, Name: "repo"},
 			PullRequest: *fc.PullRequests[5],
 		}
-		botName, err := fc.BotName()
+		botName, err := fc.BotUser()
 		if err != nil {
 			t.Fatalf("For case %s, could not get Bot nam", tc.name)
 		}
 		ic := github.IssueComment{
 			User: github.User{
-				Login: botName,
+				Login: botName.Login,
 			},
 			Body: removeCanMergeLabelNoti,
 		}

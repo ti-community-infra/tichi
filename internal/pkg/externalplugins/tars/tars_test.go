@@ -12,8 +12,8 @@ import (
 	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
-	"github.com/tidb-community-bots/prow-github/pkg/github"
 	"k8s.io/test-infra/prow/config"
+	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/plugins"
 )
 
@@ -58,8 +58,10 @@ func newFakeGithubClient(prs []pullRequest, pr *github.PullRequest,
 	return f
 }
 
-func (f *fakeGithub) BotName() (string, error) {
-	return "ti-community-prow", nil
+func (f *fakeGithub) BotUserChecker() (func(candidate string) bool, error) {
+	return func(candidate string) bool {
+		return candidate == "ti-community-prow"
+	}, nil
 }
 
 func (f *fakeGithub) CreateComment(org, repo string, number int, comment string) error {
@@ -676,10 +678,11 @@ func TestHandleAll(t *testing.T) {
 }
 
 func TestShouldPrune(t *testing.T) {
-	botName := "ti-community-bot"
 	message := "updated"
-
-	f := shouldPrune(botName, message)
+	isBot := func(candidate string) bool {
+		return candidate == "ti-community-bot"
+	}
+	f := shouldPrune(isBot, message)
 
 	testCases := []struct {
 		name    string
