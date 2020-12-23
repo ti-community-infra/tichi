@@ -10,8 +10,8 @@ import (
 	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
-	"github.com/tidb-community-bots/prow-github/pkg/github"
 	"k8s.io/test-infra/prow/config"
+	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
 	"k8s.io/test-infra/prow/plugins"
 )
@@ -27,7 +27,7 @@ var configInfoAutoUpdatedMessagePrefix = "Auto updated message: "
 
 type githubClient interface {
 	CreateComment(org, repo string, number int, comment string) error
-	BotName() (string, error)
+	BotUserChecker() (func(candidate string) bool, error)
 	DeleteStaleComments(org, repo string, number int,
 		comments []github.IssueComment, isStale func(github.IssueComment) bool) error
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
@@ -325,14 +325,14 @@ func search(ctx context.Context, log *logrus.Entry, ghc githubClient, q string) 
 // takeAction updates the PR and comment ont it.
 func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, expectedHeadSha *string,
 	author string, message string) error {
-	botName, err := ghc.BotName()
+	botUserChecker, err := ghc.BotUserChecker()
 	if err != nil {
 		return err
 	}
 	needsReply := len(message) != 0
 
 	if needsReply {
-		err = ghc.DeleteStaleComments(org, repo, num, nil, shouldPrune(botName, message))
+		err = ghc.DeleteStaleComments(org, repo, num, nil, shouldPrune(botUserChecker, message))
 		if err != nil {
 			return err
 		}
@@ -353,9 +353,9 @@ func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, 
 	return nil
 }
 
-func shouldPrune(botName string, message string) func(github.IssueComment) bool {
+func shouldPrune(isBot func(string) bool, message string) func(github.IssueComment) bool {
 	return func(ic github.IssueComment) bool {
-		return github.NormLogin(botName) == github.NormLogin(ic.User.Login) &&
+		return isBot(ic.User.Login) &&
 			strings.Contains(ic.Body, message)
 	}
 }

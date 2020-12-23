@@ -70,19 +70,10 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 }
 
 type githubClient interface {
-	IsCollaborator(owner, repo, login string) (bool, error)
 	AddLabel(owner, repo string, number int, label string) error
-	AssignIssue(owner, repo string, number int, assignees []string) error
 	CreateComment(owner, repo string, number int, comment string) error
 	RemoveLabel(owner, repo string, number int, label string) error
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
-	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
-	GetPullRequestChanges(org, repo string, number int) ([]github.PullRequestChange, error)
-	ListIssueComments(org, repo string, number int) ([]github.IssueComment, error)
-	DeleteComment(org, repo string, ID int) error
-	BotName() (string, error)
-	GetSingleCommit(org, repo, SHA string) (github.RepositoryCommit, error)
-	ListTeams(org string) ([]github.Team, error)
 }
 
 // reviewCtx contains information about each review event.

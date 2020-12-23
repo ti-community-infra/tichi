@@ -82,8 +82,8 @@ type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
 	ListIssueComments(org, repo string, number int) ([]github.IssueComment, error)
 	DeleteComment(org, repo string, ID int) error
-	BotName() (string, error)
 	ListPRCommits(org, repo string, number int) ([]github.RepositoryCommit, error)
+	BotUserChecker() (func(candidate string) bool, error)
 }
 
 // reviewCtx contains information about each review event.
@@ -197,7 +197,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	if opts.StoreTreeHash {
 		// Check if we have a tree-hash comment.
 		var lastCanMergeTreeHash string
-		botName, err := gc.BotName()
+		botUserChecker, err := gc.BotUserChecker()
 		if err != nil {
 			return err
 		}
@@ -210,7 +210,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 		for i := len(comments) - 1; i >= 0; i-- {
 			comment := comments[i]
 			m := addCanMergeLabelNotificationRe.FindStringSubmatch(comment.Body)
-			if comment.User.Login == botName && m != nil && comment.UpdatedAt.Equal(comment.CreatedAt) {
+			if botUserChecker(comment.User.Login) && m != nil && comment.UpdatedAt.Equal(comment.CreatedAt) {
 				lastCanMergeTreeHash = m[1]
 				break
 			}
