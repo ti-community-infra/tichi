@@ -98,8 +98,10 @@ func configString(maxReviewerCount int) string {
 // HandleIssueCommentEvent handles a GitHub pull request event and requests review.
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
-	if pe.Action == github.PullRequestActionLabeled {
-		return handlePullRequestLabeledEvent(gc, pe, cfg, ol, log)
+	// Handle the event of adding the SIG label of open PR.
+	if pe.Action == github.PullRequestActionLabeled && pe.PullRequest.State == "open" &&
+		strings.Contains(pe.Label.Name, externalplugins.SigPrefix) {
+		return handlePullRequestLabeled(gc, pe, cfg, ol, log)
 	}
 
 	pr := &pe.PullRequest
@@ -110,9 +112,15 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	repo := &pe.Repo
 	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
 
-	// Wait a few seconds to allow other automation plugin to apply labels.
+	// Wait a few seconds to allow other automation plugin to apply labels (Mainly sig label).
 	gracePeriod := time.Duration(opts.GracePeriodDuration) * time.Second
 	sleep(gracePeriod)
+
+	// Check if PR has sig label.
+	if opts.RequireSigLabel && !isPRContainSigLabel(pr) {
+		log.Infof("the repo %v require the PR contains the sig label, but PR %v did not", repo.FullName, pr.Number)
+		return nil
+	}
 
 	return handle(
 		gc,
@@ -124,18 +132,12 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	)
 }
 
-// handlePullRequestLabeledEvent handles the sig label labeled event.
-func handlePullRequestLabeledEvent(gc githubClient, pe *github.PullRequestEvent,
+// handlePullRequestLabeled handles the sig label labeled event.
+func handlePullRequestLabeled(gc githubClient, pe *github.PullRequestEvent,
 	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	pr := &pe.PullRequest
 	repo := &pe.Repo
 	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
-
-	// Only handle the event of adding the SIG label of open PR.
-	if !(pe.Action == github.PullRequestActionLabeled && pe.PullRequest.State == "open" &&
-		strings.Contains(pe.Label.Name, externalplugins.SigPrefix)) {
-		return nil
-	}
 
 	// Cancel requesting all pending reviewers.
 	var reviewerLogins []string
@@ -182,6 +184,12 @@ func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg 
 
 	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
 
+	// Check if PR has sig label.
+	if opts.RequireSigLabel && !isPRContainSigLabel(pr) {
+		log.Infof("the repo %v require the PR contains the sig label, but PR %v did not", repo.FullName, pr.Number)
+		return nil
+	}
+
 	return handle(
 		gc,
 		opts,
@@ -194,11 +202,6 @@ func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg 
 
 func handle(ghc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo *github.Repo, pr *github.PullRequest,
 	log *logrus.Entry, ol ownersclient.OwnersLoader) error {
-	if opts.RequireSigLabel && !isPRContainSigLabel(pr) {
-		fmt.Println(opts.RequireSigLabel && !isPRContainSigLabel(pr))
-		return fmt.Errorf("the repo %v require the PR contains the sig label, but PR %v did not", repo.FullName, pr.Number)
-	}
-
 	owners, err := ol.LoadOwners(opts.PullOwnersEndpoint, repo.Owner.Login, repo.Name, pr.Number)
 	if err != nil {
 		return fmt.Errorf("error loading RepoOwners: %v", err)
