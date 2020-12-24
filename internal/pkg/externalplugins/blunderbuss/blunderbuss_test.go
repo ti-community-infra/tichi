@@ -43,20 +43,20 @@ func (c *fakeGitHubClient) GetPullRequest(_, _ string, _ int) (*github.PullReque
 	return c.pr, nil
 }
 
-func (c *fakeGitHubClient) UnrequestReview(_, _ string, _ int, logins []string) error {
+func (c *fakeGitHubClient) UnrequestReview(_, _ string, _ int, unRequestReviewerLogins []string) error {
 	var remainReviewers []string
 
-	for _, reviewer := range c.requested {
+	for _, requestedReviewerLogin := range c.requested {
 		existed := false
-		for _, login := range logins {
-			if reviewer == login {
+		for _, unRequestReviewerLogin := range unRequestReviewerLogins {
+			if requestedReviewerLogin == unRequestReviewerLogin {
 				existed = true
 				break
 			}
 		}
 
 		if !existed {
-			remainReviewers = append(remainReviewers, reviewer)
+			remainReviewers = append(remainReviewers, requestedReviewerLogin)
 		}
 	}
 
@@ -78,16 +78,16 @@ func (f *fakeOwnersClient) LoadOwners(_ string,
 	}, nil
 }
 
-func mapGithubNameToGithubUser(githubNames []string) []github.User {
-	var requestedReviewers []github.User
+func mapGithubLoginToGithubUser(githubLogins []string) []github.User {
+	var githubUsers []github.User
 
-	for _, reviewerName := range githubNames {
-		var reviewer github.User
-		reviewer.Login = reviewerName
-		requestedReviewers = append(requestedReviewers, reviewer)
+	for _, githubLogin := range githubLogins {
+		var githubUser github.User
+		githubUser.Login = githubLogin
+		githubUsers = append(githubUsers, githubUser)
 	}
 
-	return requestedReviewers
+	return githubUsers
 }
 
 func mapLabelNameToLabel(labelNames []string) []github.Label {
@@ -251,6 +251,7 @@ func TestHandlePullRequest(t *testing.T) {
 			name:                "PR opened",
 			action:              github.PullRequestActionOpened,
 			body:                "/auto-cc",
+			state:               "open",
 			maxReviewersCount:   2,
 			expectReviewerCount: 2,
 		},
@@ -258,6 +259,7 @@ func TestHandlePullRequest(t *testing.T) {
 			name:   "PR opened with require sig label",
 			action: github.PullRequestActionOpened,
 			body:   "/auto-cc",
+			state:  "open",
 			labels: []string{
 				"sig/planner", "difficulty/hard",
 			},
@@ -269,6 +271,7 @@ func TestHandlePullRequest(t *testing.T) {
 			name:                "PR opened with /cc command",
 			action:              github.PullRequestActionOpened,
 			body:                "/cc",
+			state:               "open",
 			maxReviewersCount:   2,
 			expectReviewerCount: 0,
 		},
@@ -276,6 +279,7 @@ func TestHandlePullRequest(t *testing.T) {
 			name:                "PR closed",
 			action:              github.PullRequestActionClosed,
 			body:                "/auto-cc",
+			state:               "closed",
 			maxReviewersCount:   2,
 			expectReviewerCount: 0,
 		},
@@ -283,6 +287,7 @@ func TestHandlePullRequest(t *testing.T) {
 			name:              "PR opened with exclude reviewers",
 			action:            github.PullRequestActionOpened,
 			body:              "/auto-cc",
+			state:             "open",
 			maxReviewersCount: 2,
 			excludeReviewers: []string{
 				"collab2",
@@ -361,7 +366,7 @@ func TestHandlePullRequest(t *testing.T) {
 				Head: github.PullRequestBranch{
 					SHA: SHA,
 				},
-				RequestedReviewers: mapGithubNameToGithubUser(tc.requestedReviewers),
+				RequestedReviewers: mapGithubLoginToGithubUser(tc.requestedReviewers),
 				Labels:             mapLabelNameToLabel(tc.labels),
 			},
 			Repo: github.Repo{

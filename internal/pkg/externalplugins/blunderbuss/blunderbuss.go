@@ -99,8 +99,11 @@ func configString(maxReviewerCount int) string {
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	// Handle the event of adding the SIG label of open PR.
-	if pe.Action == github.PullRequestActionLabeled && pe.PullRequest.State == "open" &&
-		strings.Contains(pe.Label.Name, externalplugins.SigPrefix) {
+	if pe.PullRequest.State != "open" {
+		return nil
+	}
+
+	if pe.Action == github.PullRequestActionLabeled && strings.Contains(pe.Label.Name, externalplugins.SigPrefix) {
 		return handlePullRequestLabeled(gc, pe, cfg, ol, log)
 	}
 
