@@ -9,6 +9,12 @@ import (
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
+const (
+	// defaultGracePeriodDuration define the time for blunderbuss plugin to wait
+	// before requesting a review (default five seconds).
+	defaultGracePeriodDuration = 5
+)
+
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
 	TiCommunityLgtm          []TiCommunityLgtm          `json:"ti-community-lgtm,omitempty"`
@@ -126,6 +132,8 @@ type TiCommunityBlunderbuss struct {
 	// GracePeriodDuration specifies the waiting time before the plugin requests a review,
 	// defaults to 5 means that the plugin will wait 5 seconds for the sig label to be added.
 	GracePeriodDuration int `json:"grace_period_duration,omitempty"`
+	// RequireSigLabel specifies whether the PR is required to have a SIG label before requesting reviewers.
+	RequireSigLabel bool `json:"require_sig_label,omitempty"`
 }
 
 // TiCommunityTars is the config for the tars plugin.
@@ -285,8 +293,25 @@ func (c *Configuration) TarsFor(org, repo string) *TiCommunityTars {
 	return &TiCommunityTars{}
 }
 
+// setDefaults will set the default value for the configuration of all plugins.
+func (c *Configuration) setDefaults() {
+	for i := range c.TiCommunityBlunderbuss {
+		c.TiCommunityBlunderbuss[i].setDefaults()
+	}
+}
+
+// setDefaults will set the default value for the config of blunderbuss plugin.
+func (c *TiCommunityBlunderbuss) setDefaults() {
+	if c.GracePeriodDuration == 0 {
+		c.GracePeriodDuration = defaultGracePeriodDuration
+	}
+}
+
 // Validate will return an error if there are any invalid external plugin config.
 func (c *Configuration) Validate() error {
+	// Defaulting should run before validation.
+	c.setDefaults()
+
 	if err := validateLgtm(c.TiCommunityLgtm); err != nil {
 		return err
 	}

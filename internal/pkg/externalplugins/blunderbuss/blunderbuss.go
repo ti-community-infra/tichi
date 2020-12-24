@@ -21,8 +21,6 @@ import (
 const (
 	// PluginName defines this plugin's registered name.
 	PluginName = "ti-community-blunderbuss"
-	// DefaultGracePeriodDuration define the time to wait before requesting a review (default five seconds).
-	DefaultGracePeriodDuration = 5
 )
 
 var (
@@ -34,6 +32,7 @@ var sleep = time.Sleep
 type githubClient interface {
 	RequestReview(org, repo string, number int, logins []string) error
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
+	UnrequestReview(org, repo string, number int, logins []string) error
 }
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
@@ -99,6 +98,10 @@ func configString(maxReviewerCount int) string {
 // HandleIssueCommentEvent handles a GitHub pull request event and requests review.
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
+	if pe.Action == github.PullRequestActionLabeled {
+		return handlePullRequestLabeledEvent(gc, pe, cfg, ol, log)
+	}
+
 	pr := &pe.PullRequest
 	// Only for open PR and non /cc PR.
 	if pe.Action != github.PullRequestActionOpened || assign.CCRegexp.MatchString(pr.Body) {
@@ -108,13 +111,45 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
 
 	// Wait a few seconds to allow other automation plugin to apply labels.
-	gracePeriod := DefaultGracePeriodDuration * time.Second
+	gracePeriod := time.Duration(opts.GracePeriodDuration) * time.Second
+	sleep(gracePeriod)
 
-	if opts.GracePeriodDuration != 0 {
-		gracePeriod = time.Duration(opts.GracePeriodDuration) * time.Second
+	return handle(
+		gc,
+		opts,
+		repo,
+		pr,
+		log,
+		ol,
+	)
+}
+
+// handlePullRequestLabeledEvent handles the sig label labeled event.
+func handlePullRequestLabeledEvent(gc githubClient, pe *github.PullRequestEvent,
+	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
+	pr := &pe.PullRequest
+	repo := &pe.Repo
+	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
+
+	// Only handle the event of adding the SIG label of open PR.
+	if !(pe.Action == github.PullRequestActionLabeled && pe.PullRequest.State == "open" &&
+		strings.Contains(pe.Label.Name, externalplugins.SigPrefix)) {
+		return nil
 	}
 
-	sleep(gracePeriod)
+	// Cancel requesting all pending reviewers.
+	var reviewerLogins []string
+	for _, reviewer := range pr.RequestedReviewers {
+		reviewerLogins = append(reviewerLogins, reviewer.Login)
+	}
+
+	err := gc.UnrequestReview(repo.Owner.Login, repo.Name, pr.Number, reviewerLogins)
+
+	if err != nil {
+		log.WithError(err).Warn("Failed to cancel requesting reviewers of the SIG that the label specified.")
+	} else {
+		log.Infof("Cancel requesting reviews of users %s.", reviewerLogins)
+	}
 
 	return handle(
 		gc,
@@ -159,6 +194,11 @@ func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg 
 
 func handle(ghc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo *github.Repo, pr *github.PullRequest,
 	log *logrus.Entry, ol ownersclient.OwnersLoader) error {
+	if opts.RequireSigLabel && !isPRContainSigLabel(pr) {
+		fmt.Println(opts.RequireSigLabel && !isPRContainSigLabel(pr))
+		return fmt.Errorf("the repo %v require the PR contains the sig label, but PR %v did not", repo.FullName, pr.Number)
+	}
+
 	owners, err := ol.LoadOwners(opts.PullOwnersEndpoint, repo.Owner.Login, repo.Name, pr.Number)
 	if err != nil {
 		return fmt.Errorf("error loading RepoOwners: %v", err)
@@ -198,4 +238,14 @@ func getReviewers(author string, reviewers []string, excludeReviewers []string, 
 	}
 
 	return result
+}
+
+func isPRContainSigLabel(pr *github.PullRequest) bool {
+	for _, label := range pr.Labels {
+		if strings.Contains(label.Name, externalplugins.SigPrefix) {
+			return true
+		}
+	}
+
+	return false
 }

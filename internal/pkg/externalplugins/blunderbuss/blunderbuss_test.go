@@ -43,6 +43,28 @@ func (c *fakeGitHubClient) GetPullRequest(_, _ string, _ int) (*github.PullReque
 	return c.pr, nil
 }
 
+func (c *fakeGitHubClient) UnrequestReview(_, _ string, _ int, logins []string) error {
+	var remainReviewers []string
+
+	for _, reviewer := range c.requested {
+		existed := false
+		for _, login := range logins {
+			if reviewer == login {
+				existed = true
+				break
+			}
+		}
+
+		if !existed {
+			remainReviewers = append(remainReviewers, reviewer)
+		}
+	}
+
+	c.requested = remainReviewers
+
+	return nil
+}
+
 type fakeOwnersClient struct {
 	reviewers []string
 	needsLgtm int
@@ -54,6 +76,30 @@ func (f *fakeOwnersClient) LoadOwners(_ string,
 		Reviewers: f.reviewers,
 		NeedsLgtm: f.needsLgtm,
 	}, nil
+}
+
+func mapGithubNameToGithubUser(githubNames []string) []github.User {
+	var requestedReviewers []github.User
+
+	for _, reviewerName := range githubNames {
+		var reviewer github.User
+		reviewer.Login = reviewerName
+		requestedReviewers = append(requestedReviewers, reviewer)
+	}
+
+	return requestedReviewers
+}
+
+func mapLabelNameToLabel(labelNames []string) []github.Label {
+	var labels []github.Label
+
+	for _, labelName := range labelNames {
+		var label github.Label
+		label.Name = labelName
+		labels = append(labels, label)
+	}
+
+	return labels
 }
 
 func TestHandleIssueCommentEvent(t *testing.T) {
@@ -186,11 +232,18 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 
 func TestHandlePullRequest(t *testing.T) {
 	var testcases = []struct {
-		name              string
-		action            github.PullRequestEventAction
-		body              string
-		maxReviewersCount int
-		excludeReviewers  []string
+		name   string
+		action github.PullRequestEventAction
+		body   string
+		state  string
+		// labels specifies the labels the PR already owned.
+		labels []string
+		// label specifies the label related to labeled and unlabeled events.
+		label              string
+		requireSigLabel    bool
+		maxReviewersCount  int
+		requestedReviewers []string
+		excludeReviewers   []string
 
 		expectReviewerCount int
 	}{
@@ -198,6 +251,17 @@ func TestHandlePullRequest(t *testing.T) {
 			name:                "PR opened",
 			action:              github.PullRequestActionOpened,
 			body:                "/auto-cc",
+			maxReviewersCount:   2,
+			expectReviewerCount: 2,
+		},
+		{
+			name:   "PR opened with require sig label",
+			action: github.PullRequestActionOpened,
+			body:   "/auto-cc",
+			labels: []string{
+				"sig/planner", "difficulty/hard",
+			},
+			requireSigLabel:     true,
 			maxReviewersCount:   2,
 			expectReviewerCount: 2,
 		},
@@ -226,9 +290,49 @@ func TestHandlePullRequest(t *testing.T) {
 
 			expectReviewerCount: 1,
 		},
+		{
+			name:                "add new sig label for open PR",
+			action:              github.PullRequestActionLabeled,
+			state:               "open",
+			body:                "",
+			label:               "sig/planner",
+			maxReviewersCount:   2,
+			expectReviewerCount: 2,
+		},
+		{
+			name:                "add a non-sig label for open PR",
+			action:              github.PullRequestActionLabeled,
+			state:               "open",
+			body:                "",
+			label:               "difficulty/hard",
+			maxReviewersCount:   2,
+			expectReviewerCount: 0,
+		},
+		{
+			name:                "add new sig label for closed PR",
+			action:              github.PullRequestActionLabeled,
+			state:               "closed",
+			body:                "",
+			label:               "sig/planner",
+			maxReviewersCount:   2,
+			expectReviewerCount: 0,
+		},
+		{
+			name:   "add new sig label for open PR contained pending reviewers",
+			action: github.PullRequestActionLabeled,
+			state:  "open",
+			body:   "",
+			label:  "sig/planner",
+			requestedReviewers: []string{
+				// Pending reviewers.
+				"admin1",
+			},
+			maxReviewersCount:   2,
+			expectReviewerCount: 2,
+		},
 	}
 
-	// Mock the sleep function
+	// Mock the sleep function.
 	oldSleep := sleep
 	sleep = func(time.Duration) {}
 	defer func() { sleep = oldSleep }()
@@ -238,11 +342,14 @@ func TestHandlePullRequest(t *testing.T) {
 		t.Logf("Running scenario %q", tc.name)
 		pr := github.PullRequest{Number: 5, User: github.User{Login: "author"}, Body: tc.body}
 		fc := newFakeGitHubClient(&pr)
+		fc.requested = tc.requestedReviewers
+
 		e := &github.PullRequestEvent{
 			Action: tc.action,
 			PullRequest: github.PullRequest{
 				Number: 5,
 				Body:   tc.body,
+				State:  tc.state,
 				Base: github.PullRequestBranch{
 					Repo: github.Repo{
 						Owner: github.User{
@@ -254,10 +361,15 @@ func TestHandlePullRequest(t *testing.T) {
 				Head: github.PullRequestBranch{
 					SHA: SHA,
 				},
+				RequestedReviewers: mapGithubNameToGithubUser(tc.requestedReviewers),
+				Labels:             mapLabelNameToLabel(tc.labels),
 			},
 			Repo: github.Repo{
 				Owner: github.User{Login: "org"},
 				Name:  "repo",
+			},
+			Label: github.Label{
+				Name: tc.label,
 			},
 		}
 
@@ -268,6 +380,7 @@ func TestHandlePullRequest(t *testing.T) {
 				MaxReviewerCount:   tc.maxReviewersCount,
 				ExcludeReviewers:   tc.excludeReviewers,
 				PullOwnersEndpoint: "https://fake/ti-community-bot",
+				RequireSigLabel:    tc.requireSigLabel,
 			},
 		}
 
