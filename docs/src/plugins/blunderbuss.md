@@ -58,4 +58,5 @@ ti-community-blunderbuss:
 ## Q&A
 
 ### 为什么我 /auto-cc 不会自动分配 reviewers？
+
 可能是因为你的仓库设置了 require_sig_label，导致在打上 sig 标签之前都不会自动分配 reviewers。
