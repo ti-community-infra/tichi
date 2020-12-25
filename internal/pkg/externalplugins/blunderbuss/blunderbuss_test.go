@@ -284,11 +284,11 @@ func TestHandlePullRequest(t *testing.T) {
 		// label specifies the label related to labeled and unlabeled events.
 		label string
 		// Whether to simulate other plugins add SIG label to the current PR in the sleep function.
-		mockOtherPluginAddSigLabel bool
-		requireSigLabel            bool
-		maxReviewersCount          int
-		requestedReviewers         []string
-		excludeReviewers           []string
+		mockAddSigLabel    bool
+		requireSigLabel    bool
+		maxReviewersCount  int
+		requestedReviewers []string
+		excludeReviewers   []string
 
 		expectReviewerCount int
 	}{
@@ -313,24 +313,24 @@ func TestHandlePullRequest(t *testing.T) {
 		{
 			name: "PR does not require SIG label but other plugins add SIG label will not triggers " +
 				"the automatic assignment",
-			action:                     github.PullRequestActionOpened,
-			body:                       "/auto-cc",
-			state:                      "open",
-			mockOtherPluginAddSigLabel: true,
-			requireSigLabel:            false,
-			maxReviewersCount:          2,
-			expectReviewerCount:        0,
+			action:              github.PullRequestActionOpened,
+			body:                "/auto-cc",
+			state:               "open",
+			mockAddSigLabel:     true,
+			requireSigLabel:     false,
+			maxReviewersCount:   2,
+			expectReviewerCount: 0,
 		},
 		{
 			name: "PR does not require SIG label while other plugins do not add SIG label will trigger " +
 				"the automatic assignment",
-			action:                     github.PullRequestActionOpened,
-			body:                       "/auto-cc",
-			state:                      "open",
-			mockOtherPluginAddSigLabel: false,
-			requireSigLabel:            false,
-			maxReviewersCount:          2,
-			expectReviewerCount:        2,
+			action:              github.PullRequestActionOpened,
+			body:                "/auto-cc",
+			state:               "open",
+			mockAddSigLabel:     false,
+			requireSigLabel:     false,
+			maxReviewersCount:   2,
+			expectReviewerCount: 2,
 		},
 		{
 			name:                "PR opened with /cc command",
@@ -415,7 +415,7 @@ func TestHandlePullRequest(t *testing.T) {
 		// Mock the sleep function.
 		sleep = func(time.Duration) {
 			// Simulate other plugins to add SIG label to PR
-			if tc.mockOtherPluginAddSigLabel {
+			if tc.mockAddSigLabel {
 				_ = fc.AddLabel("org", "repo", pr.Number, "sig/planner")
 			}
 		}
