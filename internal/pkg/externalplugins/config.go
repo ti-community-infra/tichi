@@ -132,7 +132,7 @@ type TiCommunityBlunderbuss struct {
 	// GracePeriodDuration specifies the waiting time before the plugin requests a review,
 	// defaults to 5 means that the plugin will wait 5 seconds for the sig label to be added.
 	GracePeriodDuration int `json:"grace_period_duration,omitempty"`
-	// RequireSigLabel specifies whether the PR is required to have a SIG label before requesting reviewers.
+	// RequireSigLabel specifies whether the PR is required to have a sig label before requesting reviewers.
 	RequireSigLabel bool `json:"require_sig_label,omitempty"`
 }
 
