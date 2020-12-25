@@ -6,7 +6,7 @@
 
 ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划分的权限自动分配 reviewers。除此之外，我们还需要考虑到如果 reviewers 长时间无回复时需要再次请求其他人 review  的情况，所以我们还支持了 `/auto-cc` 命令来触发再次分配 reviewers。
 
-实际上在一些 Github 仓库当中，绝大多数 PR 都需要带有 sig 标签，只有在添加了 sig 标签之后才能够自动分配 reviewers，所以我们需要通过插件加以限制，减少不必要的自动分配。
+实际上在一些 TiDB 社区的仓库当中，绝大多数 PR 都需要带有 sig 标签，只有在添加了 sig 标签之后才能够自动分配 reviewers，所以我们需要通过插件加以限制，减少不必要的自动分配。
 
 ## 权限设计
 
@@ -54,3 +54,8 @@ ti-community-blunderbuss:
 
 - [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Fconfigs#auto_cc)
 - [代码实现](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/blunderbuss)
+
+## Q&A
+
+### 为什么我 /auto-cc 不会自动分配 reviewers？
+可能是因为你的仓库设置了 require_sig_label，导致在打上 sig 标签之前都不会自动分配 reviewers。
