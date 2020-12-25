@@ -262,7 +262,7 @@ func getReviewers(author string, reviewers []string, excludeReviewers []string, 
 
 func containSigLabel(labels []github.Label) bool {
 	for _, label := range labels {
-		if strings.Contains(label.Name, externalplugins.SigPrefix) {
+		if strings.HasPrefix(label.Name, externalplugins.SigPrefix) {
 			return true
 		}
 	}
