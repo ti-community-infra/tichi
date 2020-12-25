@@ -309,6 +309,7 @@ func (c *TiCommunityBlunderbuss) setDefaults() {
 
 // Validate will return an error if there are any invalid external plugin config.
 func (c *Configuration) Validate() error {
+	// TODO: Put the setDefaults function in a more suitable place.
 	// Defaulting should run before validation.
 	c.setDefaults()
 

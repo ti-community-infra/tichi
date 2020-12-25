@@ -15,7 +15,7 @@ import (
 	"k8s.io/test-infra/prow/pkg/layeredsets"
 	"k8s.io/test-infra/prow/pluginhelp"
 	"k8s.io/test-infra/prow/plugins"
-	assign "k8s.io/test-infra/prow/plugins/assign"
+	"k8s.io/test-infra/prow/plugins/assign"
 )
 
 const (

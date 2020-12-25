@@ -283,7 +283,7 @@ func TestHandlePullRequest(t *testing.T) {
 		labels []string
 		// label specifies the label related to labeled and unlabeled events.
 		label string
-		// Whether to simulate other plugins in the sleep function to add tags to the current PR
+		// Whether to simulate other plugins add SIG label to the current PR in the sleep function.
 		mockOtherPluginAddSigLabel bool
 		requireSigLabel            bool
 		maxReviewersCount          int
@@ -414,7 +414,7 @@ func TestHandlePullRequest(t *testing.T) {
 
 		// Mock the sleep function.
 		sleep = func(time.Duration) {
-			// Simulate other plugins to add labels to PR
+			// Simulate other plugins to add SIG label to PR
 			if tc.mockOtherPluginAddSigLabel {
 				_ = fc.AddLabel("org", "repo", pr.Number, "sig/planner")
 			}
@@ -575,23 +575,23 @@ func TestHelpProvider(t *testing.T) {
 
 func TestContainIssueLabels(t *testing.T) {
 	testCases := []struct {
-		name         string
-		labelNames   []string
-		expectReturn bool
+		name        string
+		labelNames  []string
+		expectFound bool
 	}{
 		{
 			labelNames: []string{
 				"difficulty/hard",
 				"sig/planner",
 			},
-			expectReturn: true,
+			expectFound: true,
 		},
 		{
 			labelNames: []string{
 				"difficulty/hard",
 				"status/lgm1",
 			},
-			expectReturn: false,
+			expectFound: false,
 		},
 	}
 
@@ -600,8 +600,8 @@ func TestContainIssueLabels(t *testing.T) {
 			labels := mapLabelNameToLabel(tc.labelNames)
 			contain := containSigLabel(labels)
 
-			if contain != tc.expectReturn {
-				t.Fatalf("contain sig label judgment mismatch: got %v, want %v", contain, tc.expectReturn)
+			if contain != tc.expectFound {
+				t.Fatalf("contain sig label judgment mismatch: got %v, want %v", contain, tc.expectFound)
 			}
 		})
 	}
