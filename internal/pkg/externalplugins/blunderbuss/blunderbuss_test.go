@@ -43,6 +43,39 @@ func (c *fakeGitHubClient) GetPullRequest(_, _ string, _ int) (*github.PullReque
 	return c.pr, nil
 }
 
+func (c *fakeGitHubClient) UnrequestReview(_, _ string, _ int, unRequestReviewerLogins []string) error {
+	var remainReviewers []string
+
+	for _, requestedReviewerLogin := range c.requested {
+		existed := false
+		for _, unRequestReviewerLogin := range unRequestReviewerLogins {
+			if requestedReviewerLogin == unRequestReviewerLogin {
+				existed = true
+				break
+			}
+		}
+
+		if !existed {
+			remainReviewers = append(remainReviewers, requestedReviewerLogin)
+		}
+	}
+
+	c.requested = remainReviewers
+
+	return nil
+}
+
+func (c *fakeGitHubClient) GetIssueLabels(_, _ string, _ int) ([]github.Label, error) {
+	return c.pr.Labels, nil
+}
+
+func (c *fakeGitHubClient) AddLabel(_, _ string, _ int, labelName string) error {
+	var label github.Label
+	label.Name = labelName
+	c.pr.Labels = append(c.pr.Labels, label)
+	return nil
+}
+
 type fakeOwnersClient struct {
 	reviewers []string
 	needsLgtm int
@@ -56,6 +89,30 @@ func (f *fakeOwnersClient) LoadOwners(_ string,
 	}, nil
 }
 
+func mapGithubLoginToGithubUser(githubLogins []string) []github.User {
+	var githubUsers []github.User
+
+	for _, githubLogin := range githubLogins {
+		var githubUser github.User
+		githubUser.Login = githubLogin
+		githubUsers = append(githubUsers, githubUser)
+	}
+
+	return githubUsers
+}
+
+func mapLabelNameToLabel(labelNames []string) []github.Label {
+	var labels []github.Label
+
+	for _, labelName := range labelNames {
+		var label github.Label
+		label.Name = labelName
+		labels = append(labels, label)
+	}
+
+	return labels
+}
+
 func TestHandleIssueCommentEvent(t *testing.T) {
 	var testcases = []struct {
 		name              string
@@ -63,6 +120,8 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		issueState        string
 		isPR              bool
 		body              string
+		requireSigLabel   bool
+		labels            []string
 		maxReviewersCount int
 		excludeReviewers  []string
 
@@ -83,6 +142,29 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			issueState:          "open",
 			isPR:                true,
 			body:                "/auto-cc",
+			maxReviewersCount:   1,
+			expectReviewerCount: 1,
+		},
+		{
+			name:                "commenting in a PR without required SIG label will not trigger auto-assignment",
+			action:              github.IssueCommentActionCreated,
+			issueState:          "open",
+			isPR:                true,
+			body:                "/auto-cc",
+			requireSigLabel:     true,
+			maxReviewersCount:   1,
+			expectReviewerCount: 0,
+		},
+		{
+			name:       "commenting in a PR with required SIG label will trigger auto-assignment",
+			action:     github.IssueCommentActionCreated,
+			issueState: "open",
+			isPR:       true,
+			body:       "/auto-cc",
+			labels: []string{
+				"sig/planer",
+			},
+			requireSigLabel:     true,
 			maxReviewersCount:   1,
 			expectReviewerCount: 1,
 		},
@@ -138,7 +220,13 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Logf("Running scenario %q", tc.name)
-		pr := github.PullRequest{Number: 5, User: github.User{Login: "author"}}
+		pr := github.PullRequest{
+			Number: 5,
+			User: github.User{
+				Login: "author",
+			},
+			Labels: mapLabelNameToLabel(tc.labels),
+		}
 		fc := newFakeGitHubClient(&pr)
 		e := &github.IssueCommentEvent{
 			Action: tc.action,
@@ -165,6 +253,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 				MaxReviewerCount:   tc.maxReviewersCount,
 				ExcludeReviewers:   tc.excludeReviewers,
 				PullOwnersEndpoint: "https://fake/ti-community-bot",
+				RequireSigLabel:    tc.requireSigLabel,
 			},
 		}
 
@@ -186,11 +275,20 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 
 func TestHandlePullRequest(t *testing.T) {
 	var testcases = []struct {
-		name              string
-		action            github.PullRequestEventAction
-		body              string
-		maxReviewersCount int
-		excludeReviewers  []string
+		name   string
+		action github.PullRequestEventAction
+		body   string
+		state  string
+		// labels specifies the labels the PR already owned.
+		labels []string
+		// label specifies the label related to labeled and unlabeled events.
+		label string
+		// Whether to simulate other plugins add SIG label to the current PR in the sleep function.
+		mockAddSigLabel    bool
+		requireSigLabel    bool
+		maxReviewersCount  int
+		requestedReviewers []string
+		excludeReviewers   []string
 
 		expectReviewerCount int
 	}{
@@ -198,6 +296,39 @@ func TestHandlePullRequest(t *testing.T) {
 			name:                "PR opened",
 			action:              github.PullRequestActionOpened,
 			body:                "/auto-cc",
+			requireSigLabel:     false,
+			state:               "open",
+			maxReviewersCount:   2,
+			expectReviewerCount: 2,
+		},
+		{
+			name:                "PR opened in a repository that require SIG label",
+			action:              github.PullRequestActionOpened,
+			body:                "/auto-cc",
+			state:               "open",
+			requireSigLabel:     true,
+			maxReviewersCount:   2,
+			expectReviewerCount: 0,
+		},
+		{
+			name: "PR does not require SIG label but other plugins add SIG label will not triggers " +
+				"the automatic assignment",
+			action:              github.PullRequestActionOpened,
+			body:                "/auto-cc",
+			state:               "open",
+			mockAddSigLabel:     true,
+			requireSigLabel:     false,
+			maxReviewersCount:   2,
+			expectReviewerCount: 0,
+		},
+		{
+			name: "PR does not require SIG label while other plugins do not add SIG label will trigger " +
+				"the automatic assignment",
+			action:              github.PullRequestActionOpened,
+			body:                "/auto-cc",
+			state:               "open",
+			mockAddSigLabel:     false,
+			requireSigLabel:     false,
 			maxReviewersCount:   2,
 			expectReviewerCount: 2,
 		},
@@ -205,6 +336,7 @@ func TestHandlePullRequest(t *testing.T) {
 			name:                "PR opened with /cc command",
 			action:              github.PullRequestActionOpened,
 			body:                "/cc",
+			state:               "open",
 			maxReviewersCount:   2,
 			expectReviewerCount: 0,
 		},
@@ -212,6 +344,7 @@ func TestHandlePullRequest(t *testing.T) {
 			name:                "PR closed",
 			action:              github.PullRequestActionClosed,
 			body:                "/auto-cc",
+			state:               "closed",
 			maxReviewersCount:   2,
 			expectReviewerCount: 0,
 		},
@@ -219,6 +352,7 @@ func TestHandlePullRequest(t *testing.T) {
 			name:              "PR opened with exclude reviewers",
 			action:            github.PullRequestActionOpened,
 			body:              "/auto-cc",
+			state:             "open",
 			maxReviewersCount: 2,
 			excludeReviewers: []string{
 				"collab2",
@@ -226,11 +360,49 @@ func TestHandlePullRequest(t *testing.T) {
 
 			expectReviewerCount: 1,
 		},
+		{
+			name:                "add new sig label for open PR",
+			action:              github.PullRequestActionLabeled,
+			state:               "open",
+			body:                "",
+			label:               "sig/planner",
+			maxReviewersCount:   2,
+			expectReviewerCount: 2,
+		},
+		{
+			name:                "add a non-sig label for open PR",
+			action:              github.PullRequestActionLabeled,
+			state:               "open",
+			body:                "",
+			label:               "difficulty/hard",
+			maxReviewersCount:   2,
+			expectReviewerCount: 0,
+		},
+		{
+			name:                "add new sig label for closed PR",
+			action:              github.PullRequestActionLabeled,
+			state:               "closed",
+			body:                "",
+			label:               "sig/planner",
+			maxReviewersCount:   2,
+			expectReviewerCount: 0,
+		},
+		{
+			name:   "add new sig label for open PR contained pending reviewers",
+			action: github.PullRequestActionLabeled,
+			state:  "open",
+			body:   "",
+			label:  "sig/planner",
+			requestedReviewers: []string{
+				// Pending reviewers.
+				"admin1",
+			},
+			maxReviewersCount:   2,
+			expectReviewerCount: 2,
+		},
 	}
 
-	// Mock the sleep function
 	oldSleep := sleep
-	sleep = func(time.Duration) {}
 	defer func() { sleep = oldSleep }()
 
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
@@ -238,11 +410,22 @@ func TestHandlePullRequest(t *testing.T) {
 		t.Logf("Running scenario %q", tc.name)
 		pr := github.PullRequest{Number: 5, User: github.User{Login: "author"}, Body: tc.body}
 		fc := newFakeGitHubClient(&pr)
+		fc.requested = tc.requestedReviewers
+
+		// Mock the sleep function.
+		sleep = func(time.Duration) {
+			// Simulate other plugins to add SIG label to PR
+			if tc.mockAddSigLabel {
+				_ = fc.AddLabel("org", "repo", pr.Number, "sig/planner")
+			}
+		}
+
 		e := &github.PullRequestEvent{
 			Action: tc.action,
 			PullRequest: github.PullRequest{
 				Number: 5,
 				Body:   tc.body,
+				State:  tc.state,
 				Base: github.PullRequestBranch{
 					Repo: github.Repo{
 						Owner: github.User{
@@ -254,10 +437,15 @@ func TestHandlePullRequest(t *testing.T) {
 				Head: github.PullRequestBranch{
 					SHA: SHA,
 				},
+				RequestedReviewers: mapGithubLoginToGithubUser(tc.requestedReviewers),
+				Labels:             mapLabelNameToLabel(tc.labels),
 			},
 			Repo: github.Repo{
 				Owner: github.User{Login: "org"},
 				Name:  "repo",
+			},
+			Label: github.Label{
+				Name: tc.label,
 			},
 		}
 
@@ -268,6 +456,7 @@ func TestHandlePullRequest(t *testing.T) {
 				MaxReviewerCount:   tc.maxReviewersCount,
 				ExcludeReviewers:   tc.excludeReviewers,
 				PullOwnersEndpoint: "https://fake/ti-community-bot",
+				RequireSigLabel:    tc.requireSigLabel,
 			},
 		}
 
@@ -379,6 +568,40 @@ func TestHelpProvider(t *testing.T) {
 				if !strings.Contains(pluginHelp.Config["org2/repo"], msg) {
 					t.Fatalf("helpProvider.Config error mismatch: didn't get %v, but wanted it", msg)
 				}
+			}
+		})
+	}
+}
+
+func TestContainIssueLabels(t *testing.T) {
+	testCases := []struct {
+		name        string
+		labelNames  []string
+		expectFound bool
+	}{
+		{
+			labelNames: []string{
+				"difficulty/hard",
+				"sig/planner",
+			},
+			expectFound: true,
+		},
+		{
+			labelNames: []string{
+				"difficulty/hard",
+				"status/lgm1",
+			},
+			expectFound: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			labels := mapLabelNameToLabel(tc.labelNames)
+			contain := containSigLabel(labels)
+
+			if contain != tc.expectFound {
+				t.Fatalf("contain sig label judgment mismatch: got %v, want %v", contain, tc.expectFound)
 			}
 		})
 	}

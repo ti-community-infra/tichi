@@ -21,8 +21,6 @@ import (
 const (
 	// PluginName defines this plugin's registered name.
 	PluginName = "ti-community-blunderbuss"
-	// DefaultGracePeriodDuration define the time to wait before requesting a review (default five seconds).
-	DefaultGracePeriodDuration = 5
 )
 
 var (
@@ -34,6 +32,8 @@ var sleep = time.Sleep
 type githubClient interface {
 	RequestReview(org, repo string, number int, logins []string) error
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
+	UnrequestReview(org, repo string, number int, logins []string) error
+	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
 }
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
@@ -100,21 +100,75 @@ func configString(maxReviewerCount int) string {
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	pr := &pe.PullRequest
-	// Only for open PR and non /cc PR.
-	if pe.Action != github.PullRequestActionOpened || assign.CCRegexp.MatchString(pr.Body) {
-		return nil
-	}
 	repo := &pe.Repo
 	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
 
-	// Wait a few seconds to allow other automation plugin to apply labels.
-	gracePeriod := DefaultGracePeriodDuration * time.Second
+	isPrLabeledEvent := pe.Action == github.PullRequestActionLabeled
+	openPrWithSigLabel := pe.PullRequest.State == "open" && strings.Contains(pe.Label.Name, externalplugins.SigPrefix)
 
-	if opts.GracePeriodDuration != 0 {
-		gracePeriod = time.Duration(opts.GracePeriodDuration) * time.Second
+	// Only handle the event of assigning SIG label to the open PR.
+	if isPrLabeledEvent && openPrWithSigLabel {
+		return handlePullRequestLabeled(
+			gc,
+			opts,
+			repo,
+			pr,
+			log,
+			ol,
+		)
 	}
 
-	sleep(gracePeriod)
+	isPrOpenedEvent := pe.Action == github.PullRequestActionOpened
+	repoNonRequireSigLabel := !opts.RequireSigLabel
+	openPrWithoutCcCommand := !assign.CCRegexp.MatchString(pr.Body)
+
+	// Only handle the event of opening non-CC PR, when the require_sig_label option is not turned on.
+	if isPrOpenedEvent && repoNonRequireSigLabel && openPrWithoutCcCommand {
+		// Wait a few seconds to allow other automation plugin to apply labels (Mainly SIG label).
+		gracePeriod := time.Duration(opts.GracePeriodDuration) * time.Second
+		sleep(gracePeriod)
+
+		// Reacquire new added labels of PR.
+		labels, err := gc.GetIssueLabels(repo.Owner.Login, repo.Name, pr.Number)
+		if err != nil {
+			return fmt.Errorf("error loading PullRequest labels: %v", err)
+		}
+
+		// The task requesting review has been processed in the labeled event, and the open event
+		// does not need to be processed repeatedly.
+		if containSigLabel(labels) {
+			return nil
+		}
+
+		return handle(
+			gc,
+			opts,
+			repo,
+			pr,
+			log,
+			ol,
+		)
+	}
+
+	return nil
+}
+
+// handlePullRequestLabeled handles the sig label labeled event.
+func handlePullRequestLabeled(gc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo *github.Repo,
+	pr *github.PullRequest, log *logrus.Entry, ol ownersclient.OwnersLoader) error {
+	// Cancel requesting all pending reviewers.
+	var reviewerLogins []string
+	for _, reviewer := range pr.RequestedReviewers {
+		reviewerLogins = append(reviewerLogins, reviewer.Login)
+	}
+
+	err := gc.UnrequestReview(repo.Owner.Login, repo.Name, pr.Number, reviewerLogins)
+
+	if err != nil {
+		log.WithError(err).Warn("Failed to cancel requesting reviewers of the SIG that the label specified.")
+	} else {
+		log.Infof("Cancel requesting reviews of users %s.", reviewerLogins)
+	}
 
 	return handle(
 		gc,
@@ -146,6 +200,12 @@ func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg 
 	}
 
 	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
+
+	// Check if PR has sig label.
+	if opts.RequireSigLabel && !containSigLabel(pr.Labels) {
+		log.Infof("the repo %v require the PR contains the sig label, but PR %v did not", repo.FullName, pr.Number)
+		return nil
+	}
 
 	return handle(
 		gc,
@@ -198,4 +258,14 @@ func getReviewers(author string, reviewers []string, excludeReviewers []string, 
 	}
 
 	return result
+}
+
+func containSigLabel(labels []github.Label) bool {
+	for _, label := range labels {
+		if strings.HasPrefix(label.Name, externalplugins.SigPrefix) {
+			return true
+		}
+	}
+
+	return false
 }
