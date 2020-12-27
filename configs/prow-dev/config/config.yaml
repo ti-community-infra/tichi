@@ -14,7 +14,8 @@ branch-protection:
               required_status_checks:
                 contexts:
                   - "Semantic Pull Request"
-                strict: true
+                  - "pull-test-dev-rerere"
+                strict: false
 
 in_repo_config:
   enabled:
@@ -61,7 +62,7 @@ plank:
         sidecar: gcr.io/k8s-prow/sidecar:v20201217-2de500de27
 
 tide:
-  sync_period: 1m
+  sync_period: 2m
 
   merge_method:
     ti-community-infra/test-dev: squash
