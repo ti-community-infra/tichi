@@ -15,6 +15,7 @@ ti-community-owners:
       - ti-community-infra/test-dev
     default_require_lgtm: 1
     sig_endpoint: https://bots.tidb.io/ti-community-bot
+    default_sig_name: sig-community-infra
     branches:
       try:
         default_require_lgtm: 2
@@ -41,7 +42,8 @@ ti-community-blunderbuss:
   - repos:
       - ti-community-infra/test-dev
     pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
-    max_request_count: 1
+    max_request_count: 2
+    require_sig_label: true
     exclude_reviewers:
       # Bots
       - ti-community-prow-bot
