@@ -313,10 +313,7 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 		}
 	} else if !hasCanMerge && wantMerge {
 		if isSatisfy {
-			log.Info("Adding '" + externalplugins.CanMergeLabel + "' label.")
-			if err := gc.AddLabel(org, repoName, number, externalplugins.CanMergeLabel); err != nil {
-				return err
-			}
+			// Store the tree hash.
 			if opts.StoreTreeHash {
 				pr, err := gc.GetPullRequest(org, repoName, number)
 				if err != nil {
@@ -332,6 +329,10 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 				if err := gc.CreateComment(org, repoName, number, fmt.Sprintf(addCanMergeLabelNotification, treeHash)); err != nil {
 					log.WithError(err).Error("Failed to add comment.")
 				}
+			}
+			log.Info("Adding '" + externalplugins.CanMergeLabel + "' label.")
+			if err := gc.AddLabel(org, repoName, number, externalplugins.CanMergeLabel); err != nil {
+				return err
 			}
 			// Delete the 'status/can-merge' removed noti after the 'status/can-merge' label is added.
 			cp.PruneComments(func(comment github.IssueComment) bool {

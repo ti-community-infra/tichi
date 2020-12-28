@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/ti-community-prow/internal/pkg/rerere"
@@ -23,6 +24,10 @@ const (
 	repoNameEnv = "REPO_NAME"
 	// repoOwnerEnv specifies the pull's number from the environment variable.
 	pullNumberEnv = "PULL_NUMBER"
+	// pullBaseRefEnv specifies the pull's base hash from the environment variable.
+	pullBaseRefEnv = "PULL_BASE_REF"
+	// defaultWaitingPeriod specifies the default merge waiting period for Tide.
+	defaultWaitingPeriod = time.Minute * 3
 )
 
 type options struct {
@@ -102,28 +107,48 @@ func main() {
 	if len(repo) == 0 {
 		log.Fatal("Error getting repo name.")
 	}
+	// If not the batch prow job, we have to check the labels.
 	pullNumber := os.Getenv(pullNumberEnv)
-	if len(pullNumber) == 0 {
-		log.Fatal("Error getting pull number.")
-	}
-	number, err := strconv.Atoi(pullNumber)
-	if err != nil {
-		log.WithError(err).Fatal("Error convert pull number.")
+	if len(pullNumber) != 0 {
+		number, err := strconv.Atoi(pullNumber)
+		if err != nil {
+			log.WithError(err).Fatal("Error convert pull number.")
+		}
+		pr, err := githubClient.GetPullRequest(owner, repo, number)
+		if err != nil {
+			log.WithError(err).Fatal("Error get pull request.")
+		}
+
+		var prLabels []string
+		for _, label := range pr.Labels {
+			prLabels = append(prLabels, label.Name)
+		}
+		// All the labels match.
+		labels := sets.NewString(prLabels...)
+		if !labels.HasAll(o.labels.Strings()...) {
+			log.Infof("Skip this retesting, labels missing: %v.", o.labels.StringSet().Difference(labels).List())
+			return
+		}
 	}
 
-	pr, err := githubClient.GetPullRequest(owner, repo, number)
-	if err != nil {
-		log.WithError(err).Fatal("Error get pull request.")
+	log.Info("Waiting previous PRs merged.")
+	// Before we start retesting, we have to give the Tide some time to merge the previous PRs.
+	time.Sleep(defaultWaitingPeriod)
+
+	pullBaseRef := os.Getenv(pullBaseRefEnv)
+	if len(pullBaseRef) == 0 {
+		log.Fatal("Error pull request base ref.")
 	}
 
-	var prLabels []string
-	for _, label := range pr.Labels {
-		prLabels = append(prLabels, label.Name)
+	// If we found the base commit not latest, we need to skip this retesting.
+	// Tide will retesting it before merge.
+	latestBaseCommit, err := githubClient.GetSingleCommit(owner, repo, pullBaseRef)
+	if err != nil {
+		log.WithError(err).Fatal("Error get latest base commit.")
 	}
-	// All the labels match.
-	labels := sets.NewString(prLabels...)
-	if !labels.HasAll(o.labels.Strings()...) {
-		log.Fatalf("Missing label %v.", o.labels.StringSet().Difference(labels).List())
+	if latestBaseCommit.SHA != spec.Refs.BaseSHA {
+		log.Infof("Skip this retesting, base sha mismatch: expect %s, got %s.", latestBaseCommit.SHA, spec.Refs.BaseSHA)
+		return
 	}
 
 	// Init client form current dir.
