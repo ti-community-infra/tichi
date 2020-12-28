@@ -18,14 +18,15 @@ presubmits:
             - --warnings=duplicate-job-refs
   - name: pull-ti-community-prow-rerere
     decorate: true
-    trigger: "(?mi)^/merge\\s*$"
-    rerun_command: "/merge"
+    always_run: true
+    trigger: "(?mi)^/(merge|rerere)\\s*$"
+    rerun_command: "/rerere"
     max_concurrency: 1
     branches:
       - ^master$
     spec:
       containers:
-        - image: rustinliu/rerere-component:latest
+        - image: rustinliu/rerere-component:v0.16.6
           command:
             - rerere
           args:
