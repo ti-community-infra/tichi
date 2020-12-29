@@ -218,7 +218,7 @@ func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.St
 		return true, nil
 	}
 
-	log.Infof("some of the required contexts are still not passed: %v.",
+	log.Infof("Some of the required contexts are still not passed: %v.",
 		contexts.StringSet().Difference(passedContexts).List())
 	return false, nil
 }
