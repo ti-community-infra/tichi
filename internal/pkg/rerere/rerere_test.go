@@ -76,14 +76,13 @@ func TestCheckContexts(t *testing.T) {
 			requireContexts: []string{"test1", "test2"},
 			statuses: []github.Status{
 				{Context: "test1", State: github.StatusPending},
-				{Context: "test2", State: github.StatusFailure},
+				{Context: "test2", State: github.StatusPending},
 			},
 			checkRun: github.CheckRunList{
 				Total:     0,
 				CheckRuns: []github.CheckRun{},
 			},
 			expectAllPassed: false,
-			expectError:     "require context test2 failed",
 		},
 		{
 			name:            "non passed check runs",
