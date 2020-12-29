@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>label_sync - Prow in TiDB</title>
+        <title>rerere - Prow in TiDB</title>
         
         
 
@@ -95,7 +95,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="../components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li><li class="chapter-item expanded "><a href="../components/rerere.html"><strong aria-hidden="true">2.2.</strong> rerere</a></li></ol></li><li class="chapter-item expanded "><a href="../plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="../plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="../plugins/merge.html"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="../plugins/tars.html"><strong aria-hidden="true">3.4.</strong> ti-community-tars</a></li><li class="chapter-item expanded "><a href="../plugins/blunderbuss.html"><strong aria-hidden="true">3.5.</strong> ti-community-blunderbuss</a></li><li class="chapter-item expanded "><a href="../plugins/label.html"><strong aria-hidden="true">3.6.</strong> ti-community-label</a></li><li class="chapter-item expanded "><a href="../plugins/require-matching-label.html"><strong aria-hidden="true">3.7.</strong> require-matching-label</a></li><li class="chapter-item expanded "><a href="../plugins/hold.html"><strong aria-hidden="true">3.8.</strong> hold</a></li><li class="chapter-item expanded "><a href="../plugins/wip.html"><strong aria-hidden="true">3.9.</strong> wip</a></li></ol></li><li class="chapter-item expanded "><a href="../tools.html"><strong aria-hidden="true">4.</strong> Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../tools/label_sync.html" class="active"><strong aria-hidden="true">4.1.</strong> label_sync</a></li></ol></li><li class="chapter-item expanded "><a href="../workflows.html"><strong aria-hidden="true">5.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workflows/pr.html"><strong aria-hidden="true">5.1.</strong> PR workflow</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../introduction.html"><strong aria-hidden="true">1.</strong> Prow introduction</a></li><li class="chapter-item expanded "><a href="../components.html"><strong aria-hidden="true">2.</strong> Basic components</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../components/tide.html"><strong aria-hidden="true">2.1.</strong> Tide</a></li><li class="chapter-item expanded "><a href="../components/rerere.html" class="active"><strong aria-hidden="true">2.2.</strong> rerere</a></li></ol></li><li class="chapter-item expanded "><a href="../plugins.html"><strong aria-hidden="true">3.</strong> Plugins</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../plugins/owners.html"><strong aria-hidden="true">3.1.</strong> ti-community-owners</a></li><li class="chapter-item expanded "><a href="../plugins/lgtm.html"><strong aria-hidden="true">3.2.</strong> ti-community-lgtm</a></li><li class="chapter-item expanded "><a href="../plugins/merge.html"><strong aria-hidden="true">3.3.</strong> ti-community-merge</a></li><li class="chapter-item expanded "><a href="../plugins/tars.html"><strong aria-hidden="true">3.4.</strong> ti-community-tars</a></li><li class="chapter-item expanded "><a href="../plugins/blunderbuss.html"><strong aria-hidden="true">3.5.</strong> ti-community-blunderbuss</a></li><li class="chapter-item expanded "><a href="../plugins/label.html"><strong aria-hidden="true">3.6.</strong> ti-community-label</a></li><li class="chapter-item expanded "><a href="../plugins/require-matching-label.html"><strong aria-hidden="true">3.7.</strong> require-matching-label</a></li><li class="chapter-item expanded "><a href="../plugins/hold.html"><strong aria-hidden="true">3.8.</strong> hold</a></li><li class="chapter-item expanded "><a href="../plugins/wip.html"><strong aria-hidden="true">3.9.</strong> wip</a></li></ol></li><li class="chapter-item expanded "><a href="../tools.html"><strong aria-hidden="true">4.</strong> Tools</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../tools/label_sync.html"><strong aria-hidden="true">4.1.</strong> label_sync</a></li></ol></li><li class="chapter-item expanded "><a href="../workflows.html"><strong aria-hidden="true">5.</strong> Workflows</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../workflows/pr.html"><strong aria-hidden="true">5.1.</strong> PR workflow</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -163,91 +163,90 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#label-sync" id="label-sync">label-sync</a></h1>
+                        <h1><a class="header" href="#rerere" id="rerere">rerere</a></h1>
+<p><a href="https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/rerere">rerere</a> 是 ti-community-prow 的一个核心组件，rerere 会将代码 push 到专门用来重新测试的分支上进行重新测试。它将作为一个 <a href="https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md">Prow Job</a> 运行。</p>
 <h2><a class="header" href="#设计背景" id="设计背景">设计背景</a></h2>
-<p>在 GitHub 的大型仓库上可能会存在多达上百个 labels，手动维护这些 labels 是个很大的负担。所以 Kubernetes 社区设计开发了 <a href="https://github.com/kubernetes/test-infra/tree/master/label_sync">label_sync</a> 来自动化 label 的创建、修改和维护。</p>
+<p>开发该组件还是为了解决我们在 <a href="./tide.html">Tide</a> 中提到的多个 PR 合并的问题：</p>
+<ul>
+<li>PR1: 重命名 bifurcate() 为 bifurcateCrab()</li>
+<li>PR2: 调用 bifurcate()</li>
+</ul>
+<p>这个时候两个 PR 都会以当前 master 作为 Base 分支进行测试，两个 PR 都会通过。但是一旦 PR1 先合并入 master 分支，第二个 PR 合并之后（因为测试也通过了），就会导致 master 出现找不到 <code>bifurcate</code> 的错误。</p>
+<p>为了解决上述问题我们开发了 <a href="../plugins/tars.html">tars</a> 来自动的合并最新 的 Base 分支到 PR，这样能解决问题，但是对于大型仓库来说这不是一个高效的解决方案。<strong>例如有 n 个同时可以 merge 的 PR，那就要跑 O(n^2) 次测试，大大浪费了 CI 资源。</strong></p>
+<p>为了高效的合并 PR，并且节省测试资源，我们提出了<a href="https://github.com/ti-community-infra/configs/discussions/41">多个解决方案</a>。最终决定利用 Prow Job 结合 Tide 来解决该问题。</p>
 <h2><a class="header" href="#设计思路" id="设计思路">设计思路</a></h2>
-<p>实现该工具不仅要考虑到我们需要新建 label，而且要考虑到旧的 label 可能需要迁移维护等情况。所以 Kubernetes 社区在定义 label 时新增了一些字段来处理这些情况：</p>
+<ol>
+<li>Prow Job 会利用 <a href="https://github.com/kubernetes/test-infra/tree/master/prow/clonerefs">clonerefs</a> 工具将 PR 和最新的 Base 分支合并之后克隆到运行测试的 Pod，所以我们总是能够获取到已经合并了最新 Base 的代码库，rerere 可以将该代码 push 的重新测试分支进行合并之前的测试。</li>
+<li>Porw Job 可以设置 max_concurrency 来控制该 CI 任务最多的执行个数，这是一个天然的 FIFO 队列，我们可以利用该功能对重新测试任务排队。</li>
+<li>Tide 在代码合并之前，会检测所有的 Prow Job 都使用了最新的 Base 进行了测试。如果当前 CI Pod 使用的不是最新的 Base，Tide 会自动重新触发该测试，这样就确保了所有的 PR 在合并之前都会用最新的 Base 重新测试。</li>
+<li>在 rerere 中我们会将代码 push 到指定的测试分支，然后定期检查要求的 CI 是否都已经通过，当所有要求的 CI 都通过时，我们 rerere 的 Prow Job 就会通过测试。Tide 则会自动合并当前 PR。</li>
+</ol>
+<h2><a class="header" href="#参数配置" id="参数配置">参数配置</a></h2>
 <table><thead><tr><th>参数名</th><th>类型</th><th>说明</th></tr></thead><tbody>
-<tr><td>name</td><td>string</td><td>label 的名称</td></tr>
-<tr><td>color</td><td>string</td><td>label 的颜色</td></tr>
-<tr><td>description</td><td>string</td><td>label 的描述</td></tr>
-<tr><td>target</td><td>string</td><td>label 的生效目标：prs/issues/both</td></tr>
-<tr><td>prowPlugin</td><td>string</td><td>哪一个 prow plugin 添加这个 label</td></tr>
-<tr><td>isExternalPlugin</td><td>bool</td><td>是否为外部插件添加</td></tr>
-<tr><td>addedBy</td><td>string</td><td>谁可以添加</td></tr>
-<tr><td>previously</td><td>[]Label</td><td>迁移之前旧的 labels</td></tr>
-<tr><td>deleteAfter</td><td>*time.Time</td><td>label 多久以后删除</td></tr>
+<tr><td>retesting-branch</td><td>string</td><td>用于重新测试的分支名</td></tr>
+<tr><td>retry</td><td>int</td><td>当重新测试超时后，重试的次数</td></tr>
+<tr><td>timeout</td><td>time.Duration</td><td>每次尝试重新测试的 timeout</td></tr>
+<tr><td>labels</td><td>[]string</td><td>重新测试之前必须有的标签（例如：status/can-merge）</td></tr>
+<tr><td>require-contexts</td><td>[]string</td><td>要求必须通过的 CI 任务名</td></tr>
 </tbody></table>
-<p>通过对 label 的一些扩展，我们定义清楚了这些 label 的基本信息并且能够灵活的迁移维护 label。</p>
 <p>例如：</p>
-<pre><code class="language-yaml">  - name: dead-label
-    color: cccccc
-    description: a dead label
-    target: prs
-    addedBy: humans
-    deleteAfter: 2020-01-01T13:00:00Z
-</code></pre>
-<h2><a class="header" href="#配置说明" id="配置说明">配置说明</a></h2>
-<p>例如：</p>
-<pre><code class="language-yaml">default: # default 将这些标签应用给所有的 repos
-  labels:
-    - name: priority/P0
-      color: red
-      description: P0 Priority
-      previously:
-      - color: blue
-        name: P0
-        description: P0 Priority
-    - name: dead-label
-      color: cccccc
-      description: a dead label
-      target: prs
-      addedBy: humans
-      deleteAfter: 2020-01-01T13:00:00Z
-repos: # 针对每个 repo 进行单独配置
-  pingcap/community:
-    labels:
-      - color: 00ff00
-        description: Indicates that a PR has LGTM 1.
-        name: status/LGT1
-        target: prs
-        prowPlugin: ti-community-lgtm
-        addedBy: prow
-      - color: 00ff00
-        description: Indicates that a PR has LGTM 2.
-        name: status/LGT2
-        target: prs
-        prowPlugin: ti-community-lgtm
-        addedBy: prow
-      - color: 0ffa16
-        description: Indicates a PR has been approved by a committer.
-        name: status/can-merge
-        target: prs
-        prowPlugin: ti-community-merge
-        addedBy: prow
+<pre><code class="language-yaml">presubmits:
+  tikv/tikv:
+    - name: pull-tikv-master-rerere
+      decorate: true
+      trigger: &quot;(?mi)^/(merge|rerere)\\s*$&quot;
+      rerun_command: &quot;/rerere&quot;
+      max_concurrency: 1 # 最多同时运行一个任务
+      branches:
+        - ^master$
+      spec:
+        containers:
+          - image: rustinliu/rerere-component:latest
+            command:
+              - rerere
+            args:
+              - --github-token-path=/etc/github/token
+              - --dry-run=false
+              - --github-endpoint=https://api.github.com
+              - --retesting-branch=master-retesting
+              - --timeout=40m
+              - --require-contexts=tikv_prow_integration_common_test/master-retesting
+              - --require-contexts=tikv_prow_integration_compatibility_test/master-retesting
+              - --require-contexts=tikv_prow_integration_copr_test/master-retesting
+              - --require-contexts=tikv_prow_integration_ddl_test/master-retesting
+            volumeMounts:
+              - name: github-token
+                mountPath: /etc/github
+                readOnly: true
+        volumes:
+          - name: github-token
+            secret:
+              secretName: github-token
 </code></pre>
 <h2><a class="header" href="#参考文档" id="参考文档">参考文档</a></h2>
 <ul>
-<li><a href="https://github.com/kubernetes/test-infra/blob/master/label_sync/README.md">README</a></li>
-<li><a href="https://github.com/kubernetes/test-infra/tree/master/label_sync">代码实现</a></li>
+<li><a href="https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/rerere">代码实现</a></li>
 </ul>
-<h2><a class="header" href="#qa" id="qa">Q&amp;A</a></h2>
-<h3><a class="header" href="#这些-label-什么时候更新" id="这些-label-什么时候更新">这些 label 什么时候更新？</a></h3>
-<p>目前为一个<a href="https://github.com/ti-community-infra/configs/blob/main/prow/cluster/label_sync.yaml">定时任务</a>，每小时的第 17 分钟尝试更新。</p>
+<h2><a class="header" href="#qa" id="qa">Q&amp;A</a></h2>
+<h3><a class="header" href="#我每次提交都会触发-rerere-吗" id="我每次提交都会触发-rerere-吗">我每次提交都会触发 rerere 吗？</a></h3>
+<p>是的，但是在打上 <code>status/can-merge</code> 之前，我们不会真的 push 到测试分支进行测试，该测试会因为缺少要求的标签而跳过。等到使用 <code>/merge</code> 命令时，又会再次触发该 CI，此时因为已经有了 <code>status/can-merge</code> 我们才会真的进行重新测试。</p>
+<h3><a class="header" href="#如果测试失败了还需要-merge-吗" id="如果测试失败了还需要-merge-吗">如果测试失败了，还需要 <code>/merge</code> 吗？</a></h3>
+<p>不需要，使用 Tide 之后我们无需不停的使用 <code>/merge</code>，哪一个测试失败重新触发该测试即可。例如 rerere 测试失败，你只需要 <code>/rerere</code> 重新触发让它重新测试即可。</p>
+<h3><a class="header" href="#我人为的合并-pr-之后会不会导致排队重新测试混乱出问题" id="我人为的合并-pr-之后会不会导致排队重新测试混乱出问题">我人为的合并 PR 之后，会不会导致排队重新测试混乱出问题？</a></h3>
+<p>不会，除了你手动合并的 PR 会受到影响，其他 PR 会在合并之前检测到 Base 发生变化，Tide 会自动重新触发 rerere 进行测试。<strong>强烈建议不要手动合并 PR，测试失败重新触发即可，当所有要求的 CI 通过时，Tide 会重新尝试合并。</strong></p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="../tools.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../components/tide.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="../workflows.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../plugins.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -259,13 +258,13 @@ repos: # 针对每个 repo 进行单独配置
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="../tools.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../components/tide.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a rel="next" href="../workflows.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../plugins.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
