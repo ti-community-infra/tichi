@@ -214,7 +214,7 @@ func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.St
 	}
 
 	// All required requireContexts passed.
-	if passedContexts.HasAll(contexts.StringSet().List()...) {
+	if passedContexts.HasAll(contextsSet.List()...) {
 		return true, nil
 	}
 
