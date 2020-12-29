@@ -70,7 +70,7 @@ func TestCheckContexts(t *testing.T) {
 		expectError     string
 	}{
 		{
-			name:            "non passed contexts",
+			name:            "non passed statuses",
 			org:             "org",
 			repo:            "repo",
 			requireContexts: []string{"test1", "test2"},
@@ -84,6 +84,19 @@ func TestCheckContexts(t *testing.T) {
 			},
 			expectAllPassed: false,
 			expectError:     "require context test2 failed",
+		},
+		{
+			name:            "non passed check runs",
+			org:             "org",
+			repo:            "repo",
+			requireContexts: []string{"test1", "test2"},
+			statuses:        []github.Status{},
+			checkRun: github.CheckRunList{
+				Total:     0,
+				CheckRuns: []github.CheckRun{{Name: "test1", Status: checkRunStatusCompleted, Conclusion: "skipped"}},
+			},
+			expectAllPassed: false,
+			expectError:     "require context test1 failed",
 		},
 		{
 			name:            "one passed status",
@@ -108,8 +121,10 @@ func TestCheckContexts(t *testing.T) {
 			requireContexts: []string{"test1", "test2"},
 			statuses:        []github.Status{{Context: "test2", State: github.StatusFailure}},
 			checkRun: github.CheckRunList{
-				Total:     0,
-				CheckRuns: []github.CheckRun{{Name: "test1", Status: checkRunStatusCompleted}},
+				Total: 0,
+				CheckRuns: []github.CheckRun{
+					{Name: "test1", Status: checkRunStatusCompleted, Conclusion: checkRunConclusionSuccess},
+				},
 			},
 			expectAllPassed: false,
 			expectError:     "require context test2 failed",
@@ -124,8 +139,10 @@ func TestCheckContexts(t *testing.T) {
 				{Context: "test2", State: github.StatusSuccess},
 			},
 			checkRun: github.CheckRunList{
-				Total:     0,
-				CheckRuns: []github.CheckRun{{Name: "test3", Status: checkRunStatusCompleted}},
+				Total: 0,
+				CheckRuns: []github.CheckRun{
+					{Name: "test3", Status: checkRunStatusCompleted, Conclusion: checkRunConclusionNeutral},
+				},
 			},
 			expectAllPassed: true,
 		},
