@@ -3,6 +3,7 @@
 - [Prow introduction](./introduction.md)
 - [Basic components](./components.md)
   - [Tide](./components/tide.md)
+  - [rerere](./components/rerere.md)
 - [Plugins](./plugins.md)
   - [ti-community-owners](./plugins/owners.md)
   - [ti-community-lgtm](./plugins/lgtm.md)
