@@ -29,12 +29,21 @@ const (
 // defaultCheckPeriod specifies the default period for test ticker.
 var defaultCheckPeriod = time.Minute * 5
 
-// checkRunStatusCompleted means the check run passed.
-const checkRunStatusCompleted = "completed"
+// Ref: https://developer.github.com/v3/checks/runs/#parameters.
+const (
+	// checkRunStatusCompleted means the check run passed.
+	checkRunStatusCompleted = "completed"
+
+	// checkRunConclusionNeutral means the check run neutral.
+	checkRunConclusionNeutral = "neutral"
+
+	// checkRunConclusionSuccess means the check run success.
+	checkRunConclusionSuccess = "success"
+)
 
 // Mock check for test.
 type mockCheck = func(log *logrus.Entry, ghc githubClient,
-	contexts prowflagutil.Strings, retestingBranch string, org string, repo string) error
+	contexts prowflagutil.Strings, retestingBranch string, org string, repo string) (bool, error)
 
 var check = checkContexts
 
@@ -134,13 +143,21 @@ func Retesting(log *logrus.Entry, ghc githubClient, client gitRepoClient,
 		ticker := time.NewTicker(defaultCheckPeriod)
 		for t := range ticker.C {
 			log.Infof("Check requireContexts at %v.", t)
-			err = check(log, ghc, options.Contexts, options.RetestingBranch, org, repo)
-			if err == nil {
-				log.Infof("All contexts passed.")
+
+			isAllPassed, err := check(log, ghc, options.Contexts, options.RetestingBranch, org, repo)
+			if err != nil {
+				log.WithError(err).Warn("Retesting failed.")
+				ticker.Stop()
+				break
+			}
+
+			if isAllPassed {
+				log.Infof("All required contexts passed.")
 				ticker.Stop()
 				return nil
 			}
-			log.WithError(err).Warn("Retesting failed.")
+
+			// If timeout.
 			if t.Sub(startTime) > options.Timeout {
 				log.WithError(err).Warnf("Retesting timeout at %v.", t)
 				ticker.Stop()
@@ -155,10 +172,10 @@ func Retesting(log *logrus.Entry, ghc githubClient, client gitRepoClient,
 
 // checkContexts checks if all the tests have passed.
 func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.Strings,
-	retestingBranch string, org string, repo string) error {
+	retestingBranch string, org string, repo string) (bool, error) {
 	lastCommit, err := ghc.GetSingleCommit(org, repo, retestingBranch)
 	if err != nil {
-		return fmt.Errorf("get %s last commit failed: %v", retestingBranch, err)
+		return false, fmt.Errorf("get %s last commit failed: %v", retestingBranch, err)
 	}
 
 	passedContexts := sets.String{}
@@ -166,9 +183,15 @@ func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.St
 	// List all status.
 	statuses, err := ghc.ListStatuses(org, repo, lastCommitRef)
 	if err != nil {
-		return fmt.Errorf("list %s statuses failed: %v", retestingBranch, err)
+		return false, fmt.Errorf("list %s statuses failed: %v", retestingBranch, err)
 	}
+
+	contextsSet := contexts.StringSet()
+
 	for _, status := range statuses {
+		if status.State == github.StatusFailure && contextsSet.Has(status.Context) {
+			return false, fmt.Errorf("require context %s failed", status.Context)
+		}
 		if status.State == github.StatusSuccess {
 			log.Infof("%s context passed.", status.Context)
 			passedContexts.Insert(status.Context)
@@ -177,19 +200,25 @@ func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.St
 	// List all check runs.
 	checkRun, err := ghc.ListCheckRuns(org, repo, lastCommitRef)
 	if err != nil {
-		return fmt.Errorf("list %s check runs failed: %v", retestingBranch, err)
+		return false, fmt.Errorf("list %s check runs failed: %v", retestingBranch, err)
 	}
 	for _, runs := range checkRun.CheckRuns {
 		if runs.Status == checkRunStatusCompleted {
-			log.Infof("%s runs passed.", runs.Name)
-			passedContexts.Insert(runs.Name)
+			if runs.Conclusion == checkRunConclusionNeutral || runs.Conclusion == checkRunConclusionSuccess {
+				log.Infof("%s runs passed.", runs.Name)
+				passedContexts.Insert(runs.Name)
+			} else if contextsSet.Has(runs.Name) {
+				return false, fmt.Errorf("require context %s failed", runs.Name)
+			}
 		}
 	}
 
 	// All required requireContexts passed.
 	if passedContexts.HasAll(contexts.StringSet().List()...) {
-		return nil
+		return true, nil
 	}
-	return fmt.Errorf("some of the required contexts are still not passed: %v",
+
+	log.Infof("some of the required contexts are still not passed: %v.",
 		contexts.StringSet().Difference(passedContexts).List())
+	return false, nil
 }
