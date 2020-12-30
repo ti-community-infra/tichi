@@ -1,4 +1,3 @@
-//nolint:scopelint
 package ownersclient
 
 import (
@@ -13,7 +12,7 @@ import (
 const testOwnersURLFmt = "/repos/%s/%s/pulls/%d/owners"
 
 func TestLoadOwners(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name             string
 		ownersURL        string
 		data             OwnersResponse
@@ -73,15 +72,16 @@ func TestLoadOwners(t *testing.T) {
 	repoName := "test-dev"
 	number := 1
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
 			// Fake http client.
 			mux := http.NewServeMux()
 			testServer := httptest.NewServer(mux)
 
 			// NOTICE: add pull owners URL.
-			if testCase.ownersURL == "" {
-				testCase.ownersURL = testServer.URL
+			if tc.ownersURL == "" {
+				tc.ownersURL = testServer.URL
 			}
 
 			// URL pattern.
@@ -91,22 +91,22 @@ func TestLoadOwners(t *testing.T) {
 					t.Errorf("expect 'Get' got '%s'", req.Method)
 				}
 				reqBodyBytes := new(bytes.Buffer)
-				err := json.NewEncoder(reqBodyBytes).Encode(testCase.data)
+				err := json.NewEncoder(reqBodyBytes).Encode(tc.data)
 				if err != nil {
-					t.Errorf("Encoding data '%v' failed", testCase.data)
+					t.Errorf("Encoding data '%v' failed", tc.data)
 				}
 
 				_, err = res.Write(reqBodyBytes.Bytes())
 				if err != nil {
-					t.Errorf("Write data '%v' failed", testCase.data)
+					t.Errorf("Write data '%v' failed", tc.data)
 				}
 			})
 
 			client := OwnersClient{Client: testServer.Client()}
 
-			owners, err := client.LoadOwners(testCase.ownersURL, org, repoName, number)
+			owners, err := client.LoadOwners(tc.ownersURL, org, repoName, number)
 			if err != nil {
-				if !testCase.expectError {
+				if !tc.expectError {
 					t.Errorf("unexpected error: '%v'", err)
 				} else {
 					// It should have a error, so skip follow assert.
@@ -114,16 +114,16 @@ func TestLoadOwners(t *testing.T) {
 				}
 			}
 
-			if len(owners.Committers) != len(testCase.expectCommitters) {
-				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", owners.Committers, testCase.expectCommitters)
+			if len(owners.Committers) != len(tc.expectCommitters) {
+				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", owners.Committers, tc.expectCommitters)
 			}
 
-			if len(owners.Reviewers) != len(testCase.expectReviewers) {
-				t.Errorf("Different reviewers: Got \"%v\" expected \"%v\"", owners.Reviewers, testCase.expectReviewers)
+			if len(owners.Reviewers) != len(tc.expectReviewers) {
+				t.Errorf("Different reviewers: Got \"%v\" expected \"%v\"", owners.Reviewers, tc.expectReviewers)
 			}
 
-			if owners.NeedsLgtm != testCase.expectNeedsLgtm {
-				t.Errorf("Different LGTM: Got \"%v\" expected \"%v\"", owners.NeedsLgtm, testCase.expectNeedsLgtm)
+			if owners.NeedsLgtm != tc.expectNeedsLgtm {
+				t.Errorf("Different LGTM: Got \"%v\" expected \"%v\"", owners.NeedsLgtm, tc.expectNeedsLgtm)
 			}
 
 			testServer.Close()
@@ -132,7 +132,7 @@ func TestLoadOwners(t *testing.T) {
 }
 
 func TestLoadOwnersFailed(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name        string
 		ownersURL   string
 		invalidData bool
@@ -152,15 +152,16 @@ func TestLoadOwnersFailed(t *testing.T) {
 	repoName := "test-dev"
 	number := 1
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
 			// Fake http client.
 			mux := http.NewServeMux()
 			testServer := httptest.NewServer(mux)
 
 			// Notice: use mock server URL.
-			if testCase.ownersURL == "" {
-				testCase.ownersURL = testServer.URL
+			if tc.ownersURL == "" {
+				tc.ownersURL = testServer.URL
 			}
 
 			// URL pattern.
@@ -170,7 +171,7 @@ func TestLoadOwnersFailed(t *testing.T) {
 					t.Errorf("expect 'Get' got '%s'", req.Method)
 				}
 				// If set invalid data true, we need response a invalid data.
-				if testCase.invalidData {
+				if tc.invalidData {
 					_, err := res.Write([]byte{})
 					if err != nil {
 						t.Errorf("Write data '%v' failed", []byte{})
@@ -183,11 +184,11 @@ func TestLoadOwnersFailed(t *testing.T) {
 
 			client := OwnersClient{Client: testServer.Client()}
 
-			_, err := client.LoadOwners(testCase.ownersURL, org, repoName, number)
+			_, err := client.LoadOwners(tc.ownersURL, org, repoName, number)
 			if err == nil {
-				t.Errorf("expected error '%v', but it is nil", testCase.expectError)
-			} else if err.Error() != testCase.expectError {
-				t.Errorf("expected error '%v', but it is '%v'", testCase.expectError, err)
+				t.Errorf("expected error '%v', but it is nil", tc.expectError)
+			} else if err.Error() != tc.expectError {
+				t.Errorf("expected error '%v', but it is '%v'", tc.expectError, err)
 			}
 
 			testServer.Close()

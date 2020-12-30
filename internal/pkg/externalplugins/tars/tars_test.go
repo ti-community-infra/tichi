@@ -1,4 +1,3 @@
-//nolint:scopelint
 package tars
 
 import (
@@ -179,7 +178,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 	sleep = func(time.Duration) {}
 	defer func() { sleep = oldSleep }()
 
-	testCases := []struct {
+	testcases := []struct {
 		name       string
 		pr         *github.PullRequest
 		labels     []github.Label
@@ -279,7 +278,8 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			fc := newFakeGithubClient(nil, tc.pr, tc.baseCommit, tc.prCommits, tc.outOfDate)
 			ice := &github.IssueCommentEvent{}
@@ -342,7 +342,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 	sleep = func(time.Duration) {}
 	defer func() { sleep = oldSleep }()
 
-	testCases := []struct {
+	testcases := []struct {
 		name       string
 		merged     bool
 		labels     []github.Label
@@ -433,7 +433,8 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			fc := newFakeGithubClient(nil, nil, tc.baseCommit, tc.prCommits, tc.outOfDate)
 			pre := &github.PullRequestEvent{
@@ -501,7 +502,7 @@ func TestHandleAll(t *testing.T) {
 		return prCommits
 	}
 
-	testCases := []struct {
+	testcases := []struct {
 		name       string
 		pr         *github.PullRequest
 		merged     bool
@@ -606,7 +607,8 @@ func TestHandleAll(t *testing.T) {
 	sleep = func(time.Duration) {}
 	defer func() { sleep = oldSleep }()
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			var prs []pullRequest
 			// For now we only add one pr.
@@ -684,7 +686,7 @@ func TestShouldPrune(t *testing.T) {
 	}
 	f := shouldPrune(isBot, message)
 
-	testCases := []struct {
+	testcases := []struct {
 		name    string
 		comment github.IssueComment
 
@@ -722,7 +724,8 @@ func TestShouldPrune(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			shouldPrune := f(tc.comment)
 			if shouldPrune != tc.shouldPrune {
@@ -737,7 +740,7 @@ func TestHelpProvider(t *testing.T) {
 		{Org: "org1", Repo: "repo"},
 		{Org: "org2", Repo: "repo"},
 	}
-	cases := []struct {
+	testcases := []struct {
 		name               string
 		config             *externalplugins.Configuration
 		enabledRepos       []config.OrgRepo
@@ -765,22 +768,23 @@ func TestHelpProvider(t *testing.T) {
 			configInfoIncludes: []string{configInfoAutoUpdatedMessagePrefix},
 		},
 	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
 			epa := &externalplugins.ConfigAgent{}
-			epa.Set(c.config)
+			epa.Set(tc.config)
 
 			helpProvider := HelpProvider(epa)
-			pluginHelp, err := helpProvider(c.enabledRepos)
-			if err != nil && !c.err {
+			pluginHelp, err := helpProvider(tc.enabledRepos)
+			if err != nil && !tc.err {
 				t.Fatalf("helpProvider error: %v", err)
 			}
-			for _, msg := range c.configInfoExcludes {
+			for _, msg := range tc.configInfoExcludes {
 				if strings.Contains(pluginHelp.Config["org2/repo"], msg) {
 					t.Fatalf("helpProvider.Config error mismatch: got %v, but didn't want it", msg)
 				}
 			}
-			for _, msg := range c.configInfoIncludes {
+			for _, msg := range tc.configInfoIncludes {
 				if !strings.Contains(pluginHelp.Config["org2/repo"], msg) {
 					t.Fatalf("helpProvider.Config error mismatch: didn't get %v, but wanted it", msg)
 				}
