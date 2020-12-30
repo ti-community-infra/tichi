@@ -66,22 +66,36 @@ func TestCheckContexts(t *testing.T) {
 		statuses        []github.Status
 		checkRun        github.CheckRunList
 
-		expectError string
+		expectAllPassed bool
+		expectError     string
 	}{
 		{
-			name:            "non passed contexts",
+			name:            "non passed statuses",
 			org:             "org",
 			repo:            "repo",
 			requireContexts: []string{"test1", "test2"},
 			statuses: []github.Status{
 				{Context: "test1", State: github.StatusPending},
-				{Context: "test2", State: github.StatusFailure},
+				{Context: "test2", State: github.StatusPending},
 			},
 			checkRun: github.CheckRunList{
 				Total:     0,
 				CheckRuns: []github.CheckRun{},
 			},
-			expectError: "some of the required contexts are still not passed: [test1 test2]",
+			expectAllPassed: false,
+		},
+		{
+			name:            "non passed check runs",
+			org:             "org",
+			repo:            "repo",
+			requireContexts: []string{"test1", "test2"},
+			statuses:        []github.Status{},
+			checkRun: github.CheckRunList{
+				Total:     0,
+				CheckRuns: []github.CheckRun{{Name: "test1", Status: checkRunStatusCompleted, Conclusion: "skipped"}},
+			},
+			expectAllPassed: false,
+			expectError:     "require context test1 failed",
 		},
 		{
 			name:            "one passed status",
@@ -96,7 +110,8 @@ func TestCheckContexts(t *testing.T) {
 				Total:     0,
 				CheckRuns: []github.CheckRun{},
 			},
-			expectError: "some of the required contexts are still not passed: [test2]",
+			expectAllPassed: false,
+			expectError:     "require context test2 failed",
 		},
 		{
 			name:            "one passed check run",
@@ -105,10 +120,13 @@ func TestCheckContexts(t *testing.T) {
 			requireContexts: []string{"test1", "test2"},
 			statuses:        []github.Status{{Context: "test2", State: github.StatusFailure}},
 			checkRun: github.CheckRunList{
-				Total:     0,
-				CheckRuns: []github.CheckRun{{Name: "test1", Status: checkRunStatusCompleted}},
+				Total: 0,
+				CheckRuns: []github.CheckRun{
+					{Name: "test1", Status: checkRunStatusCompleted, Conclusion: checkRunConclusionSuccess},
+				},
 			},
-			expectError: "some of the required contexts are still not passed: [test2]",
+			expectAllPassed: false,
+			expectError:     "require context test2 failed",
 		},
 		{
 			name:            "all statuses passed",
@@ -120,9 +138,12 @@ func TestCheckContexts(t *testing.T) {
 				{Context: "test2", State: github.StatusSuccess},
 			},
 			checkRun: github.CheckRunList{
-				Total:     0,
-				CheckRuns: []github.CheckRun{{Name: "test3", Status: checkRunStatusCompleted}},
+				Total: 0,
+				CheckRuns: []github.CheckRun{
+					{Name: "test3", Status: checkRunStatusCompleted, Conclusion: checkRunConclusionNeutral},
+				},
 			},
+			expectAllPassed: true,
 		},
 		{
 			name:            "all check runs passed",
@@ -135,10 +156,11 @@ func TestCheckContexts(t *testing.T) {
 			checkRun: github.CheckRunList{
 				Total: 0,
 				CheckRuns: []github.CheckRun{
-					{Name: "test1", Status: checkRunStatusCompleted},
-					{Name: "test2", Status: checkRunStatusCompleted},
+					{Name: "test1", Status: checkRunStatusCompleted, Conclusion: checkRunConclusionNeutral},
+					{Name: "test2", Status: checkRunStatusCompleted, Conclusion: checkRunConclusionSuccess},
 				},
 			},
+			expectAllPassed: true,
 		},
 	}
 
@@ -163,9 +185,8 @@ func TestCheckContexts(t *testing.T) {
 				checkRunList: checkRunList,
 			}
 
-			err := checkContexts(logrus.WithField("rerere", "testing"),
+			isAllPassed, err := checkContexts(logrus.WithField("rerere", "testing"),
 				&ghc, prowflagutil.NewStrings(tc.requireContexts...), tc.branch, tc.org, tc.repo)
-
 			if err != nil {
 				if len(tc.expectError) == 0 {
 					t.Errorf("unexpected error: '%v'", err)
@@ -176,6 +197,10 @@ func TestCheckContexts(t *testing.T) {
 				if len(tc.expectError) != 0 {
 					t.Errorf("expected error: '%v', but it is nil", tc.expectError)
 				}
+			}
+
+			if isAllPassed != tc.expectAllPassed {
+				t.Errorf("expected all passed: '%v', but it is '%v'", tc.expectAllPassed, isAllPassed)
 			}
 		})
 	}
@@ -201,8 +226,8 @@ func TestRetesting(t *testing.T) {
 			},
 			run: func() mockCheck {
 				return func(log *logrus.Entry, ghc githubClient, contexts prowflagutil.Strings,
-					retestingBranch string, org string, repo string) error {
-					return nil
+					retestingBranch string, org string, repo string) (bool, error) {
+					return true, nil
 				}
 			},
 			expectCheckoutTimes: 1,
@@ -220,16 +245,16 @@ func TestRetesting(t *testing.T) {
 			run: func() mockCheck {
 				result := []error{errors.New("one"), nil}
 				i := 0
-				next := func() error {
+				next := func() (bool, error) {
 					if i > 0 {
 						time.Sleep(time.Nanosecond * 2)
 					}
 					err := result[i]
 					i++
-					return err
+					return err == nil, err
 				}
 				return func(log *logrus.Entry, ghc githubClient, contexts prowflagutil.Strings,
-					retestingBranch string, org string, repo string) error {
+					retestingBranch string, org string, repo string) (bool, error) {
 					return next()
 				}
 			},
@@ -248,16 +273,16 @@ func TestRetesting(t *testing.T) {
 			run: func() mockCheck {
 				result := []error{errors.New("one"), errors.New("two"), nil}
 				i := 0
-				next := func() error {
+				next := func() (bool, error) {
 					if i > 0 {
 						time.Sleep(time.Nanosecond * 2)
 					}
 					err := result[i]
 					i++
-					return err
+					return err == nil, err
 				}
 				return func(log *logrus.Entry, ghc githubClient, contexts prowflagutil.Strings,
-					retestingBranch string, org string, repo string) error {
+					retestingBranch string, org string, repo string) (bool, error) {
 					return next()
 				}
 			},
@@ -276,16 +301,16 @@ func TestRetesting(t *testing.T) {
 			run: func() mockCheck {
 				result := []error{errors.New("one"), errors.New("two"), errors.New("three")}
 				i := 0
-				next := func() error {
+				next := func() (bool, error) {
 					if i > 0 {
 						time.Sleep(time.Nanosecond * 2)
 					}
 					err := result[i]
 					i++
-					return err
+					return err == nil, err
 				}
 				return func(log *logrus.Entry, ghc githubClient, contexts prowflagutil.Strings,
-					retestingBranch string, org string, repo string) error {
+					retestingBranch string, org string, repo string) (bool, error) {
 					return next()
 				}
 			},
