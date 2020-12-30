@@ -1,4 +1,3 @@
-//nolint:scopelint
 package owners
 
 import (
@@ -153,7 +152,7 @@ func TestListOwners(t *testing.T) {
 	pullNumber := 1
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 
-	testCases := []struct {
+	testcases := []struct {
 		name                   string
 		sigRes                 *SigResponse
 		labels                 []github.Label
@@ -369,8 +368,9 @@ func TestListOwners(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
 			// Fake http client.
 			mux := http.NewServeMux()
 			testServer := httptest.NewServer(mux)
@@ -379,23 +379,23 @@ func TestListOwners(t *testing.T) {
 			repoConfig := tiexternalplugins.TiCommunityOwners{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				SigEndpoint:        testServer.URL,
-				DefaultRequireLgtm: testCase.defaultRequireLgtm,
+				DefaultRequireLgtm: tc.defaultRequireLgtm,
 			}
 
-			if testCase.useDefaultSigName {
+			if tc.useDefaultSigName {
 				repoConfig.DefaultSigName = sigName
 			}
 
-			if testCase.trustTeams != nil {
-				repoConfig.TrustTeams = testCase.trustTeams
+			if tc.trustTeams != nil {
+				repoConfig.TrustTeams = tc.trustTeams
 			}
 
-			if testCase.requireLgtmLabelPrefix != "" {
-				repoConfig.RequireLgtmLabelPrefix = testCase.requireLgtmLabelPrefix
+			if tc.requireLgtmLabelPrefix != "" {
+				repoConfig.RequireLgtmLabelPrefix = tc.requireLgtmLabelPrefix
 			}
 
-			if testCase.branchesConfig != nil {
-				repoConfig.Branches = testCase.branchesConfig
+			if tc.branchesConfig != nil {
+				repoConfig.Branches = tc.branchesConfig
 			}
 
 			config.TiCommunityOwners = []tiexternalplugins.TiCommunityOwners{
@@ -409,14 +409,14 @@ func TestListOwners(t *testing.T) {
 					t.Errorf("expect 'Get' got '%s'", req.Method)
 				}
 				reqBodyBytes := new(bytes.Buffer)
-				err := json.NewEncoder(reqBodyBytes).Encode(testCase.sigRes)
+				err := json.NewEncoder(reqBodyBytes).Encode(tc.sigRes)
 				if err != nil {
-					t.Errorf("Encoding data '%v' failed", testCase.sigRes)
+					t.Errorf("Encoding data '%v' failed", tc.sigRes)
 				}
 
 				_, err = res.Write(reqBodyBytes.Bytes())
 				if err != nil {
-					t.Errorf("Write data '%v' failed", testCase.sigRes)
+					t.Errorf("Write data '%v' failed", tc.sigRes)
 				}
 			})
 
@@ -438,8 +438,8 @@ func TestListOwners(t *testing.T) {
 			}
 
 			// NOTICE: adds labels.
-			if testCase.labels != nil {
-				fc.PullRequests[pullNumber].Labels = testCase.labels
+			if tc.labels != nil {
+				fc.PullRequests[pullNumber].Labels = tc.labels
 			}
 
 			ownersServer := Server{
@@ -458,23 +458,23 @@ func TestListOwners(t *testing.T) {
 			}
 
 			sort.Strings(res.Data.Committers)
-			sort.Strings(testCase.expectCommitters)
+			sort.Strings(tc.expectCommitters)
 
-			if len(res.Data.Committers) != len(testCase.expectCommitters) ||
-				!reflect.DeepEqual(res.Data.Committers, testCase.expectCommitters) {
-				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", res.Data.Committers, testCase.expectCommitters)
+			if len(res.Data.Committers) != len(tc.expectCommitters) ||
+				!reflect.DeepEqual(res.Data.Committers, tc.expectCommitters) {
+				t.Errorf("Different committers: Got \"%v\" expected \"%v\"", res.Data.Committers, tc.expectCommitters)
 			}
 
 			sort.Strings(res.Data.Reviewers)
-			sort.Strings(testCase.expectReviewers)
+			sort.Strings(tc.expectReviewers)
 
-			if len(res.Data.Reviewers) != len(testCase.expectReviewers) ||
-				!reflect.DeepEqual(res.Data.Reviewers, testCase.expectReviewers) {
-				t.Errorf("Different reviewers: Got \"%v\" expected \"%v\"", res.Data.Reviewers, testCase.expectReviewers)
+			if len(res.Data.Reviewers) != len(tc.expectReviewers) ||
+				!reflect.DeepEqual(res.Data.Reviewers, tc.expectReviewers) {
+				t.Errorf("Different reviewers: Got \"%v\" expected \"%v\"", res.Data.Reviewers, tc.expectReviewers)
 			}
 
-			if res.Data.NeedsLgtm != testCase.expectNeedsLgtm {
-				t.Errorf("Different LGTM: Got \"%v\" expected \"%v\"", res.Data.NeedsLgtm, testCase.expectNeedsLgtm)
+			if res.Data.NeedsLgtm != tc.expectNeedsLgtm {
+				t.Errorf("Different LGTM: Got \"%v\" expected \"%v\"", res.Data.NeedsLgtm, tc.expectNeedsLgtm)
 			}
 		})
 	}
@@ -495,7 +495,7 @@ func TestListOwnersFailed(t *testing.T) {
 	pullNumber := 1
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 
-	testCases := []struct {
+	testcases := []struct {
 		name        string
 		labels      []github.Label
 		invalidData bool
@@ -523,8 +523,9 @@ func TestListOwnersFailed(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
 			// Fake http client.
 			mux := http.NewServeMux()
 			testServer := httptest.NewServer(mux)
@@ -544,7 +545,7 @@ func TestListOwnersFailed(t *testing.T) {
 					t.Errorf("expect 'Get' got '%s'", req.Method)
 				}
 
-				if testCase.invalidData {
+				if tc.invalidData {
 					_, err := res.Write([]byte{})
 					if err != nil {
 						t.Errorf("Write data invalidData failed")
@@ -573,8 +574,8 @@ func TestListOwnersFailed(t *testing.T) {
 			}
 
 			// NOTICE: adds labels.
-			if testCase.labels != nil {
-				fc.PullRequests[pullNumber].Labels = testCase.labels
+			if tc.labels != nil {
+				fc.PullRequests[pullNumber].Labels = tc.labels
 			}
 
 			ownersServer := Server{
@@ -588,9 +589,9 @@ func TestListOwnersFailed(t *testing.T) {
 
 			_, err := ownersServer.ListOwners(org, repoName, pullNumber, config)
 			if err == nil {
-				t.Errorf("expected error '%v', but it is nil", testCase.expectError)
-			} else if err.Error() != testCase.expectError {
-				t.Errorf("expected error '%v', but it is '%v'", testCase.expectError, err)
+				t.Errorf("expected error '%v', but it is nil", tc.expectError)
+			} else if err.Error() != tc.expectError {
+				t.Errorf("expected error '%v', but it is '%v'", tc.expectError, err)
 			}
 
 			testServer.Close()
@@ -603,7 +604,7 @@ func TestGetSigNameByLabel(t *testing.T) {
 	testLabel2 := "testLabel2"
 	sigLabel := "sig/testing"
 
-	testCases := []struct {
+	testcases := []struct {
 		name          string
 		labels        []github.Label
 		expectSigName string
@@ -635,19 +636,20 @@ func TestGetSigNameByLabel(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			sigName := getSigNameByLabel(testCase.labels)
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			sigName := getSigNameByLabel(tc.labels)
 
-			if sigName != testCase.expectSigName {
-				t.Errorf("expected sig '%s', but it is '%s'", testCase.expectSigName, sigName)
+			if sigName != tc.expectSigName {
+				t.Errorf("expected sig '%s', but it is '%s'", tc.expectSigName, sigName)
 			}
 		})
 	}
 }
 
 func TestGetRequireLgtmByLabel(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name                   string
 		labels                 []github.Label
 		requireLgtmLabelPrefix string
@@ -701,16 +703,17 @@ func TestGetRequireLgtmByLabel(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			requireLgtm, err := getRequireLgtmByLabel(testCase.labels, testCase.requireLgtmLabelPrefix)
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			requireLgtm, err := getRequireLgtmByLabel(tc.labels, tc.requireLgtmLabelPrefix)
 
-			if requireLgtm != testCase.expectLgtm {
-				t.Errorf("expected lgtm '%d', but it is '%d'", testCase.expectLgtm, requireLgtm)
+			if requireLgtm != tc.expectLgtm {
+				t.Errorf("expected lgtm '%d', but it is '%d'", tc.expectLgtm, requireLgtm)
 			}
 
-			if err != nil && err.Error() != testCase.expectErr {
-				t.Errorf("expected err '%v', but it is '%v'", testCase.expectErr, err)
+			if err != nil && err.Error() != tc.expectErr {
+				t.Errorf("expected err '%v', but it is '%v'", tc.expectErr, err)
 			}
 		})
 	}

@@ -1,4 +1,4 @@
-//nolint:scopelint,dupl
+//nolint:dupl
 package externalplugins
 
 import (
@@ -9,7 +9,7 @@ import (
 )
 
 func TestValidateConfig(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name           string
 		lgtm           *TiCommunityLgtm
 		merge          *TiCommunityMerge
@@ -309,7 +309,8 @@ func TestValidateConfig(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{
 				TiCommunityLgtm: []TiCommunityLgtm{
@@ -344,7 +345,7 @@ func TestValidateConfig(t *testing.T) {
 }
 
 func TestLgtmFor(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name        string
 		lgtm        *TiCommunityLgtm
 		org         string
@@ -380,7 +381,8 @@ func TestLgtmFor(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{TiCommunityLgtm: []TiCommunityLgtm{
 				*tc.lgtm,
@@ -397,7 +399,7 @@ func TestLgtmFor(t *testing.T) {
 }
 
 func TestMergeFor(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name        string
 		merge       *TiCommunityMerge
 		org         string
@@ -431,7 +433,8 @@ func TestMergeFor(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{TiCommunityMerge: []TiCommunityMerge{
 				*tc.merge,
@@ -449,7 +452,7 @@ func TestMergeFor(t *testing.T) {
 }
 
 func TestOwnersFor(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name        string
 		owners      *TiCommunityOwners
 		org         string
@@ -483,7 +486,8 @@ func TestOwnersFor(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{TiCommunityOwners: []TiCommunityOwners{
 				*tc.owners,
@@ -501,7 +505,7 @@ func TestOwnersFor(t *testing.T) {
 }
 
 func TestLabelFor(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name        string
 		label       *TiCommunityLabel
 		org         string
@@ -535,7 +539,8 @@ func TestLabelFor(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{TiCommunityLabel: []TiCommunityLabel{
 				*tc.label,
@@ -553,7 +558,7 @@ func TestLabelFor(t *testing.T) {
 }
 
 func TestAutoresponderFor(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name          string
 		autoresponder *TiCommunityAutoresponder
 		org           string
@@ -597,7 +602,8 @@ func TestAutoresponderFor(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{TiCommunityAutoresponder: []TiCommunityAutoresponder{
 				*tc.autoresponder,
@@ -615,7 +621,7 @@ func TestAutoresponderFor(t *testing.T) {
 }
 
 func TestBlunderbussFor(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name        string
 		blunderbuss *TiCommunityBlunderbuss
 		org         string
@@ -653,7 +659,8 @@ func TestBlunderbussFor(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{TiCommunityBlunderbuss: []TiCommunityBlunderbuss{
 				*tc.blunderbuss,
@@ -671,7 +678,7 @@ func TestBlunderbussFor(t *testing.T) {
 }
 
 func TestTarsFor(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name        string
 		tars        *TiCommunityTars
 		org         string
@@ -707,7 +714,8 @@ func TestTarsFor(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{TiCommunityTars: []TiCommunityTars{
 				*tc.tars,
@@ -725,7 +733,7 @@ func TestTarsFor(t *testing.T) {
 }
 
 func TestSetBlunderbussDefaults(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name                      string
 		gracePeriodDuration       int
 		expectGracePeriodDuration int
@@ -742,7 +750,8 @@ func TestSetBlunderbussDefaults(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			c := &Configuration{
 				TiCommunityBlunderbuss: []TiCommunityBlunderbuss{

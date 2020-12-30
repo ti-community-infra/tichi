@@ -1,4 +1,3 @@
-//nolint:scopelint
 package lgtm
 
 import (
@@ -572,8 +571,8 @@ func TestGetCurrentAndNextLabel(t *testing.T) {
 		},
 	}
 
-	// scopelint:ignore
-	for _, tc := range testcases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LgtmLabelPrefix, tc.labels, tc.needsLgtm)
 
@@ -622,22 +621,23 @@ func TestHelpProvider(t *testing.T) {
 			configInfoIncludes: []string{configInfoReviewActsAsLgtm},
 		},
 	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for _, testcase := range cases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
 			epa := &externalplugins.ConfigAgent{}
-			epa.Set(c.config)
+			epa.Set(tc.config)
 
 			helpProvider := HelpProvider(epa)
-			pluginHelp, err := helpProvider(c.enabledRepos)
-			if err != nil && !c.err {
+			pluginHelp, err := helpProvider(tc.enabledRepos)
+			if err != nil && !tc.err {
 				t.Fatalf("helpProvider error: %v", err)
 			}
-			for _, msg := range c.configInfoExcludes {
+			for _, msg := range tc.configInfoExcludes {
 				if strings.Contains(pluginHelp.Config["org2/repo"], msg) {
 					t.Fatalf("helpProvider.Config error mismatch: got %v, but didn't want it", msg)
 				}
 			}
-			for _, msg := range c.configInfoIncludes {
+			for _, msg := range tc.configInfoIncludes {
 				if !strings.Contains(pluginHelp.Config["org2/repo"], msg) {
 					t.Fatalf("helpProvider.Config error mismatch: didn't get %v, but wanted it", msg)
 				}

@@ -1,4 +1,3 @@
-//nolint:scopelint
 package merge
 
 import (
@@ -556,7 +555,7 @@ func TestHandlePullRequest(t *testing.T) {
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	treeSHA := "6dcb09b5b57875f334f61aebed695e2e4193db5e"
 	prName := "kubernetes/kubernetes#101"
-	cases := []struct {
+	testcases := []struct {
 		name             string
 		event            github.PullRequestEvent
 		prCommits        map[string][]github.RepositoryCommit
@@ -730,10 +729,11 @@ func TestHandlePullRequest(t *testing.T) {
 			expectNoComments: true,
 		},
 	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
 			fakeGitHub := &fakegithub.FakeClient{
-				IssueComments: c.issueComments,
+				IssueComments: tc.issueComments,
 				PullRequests: map[int]*github.PullRequest{
 					101: {
 						Base: github.PullRequestBranch{
@@ -746,8 +746,8 @@ func TestHandlePullRequest(t *testing.T) {
 				},
 				Commits:          make(map[string]github.RepositoryCommit),
 				Collaborators:    []string{"collab"},
-				IssueLabelsAdded: c.IssueLabelsAdded,
-				CommitMap:        c.prCommits,
+				IssueLabelsAdded: tc.IssueLabelsAdded,
+				CommitMap:        tc.prCommits,
 			}
 			fakeGitHub.IssueLabelsAdded = append(fakeGitHub.IssueLabelsAdded, prName+":"+externalplugins.CanMergeLabel)
 			commit := github.RepositoryCommit{}
@@ -765,35 +765,35 @@ func TestHandlePullRequest(t *testing.T) {
 
 			err := HandlePullRequestEvent(
 				fakeGitHub,
-				&c.event,
+				&tc.event,
 				cfg,
 				logrus.WithField("plugin", PluginName),
 			)
 
-			if err != nil && c.err == nil {
+			if err != nil && tc.err == nil {
 				t.Fatalf("handlePullRequest error: %v", err)
 			}
 
-			if err == nil && c.err != nil {
-				t.Fatalf("handlePullRequest wanted error: %v, got nil", c.err)
+			if err == nil && tc.err != nil {
+				t.Fatalf("handlePullRequest wanted error: %v, got nil", tc.err)
 			}
 
-			if got, want := err, c.err; !equality.Semantic.DeepEqual(got, want) {
+			if got, want := err, tc.err; !equality.Semantic.DeepEqual(got, want) {
 				t.Fatalf("handlePullRequest error mismatch: got %v, want %v", got, want)
 			}
 
-			if got, want := len(fakeGitHub.IssueLabelsRemoved), len(c.IssueLabelsRemoved); got != want {
-				t.Logf("IssueLabelsRemoved: got %v, want: %v", fakeGitHub.IssueLabelsRemoved, c.IssueLabelsRemoved)
+			if got, want := len(fakeGitHub.IssueLabelsRemoved), len(tc.IssueLabelsRemoved); got != want {
+				t.Logf("IssueLabelsRemoved: got %v, want: %v", fakeGitHub.IssueLabelsRemoved, tc.IssueLabelsRemoved)
 				t.Fatalf("IssueLabelsRemoved length mismatch: got %d, want %d", got, want)
 			}
 
-			if got, want := fakeGitHub.IssueComments, c.issueComments; !equality.Semantic.DeepEqual(got, want) {
+			if got, want := fakeGitHub.IssueComments, tc.issueComments; !equality.Semantic.DeepEqual(got, want) {
 				t.Fatalf("LGTM revmoved notifications mismatch: got %v, want %v", got, want)
 			}
-			if c.expectNoComments && len(fakeGitHub.IssueCommentsAdded) > 0 {
+			if tc.expectNoComments && len(fakeGitHub.IssueCommentsAdded) > 0 {
 				t.Fatalf("expected no comments but got %v", fakeGitHub.IssueCommentsAdded)
 			}
-			if !c.expectNoComments && len(fakeGitHub.IssueCommentsAdded) == 0 {
+			if !tc.expectNoComments && len(fakeGitHub.IssueCommentsAdded) == 0 {
 				t.Fatalf("expected comments but got none")
 			}
 		})
@@ -995,8 +995,8 @@ func TestGetCurrentLabelNumber(t *testing.T) {
 		},
 	}
 
-	// scopelint:ignore
-	for _, tc := range testcases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			isSatisfy := isLGTMSatisfy(externalplugins.LgtmLabelPrefix, tc.labels, tc.needsLgtm)
 
@@ -1012,7 +1012,7 @@ func TestHelpProvider(t *testing.T) {
 		{Org: "org1", Repo: "repo"},
 		{Org: "org2", Repo: "repo"},
 	}
-	cases := []struct {
+	testcases := []struct {
 		name               string
 		config             *externalplugins.Configuration
 		enabledRepos       []config.OrgRepo
@@ -1054,22 +1054,23 @@ func TestHelpProvider(t *testing.T) {
 			configInfoIncludes: []string{configInfoStoreTreeHash},
 		},
 	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
 			epa := &externalplugins.ConfigAgent{}
-			epa.Set(c.config)
+			epa.Set(tc.config)
 
 			helpProvider := HelpProvider(epa)
-			pluginHelp, err := helpProvider(c.enabledRepos)
-			if err != nil && !c.err {
+			pluginHelp, err := helpProvider(tc.enabledRepos)
+			if err != nil && !tc.err {
 				t.Fatalf("helpProvider error: %v", err)
 			}
-			for _, msg := range c.configInfoExcludes {
+			for _, msg := range tc.configInfoExcludes {
 				if strings.Contains(pluginHelp.Config["org2/repo"], msg) {
 					t.Fatalf("helpProvider.Config error mismatch: got %v, but didn't want it", msg)
 				}
 			}
-			for _, msg := range c.configInfoIncludes {
+			for _, msg := range tc.configInfoIncludes {
 				if !strings.Contains(pluginHelp.Config["org2/repo"], msg) {
 					t.Fatalf("helpProvider.Config error mismatch: didn't get %v, but wanted it", msg)
 				}
@@ -1170,11 +1171,12 @@ func TestAllGuaranteed(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		t.Run(testcase.name, func(t *testing.T) {
-			isGuaranteed := isAllGuaranteed(testcase.commits, testcase.lastCanMergeSha, logrus.WithField("plugin", PluginName))
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			isGuaranteed := isAllGuaranteed(tc.commits, tc.lastCanMergeSha, logrus.WithField("plugin", PluginName))
 
-			if isGuaranteed != testcase.expectGuaranteed {
-				t.Fatalf("=guarantee mismatch: got %v, want %v", isGuaranteed, testcase.expectGuaranteed)
+			if isGuaranteed != tc.expectGuaranteed {
+				t.Fatalf("=guarantee mismatch: got %v, want %v", isGuaranteed, tc.expectGuaranteed)
 			}
 		})
 	}

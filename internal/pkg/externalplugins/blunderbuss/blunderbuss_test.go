@@ -1,4 +1,3 @@
-//nolint:scopelint
 package blunderbuss
 
 import (
@@ -406,7 +405,8 @@ func TestHandlePullRequest(t *testing.T) {
 	defer func() { sleep = oldSleep }()
 
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
-	for _, tc := range testcases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Logf("Running scenario %q", tc.name)
 		pr := github.PullRequest{Number: 5, User: github.User{Login: "author"}, Body: tc.body}
 		fc := newFakeGitHubClient(&pr)
@@ -554,17 +554,18 @@ func TestHelpProvider(t *testing.T) {
 			configInfoIncludes: []string{configString(2)},
 		},
 	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for _, testcase := range cases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
 			epa := &externalplugins.ConfigAgent{}
-			epa.Set(c.config)
+			epa.Set(tc.config)
 
 			helpProvider := HelpProvider(epa)
-			pluginHelp, err := helpProvider(c.enabledRepos)
-			if err != nil && !c.err {
+			pluginHelp, err := helpProvider(tc.enabledRepos)
+			if err != nil && !tc.err {
 				t.Fatalf("helpProvider error: %v", err)
 			}
-			for _, msg := range c.configInfoIncludes {
+			for _, msg := range tc.configInfoIncludes {
 				if !strings.Contains(pluginHelp.Config["org2/repo"], msg) {
 					t.Fatalf("helpProvider.Config error mismatch: didn't get %v, but wanted it", msg)
 				}
@@ -574,7 +575,7 @@ func TestHelpProvider(t *testing.T) {
 }
 
 func TestContainIssueLabels(t *testing.T) {
-	testCases := []struct {
+	testcases := []struct {
 		name        string
 		labelNames  []string
 		expectFound bool
@@ -595,7 +596,8 @@ func TestContainIssueLabels(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			labels := mapLabelNameToLabel(tc.labelNames)
 			contain := containSigLabel(labels)
