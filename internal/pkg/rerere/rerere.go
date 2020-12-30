@@ -186,10 +186,10 @@ func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.St
 		return false, fmt.Errorf("list %s statuses failed: %v", retestingBranch, err)
 	}
 
-	contextsSet := contexts.StringSet()
+	requireContextSet := contexts.StringSet()
 
 	for _, status := range statuses {
-		if status.State == github.StatusFailure && contextsSet.Has(status.Context) {
+		if status.State == github.StatusFailure && requireContextSet.Has(status.Context) {
 			return false, fmt.Errorf("require context %s failed", status.Context)
 		}
 		if status.State == github.StatusSuccess {
@@ -207,14 +207,14 @@ func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.St
 			if runs.Conclusion == checkRunConclusionNeutral || runs.Conclusion == checkRunConclusionSuccess {
 				log.Infof("%s runs passed.", runs.Name)
 				passedContexts.Insert(runs.Name)
-			} else if contextsSet.Has(runs.Name) {
+			} else if requireContextSet.Has(runs.Name) {
 				return false, fmt.Errorf("require context %s failed", runs.Name)
 			}
 		}
 	}
 
 	// All required requireContexts passed.
-	if passedContexts.HasAll(contextsSet.List()...) {
+	if passedContexts.HasAll(requireContextSet.List()...) {
 		return true, nil
 	}
 
