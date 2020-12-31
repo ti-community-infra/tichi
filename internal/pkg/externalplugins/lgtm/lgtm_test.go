@@ -443,7 +443,7 @@ func TestLGTMFromApproveReview(t *testing.T) {
 			body:         "/lgtm cancel",
 			currentLabel: lgtmOne,
 			isCancel:     true,
-			shouldToggle: false,
+			shouldToggle: true,
 		},
 	}
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
