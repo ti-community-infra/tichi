@@ -89,10 +89,6 @@ ti-community-lgtm:
 
 因为我们要兼容 GitHub 对该功能本身的语义定义：`Submit general feedback without explicit approval.`，所以使用该功能不会打上 LGTM 相应标签。
 
-### 为什么我使用 GitHub review 功能的 Approve 并且在 comment 中填写 `/lgtm` 导致 Approve 无效？
-
-因为过去一段时间在 TiDB 社区，lgtm 功能支持的触发条件太多，大家使用过程越来越随意和复杂，有时根本分不清楚该操作是否该记为一次有效的 lgtm。在这次的设计中我们希望保证该功能清晰明了并且兼容 GitHub 本身设计，在使用 Approve 时不再适配任何的 comment 中的 `/lgtm`，所以当你同时使用这两个功能时，机器人会直接忽略这次操作。**(该功能为暂时性限制，等到大家熟悉新的机器人，不会再使用 Review 功能中的 Comment 填写 `/lgtm` 之后移除)**.
-
 ### 我是否可以 `/lgtm` 自己的 PR?
 
 不可以，就算你拥有 reviewer 的权限也不会被记为一次有效的 code review。这就像在 GitHub 你无法 approve 自己的 PR 一样。

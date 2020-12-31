@@ -138,12 +138,6 @@ func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
 		return nil
 	}
 
-	// If the review event body contains an '/lgtm' or '/lgtm cancel' comment,
-	// skip handling the review event
-	if LGTMRe.MatchString(rc.body) || LGTMCancelRe.MatchString(rc.body) {
-		return nil
-	}
-
 	// The review webhook returns state as lowercase, while the review API
 	// returns state as uppercase. Uppercase the value here so it always
 	// matches the constant.
