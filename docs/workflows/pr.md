@@ -59,7 +59,7 @@
 
 ### 大型仓库推荐使用 rerere 
 
-我们使用 [ti-community-tars](plugins/tars.md) 并且打开  Require branches to be up to date before merging 可以解决 PR 合并问题，但是对于大型仓库来说，这样会极大的浪费测试资源。所以推荐使用 rerere 解决该问题，详见：[rerere](../components/rerere.md)。
+我们使用 [ti-community-tars](plugins/tars.md) 并且打开  Require branches to be up to date before merging 可以解决 PR 合并问题，但是对于大型仓库来说，这样会极大的浪费测试资源。所以推荐使用 rerere 解决该问题，详见：[rerere](components/rerere.md)。
 
 ## Q&A
 
