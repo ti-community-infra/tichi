@@ -4,7 +4,7 @@
 
 在我们在做 Code Review 的过程中，可能会出现 PR 的改动没有问题，但是该 PR 会产生比较大的副作用需要其他人也参与进来评估的情况。
 
-[hold](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/hold) 通过命令在 PR 上添加或移除 `do-not-merge/hold` 标签来配合 [Tide](../components/tide.md) 阻止 PR 的合并。
+[hold](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/hold) 通过命令在 PR 上添加或移除 `do-not-merge/hold` 标签来配合 [Tide](components/tide.md) 阻止 PR 的合并。
 
 ## 设计思路
 
