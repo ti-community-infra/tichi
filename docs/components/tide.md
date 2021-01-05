@@ -71,7 +71,7 @@ Tide 在 TiDB 社区使用基本正常，但是还是遇到了一个棘手的问
 
 从这几个地方获取 PR 状态
 
-- PR 下面的 CI 状态上下文。状态要么告诉你的 PR 在合并池了，要么告诉你为什么它不在合并池中。 点击详情会跳转到 [Tide Dashboard](https://prow.tidb.io/tide)。例如：![example](https://user-images.githubusercontent.com/29879298/98230629-54037400-1f96-11eb-8a9c-1144905fbbd5.png)
+- PR 下面的 CI 状态上下文。状态要么告诉你的 PR 在合并池了，要么告诉你为什么它不在合并池中。 点击详情会跳转到 [Tide Dashboard](https://prow.tidb.io/tide)。例如：![example](https://user-images.githubusercontent.com/29879298/98230629-54037400-1f96-11eb-8a9c-1144905fbbd5.png ':size=70%')
 - 在 [PR status](https://prow.tidb.io/pr) 中，你的每一个 PR 都会有一个卡片，每个卡片都显示了测试结果和合并要求。（推荐使用）
 - 在 [Tide Dashboard](https://prow.tidb.io/tide) 中，显示每个合并池的状态,可以查看 Tide 当前正在做什么以及 PR 在重新检测队列中的位置。
 

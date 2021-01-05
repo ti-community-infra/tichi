@@ -4,14 +4,14 @@
 
 ## 设计背景
 
-开发该组件还是为了解决我们在 [Tide](./tide.md) 中提到的多个 PR 合并的问题：
+开发该组件还是为了解决我们在 [Tide](components/tide.md) 中提到的多个 PR 合并的问题：
 
 - PR1: 重命名 bifurcate() 为 bifurcateCrab()
 - PR2: 调用 bifurcate()
   
 这个时候两个 PR 都会以当前 master 作为 Base 分支进行测试，两个 PR 都会通过。但是一旦 PR1 先合并入 master 分支，第二个 PR 合并之后（因为测试也通过了），就会导致 master 出现找不到 `bifurcate` 的错误。
 
-为了解决上述问题我们开发了 [tars](../plugins/tars.md) 来自动的合并最新 的 Base 分支到 PR，这样能解决问题，但是对于大型仓库来说这不是一个高效的解决方案。**例如有 n 个同时可以 merge 的 PR，那就要跑 O(n^2) 次测试，大大浪费了 CI 资源。**
+为了解决上述问题我们开发了 [tars](plugins/tars.md) 来自动的合并最新 的 Base 分支到 PR，这样能解决问题，但是对于大型仓库来说这不是一个高效的解决方案。**例如有 n 个同时可以 merge 的 PR，那就要跑 O(n^2) 次测试，大大浪费了 CI 资源。**
 
 为了高效的合并 PR，并且节省测试资源，我们提出了[多个解决方案](https://github.com/ti-community-infra/configs/discussions/41)。最终决定利用 Prow Job 结合 Tide 来解决该问题。
 
