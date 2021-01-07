@@ -14,4 +14,4 @@
 - [工具](tools.md)
   - [label_sync](tools/label_sync.md)
 - [工作流](workflows.md)
-  - [PR workflow](workflows/pr.md)
+  - [PR 工作流](workflows/pr.md)
