@@ -78,5 +78,3 @@ Yes, because when you do a merge locally, I can't tell if you're merging master 
 ### Will my own manual rebase PR cause the labels to disappear?
 
 Yes, because the hash of all commits will be recalculated after rebase, and the hash we stored in comment will be invalid.
-
-
