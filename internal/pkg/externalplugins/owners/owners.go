@@ -160,8 +160,10 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		return nil, err
 	}
 
+	// Get the configuration.
 	opts := config.OwnersFor(org, repo)
 
+	// Get the require lgtm number from PR's label.
 	requireLgtm, err := getRequireLgtmByLabel(pull.Labels, opts.RequireLgtmLabelPrefix)
 	if err != nil {
 		s.Log.WithField("pullNumber", number).WithError(err).Error("Failed to parse require lgtm.")
