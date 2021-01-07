@@ -246,7 +246,7 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: 1,
 		},
 		{
-			name:    "has two sigs label",
+			name:    "have two sig labels",
 			sigsRes: []SigResponse{sig1Res, sig2Res},
 			labels: []github.Label{
 				{
@@ -268,7 +268,7 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: lgtmTwo,
 		},
 		{
-			name:    "has two sigs label and require one lgtm",
+			name:    "have two sig labels and require one lgtm",
 			sigsRes: []SigResponse{sig1Res, sig2Res},
 			labels: []github.Label{
 				{
