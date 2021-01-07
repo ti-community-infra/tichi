@@ -78,5 +78,3 @@ ti-community-merge:
 ### 我自己手动 rebase PR 会导致标签消失吗？
 
 会，因为 rebase 之后所有提交的 hash 都会重新计算，我们存储在 comment 中的 hash 就会失效。
-
-
