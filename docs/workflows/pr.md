@@ -2,7 +2,7 @@
 
 ## 设计背景
 
-在引入 Tide 之后 PR 的协作流程发生了一些变化，但是基本地大框架还是保留了下来。主要的调整发生在 PR 合并阶段，从原来一次性的 `/merge` 命令去触发机器人运行测试合并代码变成了 `/merge` 只负责打上 `status/can-merge` 标签。当 PR 的标签满足要求并且所有测试通过后，PR 将会自动合并无需人为干预。
+在引入 Tide 之后 PR 的协作流程发生了一些变化，但是基本的大框架还是保留了下来。主要的调整发生在 PR 合并阶段，从原来一次性的 `/merge` 命令去触发机器人运行测试合并代码变成了 `/merge` 只负责打上 `status/can-merge` 标签。当 PR 的标签满足要求并且所有测试通过后，PR 将会自动合并无需人为干预。
 
 **⚠️ 注意：在阅读以下内容之前请先仔细阅读 [Tide](components/tide.md)、[ti-community-lgtm](plugins/lgtm.md)、[ti-community-tars](plugins/tars.md)、[rerere](components/rerere.md)、[ti-community-blunderbuss](plugins/blunderbuss.md) 和 [ti-community-merge](plugins/merge.md) 章节内容**。
 
@@ -39,7 +39,7 @@
 
 ### 推荐使用 Squash 模式合并代码
 
-在合并方式上我们还是推荐采用 GitHub 的 Squash 模式进行合并，因为这是目前 TiDB 社区的传统，大家都会在 PR 中创建大量提交，然后再合并时通过 GitHub 自动进行 Squash。目前我们的 ti-community-merge 的设计也是为 Squash 模式服务，**如果不采用 Squash 模式，那么你在 PR 中就需要自己负责 rebase 或者 squash PR，这样会使我们存储提交 hash 的功能失效（详见 Q&A），最终导致 status/can-merge 因为有新的提交而自动取消**。所以我们强烈建议大家使用 Squash 模式进行协作。
+在合并方式上我们还是推荐采用 GitHub 的 Squash 模式进行合并，因为这是目前 TiDB 社区的传统，大家都会在 PR 中创建大量提交，然后在合并时通过 GitHub 自动进行 Squash。目前我们的 ti-community-merge 的设计也是为 Squash 模式服务，**如果不采用 Squash 模式，那么你在 PR 中就需要自己负责 rebase 或者 squash PR，这样会使我们存储提交 hash 的功能失效（详见 Q&A），最终导致 status/can-merge 因为有新的提交而自动取消**。所以我们强烈建议大家使用 Squash 模式进行协作。
 
 ### 小型仓库推荐打开 Require branches to be up to date before merging 分支保护选项
 
