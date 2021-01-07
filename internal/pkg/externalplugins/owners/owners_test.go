@@ -12,6 +12,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
+	"gotest.tools/assert"
 	"k8s.io/test-infra/prow/github"
 )
 
@@ -599,15 +600,16 @@ func TestListOwnersFailed(t *testing.T) {
 	}
 }
 
-func TestGetSigNameByLabel(t *testing.T) {
+func TestGetSigsNameByLabel(t *testing.T) {
 	testLabel1 := "testLabel1"
 	testLabel2 := "testLabel2"
-	sigLabel := "sig/testing"
+	sig1Label := "sig/testing1"
+	sig2Label := "sig/testing2"
 
 	testcases := []struct {
-		name          string
-		labels        []github.Label
-		expectSigName string
+		name           string
+		labels         []github.Label
+		expectSigsName []string
 	}{
 		{
 			name: "has one sig label",
@@ -618,10 +620,24 @@ func TestGetSigNameByLabel(t *testing.T) {
 					Name: testLabel2,
 				},
 				{
-					Name: sigLabel,
+					Name: sig1Label,
 				},
 			},
-			expectSigName: "testing",
+			expectSigsName: []string{"testing1"},
+		},
+		{
+			name: "has two sig labels",
+			labels: []github.Label{
+				{
+					Name: testLabel1,
+				}, {
+					Name: sig2Label,
+				},
+				{
+					Name: sig1Label,
+				},
+			},
+			expectSigsName: []string{"testing1", "testing2"},
 		},
 		{
 			name: "non sig label",
@@ -632,18 +648,19 @@ func TestGetSigNameByLabel(t *testing.T) {
 					Name: testLabel2,
 				},
 			},
-			expectSigName: "",
+			expectSigsName: nil,
 		},
 	}
 
 	for _, testcase := range testcases {
 		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
-			sigName := getSigNameByLabel(tc.labels)
+			sigsName := getSigsNameByLabel(tc.labels)
+			// sort the name.
+			sort.Strings(sigsName)
+			sort.Strings(tc.expectSigsName)
 
-			if sigName != tc.expectSigName {
-				t.Errorf("expected sig '%s', but it is '%s'", tc.expectSigName, sigName)
-			}
+			assert.DeepEqual(t, sigsName, tc.expectSigsName)
 		})
 	}
 }
