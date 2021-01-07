@@ -193,7 +193,7 @@ func TestListOwners(t *testing.T) {
 
 	testcases := []struct {
 		name                   string
-		sigsRes                []SigResponse
+		sigResponses           []SigResponse
 		labels                 []github.Label
 		defaultSigName         string
 		trustTeams             []string
@@ -206,8 +206,8 @@ func TestListOwners(t *testing.T) {
 		expectNeedsLgtm  int
 	}{
 		{
-			name:    "has one sig label",
-			sigsRes: []SigResponse{sig1Res},
+			name:         "has one sig label",
+			sigResponses: []SigResponse{sig1Res},
 			labels: []github.Label{
 				{
 					Name: "sig/sig1",
@@ -224,8 +224,8 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: lgtmTwo,
 		},
 		{
-			name:    "has one sig label and require one lgtm",
-			sigsRes: []SigResponse{sig1Res},
+			name:         "has one sig label and require one lgtm",
+			sigResponses: []SigResponse{sig1Res},
 			labels: []github.Label{
 				{
 					Name: "sig/sig1",
@@ -246,8 +246,8 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: 1,
 		},
 		{
-			name:    "have two sig labels",
-			sigsRes: []SigResponse{sig1Res, sig2Res},
+			name:         "have two sig labels",
+			sigResponses: []SigResponse{sig1Res, sig2Res},
 			labels: []github.Label{
 				{
 					Name: "sig/sig1",
@@ -268,8 +268,8 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: lgtmTwo,
 		},
 		{
-			name:    "have two sig labels and require one lgtm",
-			sigsRes: []SigResponse{sig1Res, sig2Res},
+			name:         "have two sig labels and require one lgtm",
+			sigResponses: []SigResponse{sig1Res, sig2Res},
 			labels: []github.Label{
 				{
 					Name: "sig/sig1",
@@ -294,8 +294,8 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: 1,
 		},
 		{
-			name:    "non sig label",
-			sigsRes: []SigResponse{sig1Res},
+			name:         "non sig label",
+			sigResponses: []SigResponse{sig1Res},
 			expectCommitters: []string{
 				"collab2", "collab3",
 			},
@@ -305,8 +305,8 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: lgtmTwo,
 		},
 		{
-			name:    "non sig label and require one lgtm",
-			sigsRes: []SigResponse{sig1Res},
+			name:         "non sig label and require one lgtm",
+			sigResponses: []SigResponse{sig1Res},
 			labels: []github.Label{
 				{
 					Name: "require-LGT1",
@@ -323,7 +323,7 @@ func TestListOwners(t *testing.T) {
 		},
 		{
 			name:           "non sig label but use default sig name",
-			sigsRes:        []SigResponse{sig1Res},
+			sigResponses:   []SigResponse{sig1Res},
 			defaultSigName: "sig1",
 			expectCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
@@ -337,7 +337,7 @@ func TestListOwners(t *testing.T) {
 		},
 		{
 			name:           "non sig label but use default sig name and require one lgtm",
-			sigsRes:        []SigResponse{sig1Res},
+			sigResponses:   []SigResponse{sig1Res},
 			defaultSigName: "sig1",
 			labels: []github.Label{
 				{
@@ -357,7 +357,7 @@ func TestListOwners(t *testing.T) {
 		},
 		{
 			name:                   "non sig label but use default sig name and default require two lgtm",
-			sigsRes:                []SigResponse{sig1Res},
+			sigResponses:           []SigResponse{sig1Res},
 			defaultSigName:         "sig1",
 			labels:                 []github.Label{},
 			requireLgtmLabelPrefix: "require-LGT",
@@ -373,8 +373,8 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: lgtmTwo,
 		},
 		{
-			name:    "has one sig label and a trust team",
-			sigsRes: []SigResponse{sig1Res},
+			name:         "has one sig label and a trust team",
+			sigResponses: []SigResponse{sig1Res},
 			labels: []github.Label{
 				{
 					Name: "sig/sig1",
@@ -396,8 +396,8 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: lgtmTwo,
 		},
 		{
-			name:    "owners plugin config contains branch config",
-			sigsRes: []SigResponse{sig1Res},
+			name:         "owners plugin config contains branch config",
+			sigResponses: []SigResponse{sig1Res},
 			labels: []github.Label{
 				{
 					Name: "sig/sig1",
@@ -430,8 +430,8 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: 3,
 		},
 		{
-			name:    "owners plugin config contains multiple trusted teams",
-			sigsRes: []SigResponse{sig1Res},
+			name:         "owners plugin config contains multiple trusted teams",
+			sigResponses: []SigResponse{sig1Res},
 			labels: []github.Label{
 				{
 					Name: "sig/sig1",
@@ -490,7 +490,7 @@ func TestListOwners(t *testing.T) {
 				repoConfig,
 			}
 
-			for _, res := range tc.sigsRes {
+			for _, res := range tc.sigResponses {
 				sigRes := res
 				// URL pattern.
 				pattern := fmt.Sprintf(SigEndpointFmt, sigRes.Data.Name)
@@ -610,7 +610,7 @@ func TestListOwnersFailed(t *testing.T) {
 				},
 			},
 			invalidData: false,
-			expectError: "could not get a sig",
+			expectError: "could not get the sig: testing",
 		},
 	}
 
@@ -690,7 +690,7 @@ func TestListOwnersFailed(t *testing.T) {
 	}
 }
 
-func TestGetSigsNameByLabel(t *testing.T) {
+func TestGetSigNamesByLabel(t *testing.T) {
 	testLabel1 := "testLabel1"
 	testLabel2 := "testLabel2"
 	sig1Label := "sig/testing1"
@@ -699,7 +699,7 @@ func TestGetSigsNameByLabel(t *testing.T) {
 	testcases := []struct {
 		name           string
 		labels         []github.Label
-		expectSigsName []string
+		expectSigNames []string
 	}{
 		{
 			name: "has one sig label",
@@ -713,7 +713,7 @@ func TestGetSigsNameByLabel(t *testing.T) {
 					Name: sig1Label,
 				},
 			},
-			expectSigsName: []string{"testing1"},
+			expectSigNames: []string{"testing1"},
 		},
 		{
 			name: "has two sig labels",
@@ -727,7 +727,7 @@ func TestGetSigsNameByLabel(t *testing.T) {
 					Name: sig1Label,
 				},
 			},
-			expectSigsName: []string{"testing1", "testing2"},
+			expectSigNames: []string{"testing1", "testing2"},
 		},
 		{
 			name: "non sig label",
@@ -738,19 +738,19 @@ func TestGetSigsNameByLabel(t *testing.T) {
 					Name: testLabel2,
 				},
 			},
-			expectSigsName: nil,
+			expectSigNames: nil,
 		},
 	}
 
 	for _, testcase := range testcases {
 		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
-			sigsName := getSigsNameByLabels(tc.labels)
+			sigNames := getSigNamesByLabels(tc.labels)
 			// sort the name.
-			sort.Strings(sigsName)
-			sort.Strings(tc.expectSigsName)
+			sort.Strings(sigNames)
+			sort.Strings(tc.expectSigNames)
 
-			assert.DeepEqual(t, sigsName, tc.expectSigsName)
+			assert.DeepEqual(t, sigNames, tc.expectSigNames)
 		})
 	}
 }

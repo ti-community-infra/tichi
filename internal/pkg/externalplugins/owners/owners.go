@@ -2,7 +2,6 @@ package owners
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -75,28 +74,28 @@ func (s *Server) listOwnersForNonSig(org string, repo string,
 	}, nil
 }
 
-func (s *Server) listOwnersForSigs(sigsName []string,
+func (s *Server) listOwnersForSigs(sigNames []string,
 	opts *tiexternalplugins.TiCommunityOwners, trustTeamMembers []string,
 	requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	var committers []string
 	var reviewers []string
 	var maxNeedsLgtm int
 
-	for _, sig := range sigsName {
-		url := opts.SigEndpoint + fmt.Sprintf(SigEndpointFmt, sig)
-		// Get sig info.
+	for _, sigName := range sigNames {
+		url := opts.SigEndpoint + fmt.Sprintf(SigEndpointFmt, sigName)
+		// Get sigName info.
 		res, err := s.Client.Get(url)
 		if err != nil {
-			s.Log.WithField("url", url).WithError(err).Error("Failed to get sig info.")
+			s.Log.WithField("url", url).WithError(err).Error("Failed to get sigName info.")
 			return nil, err
 		}
 
 		if res.StatusCode != 200 {
-			s.Log.WithField("url", url).WithError(err).Error("Failed to get sig info.")
-			return nil, errors.New("could not get a sig")
+			s.Log.WithField("url", url).WithError(err).Error("Failed to get sigName info.")
+			return nil, fmt.Errorf("could not get the sig: %s", sigName)
 		}
 
-		// Unmarshal sig members from body.
+		// Unmarshal sigName members from body.
 		body, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			return nil, err
@@ -135,7 +134,7 @@ func (s *Server) listOwnersForSigs(sigsName []string,
 		_ = res.Body.Close()
 	}
 
-	// If the number of lgtm is not specified, the maximum of sig's needsLgtm is used.
+	// If the number of lgtm is not specified, the maximum of sigName's needsLgtm is used.
 	if requireLgtm == 0 {
 		requireLgtm = maxNeedsLgtm
 	}
@@ -202,33 +201,33 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		trustTeamMembers.Insert(members...)
 	}
 
-	// Find sigs name by labels.
-	sigsName := getSigsNameByLabels(pull.Labels)
+	// Find sig names by labels.
+	sigNames := getSigNamesByLabels(pull.Labels)
 
 	// Use default sig name if cannot find.
-	if len(sigsName) == 0 && len(opts.DefaultSigName) != 0 {
-		sigsName = append(sigsName, opts.DefaultSigName)
+	if len(sigNames) == 0 && len(opts.DefaultSigName) != 0 {
+		sigNames = append(sigNames, opts.DefaultSigName)
 	}
 
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
-	if len(sigsName) == 0 {
+	if len(sigNames) == 0 {
 		return s.listOwnersForNonSig(org, repo, trustTeamMembers.List(), requireLgtm)
 	}
 
-	return s.listOwnersForSigs(sigsName, opts, trustTeamMembers.List(), requireLgtm)
+	return s.listOwnersForSigs(sigNames, opts, trustTeamMembers.List(), requireLgtm)
 }
 
-// getSigsNameByLabels returns the name of sigs when the label prefix matches.
-func getSigsNameByLabels(labels []github.Label) []string {
-	var sigsName []string
+// getSigNamesByLabels returns the names of sig when the label prefix matches.
+func getSigNamesByLabels(labels []github.Label) []string {
+	var sigNames []string
 	for _, label := range labels {
 		if strings.HasPrefix(label.Name, tiexternalplugins.SigPrefix) {
 			sigName := strings.TrimPrefix(label.Name, tiexternalplugins.SigPrefix)
-			sigsName = append(sigsName, sigName)
+			sigNames = append(sigNames, sigName)
 		}
 	}
 
-	return sigsName
+	return sigNames
 }
 
 // getRequireLgtmByLabel returns the number of require lgtm when the label prefix matches.
