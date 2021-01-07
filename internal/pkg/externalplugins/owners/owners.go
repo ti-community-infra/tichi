@@ -202,8 +202,8 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		trustTeamMembers.Insert(members...)
 	}
 
-	// Find sig label.
-	sigsName := getSigsNameByLabel(pull.Labels)
+	// Find sigs name by labels.
+	sigsName := getSigsNameByLabels(pull.Labels)
 
 	// Use default sig name if cannot find.
 	if len(sigsName) == 0 && len(opts.DefaultSigName) != 0 {
@@ -218,8 +218,8 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	return s.listOwnersForSigs(sigsName, opts, trustTeamMembers.List(), requireLgtm)
 }
 
-// getSigsNameByLabel returns the name of sigs when the label prefix matches.
-func getSigsNameByLabel(labels []github.Label) []string {
+// getSigsNameByLabels returns the name of sigs when the label prefix matches.
+func getSigsNameByLabels(labels []github.Label) []string {
 	var sigsName []string
 	for _, label := range labels {
 		if strings.HasPrefix(label.Name, tiexternalplugins.SigPrefix) {

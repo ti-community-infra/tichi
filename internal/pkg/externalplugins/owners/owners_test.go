@@ -745,7 +745,7 @@ func TestGetSigsNameByLabel(t *testing.T) {
 	for _, testcase := range testcases {
 		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
-			sigsName := getSigsNameByLabel(tc.labels)
+			sigsName := getSigsNameByLabels(tc.labels)
 			// sort the name.
 			sort.Strings(sigsName)
 			sort.Strings(tc.expectSigsName)
