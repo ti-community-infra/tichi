@@ -2,7 +2,6 @@ package owners
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -75,62 +74,69 @@ func (s *Server) listOwnersForNonSig(org string, repo string,
 	}, nil
 }
 
-func (s *Server) listOwnersForSig(sigName string,
+func (s *Server) listOwnersForSigs(sigNames []string,
 	opts *tiexternalplugins.TiCommunityOwners, trustTeamMembers []string,
 	requireLgtm int) (*ownersclient.OwnersResponse, error) {
-	url := opts.SigEndpoint + fmt.Sprintf(SigEndpointFmt, sigName)
-	// Get sig info.
-	res, err := s.Client.Get(url)
-	if err != nil {
-		s.Log.WithField("url", url).WithError(err).Error("Failed to get sig info.")
-		return nil, err
-	}
-	defer func() {
-		_ = res.Body.Close()
-	}()
-
-	if res.StatusCode != 200 {
-		s.Log.WithField("url", url).WithError(err).Error("Failed to get sig info.")
-		return nil, errors.New("could not get a sig")
-	}
-
-	// Unmarshal sig members from body.
-	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-	var sigRes SigResponse
-	if err := json.Unmarshal(body, &sigRes); err != nil {
-		s.Log.WithField("body", body).WithError(err).Error("Failed to unmarshal body.")
-		return nil, err
-	}
-
 	var committers []string
 	var reviewers []string
+	var maxNeedsLgtm int
 
-	sig := sigRes.Data
+	for _, sigName := range sigNames {
+		url := opts.SigEndpoint + fmt.Sprintf(SigEndpointFmt, sigName)
+		// Get sigName info.
+		res, err := s.Client.Get(url)
+		if err != nil {
+			s.Log.WithField("url", url).WithError(err).Error("Failed to get sigName info.")
+			return nil, err
+		}
 
-	for _, leader := range sig.Membership.TechLeaders {
-		committers = append(committers, leader.GithubName)
-		reviewers = append(reviewers, leader.GithubName)
+		if res.StatusCode != 200 {
+			s.Log.WithField("url", url).WithError(err).Error("Failed to get sigName info.")
+			return nil, fmt.Errorf("could not get the sig: %s", sigName)
+		}
+
+		// Unmarshal sigName members from body.
+		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, err
+		}
+		var sigRes SigResponse
+		if err := json.Unmarshal(body, &sigRes); err != nil {
+			s.Log.WithField("body", body).WithError(err).Error("Failed to unmarshal body.")
+			return nil, err
+		}
+
+		sig := sigRes.Data
+
+		for _, leader := range sig.Membership.TechLeaders {
+			committers = append(committers, leader.GithubName)
+			reviewers = append(reviewers, leader.GithubName)
+		}
+
+		for _, coLeader := range sig.Membership.CoLeaders {
+			committers = append(committers, coLeader.GithubName)
+			reviewers = append(reviewers, coLeader.GithubName)
+		}
+
+		for _, committer := range sig.Membership.Committers {
+			committers = append(committers, committer.GithubName)
+			reviewers = append(reviewers, committer.GithubName)
+		}
+
+		for _, reviewer := range sig.Membership.Reviewers {
+			reviewers = append(reviewers, reviewer.GithubName)
+		}
+
+		if sig.NeedsLgtm > maxNeedsLgtm {
+			maxNeedsLgtm = sig.NeedsLgtm
+		}
+
+		_ = res.Body.Close()
 	}
 
-	for _, coLeader := range sig.Membership.CoLeaders {
-		committers = append(committers, coLeader.GithubName)
-		reviewers = append(reviewers, coLeader.GithubName)
-	}
-
-	for _, committer := range sig.Membership.Committers {
-		committers = append(committers, committer.GithubName)
-		reviewers = append(reviewers, committer.GithubName)
-	}
-
-	for _, reviewer := range sig.Membership.Reviewers {
-		reviewers = append(reviewers, reviewer.GithubName)
-	}
-
+	// If the number of lgtm is not specified, the maximum of sigName's needsLgtm is used.
 	if requireLgtm == 0 {
-		requireLgtm = sig.NeedsLgtm
+		requireLgtm = maxNeedsLgtm
 	}
 
 	return &ownersclient.OwnersResponse{
@@ -153,15 +159,10 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		return nil, err
 	}
 
+	// Get the configuration.
 	opts := config.OwnersFor(org, repo)
-	// Find sig label.
-	sigName := getSigNameByLabel(pull.Labels)
 
-	// Use default sig name if cannot find.
-	if sigName == "" {
-		sigName = opts.DefaultSigName
-	}
-
+	// Get the require lgtm number from PR's label.
 	requireLgtm, err := getRequireLgtmByLabel(pull.Labels, opts.RequireLgtmLabelPrefix)
 	if err != nil {
 		s.Log.WithField("pullNumber", number).WithError(err).Error("Failed to parse require lgtm.")
@@ -200,25 +201,33 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		trustTeamMembers.Insert(members...)
 	}
 
+	// Find sig names by labels.
+	sigNames := getSigNamesByLabels(pull.Labels)
+
+	// Use default sig name if cannot find.
+	if len(sigNames) == 0 && len(opts.DefaultSigName) != 0 {
+		sigNames = append(sigNames, opts.DefaultSigName)
+	}
+
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
-	if sigName == "" {
+	if len(sigNames) == 0 {
 		return s.listOwnersForNonSig(org, repo, trustTeamMembers.List(), requireLgtm)
 	}
 
-	return s.listOwnersForSig(sigName, opts, trustTeamMembers.List(), requireLgtm)
+	return s.listOwnersForSigs(sigNames, opts, trustTeamMembers.List(), requireLgtm)
 }
 
-// getSigNameByLabel returns the name of sig when the label prefix matches.
-func getSigNameByLabel(labels []github.Label) string {
-	var sigName string
+// getSigNamesByLabels returns the names of sig when the label prefix matches.
+func getSigNamesByLabels(labels []github.Label) []string {
+	var sigNames []string
 	for _, label := range labels {
 		if strings.HasPrefix(label.Name, tiexternalplugins.SigPrefix) {
-			sigName = strings.TrimPrefix(label.Name, tiexternalplugins.SigPrefix)
-			return sigName
+			sigName := strings.TrimPrefix(label.Name, tiexternalplugins.SigPrefix)
+			sigNames = append(sigNames, sigName)
 		}
 	}
 
-	return ""
+	return sigNames
 }
 
 // getRequireLgtmByLabel returns the number of require lgtm when the label prefix matches.
