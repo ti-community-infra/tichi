@@ -1,2 +1,4 @@
+- [Plugins](en/plugins.md)
+  - [ti-community-merge](en/plugins/merge.md)
 - [Workflows](en/workflows.md)
   - [PR workflow](en/workflows/pr.md)
