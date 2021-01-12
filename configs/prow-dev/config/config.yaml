@@ -67,6 +67,11 @@ tide:
   merge_method:
     ti-community-infra/test-dev: squash
 
+  merge_commit_template:
+    ti-community-infra/test-dev:
+      title: "{{ .Title }} (#{{ .Number }})"
+      body: "{{ .Body }}"
+
   target_url: https://prow-dev.tidb.io/tide
 
   queries:
