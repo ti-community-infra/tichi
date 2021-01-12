@@ -1,4 +1,6 @@
+import React from "react";
 import "antd/dist/antd.css";
+
 import "../styles/globals.css";
 
 export default function MyApp({ Component, pageProps }) {

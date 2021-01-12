@@ -1,18 +1,19 @@
 name: Web
 
 on:
-  push: 
-   branches:
-     - link
-     - master
-
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
 jobs:
-  weblint: 
+  weblint:
     runs-on: ubuntu-latest
-    steps: 
+    steps:
       - name: Install Node
         users: actions/setup-node@v1
-        with: 
+        with:
           node-version: '12'
         run: npm install
       - name: Run lint

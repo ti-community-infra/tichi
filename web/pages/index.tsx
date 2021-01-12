@@ -1,16 +1,16 @@
 import Head from "next/head";
+
 import styles from "../styles/home.module.scss";
-import { Button } from "antd";
-import { useRouter } from "next/router";
+import React from "react";
 
 export default function Owner() {
-  const router = useRouter();
   return (
     <div className={styles.container}>
       <Head>
-        <title>Owner Page</title>
+        <title>Link</title>
       </Head>
-      <div>Index Page</div>
+
+      <div>Link</div>
     </div>
   );
 }
