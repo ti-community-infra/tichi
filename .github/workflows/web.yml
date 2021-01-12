@@ -3,7 +3,6 @@ name: Web
 on:
   push: 
    branches:
-     - link
      - master
 
 jobs:
