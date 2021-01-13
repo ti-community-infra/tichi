@@ -17,11 +17,11 @@ When the PR labels are satisfied and all tests pass, the PR will be merged autom
 - **Phase II：** reviewers review code ([ti-community-lgtm](en/plugins/lgtm.md) provide support)
   - reviewer will look at the quality of the code, correctness, engineering considerations, etc.
   - If the reviewer finds no problems with the code, the reviewer will use `/lgtm` to agree to the changes; if the reviewer later finds that there are still problems with the code, they can cancel the changes by using `/lgtm cancel`
-  - Once the reviewer uses the above command, the bot ti-community-prow-bot will automatically add or remove the lgtm-related labels 
+  - Once the reviewer uses the above command, the bot ti-chi-bot will automatically add or remove the lgtm-related labels 
 - **Phase III：** committers review code ([ti-community-merge](en/plugins/merge.md) provide support)
   - committer to review the PR again, looking at dependencies with other features, forward/backward compatibility, etc.
   - If the committer thinks there will be no problems with the code changes, the committer will use `/merge` to agree to the merge; if the committer later thinks there are still problems with the code, it can cancel the merge by using `/merge cancel`
-  - Once the committer uses the above command, the bot ti-community-prow-bot will automatically add or remove the `status/can-merge` label
+  - Once the committer uses the above command, the bot ti-chi-bot will automatically add or remove the `status/can-merge` label
 - **Phase IV：** Auto-merge PR ([Tide](en/components/tide.md) provide support)
   - If all of the following requirements are met
     - All labels requested to already exist (e.g. status/can-merge)
