@@ -2,6 +2,7 @@ package owners
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -18,17 +19,28 @@ import (
 const (
 	// SigEndpointFmt specifies a format for sigs URL.
 	SigEndpointFmt = "/sigs/%s"
+	// MembersEndpoint specifies a members endpoint.
+	MembersEndpoint = "/members/"
+)
+
+// Member's levels.
+const (
+	activeContributorLevel = "active-contributor"
+	reviewerLevel          = "reviewer"
+	committerLevel         = "committer"
+	coLeaderLevel          = "co-leader"
+	leaderLevel            = "leader"
 )
 
 const (
 	// listOwnersSuccessMessage returns on success.
 	listOwnersSuccessMessage = "List all owners success."
-	lgtmTwo                  = 2
+	// defaultRequireLgtmNum specifies default lgtm number.
+	defaultRequireLgtmNum = 2
 )
 
 type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
-	ListCollaborators(org, repo string) ([]github.User, error)
 	ListTeams(org string) ([]github.Team, error)
 	ListTeamMembers(org string, id int, role string) ([]github.TeamMember, error)
 }
@@ -43,31 +55,61 @@ type Server struct {
 	Log            *logrus.Entry
 }
 
-func (s *Server) listOwnersForNonSig(org string, repo string,
+func (s *Server) listOwnersForNonSig(opts *tiexternalplugins.TiCommunityOwners,
 	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
-	collaborators, err := s.Gc.ListCollaborators(org, repo)
+	var committers []string
+	var reviewers []string
+
+	// Members URL.
+	url := opts.SigEndpoint + MembersEndpoint
+
+	res, err := s.Client.Get(url)
 	if err != nil {
-		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed to get collaborators.")
+		s.Log.WithField("url", url).WithError(err).Error("Failed to get members.")
+		return nil, err
+	}
+	defer func() {
+		_ = res.Body.Close()
+	}()
+
+	if res.StatusCode != 200 {
+		s.Log.WithField("url", url).WithError(err).Error("Failed to get members.")
+		return nil, errors.New("could not get the members")
+	}
+
+	// Unmarshal members from body.
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
 		return nil, err
 	}
 
-	var collaboratorsLogin []string
-	for _, collaborator := range collaborators {
-		// Only write and admin permission can lgtm and merge PR.
-		if collaborator.Permissions.Push || collaborator.Permissions.Admin {
-			collaboratorsLogin = append(collaboratorsLogin, collaborator.Login)
+	var membersRes MembersResponse
+	if err := json.Unmarshal(body, &membersRes); err != nil {
+		s.Log.WithField("body", body).WithError(err).Error("Failed to unmarshal body.")
+		return nil, err
+	}
+
+	members := membersRes.Data.Members
+	for _, member := range members {
+		// Except for activeContributor and reviewer, which are both committers.
+		if member.Level != activeContributorLevel && member.Level != reviewerLevel {
+			committers = append(committers, member.GithubName)
+		}
+		// Except for activeContributor, which are both reviewers.
+		if member.Level != activeContributorLevel {
+			reviewers = append(reviewers, member.GithubName)
 		}
 	}
-	committers := sets.NewString(collaboratorsLogin...).Insert(trustTeamMembers...).List()
 
+	// If require lgtm no setting, use default require lgtm.
 	if requireLgtm == 0 {
-		requireLgtm = lgtmTwo
+		requireLgtm = defaultRequireLgtmNum
 	}
 
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
-			Committers: committers,
-			Reviewers:  committers,
+			Committers: sets.NewString(committers...).Insert(trustTeamMembers...).List(),
+			Reviewers:  sets.NewString(reviewers...).Insert(trustTeamMembers...).List(),
 			NeedsLgtm:  requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
@@ -211,7 +253,7 @@ func (s *Server) ListOwners(org string, repo string, number int,
 
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
 	if len(sigNames) == 0 {
-		return s.listOwnersForNonSig(org, repo, trustTeamMembers.List(), requireLgtm)
+		return s.listOwnersForNonSig(opts, trustTeamMembers.List(), requireLgtm)
 	}
 
 	return s.listOwnersForSigs(sigNames, opts, trustTeamMembers.List(), requireLgtm)

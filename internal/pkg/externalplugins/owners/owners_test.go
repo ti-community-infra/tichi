@@ -17,8 +17,7 @@ import (
 )
 
 type fakegithub struct {
-	PullRequests  map[int]*github.PullRequest
-	Collaborators []github.User
+	PullRequests map[int]*github.PullRequest
 }
 
 // GetPullRequest returns details about the PR.
@@ -28,11 +27,6 @@ func (f *fakegithub) GetPullRequest(owner, repo string, number int) (*github.Pul
 		return nil, fmt.Errorf("pull request number %d does not exist", number)
 	}
 	return val, nil
-}
-
-// ListCollaborators lists the collaborators.
-func (f *fakegithub) ListCollaborators(org, repo string) ([]github.User, error) {
-	return f.Collaborators, nil
 }
 
 // ListTeams return a list of fake teams that correspond to the fake team members returned by ListTeamMembers.
@@ -85,105 +79,125 @@ func TestListOwners(t *testing.T) {
 		Data: SigInfo{
 			Name: "sig1",
 			Membership: SigMembership{
-				TechLeaders: []ContributorInfo{
+				TechLeaders: []MemberInfo{
 					{
 						GithubName: "leader1",
 					}, {
 						GithubName: "leader2",
 					},
 				},
-				CoLeaders: []ContributorInfo{
+				CoLeaders: []MemberInfo{
 					{
 						GithubName: "coLeader1",
 					}, {
 						GithubName: "coLeader2",
 					},
 				},
-				Committers: []ContributorInfo{
+				Committers: []MemberInfo{
 					{
 						GithubName: "committer1",
 					}, {
 						GithubName: "committer2",
 					},
 				},
-				Reviewers: []ContributorInfo{
+				Reviewers: []MemberInfo{
 					{
 						GithubName: "reviewer1",
 					}, {
 						GithubName: "reviewer2",
 					},
 				},
-				ActiveContributors: []ContributorInfo{},
 			},
-			NeedsLgtm: lgtmTwo,
+			NeedsLgtm: defaultRequireLgtmNum,
 		},
-		Message: listOwnersSuccessMessage,
+		Message: "Test sig1.",
 	}
 
 	sig2Res := SigResponse{
 		Data: SigInfo{
 			Name: "sig2",
 			Membership: SigMembership{
-				TechLeaders: []ContributorInfo{
+				TechLeaders: []MemberInfo{
 					{
 						GithubName: "leader3",
 					}, {
 						GithubName: "leader4",
 					},
 				},
-				CoLeaders: []ContributorInfo{
+				CoLeaders: []MemberInfo{
 					{
 						GithubName: "coLeader3",
 					}, {
 						GithubName: "coLeader4",
 					},
 				},
-				Committers: []ContributorInfo{
+				Committers: []MemberInfo{
 					{
 						GithubName: "committer3",
 					}, {
 						GithubName: "committer4",
 					},
 				},
-				Reviewers: []ContributorInfo{
+				Reviewers: []MemberInfo{
 					{
 						GithubName: "reviewer3",
 					}, {
 						GithubName: "reviewer4",
 					},
 				},
-				ActiveContributors: []ContributorInfo{},
 			},
 			NeedsLgtm: 1,
 		},
-		Message: listOwnersSuccessMessage,
+		Message: "Test sig2.",
 	}
 
-	collaborators := []github.User{
-		{
-			Login: "collab1",
-			Permissions: github.RepoPermissions{
-				Pull:  true,
-				Push:  false,
-				Admin: false,
+	membersResponse := MembersResponse{
+		Data: MembersInfo{
+			Members: []MemberInfo{
+				{
+					Level:      activeContributorLevel,
+					GithubName: "activeContributor1",
+				},
+				{
+					Level:      activeContributorLevel,
+					GithubName: "activeContributor2",
+				},
+				{
+					Level:      reviewerLevel,
+					GithubName: "reviewer1",
+				},
+				{
+					Level:      reviewerLevel,
+					GithubName: "reviewer2",
+				},
+				{
+					Level:      committerLevel,
+					GithubName: "committer1",
+				},
+				{
+					Level:      committerLevel,
+					GithubName: "committer2",
+				},
+				{
+					Level:      coLeaderLevel,
+					GithubName: "coLeader1",
+				},
+				{
+					Level:      coLeaderLevel,
+					GithubName: "coLeader2",
+				},
+				{
+					Level:      leaderLevel,
+					GithubName: "leader1",
+				},
+				{
+					Level:      leaderLevel,
+					GithubName: "leader2",
+				},
 			},
+			Total: 10,
 		},
-		{
-			Login: "collab2",
-			Permissions: github.RepoPermissions{
-				Pull:  true,
-				Push:  true,
-				Admin: false,
-			},
-		},
-		{
-			Login: "collab3",
-			Permissions: github.RepoPermissions{
-				Pull:  true,
-				Push:  true,
-				Admin: true,
-			},
-		},
+		Message: "Test members.",
 	}
 
 	org := "ti-community-infra"
@@ -194,6 +208,7 @@ func TestListOwners(t *testing.T) {
 	testcases := []struct {
 		name                   string
 		sigResponses           []SigResponse
+		membersResponse        *MembersResponse
 		labels                 []github.Label
 		defaultSigName         string
 		trustTeams             []string
@@ -221,7 +236,7 @@ func TestListOwners(t *testing.T) {
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			expectNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
 			name:         "has one sig label and require one lgtm",
@@ -265,7 +280,7 @@ func TestListOwners(t *testing.T) {
 				"committer1", "committer2", "committer3", "committer4",
 				"reviewer1", "reviewer2", "reviewer3", "reviewer4",
 			},
-			expectNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
 			name:         "have two sig labels and require one lgtm",
@@ -294,19 +309,21 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: 1,
 		},
 		{
-			name:         "non sig label",
-			sigResponses: []SigResponse{sig1Res},
+			name:            "non sig label",
+			sigResponses:    []SigResponse{sig1Res},
+			membersResponse: &membersResponse,
 			expectCommitters: []string{
-				"collab2", "collab3",
+				"leader1", "leader2", "coLeader1", "coLeader2", "committer1", "committer2",
 			},
 			expectReviewers: []string{
-				"collab2", "collab3",
+				"leader1", "leader2", "coLeader1", "coLeader2", "committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			expectNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
-			name:         "non sig label and require one lgtm",
-			sigResponses: []SigResponse{sig1Res},
+			name:            "non sig label and require one lgtm",
+			sigResponses:    []SigResponse{sig1Res},
+			membersResponse: &membersResponse,
 			labels: []github.Label{
 				{
 					Name: "require-LGT1",
@@ -314,10 +331,10 @@ func TestListOwners(t *testing.T) {
 			},
 			requireLgtmLabelPrefix: "require-LGT",
 			expectCommitters: []string{
-				"collab2", "collab3",
+				"leader1", "leader2", "coLeader1", "coLeader2", "committer1", "committer2",
 			},
 			expectReviewers: []string{
-				"collab2", "collab3",
+				"leader1", "leader2", "coLeader1", "coLeader2", "committer1", "committer2", "reviewer1", "reviewer2",
 			},
 			expectNeedsLgtm: 1,
 		},
@@ -333,7 +350,7 @@ func TestListOwners(t *testing.T) {
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			expectNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
 			name:           "non sig label but use default sig name and require one lgtm",
@@ -370,7 +387,7 @@ func TestListOwners(t *testing.T) {
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			expectNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
 			name:         "has one sig label and a trust team",
@@ -393,7 +410,7 @@ func TestListOwners(t *testing.T) {
 				// Team members.
 				"sig-leader1", "sig-leader2",
 			},
-			expectNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
 			name:         "owners plugin config contains branch config",
@@ -511,6 +528,24 @@ func TestListOwners(t *testing.T) {
 				})
 			}
 
+			if tc.membersResponse != nil {
+				mux.HandleFunc(MembersEndpoint, func(res http.ResponseWriter, req *http.Request) {
+					if req.Method != "GET" {
+						t.Errorf("expect 'Get' got '%s'", req.Method)
+					}
+					reqBodyBytes := new(bytes.Buffer)
+					err := json.NewEncoder(reqBodyBytes).Encode(tc.membersResponse)
+					if err != nil {
+						t.Errorf("Encoding data '%v' failed", tc.membersResponse)
+					}
+
+					_, err = res.Write(reqBodyBytes.Bytes())
+					if err != nil {
+						t.Errorf("Write data '%v' failed", tc.membersResponse)
+					}
+				})
+			}
+
 			fc := &fakegithub{
 				PullRequests: map[int]*github.PullRequest{
 					pullNumber: {
@@ -525,7 +560,6 @@ func TestListOwners(t *testing.T) {
 						State:  "open",
 					},
 				},
-				Collaborators: collaborators,
 			}
 
 			// NOTICE: adds labels.
@@ -572,14 +606,6 @@ func TestListOwners(t *testing.T) {
 }
 
 func TestListOwnersFailed(t *testing.T) {
-	collaborators := []github.User{
-		{
-			Login: "collab1",
-		},
-		{
-			Login: "collab2",
-		},
-	}
 	org := "ti-community-infra"
 	repoName := "test-dev"
 	sigName := "testing"
@@ -587,10 +613,11 @@ func TestListOwnersFailed(t *testing.T) {
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 
 	testcases := []struct {
-		name        string
-		labels      []github.Label
-		invalidData bool
-		expectError string
+		name               string
+		labels             []github.Label
+		invalidSigInfoData bool
+		invalidMembersData bool
+		expectError        string
 	}{
 		{
 			name: "has one sig label",
@@ -599,18 +626,14 @@ func TestListOwnersFailed(t *testing.T) {
 					Name: "sig/testing",
 				},
 			},
-			invalidData: true,
-			expectError: "unexpected end of JSON input",
+			invalidSigInfoData: true,
+			expectError:        "unexpected end of JSON input",
 		},
 		{
-			name: "non sig label",
-			labels: []github.Label{
-				{
-					Name: "sig/testing",
-				},
-			},
-			invalidData: false,
-			expectError: "could not get the sig: testing",
+			name:               "non sig label",
+			labels:             []github.Label{},
+			invalidMembersData: true,
+			expectError:        "unexpected end of JSON input",
 		},
 	}
 
@@ -629,17 +652,33 @@ func TestListOwnersFailed(t *testing.T) {
 				},
 			}
 
-			// URL pattern.
+			// SIG info URL pattern.
 			pattern := fmt.Sprintf(SigEndpointFmt, sigName)
 			mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
 				if req.Method != "GET" {
 					t.Errorf("expect 'Get' got '%s'", req.Method)
 				}
 
-				if tc.invalidData {
+				if tc.invalidSigInfoData {
 					_, err := res.Write([]byte{})
 					if err != nil {
-						t.Errorf("Write data invalidData failed")
+						t.Errorf("Write data sig info data failed")
+					}
+				} else {
+					// Just http filed.
+					res.WriteHeader(http.StatusInternalServerError)
+				}
+			})
+
+			mux.HandleFunc(MembersEndpoint, func(res http.ResponseWriter, req *http.Request) {
+				if req.Method != "GET" {
+					t.Errorf("expect 'Get' got '%s'", req.Method)
+				}
+
+				if tc.invalidMembersData {
+					_, err := res.Write([]byte{})
+					if err != nil {
+						t.Errorf("Write data members data failed")
 					}
 				} else {
 					// Just http filed.
@@ -661,7 +700,6 @@ func TestListOwnersFailed(t *testing.T) {
 						State:  "open",
 					},
 				},
-				Collaborators: collaborators,
 			}
 
 			// NOTICE: adds labels.
