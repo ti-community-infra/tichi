@@ -23,18 +23,20 @@ const (
 	MembersEndpoint = "/members/"
 )
 
+// Member's levels.
 const (
 	activeContributorLevel = "active-contributor"
 	reviewerLevel          = "reviewer"
 	committerLevel         = "committer"
 	coLeaderLevel          = "co-leader"
-	LeaderLevel            = "leader"
+	leaderLevel            = "leader"
 )
 
 const (
 	// listOwnersSuccessMessage returns on success.
 	listOwnersSuccessMessage = "List all owners success."
-	lgtmTwo                  = 2
+	// defaultRequireLgtmNum specifies default lgtm number.
+	defaultRequireLgtmNum = 2
 )
 
 type githubClient interface {
@@ -58,11 +60,12 @@ func (s *Server) listOwnersForNonSig(opts *tiexternalplugins.TiCommunityOwners,
 	var committers []string
 	var reviewers []string
 
+	// Members URL.
 	url := opts.SigEndpoint + MembersEndpoint
 
 	res, err := s.Client.Get(url)
 	if err != nil {
-		s.Log.WithField("url", url).WithError(err).Error("Failed to get members info.")
+		s.Log.WithField("url", url).WithError(err).Error("Failed to get members.")
 		return nil, err
 	}
 	defer func() {
@@ -70,7 +73,7 @@ func (s *Server) listOwnersForNonSig(opts *tiexternalplugins.TiCommunityOwners,
 	}()
 
 	if res.StatusCode != 200 {
-		s.Log.WithField("url", url).WithError(err).Error("Failed to get members info.")
+		s.Log.WithField("url", url).WithError(err).Error("Failed to get members.")
 		return nil, errors.New("could not get the members")
 	}
 
@@ -87,18 +90,20 @@ func (s *Server) listOwnersForNonSig(opts *tiexternalplugins.TiCommunityOwners,
 	}
 
 	members := membersRes.Data.Members
-
 	for _, member := range members {
+		// Except for activeContributor and reviewer, which are both committers.
 		if member.Level != activeContributorLevel && member.Level != reviewerLevel {
 			committers = append(committers, member.GithubName)
 		}
+		// Except for activeContributor, which are both reviewers.
 		if member.Level != activeContributorLevel {
 			reviewers = append(reviewers, member.GithubName)
 		}
 	}
 
+	// If require lgtm no setting, use default require lgtm.
 	if requireLgtm == 0 {
-		requireLgtm = lgtmTwo
+		requireLgtm = defaultRequireLgtmNum
 	}
 
 	return &ownersclient.OwnersResponse{

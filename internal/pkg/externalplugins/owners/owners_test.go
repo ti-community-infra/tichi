@@ -108,7 +108,7 @@ func TestListOwners(t *testing.T) {
 					},
 				},
 			},
-			NeedsLgtm: lgtmTwo,
+			NeedsLgtm: defaultRequireLgtmNum,
 		},
 		Message: "Test sig1.",
 	}
@@ -187,11 +187,11 @@ func TestListOwners(t *testing.T) {
 					GithubName: "coLeader2",
 				},
 				{
-					Level:      LeaderLevel,
+					Level:      leaderLevel,
 					GithubName: "leader1",
 				},
 				{
-					Level:      LeaderLevel,
+					Level:      leaderLevel,
 					GithubName: "leader2",
 				},
 			},
@@ -236,7 +236,7 @@ func TestListOwners(t *testing.T) {
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			expectNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
 			name:         "has one sig label and require one lgtm",
@@ -280,7 +280,7 @@ func TestListOwners(t *testing.T) {
 				"committer1", "committer2", "committer3", "committer4",
 				"reviewer1", "reviewer2", "reviewer3", "reviewer4",
 			},
-			expectNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
 			name:         "have two sig labels and require one lgtm",
@@ -318,7 +318,7 @@ func TestListOwners(t *testing.T) {
 			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2", "committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			expectNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
 			name:            "non sig label and require one lgtm",
@@ -350,7 +350,7 @@ func TestListOwners(t *testing.T) {
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			expectNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
 			name:           "non sig label but use default sig name and require one lgtm",
@@ -387,7 +387,7 @@ func TestListOwners(t *testing.T) {
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
-			expectNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
 			name:         "has one sig label and a trust team",
@@ -410,7 +410,7 @@ func TestListOwners(t *testing.T) {
 				// Team members.
 				"sig-leader1", "sig-leader2",
 			},
-			expectNeedsLgtm: lgtmTwo,
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
 			name:         "owners plugin config contains branch config",
