@@ -41,7 +41,7 @@ ti-community-blunderbuss:
     max_request_count: 1
     exclude_reviewers:
       # Bots
-      - ti-community-prow-bot
+      - ti-chi-bot
       - rustin-bot
       # Inactive reviewers
       - sykp241095
