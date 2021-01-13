@@ -613,10 +613,11 @@ func TestListOwnersFailed(t *testing.T) {
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 
 	testcases := []struct {
-		name        string
-		labels      []github.Label
-		invalidData bool
-		expectError string
+		name               string
+		labels             []github.Label
+		invalidSigInfoData bool
+		invalidMembersData bool
+		expectError        string
 	}{
 		{
 			name: "has one sig label",
@@ -625,18 +626,14 @@ func TestListOwnersFailed(t *testing.T) {
 					Name: "sig/testing",
 				},
 			},
-			invalidData: true,
-			expectError: "unexpected end of JSON input",
+			invalidSigInfoData: true,
+			expectError:        "unexpected end of JSON input",
 		},
 		{
-			name: "non sig label",
-			labels: []github.Label{
-				{
-					Name: "sig/testing",
-				},
-			},
-			invalidData: false,
-			expectError: "could not get the sig: testing",
+			name:               "non sig label",
+			labels:             []github.Label{},
+			invalidMembersData: true,
+			expectError:        "unexpected end of JSON input",
 		},
 	}
 
@@ -655,17 +652,33 @@ func TestListOwnersFailed(t *testing.T) {
 				},
 			}
 
-			// URL pattern.
+			// SIG info URL pattern.
 			pattern := fmt.Sprintf(SigEndpointFmt, sigName)
 			mux.HandleFunc(pattern, func(res http.ResponseWriter, req *http.Request) {
 				if req.Method != "GET" {
 					t.Errorf("expect 'Get' got '%s'", req.Method)
 				}
 
-				if tc.invalidData {
+				if tc.invalidSigInfoData {
 					_, err := res.Write([]byte{})
 					if err != nil {
-						t.Errorf("Write data invalidData failed")
+						t.Errorf("Write data sig info data failed")
+					}
+				} else {
+					// Just http filed.
+					res.WriteHeader(http.StatusInternalServerError)
+				}
+			})
+
+			mux.HandleFunc(MembersEndpoint, func(res http.ResponseWriter, req *http.Request) {
+				if req.Method != "GET" {
+					t.Errorf("expect 'Get' got '%s'", req.Method)
+				}
+
+				if tc.invalidMembersData {
+					_, err := res.Write([]byte{})
+					if err != nil {
+						t.Errorf("Write data members data failed")
 					}
 				} else {
 					// Just http filed.
