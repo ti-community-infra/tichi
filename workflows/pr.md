@@ -15,11 +15,11 @@
 - **第二阶段：** reviewers review 代码 ([ti-community-lgtm](plugins/lgtm.md) 提供支持)
   - reviewer 会查看代码的质量，正确性，工程考量等
   - 如果 reviewer 认为代码没有问题，reviewer 会使用 `/lgtm` 同意这些改动；如果 reviewer 后续觉得代码还是有问题，可以通过 `/lgtm cancel` 来取消同意代码改动
-  - 一旦 reviewer 使用上述命令，机器人 ti-community-prow-bot 就会自动打上或移除 lgtm 相关标签 
+  - 一旦 reviewer 使用上述命令，机器人 ti-chi-bot 就会自动打上或移除 lgtm 相关标签 
 - **第三阶段：** committers 审核代码 ([ti-community-merge](plugins/merge.md) 提供支持)
   - committer 对 PR 进行再审核，考察与其他功能的依赖关系，向前/向后的兼容性等
   - 如果 committer 认为代码合并之后不会有问题，committer 会使用 `/merge` 同意这些代码改动；如果 committer 后续觉得代码还是有问题，可以通过 `/merge cancel` 来取消同意这些代码改动合并
-  - 一旦 committer 使用上述命令，机器人 ti-community-prow-bot 就会自动打上或移除 `status/can-merge` 标签
+  - 一旦 committer 使用上述命令，机器人 ti-chi-bot 就会自动打上或移除 `status/can-merge` 标签
 - **第四阶段：** 自动合并 PR ([Tide](components/tide.md) 提供支持)
   - 如果满足以下所有要求
     - 所有要求到的标签已经存在（例如：status/can-merge）
