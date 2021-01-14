@@ -53,7 +53,7 @@ ti-community-blunderbuss:
 ## 参考文档
 
 - [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Fconfigs#auto_cc)
-- [代码实现](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/blunderbuss)
+- [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/blunderbuss)
 
 ## Q&A
 

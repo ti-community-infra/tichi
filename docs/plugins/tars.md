@@ -38,7 +38,7 @@ ti-community-tars:
 
 ## 参考文档
 
-- [代码实现](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/tars)
+- [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/tars)
 
 ## Q&A
 

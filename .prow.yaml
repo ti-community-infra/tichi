@@ -1,5 +1,5 @@
 presubmits:
-  - name: pull-ti-community-prow-validate-prow-yaml
+  - name: pull-tichi-validate-prow-yaml
     decorate: true
     run_if_changed: 'configs/prow-dev/'
     branches:
@@ -16,7 +16,7 @@ presubmits:
             - --warnings=validate-urls
             - --warnings=unknown-fields
             - --warnings=duplicate-job-refs
-  - name: pull-ti-community-prow-rerere
+  - name: pull-tichi-rerere
     decorate: true
     always_run: true
     trigger: "(?mi)^/(merge|rerere)\\s*$"
@@ -45,7 +45,7 @@ presubmits:
           secret:
             secretName: github-token
 postsubmits:
-  - name: post-ti-community-prow-deploy-prow
+  - name: post-tichi-deploy-prow
     run_if_changed: 'configs/prow-dev/cluster/'
     decorate: true
     branches:

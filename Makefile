@@ -1,4 +1,4 @@
-PROJECT=ti-community-prow
+PROJECT=tichi
 GOPATH ?= $(shell go env GOPATH)
 
 # Ensure GOPATH is set before running build process.

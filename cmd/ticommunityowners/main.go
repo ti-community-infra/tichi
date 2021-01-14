@@ -11,8 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	tiexternalplugins "github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
-	"github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins/owners"
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/owners"
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"

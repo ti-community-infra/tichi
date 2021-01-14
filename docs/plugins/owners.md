@@ -65,7 +65,7 @@
 ti-community-owners:
   - repos:
       - ti-community-infra/test-live
-      - ti-community-infra/ti-community-prow
+      - ti-community-infra/tichi
       - ti-community-infra/ti-community-bot
       - ti-community-infra/ti-challenge-bot
     sig_endpoint: https://bots.tidb.io/ti-community-bot

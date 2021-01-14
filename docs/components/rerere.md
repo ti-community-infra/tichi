@@ -1,6 +1,6 @@
 # rerere
 
-[rerere](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/rerere) 是 ti-community-prow 的一个核心组件，rerere 会将代码 push 到专门用来重新测试的分支上进行重新测试。它将作为一个 [Prow Job](https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md) 运行。
+[rerere](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/rerere) 是 tichi 的一个核心组件，rerere 会将代码 push 到专门用来重新测试的分支上进行重新测试。它将作为一个 [Prow Job](https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md) 运行。
 
 ## 设计背景
 
@@ -70,7 +70,7 @@ presubmits:
 ```
 
 ## 参考文档
-- [代码实现](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/rerere)
+- [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/rerere)
 
 ## Q&A
 

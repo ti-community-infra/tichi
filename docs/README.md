@@ -6,9 +6,9 @@
 
 ## 在 TiDB 社区的应用
 
-在 [ti-community-prow](https://github.com/ti-community-infra/ti-community-prow) 中，主要利用 Prow 提供的 GitHub 自动化功能，希望实现 [TiDB](https://github.com/pingcap/tidb) 社区的协作流程高度自动化和标准化。
+在 [tichi](https://github.com/ti-community-infra/tichi) 中，主要利用 Prow 提供的 GitHub 自动化功能，希望实现 [TiDB](https://github.com/pingcap/tidb) 社区的协作流程高度自动化和标准化。
 
-因为 Prow 具有良好的[扩展性](https://github.com/kubernetes/test-infra/tree/master/prow/plugins)，可以按照自己的社区实践规范编写和定制插件。TiDB 社区基于这个特性定制了一批自己的[插件](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins)。
+因为 Prow 具有良好的[扩展性](https://github.com/kubernetes/test-infra/tree/master/prow/plugins)，可以按照自己的社区实践规范编写和定制插件。TiDB 社区基于这个特性定制了一批自己的[插件](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins)。
 
 ## 关于本书
 

@@ -1,4 +1,4 @@
-module github.com/ti-community-infra/ti-community-prow
+module github.com/ti-community-infra/tichi
 
 go 1.15
 

@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
-	"github.com/ti-community-infra/ti-community-prow/internal/pkg/ownersclient"
+	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 )
