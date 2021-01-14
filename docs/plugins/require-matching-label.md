@@ -39,7 +39,7 @@
 
 ## 参考文档
 
-- [require-matching-label doc](https://prow.tidb.io/plugins?repo=ti-community-infra%2Fti-community-prow)
+- [require-matching-label doc](https://prow.tidb.io/plugins?repo=ti-community-infra%2Ftichi)
 - [代码实现](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/require-matching-label)
 
 ## Q&A

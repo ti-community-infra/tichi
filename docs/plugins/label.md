@@ -31,7 +31,7 @@ ti-community-label 采取不一样的策略，该插件支持按照分类打标�
 ti-community-label:
   - repos:
       - ti-community-infra/test-live
-      - ti-community-infra/ti-community-prow
+      - ti-community-infra/tichi
       - ti-community-infra/prow-configs
       - ti-community-infra/ti-community-bot
       - ti-community-infra/ti-challenge-bot
@@ -47,8 +47,8 @@ ti-community-label:
 
 ## 参考文档
 
-- [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Fti-community-prow#type)
-- [代码实现](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/merge)
+- [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftichi#type)
+- [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/merge)
 
 ## Q&A
 

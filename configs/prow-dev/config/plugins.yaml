@@ -57,7 +57,7 @@ plugins:
     - milestone
     - milestoneapplier
     - trigger
-  ti-community-infra/ti-community-prow:
+  ti-community-infra/tichi:
     - config-updater
 
 external_plugins:

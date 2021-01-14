@@ -11,7 +11,7 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
-	tiexternalplugins "github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"gotest.tools/assert"
 	"k8s.io/test-infra/prow/github"
 )

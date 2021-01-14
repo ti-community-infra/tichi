@@ -10,7 +10,7 @@ import (
 
 	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/ti-community-prow/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/plugins"
@@ -59,7 +59,7 @@ func newFakeGithubClient(prs []pullRequest, pr *github.PullRequest,
 
 func (f *fakeGithub) BotUserChecker() (func(candidate string) bool, error) {
 	return func(candidate string) bool {
-		return candidate == "ti-community-prow"
+		return candidate == "tichi"
 	}, nil
 }
 

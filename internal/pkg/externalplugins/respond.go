@@ -12,8 +12,8 @@ const AboutThisBotWithoutCommands = "Instructions for interacting with me using 
 	"[here](https://prow.tidb.io/command-help).  " +
 	"If you have questions or suggestions related to my behavior, " +
 	"please file an issue against the " +
-	"[ti-community-infra/ti-community-prow]" +
-	"(https://github.com/ti-community-infra/ti-community-prow/issues/new?title=Prow%20issue:) repository."
+	"[ti-community-infra/tichi]" +
+	"(https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) repository."
 
 // AboutThisBotCommands contains the message that links to the commands the bot understand.
 const AboutThisBotCommands = "I understand the commands that are listed [here](https://prow.tidb.io/command-help)."

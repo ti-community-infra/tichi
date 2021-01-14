@@ -47,7 +47,7 @@ For example:
 ti-community-merge:
   - repos:
       - ti-community-infra/test-live
-      - ti-community-infra/ti-community-prow
+      - ti-community-infra/tichi
       - ti-community-infra/ti-community-bot
       - ti-community-infra/ti-challenge-bot
       - tikv/pd
@@ -63,7 +63,7 @@ ti-community-merge:
 ## Reference Documents
 
 - [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftest-live#merge)
-- [code](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/merge)
+- [code](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/merge)
 
 ## Q&A
 

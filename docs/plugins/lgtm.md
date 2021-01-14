@@ -65,7 +65,7 @@ ti-community-lgtm 是用来根据权限自动的为 PR 添加 LGTM 对应 label 
 ti-community-lgtm:
   - repos:
       - ti-community-infra/test-live
-      - ti-community-infra/ti-community-prow
+      - ti-community-infra/tichi
       - ti-community-infra/ti-community-bot
       - ti-community-infra/ti-challenge-bot
       - tikv/pd
@@ -81,7 +81,7 @@ ti-community-lgtm:
 ## 参考文档
 
 - [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftest-live#lgtm)
-- [代码实现](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/lgtm)
+- [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/lgtm)
 
 ## Q&A
 
