@@ -47,7 +47,7 @@ ti-community-merge 采取不一样的策略，`/merge` 只负责打上 `status/c
 ti-community-merge:
   - repos:
       - ti-community-infra/test-live
-      - ti-community-infra/ti-community-prow
+      - ti-community-infra/tichi
       - ti-community-infra/ti-community-bot
       - ti-community-infra/ti-challenge-bot
       - tikv/pd
@@ -63,7 +63,7 @@ ti-community-merge:
 ## 参考文档
 
 - [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftest-live#merge)
-- [代码实现](https://github.com/ti-community-infra/ti-community-prow/tree/master/internal/pkg/externalplugins/merge)
+- [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/merge)
 
 ## Q&A
 
