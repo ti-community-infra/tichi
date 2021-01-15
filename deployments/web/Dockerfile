@@ -1,8 +1,5 @@
 FROM node:12
 
-ARG NODE_ENV="production"
-ENV NODE_ENV=${NODE_ENV}
-
 # Create app directory
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
@@ -11,7 +8,7 @@ WORKDIR /usr/src/app
 COPY web /usr/src/app
 
 # Install app dependencies
-RUN npm install
+RUN npm ci
 
 # Build app
 RUN npm run build
