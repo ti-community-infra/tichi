@@ -182,4 +182,4 @@ dockers:
       - "rustinliu/tichi-web:{{ .Major }}"
     dockerfile: ./deployments/web/Dockerfile
     extra_files:
-      web/
+      - web/
