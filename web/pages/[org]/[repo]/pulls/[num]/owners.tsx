@@ -14,8 +14,7 @@ export default function Owners({ org, repo, num, owners }) {
       <p className={style.members}>
         {members.map((member, index) => (
           <a key={member} href={GITHUB_BASE_URL + member}>
-            {" "}
-            @{member}{" "}
+            {` @${member} `}
           </a>
         ))}
       </p>

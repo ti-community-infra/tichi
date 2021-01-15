@@ -6,8 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "prettier --check '**' ",
-    "lint:fix": "prettier --write '**' "
+    "lint": "prettier --check \"**\"",
+    "lint:fix": "prettier --write \"**\""
   },
   "dependencies": {
     "antd": "^4.8.6",
