@@ -7,10 +7,10 @@ export default function Owner() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Link</title>
+        <title>Ti Chi</title>
       </Head>
 
-      <div>Link</div>
+      <div>Ti Chi</div>
     </div>
   );
 }

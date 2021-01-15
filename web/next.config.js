@@ -1,3 +1,3 @@
 module.exports = {
-  useFileSystemPublicRoutes: true
-}
+  useFileSystemPublicRoutes: true,
+};

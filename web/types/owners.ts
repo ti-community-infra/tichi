@@ -1,10 +1,10 @@
-export interface IOwnerTypeData {
+export interface OwnersData {
   needsLGTM: number;
   committers: string[];
   reviewers: string[];
 }
 
-export interface OwnerType {
-  data: IOwnerTypeData;
+export interface OwnerResponse {
+  data: OwnersData;
   message: string;
 }

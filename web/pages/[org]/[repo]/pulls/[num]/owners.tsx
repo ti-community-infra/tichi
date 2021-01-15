@@ -1,50 +1,54 @@
-import { Card } from "antd";
+import { Tag, Descriptions } from "antd";
 import React from "react";
 import { get } from "@/utils/request";
-import {
-  BASE_URL,
-  COMMITTER,
-  GITHUB_BASE_URL,
-  REVIEWER,
-} from "@/types/constant";
-import { IOwnerTypeData } from "@/types/owners";
+import { BASE_URL, GITHUB_BASE_URL } from "@/types/constant";
+import { OwnersData } from "@/types/owners";
 
 import style from "./owners.module.scss";
 
-export default function Owners({ owners }) {
-  const detailData: Partial<IOwnerTypeData> = owners.data;
+export default function Owners({ org, repo, num, owners }) {
+  const ownersData: Partial<OwnersData> = owners.data;
 
-  const renderMembers = (members: Array<string>, title: string) => {
+  const renderMembers = (members: Array<string>) => {
     return (
-      <>
-        <p className={style.member}>{title}</p>
-        <div className={style.wrapper}>
-          {members.map((member) => (
-            <Card
-              className={style.container}
-              cover={<img alt="pic" src={`${GITHUB_BASE_URL + member}.png`} />}
-            >
-              <a href={GITHUB_BASE_URL + member}>{member}</a>
-            </Card>
-          ))}
-        </div>
-      </>
+      <p className={style.members}>
+        {members.map((member) => (
+          <a key={member} href={GITHUB_BASE_URL + member}>
+            {` @${member} `}
+          </a>
+        ))}
+      </p>
     );
   };
 
-  const reviewers = detailData.reviewers
-    ? renderMembers(detailData.reviewers, REVIEWER)
-    : null;
-  const committers = detailData.committers
-    ? renderMembers(detailData.committers, COMMITTER)
-    : null;
-
   return (
-    <>
-      <p className={style.header}>needsLGTM: {detailData.needsLGTM}</p>
-      {reviewers}
-      {committers}
-    </>
+    <div className={style.desc}>
+      <Descriptions title="PR Owners" bordered>
+        <Descriptions.Item label="Repo">
+          <Tag color="green">
+            <a href={`${GITHUB_BASE_URL + org}/${repo}`}>
+              {org}/{repo}
+            </a>
+          </Tag>
+        </Descriptions.Item>
+        <Descriptions.Item label="PR">
+          <Tag color="blue">
+            <a href={`${GITHUB_BASE_URL + org}/${repo}/pull/${num}`}>
+              {org}/{repo}#{num}
+            </a>
+          </Tag>
+        </Descriptions.Item>
+        <Descriptions.Item label="Required LGTM Number">
+          <Tag color="red">{ownersData.needsLGTM}</Tag>
+        </Descriptions.Item>
+        <Descriptions.Item label="Committers" span={3}>
+          {renderMembers(ownersData.committers)}
+        </Descriptions.Item>
+        <Descriptions.Item label="Reviewers" span={3}>
+          {renderMembers(ownersData.reviewers)}
+        </Descriptions.Item>
+      </Descriptions>
+    </div>
   );
 }
 
@@ -59,6 +63,6 @@ export async function getServerSideProps(ctx) {
     throw err;
   }
   return {
-    props: { owners },
+    props: { org, repo, num, owners },
   };
 }
