@@ -145,7 +145,8 @@ dockers:
       - "rustinliu/tichi-tars-plugin:{{ .Tag }}"
       - "rustinliu/tichi-tars-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/tars/Dockerfile
-  - binaries:
+  -
+    binaries:
       - ticommunityautoresponder
     builds:
       - ti-community-autoresponder
@@ -154,7 +155,8 @@ dockers:
       - "rustinliu/tichi-autoresponder-plugin:{{ .Tag }}"
       - "rustinliu/tichi-autoresponder-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/autoresponder/Dockerfile
-  - binaries:
+  -
+    binaries:
       - ticommunityblunderbuss
     builds:
       - ti-community-blunderbuss
@@ -163,7 +165,8 @@ dockers:
       - "rustinliu/tichi-blunderbuss-plugin:{{ .Tag }}"
       - "rustinliu/tichi-blunderbuss-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/blunderbuss/Dockerfile
-  - binaries:
+  -
+    binaries:
       - rerere
     builds:
       - rerere
@@ -172,3 +175,11 @@ dockers:
       - "rustinliu/rerere-component:{{ .Tag }}"
       - "rustinliu/rerere-component:{{ .Major }}"
     dockerfile: ./deployments/components/rerere/Dockerfile
+  -
+    image_templates:
+      - "rustinliu/tichi-web:latest"
+      - "rustinliu/tichi-web:{{ .Tag }}"
+      - "rustinliu/tichi-web:{{ .Major }}"
+    dockerfile: ./deployments/web/Dockerfile
+    extra_files:
+      web/
