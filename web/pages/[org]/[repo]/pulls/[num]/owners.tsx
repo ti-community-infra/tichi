@@ -12,7 +12,7 @@ export default function Owners({ org, repo, num, owners }) {
   const renderMembers = (members: Array<string>) => {
     return (
       <p className={style.members}>
-        {members.map((member, index) => (
+        {members.map((member) => (
           <a key={member} href={GITHUB_BASE_URL + member}>
             {` @${member} `}
           </a>
