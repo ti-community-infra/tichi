@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: prow
+  name: tichi-web
+spec:
+  selector:
+    app: tichi-web
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: NodePort

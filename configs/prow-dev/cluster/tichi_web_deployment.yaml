@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: prow
+  name: tichi-web
+  labels:
+    app: tichi-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tichi-web
+  template:
+    metadata:
+      labels:
+        app: tichi-web
+    spec:
+      terminationGracePeriodSeconds: 180
+      containers:
+        - name: tichi-web
+          image: rustinliu/tichi-web:v0.17.3
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: tichi
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 3
+            timeoutSeconds: 600
+          readinessProbe:
+            httpGet:
+              path: tichi
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 3
+            timeoutSeconds: 600

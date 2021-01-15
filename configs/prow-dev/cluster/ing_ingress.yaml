@@ -24,6 +24,14 @@ spec:
             backend:
               serviceName: ti-community-owners
               servicePort: 80
+          - path: /tichi
+            backend:
+              serviceName: tichi-web
+              servicePort: 80
+          - path: /tichi/*
+            backend:
+              serviceName: tichi-web
+              servicePort: 80
   tls:
     - hosts:
         - "*.tidb.io"
