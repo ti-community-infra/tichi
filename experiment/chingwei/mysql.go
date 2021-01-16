@@ -7,7 +7,7 @@ import (
 func RunMysql(version string) error {
 	return nil
 }
-func PrepareMySQL(version string) (DBConnInfo, error) {
+func PrepareMySQL(version string) (*DBConnInfo, error) {
 	// fetch mysql container
 	client, newClientErr := docker.NewClientFromEnv()
 	if newClientErr != nil {
@@ -28,5 +28,5 @@ func PrepareMySQL(version string) (DBConnInfo, error) {
 
 	// connect to mysql and run
 
-	return DBConnInfo{Host: "", Port: "3306", User: "root", Database: "test"}, nil
+	return &DBConnInfo{Host: "", Port: "3306", User: "root", Database: "test"}, nil
 }
