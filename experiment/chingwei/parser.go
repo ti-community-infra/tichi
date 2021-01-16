@@ -3,11 +3,9 @@ package chingwei
 import (
 	"regexp"
 	"strings"
-
-	"k8s.io/test-infra/prow/github"
 )
 
-func parseIssue(issue github.Issue) *IssueBasicInfo {
+func parseIssue(body string) *IssueBasicInfo {
 	re := regexp.MustCompile(`### Steps to reproduce
 (?P<query>(.+\n)+)
 ### What is expected\?
@@ -18,8 +16,6 @@ func parseIssue(issue github.Issue) *IssueBasicInfo {
 \|---\|---\|
 \| TiDB Version \| (?P<tidbVersion>(v\d|.+)) \|
 \| MySQL Version \| (?P<mysqlVersion>(\d|.+)) \|`)
-
-	body := issue.Body
 
 	matches := re.FindStringSubmatch(body)
 	query := strings.TrimSpace(matches[re.SubexpIndex("query")])

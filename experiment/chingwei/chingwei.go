@@ -37,7 +37,7 @@ func Reproducing(log *logrus.Entry, ghc githubClient) error {
 	issue := issues[0]
 
 	// Parse minimal reproduce step and version from GitHub issue.
-	issueBasicInfo := parseIssue(issue)
+	issueBasicInfo := parseIssue(issue.Body)
 
 	// Prepare TiDB and MySQL.
 	tidbConInfo, err := PrepareTiDB(issueBasicInfo.tidbVersion)
