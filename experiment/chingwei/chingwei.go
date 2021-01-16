@@ -35,6 +35,7 @@ func Reproducing(log *logrus.Entry, ghc githubClient) error {
 
 	// For now, only reproduce first issue.
 	issue := issues[0]
+	log.Infof("Got issue: %v with body: %s", issue, issue.Body)
 
 	// Parse minimal reproduce step and version from GitHub issue.
 	issueBasicInfo := parseIssue(issue.Body)
