@@ -39,10 +39,11 @@ func PrepareMySQL(version string) (*DBConnInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	time.Sleep(10 * time.Second)
+	time.Sleep(30 * time.Second)
 	containerName := "mysql/mysql-server:" + version
 	password := "zhangyushao"
 	cmd := exec.Command("docker", "run", "-d", "-e", "MYSQL_ROOT_PASSWORD="+password, "-e", "MYSQL_ROOT_HOST=%", "-p", "3306:3306", "--name", "mysqlcw", containerName, "--default-authentication-plugin=mysql_native_password")
+	fmt.Println("docker command:", cmd)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -58,7 +59,7 @@ func PrepareMySQL(version string) (*DBConnInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("wait for mysql service failed: %w", err)
 	}
-	time.Sleep(10 * time.Second)
+	time.Sleep(30 * time.Second)
 	log.Println("Started MySQL server.")
 
 	// connect to mysql and run

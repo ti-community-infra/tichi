@@ -83,7 +83,10 @@ type DBConnInfo struct {
 }
 
 func Reproduce(info *DBConnInfo, query string) (string, error) {
-	cmd := exec.Command("mysql", "--host", info.Host, "--port", info.Port, "-u", info.User, info.Database, "-e", query, "-p"+info.Password)
+	cmd := exec.Command("mysql", "--host", info.Host, "--port", info.Port, "-u", info.User, info.Database, "-e", query)
+	if info.Password != "" {
+		cmd.Args = append(cmd.Args, "-p"+info.Password)
+	}
 	fmt.Printf("reproduce command: %v\n", cmd)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
