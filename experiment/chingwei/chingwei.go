@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/google/go-cmp/cmp"
 	"github.com/google/martian/log"
+	"github.com/kylelemons/godebug/diff"
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/github"
@@ -35,13 +35,13 @@ func Reproducing(log *logrus.Entry, ghc githubClient) error {
 
 	// For now, only reproduce first issue.
 	issue := issues[0]
-	log.Infof("Got issue: %v with body: %s", issue, issue.Body)
+	log.Infof("Got issue: %v with body: %q", issue, issue.Body)
 
 	// Parse minimal reproduce step and version from GitHub issue.
 	issueBasicInfo := parseIssue(issue.Body)
 
 	// Prepare TiDB and MySQL.
-	tidbConInfo, err := PrepareTiDB(issueBasicInfo.tidbVersion)
+	tidbConInfo, tidbCleanup, err := PrepareTiDB(issueBasicInfo.tidbVersion)
 	if err != nil {
 		return err
 	}
@@ -56,6 +56,7 @@ func Reproducing(log *logrus.Entry, ghc githubClient) error {
 		return err
 	}
 	log.Infof("tidb cluster output: %s", tidbOutput)
+	tidbCleanup()
 
 	mysqlOutput, err := reproduce(mysqlConInfo, issueBasicInfo.query)
 	if err != nil {
@@ -65,10 +66,10 @@ func Reproducing(log *logrus.Entry, ghc githubClient) error {
 	log.Infof("mysql output: %s", mysqlOutput)
 
 	// MySQL output v.s. expected.
-	expectedDiff := diff(issueBasicInfo.expected, mysqlOutput)
+	expectedDiff := Diff(issueBasicInfo.expected, mysqlOutput)
 
 	// TiDB output v.s. actual.
-	actualDiff := diff(issueBasicInfo.actual, tidbOutput)
+	actualDiff := Diff(issueBasicInfo.actual, tidbOutput)
 
 	resp := expectedDiff + actualDiff
 
@@ -80,7 +81,7 @@ func Reproducing(log *logrus.Entry, ghc githubClient) error {
 func reproduce(info *DBConnInfo, query string) (string, error) {
 	//nolint:gosec
 	cmd := exec.Command("mysql", "--host", info.Host,
-		"--port", info.Port, "-u", info.User, info.Database, "-e", query)
+		"--port", info.Port, "-u", info.User, info.Database, "-e", query, "-t")
 	if info.Password != "" {
 		cmd.Args = append(cmd.Args, "-p"+info.Password)
 	}
@@ -92,13 +93,13 @@ func reproduce(info *DBConnInfo, query string) (string, error) {
 	return string(output), nil
 }
 
-func diff(want, got string) string {
+func Diff(want, got string) string {
 	var result string
-	diff := cmp.Diff(want, got)
+	diff := diff.Diff(want, got)
 	if diff == "" {
 		result = fmt.Sprintf("want: %s\n, got: %s\n", want, got)
 	} else {
-		result = "```diff\n" + diff + "```\n"
+		result = fmt.Sprintf("\n```diff\n%s\n```\n", diff)
 	}
 
 	return result

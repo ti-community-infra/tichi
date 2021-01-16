@@ -6,6 +6,7 @@ import (
 )
 
 func parseIssue(body string) *IssueBasicInfo {
+	body = strings.ReplaceAll(body, "\r\n", "\n")
 	re := regexp.MustCompile(`### Steps to reproduce
 (?P<query>(.+\n)+)
 ### What is expected\?
