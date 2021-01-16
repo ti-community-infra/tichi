@@ -15,16 +15,15 @@ type githubClient interface {
 
 func Reproducing(log *logrus.Entry, ghc githubClient) error {
 	log.Info("Staring search pull request.")
-	// filter := `repo:"tidb" label:"status/needs-reproduction"`
+	filter := `repo:"tidb" label:"status/needs-reproduction"`
 
-	// issues, err := ghc.FindIssues(filter, "", false)
-	// if err != nil {
-	// 	return err
-	// }
-	// var issue
+	issues, err := ghc.FindIssues(filter, "", false)
+	if err != nil {
+		return err
+	}
 
 	// only reproduce first issue
-	var issue github.Issue
+	issue := issues[0]
 	// parse minimal reproduce step and version from issue
 	query, mysqlVersion, tidbVersion, expected, actual := parseIssue(issue)
 
