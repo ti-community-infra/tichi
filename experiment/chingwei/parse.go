@@ -14,5 +14,6 @@ INSERT INTO test VALUES (2, 10), (3, NULL);
 SELECT DISTINCT count(*), id + int_test as res FROM test  GROUP BY res ORDER BY res;
 `
 	tidbVersion = "v4.0.0"
+	mysqlVersion = "8.0.21"
 	return
 }

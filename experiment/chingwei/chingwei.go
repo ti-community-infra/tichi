@@ -31,23 +31,25 @@ func Reproducing(log *logrus.Entry, ghc githubClient) error {
 	// try send a SQL query to tidb with a specific version
 	tidbInfo, err := PrepareTiDB(tidbVersion)
 	if err != nil {
-		panic(err)
+		return err
 	}
-	_ = mysqlVersion
-	// mysqlInfo, err := PrepareMySQL(mysqlVersion)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	mysqlInfo, err := PrepareMySQL(mysqlVersion)
+	if err != nil {
+		return err
+	}
 
 	// reproduce by connecting to tidb and mysql
-	tidbOutput, tidbErr := Reproduce(tidbInfo, query)
-	// mysqlOutput, mysqlErr := Reproduce(mysqlInfo, query)
-
-	if tidbErr != nil {
-		panic(tidbErr)
+	tidbOutput, err := Reproduce(tidbInfo, query)
+	if err != nil {
+		return err
+	}
+	mysqlOutput, err := Reproduce(mysqlInfo, query)
+	if err != nil {
+		return err
 	}
 
 	fmt.Println("tidb output:", tidbOutput)
+	fmt.Println("mysql output:", mysqlOutput)
 
 	// Feedback to issue.
 	// diff expected v.s. mysqlOutput
@@ -67,10 +69,11 @@ type DBConnInfo struct {
 	Port     string
 	User     string
 	Database string
+	Password string
 }
 
 func Reproduce(info *DBConnInfo, query string) (string, error) {
-	cmd := exec.Command("mysql", "--host", info.Host, "--port", info.Port, "-u", info.User, info.Database, "-e", query)
+	cmd := exec.Command("mysql", "--host", info.Host, "--port", info.Port, "-u", info.User, info.Database, "-e", query, "-p"+info.Password)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("mysql client failed: %w\n", err)
