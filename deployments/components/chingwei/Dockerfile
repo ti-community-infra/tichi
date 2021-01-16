@@ -47,7 +47,6 @@ RUN mkdir /docker-graph
 #
 # END: DOCKER IN DOCKER SETUP
 #
-RUN service docker start
 
 # set used shell
 SHELL [ "/bin/bash", "-c"]
@@ -59,4 +58,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ADD wait-for-it.sh /usr/local/bin/
 ADD chingwei /usr/local/bin/
 
-ENTRYPOINT [ "/usr/local/bin/chingwei" ]
+CMD [ "/usr/local/bin/chingwei" ]
