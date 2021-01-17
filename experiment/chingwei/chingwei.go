@@ -65,13 +65,15 @@ func Reproducing(log *logrus.Entry, ghc githubClient) error {
 
 	log.Infof("mysql output: %s", mysqlOutput)
 
-	// MySQL output v.s. expected.
-	expectedDiff := Diff(issueBasicInfo.expected, mysqlOutput)
+	diffOutput := diff.Diff(mysqlOutput, tidbOutput)
+	var resp string
+	if diffOutput == "" {
+		resp = fmt.Sprintf("This issue is **NOT** reproduced on MySQL (%s) and TiDB (%s). The output of TiDB is the same as MySQL.", issueBasicInfo.mysqlVersion, issueBasicInfo.tidbVersion)
+	} else {
+		resp = fmt.Sprintf("This issue is reproduced on MySQL (%s) and TiDB (%s). Here is the diff between MySQL output and TiDB output.\n```diff\n+++ tidb.log\n--- mysql.log\n\n%s\n```\n", issueBasicInfo.mysqlVersion, issueBasicInfo.tidbVersion, diffOutput)
+	}
 
-	// TiDB output v.s. actual.
-	actualDiff := Diff(issueBasicInfo.actual, tidbOutput)
-
-	resp := expectedDiff + actualDiff
+	resp += fmt.Sprintf("TiDB output:\n```\n%s\n```\nMySQL output:\n```\n%s\n```\n", tidbOutput, mysqlOutput)
 
 	// Feedback to github issue.
 	return ghc.CreateComment(owner, repo, issue.Number,
@@ -91,16 +93,4 @@ func reproduce(info *DBConnInfo, query string) (string, error) {
 		return "", fmt.Errorf("connect to mysql failed: output: %s, error: %w", string(output), err)
 	}
 	return string(output), nil
-}
-
-func Diff(want, got string) string {
-	var result string
-	diff := diff.Diff(want, got)
-	if diff == "" {
-		result = fmt.Sprintf("want: %s\n, got: %s\n", want, got)
-	} else {
-		result = fmt.Sprintf("\n```diff\n%s\n```\n", diff)
-	}
-
-	return result
 }
