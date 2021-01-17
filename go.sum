@@ -1952,7 +1952,6 @@ k8s.io/test-infra v0.0.0-20200617221206-ea73eaeab7ff/go.mod h1:L3+cRvwftUq8IW1Tr
 k8s.io/test-infra v0.0.0-20200630233406-1dca6122872e/go.mod h1:L3+cRvwftUq8IW1TrHji5m3msnc4uck/7LsE/GR/aZk=
 k8s.io/test-infra v0.0.0-20201223014427-026679a0c7dd h1:DLbYV6EIlG7QmhVczXxeQNiUJjCE1cewhzyS6rnGtMg=
 k8s.io/test-infra v0.0.0-20201223014427-026679a0c7dd/go.mod h1:w8UnlrLZZc6ANHdBaCoLrkF7PN4tX5H4OPlSDJMdPqM=
-k8s.io/test-infra v0.0.0-20210115224744-8217480db338 h1:hMmeloqKY7Zw3GcPXpD3gi2ugeoLIy7WVn3wQj94TFs=
 k8s.io/utils v0.0.0-20181019225348-5e321f9a457c/go.mod h1:8k8uAuAQ0rXslZKaEWd0c3oVhZz7sSzSiPnVZayjIX0=
 k8s.io/utils v0.0.0-20190221042446-c2654d5206da/go.mod h1:8k8uAuAQ0rXslZKaEWd0c3oVhZz7sSzSiPnVZayjIX0=
 k8s.io/utils v0.0.0-20190506122338-8fab8cb257d5/go.mod h1:sZAwmy6armz5eXlNoLmJcl4F1QuKu7sr+mFQ0byX7Ew=

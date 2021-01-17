@@ -11,10 +11,14 @@ import (
 	"k8s.io/test-infra/prow/github"
 )
 
+const needsReproLabel = "status/needs-reproduction"
+const reproducedByChingweiLabel = "status/reproduced-by-chingwei"
+
 type githubClient interface {
 	FindIssues(query, sort string, asc bool) ([]github.Issue, error)
 	CreateComment(owner, repo string, number int, comment string) error
 	RemoveLabel(owner, repo string, number int, label string) error
+	AddLabel(owner, repo string, number int, label string) error
 }
 
 func Reproducing(log *logrus.Entry, ghc githubClient) error {
@@ -22,7 +26,7 @@ func Reproducing(log *logrus.Entry, ghc githubClient) error {
 	repo := "test-dev"
 
 	log.Info("Staring search pull request.")
-	filter := "repo:" + owner + "/" + repo + " label:status/needs-reproduction"
+	filter := "repo:" + owner + "/" + repo + " label:" + needsReproLabel
 
 	issues, err := ghc.FindIssues(filter, "", false)
 	if err != nil {
@@ -68,12 +72,26 @@ func Reproducing(log *logrus.Entry, ghc githubClient) error {
 	diffOutput := diff.Diff(mysqlOutput, tidbOutput)
 	var resp string
 	if diffOutput == "" {
-		resp = fmt.Sprintf("This issue is **NOT** reproduced on MySQL (%s) and TiDB (%s). The output of TiDB is the same as MySQL.", issueBasicInfo.mysqlVersion, issueBasicInfo.tidbVersion)
+		resp = fmt.Sprintf("This issue is **NOT** reproduced on MySQL (%s) and TiDB (%s). "+
+			"The output of TiDB is the same as MySQL.", issueBasicInfo.mysqlVersion, issueBasicInfo.tidbVersion)
 	} else {
-		resp = fmt.Sprintf("This issue is reproduced on MySQL (%s) and TiDB (%s). Here is the diff between MySQL output and TiDB output.\n```diff\n+++ tidb.log\n--- mysql.log\n\n%s\n```\n", issueBasicInfo.mysqlVersion, issueBasicInfo.tidbVersion, diffOutput)
+		resp = fmt.Sprintf("This issue is reproduced on MySQL (%s) and TiDB (%s). "+
+			"Here is the diff between MySQL output and TiDB output.\n```diff\n+++ tidb.log\n--- mysql.log\n\n%s\n```\n",
+			issueBasicInfo.mysqlVersion, issueBasicInfo.tidbVersion, diffOutput)
 	}
 
 	resp += fmt.Sprintf("TiDB output:\n```\n%s\n```\nMySQL output:\n```\n%s\n```\n", tidbOutput, mysqlOutput)
+
+	// Remove needs reproduction label and chingwei label.
+	err = ghc.RemoveLabel(owner, repo, issue.Number, needsReproLabel)
+	if err != nil {
+		return err
+	}
+
+	err = ghc.AddLabel(owner, repo, issue.Number, reproducedByChingweiLabel)
+	if err != nil {
+		return err
+	}
 
 	// Feedback to github issue.
 	return ghc.CreateComment(owner, repo, issue.Number,

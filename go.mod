@@ -9,7 +9,7 @@ replace (
 
 require (
 	github.com/gin-gonic/gin v1.6.3
-	github.com/google/go-cmp v0.5.4
+	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/google/martian v2.1.1-0.20190517191504-25dcb96d9e51+incompatible
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/kylelemons/godebug v1.1.0
