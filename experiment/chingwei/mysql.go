@@ -1,7 +1,6 @@
 package chingwei
 
 import (
-	//docker "github.com/fsouza/go-dockerclient"
 	"fmt"
 	"log"
 	"os"
@@ -10,40 +9,22 @@ import (
 )
 
 func PrepareMySQL(version string) (*DBConnInfo, error) {
-	//client, newClientErr := docker.NewClientFromEnv()
-	//if newClientErr != nil {
-	//	panic(newClientErr)
-	//}
-
-	// create mysql container
-	//client.PullImage(docker.PullImageOptions{
-	//	Repository: "mysql",
-	//	Tag: version,
-	//	Platform: version})
-	//client.CreateContainer(docker.CreateContainerOptions{Name: "mysql"})
-
-	//filter := make(map[string][]string)
-	//filter["ancestor"] = []string{"mysql-server"}
-	//
-	//// should only yield one container
-	//containers, listErr := client.ListContainers(docker.ListContainersOptions{All: false, Filters: filter})
-	//if listErr != nil {
-	//	panic(listErr)
-	//}
-	//if len(containers) != 1 {
-	//	log := logrus.StandardLogger().WithField("component", "ching-wei")
-	//	log.Warn("Detected more than one container is running")
-	//}
 	startDocker := exec.Command("service", "docker", "start")
 	err := startDocker.Run()
 	if err != nil {
 		return nil, err
 	}
+
+	// Waiting docker starting.
 	time.Sleep(30 * time.Second)
+
+	// Pull the image.
 	containerName := "mysql/mysql-server:" + version
 	password := "zhangyushao"
-	cmd := exec.Command("docker", "run", "-d", "-e", "MYSQL_ROOT_PASSWORD="+password, "-e", "MYSQL_ROOT_HOST=%", "-p", "3306:3306", "--name", "mysqlcw", containerName, "--default-authentication-plugin=mysql_native_password")
-	fmt.Println("docker command:", cmd)
+	cmd := exec.Command("docker", "run", "-d", "-e", "MYSQL_ROOT_PASSWORD="+password,
+		"-e", "MYSQL_ROOT_HOST=%", "-p", "3306:3306", "--name", "mysqlcw",
+		containerName, "--default-authentication-plugin=mysql_native_password")
+
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
