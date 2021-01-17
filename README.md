@@ -6,9 +6,7 @@
 ![version](https://img.shields.io/github/release/ti-community-infra/tichi/all.svg)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://slack.tidb.io/invite?team=tidb-community&channel=sig-community-infra)
 
-[Prow](https://github.com/kubernetes/test-infra/tree/master/prow) is a Kubernetes based CI/CD system.
-
-This repository contains tools and configuration files for the testing and automation needs for TiDB community.
+Ti Chi ☯️ contains the tidb community collaboration automation basic framework and tool set. 
 
 ## High level architecture
 
