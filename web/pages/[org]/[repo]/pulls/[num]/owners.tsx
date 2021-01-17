@@ -1,7 +1,7 @@
 import { Tag, Descriptions } from "antd";
 import React from "react";
 import { get } from "@/utils/request";
-import { BASE_URL, GITHUB_BASE_URL } from "@/types/constant";
+import { GITHUB_BASE_URL } from "@/types/constant";
 import { OwnersData } from "@/types/owners";
 
 import style from "./owners.module.scss";
@@ -54,11 +54,11 @@ export default function Owners({ org, repo, num, owners }) {
 
 export async function getServerSideProps(ctx) {
   const { query } = ctx;
-  const { num, org, repo } = query;
+  const { num, org, repo, baseURL } = query;
 
   let owners;
   try {
-    owners = await get(`${BASE_URL}/${org}/${repo}/pulls/${num}/owners`);
+    owners = await get(`${baseURL}/repos/${org}/${repo}/pulls/${num}/owners`);
   } catch (err) {
     throw err;
   }
