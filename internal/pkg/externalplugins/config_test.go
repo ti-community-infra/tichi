@@ -356,7 +356,7 @@ func TestValidateConfig(t *testing.T) {
 		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{
-				TichiWeb: tc.tichi,
+				TichiWebURL: tc.tichi,
 				TiCommunityLgtm: []TiCommunityLgtm{
 					*tc.lgtm,
 				},

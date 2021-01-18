@@ -211,7 +211,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 
 	// Get ti-community-lgtm config.
 	opts := config.LgtmFor(rc.repo.Owner.Login, rc.repo.Name)
-	tichiURL := fmt.Sprintf(ownersclient.OwnersURLFmt, config.TichiWeb, org, repoName, number)
+	tichiURL := fmt.Sprintf(ownersclient.OwnersURLFmt, config.TichiWebURL, org, repoName, number)
 	reviewersAndNeedsLGTM, err := ol.LoadOwners(opts.PullOwnersEndpoint, org, repoName, number)
 	if err != nil {
 		return err
