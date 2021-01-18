@@ -11,7 +11,7 @@ import (
 func TestValidateConfig(t *testing.T) {
 	testcases := []struct {
 		name           string
-		tichi          string
+		tichiWebURL    string
 		lgtm           *TiCommunityLgtm
 		merge          *TiCommunityMerge
 		owners         *TiCommunityOwners
@@ -20,8 +20,8 @@ func TestValidateConfig(t *testing.T) {
 		expected       error
 	}{
 		{
-			name:  "https pull owners URL",
-			tichi: "https://tichi",
+			name:        "https pull owners URL",
+			tichiWebURL: "https://tichiWebURL",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -53,8 +53,8 @@ func TestValidateConfig(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name:  "http pull owners URL",
-			tichi: "https://tichi",
+			name:        "http pull owners URL",
+			tichiWebURL: "https://tichiWebURL",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -86,8 +86,8 @@ func TestValidateConfig(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name:  "invalid lgtm pull owners URL",
-			tichi: "https://tichi",
+			name:        "invalid lgtm pull owners URL",
+			tichiWebURL: "https://tichiWebURL",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -119,8 +119,8 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
-			name:  "invalid merge pull owners URL",
-			tichi: "https://tichi",
+			name:        "invalid merge pull owners URL",
+			tichiWebURL: "https://tichiWebURL",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -152,8 +152,8 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
-			name:  "invalid owners sig endpoint",
-			tichi: "https://tichi",
+			name:        "invalid owners sig endpoint",
+			tichiWebURL: "https://tichiWebURL",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -185,8 +185,8 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
-			name:  "invalid blunderbuss regex",
-			tichi: "https://tichi",
+			name:        "invalid blunderbuss regex",
+			tichiWebURL: "https://tichiWebURL",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -218,8 +218,8 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("error parsing regexp: missing argument to repetition operator: `?`"),
 		},
 		{
-			name:  "invalid blunderbuss pull owners",
-			tichi: "https://tichi",
+			name:        "invalid blunderbuss pull owners",
+			tichiWebURL: "https://tichiWebURL",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -251,8 +251,8 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
-			name:  "invalid blunderbuss max reviewer count",
-			tichi: "https://tichi",
+			name:        "invalid blunderbuss max reviewer count",
+			tichiWebURL: "https://tichiWebURL",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -284,8 +284,8 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("max reviewer count must more than 0"),
 		},
 		{
-			name:  "invalid blunderbuss grace period duration",
-			tichi: "https://tichi",
+			name:        "invalid blunderbuss grace period duration",
+			tichiWebURL: "https://tichiWebURL",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -318,8 +318,8 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("grace period duration must not less than 0"),
 		},
 		{
-			name:  "invalid tichi",
-			tichi: "https//tichi",
+			name:        "invalid tichiWebURL",
+			tichiWebURL: "https//tichiWebURL",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -348,7 +348,7 @@ func TestValidateConfig(t *testing.T) {
 				ExcludeReviewers:   []string{},
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
-			expected: fmt.Errorf("parse \"https//tichi\": invalid URI for request"),
+			expected: fmt.Errorf("parse \"https//tichiWebURL\": invalid URI for request"),
 		},
 	}
 
@@ -356,7 +356,7 @@ func TestValidateConfig(t *testing.T) {
 		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{
-				TichiWebURL: tc.tichi,
+				TichiWebURL: tc.tichiWebURL,
 				TiCommunityLgtm: []TiCommunityLgtm{
 					*tc.lgtm,
 				},
