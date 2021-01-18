@@ -1,3 +1,5 @@
+tichi-web-url: https://prow-dev.tidb.io/tichi
+
 ti-community-lgtm:
   - repos:
       - ti-community-infra/test-dev
