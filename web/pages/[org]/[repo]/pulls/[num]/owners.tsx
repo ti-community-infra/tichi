@@ -65,7 +65,7 @@ export async function getServerSideProps(ctx) {
   const { num, org, repo } = query;
 
   const ownersEndpoint = findOwnersEndpoint(
-    process.env["EXTERNAL_PLUGINS_CONFIGS"],
+    process.env["EXTERNAL_PLUGINS_CONFIG"],
     org,
     repo
   );
