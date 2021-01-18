@@ -263,7 +263,7 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 
 	// Get ti-community-merge config.
 	opts := config.MergeFor(rc.repo.Owner.Login, rc.repo.Name)
-	url := fmt.Sprintf(ownersclient.OwnersURLFmt, opts.PullOwnersEndpoint, org, repoName, number)
+	tichiURL := fmt.Sprintf(ownersclient.OwnersURLFmt, config.TichiWebURL, org, repoName, number)
 	owners, err := ol.LoadOwners(opts.PullOwnersEndpoint, org, repoName, number)
 	if err != nil {
 		return err
@@ -276,14 +276,14 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 
 	// Not committers but want merge.
 	if !committers.Has(author) && wantMerge {
-		resp := "`/merge` is only allowed for the committers in [list](" + url + ")."
+		resp := "`/merge` is only allowed for the committers in [list](" + tichiURL + ")."
 		log.Infof("Reply /merge request in comment: \"%s\"", resp)
 		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
 	// Not author or committers but want remove merge.
 	if !committers.Has(author) && !isAuthor && !wantMerge {
-		resp := "`/merge cancel` is only allowed for the PR author and the committers in [list](" + url + ")."
+		resp := "`/merge cancel` is only allowed for the PR author and the committers in [list](" + tichiURL + ")."
 		log.Infof("Reply /merge cancel request with comment: \"%s\"", resp)
 		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
