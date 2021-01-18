@@ -35,9 +35,8 @@ spec:
               path: tichi
               port: 3000
               scheme: HTTP
-            initialDelaySeconds: 10
+            initialDelaySeconds: 3
             periodSeconds: 3
-            timeoutSeconds: 600
           readinessProbe:
             httpGet:
               path: tichi
@@ -45,7 +44,7 @@ spec:
               scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 3
-            timeoutSeconds: 600
+            timeoutSeconds: 300
       volumes:
         - name: external-plugins-config
           configMap:
