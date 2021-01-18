@@ -1,3 +1,4 @@
+tichi-web: "https://tichi"
 ti-community-lgtm:
   - repos:
       - ti-community-infra/test-dev

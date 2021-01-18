@@ -17,6 +17,8 @@ const (
 
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
+	TiChi string `json:"tichi-web,omitempty"`
+
 	TiCommunityLgtm          []TiCommunityLgtm          `json:"ti-community-lgtm,omitempty"`
 	TiCommunityMerge         []TiCommunityMerge         `json:"ti-community-merge,omitempty"`
 	TiCommunityOwners        []TiCommunityOwners        `json:"ti-community-owners,omitempty"`
@@ -134,6 +136,13 @@ type TiCommunityBlunderbuss struct {
 	GracePeriodDuration int `json:"grace_period_duration,omitempty"`
 	// RequireSigLabel specifies whether the PR is required to have a sig label before requesting reviewers.
 	RequireSigLabel bool `json:"require_sig_label,omitempty"`
+}
+
+// setDefaults will set the default value for the config of blunderbuss plugin.
+func (c *TiCommunityBlunderbuss) setDefaults() {
+	if c.GracePeriodDuration == 0 {
+		c.GracePeriodDuration = defaultGracePeriodDuration
+	}
 }
 
 // TiCommunityTars is the config for the tars plugin.
@@ -300,18 +309,16 @@ func (c *Configuration) setDefaults() {
 	}
 }
 
-// setDefaults will set the default value for the config of blunderbuss plugin.
-func (c *TiCommunityBlunderbuss) setDefaults() {
-	if c.GracePeriodDuration == 0 {
-		c.GracePeriodDuration = defaultGracePeriodDuration
-	}
-}
-
 // Validate will return an error if there are any invalid external plugin config.
 func (c *Configuration) Validate() error {
 	// TODO: Put the setDefaults function in a more suitable place.
 	// Defaulting should run before validation.
 	c.setDefaults()
+
+	// Validate tichi web URL.
+	if _, err := url.ParseRequestURI(c.TiChi); err != nil {
+		return err
+	}
 
 	if err := validateLgtm(c.TiCommunityLgtm); err != nil {
 		return err

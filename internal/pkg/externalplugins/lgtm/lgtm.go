@@ -211,7 +211,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 
 	// Get ti-community-lgtm config.
 	opts := config.LgtmFor(rc.repo.Owner.Login, rc.repo.Name)
-	url := fmt.Sprintf(ownersclient.OwnersURLFmt, opts.PullOwnersEndpoint, org, repoName, number)
+	tichiURL := fmt.Sprintf(ownersclient.OwnersURLFmt, config.TiChi, org, repoName, number)
 	reviewersAndNeedsLGTM, err := ol.LoadOwners(opts.PullOwnersEndpoint, org, repoName, number)
 	if err != nil {
 		return err
@@ -224,14 +224,14 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 
 	// Not reviewers but want to add LGTM.
 	if !reviewers.Has(author) && wantLGTM {
-		resp := "`/lgtm` is only allowed for the reviewers in [list](" + url + ")."
+		resp := "`/lgtm` is only allowed for the reviewers in [list](" + tichiURL + ")."
 		log.Infof("Reply /lgtm request in comment: \"%s\"", resp)
 		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
 	// Not author or reviewers but want to remove LGTM.
 	if !reviewers.Has(author) && !isAuthor && !wantLGTM {
-		resp := "`/lgtm cancel` is only allowed for the PR author or the reviewers in [list](" + url + ")."
+		resp := "`/lgtm cancel` is only allowed for the PR author or the reviewers in [list](" + tichiURL + ")."
 		log.Infof("Reply /lgtm cancel request in comment: \"%s\"", resp)
 		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
