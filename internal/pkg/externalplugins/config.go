@@ -17,7 +17,7 @@ const (
 
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
-	TiChi string `json:"tichi-web,omitempty"`
+	TichiWeb string `json:"tichi-web,omitempty"`
 
 	TiCommunityLgtm          []TiCommunityLgtm          `json:"ti-community-lgtm,omitempty"`
 	TiCommunityMerge         []TiCommunityMerge         `json:"ti-community-merge,omitempty"`
@@ -316,7 +316,7 @@ func (c *Configuration) Validate() error {
 	c.setDefaults()
 
 	// Validate tichi web URL.
-	if _, err := url.ParseRequestURI(c.TiChi); err != nil {
+	if _, err := url.ParseRequestURI(c.TichiWeb); err != nil {
 		return err
 	}
 
