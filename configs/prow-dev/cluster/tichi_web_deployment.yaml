@@ -18,11 +18,18 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
         - name: tichi-web
-          image: rustinliu/tichi-web:v0.17.3
+          image: rustinliu/tichi-web:v0.17.4
           imagePullPolicy: Always
           ports:
             - name: http
               containerPort: 3000
+          env:
+            - name: EXTERNAL_PLUGINS_CONFIG
+              value: /etc/external_plugins_config/external_plugins_config.yaml
+          volumeMounts:
+            - name: external-plugins-config
+              mountPath: /etc/external_plugins_config
+              readOnly: true
           livenessProbe:
             httpGet:
               path: tichi
@@ -39,3 +46,7 @@ spec:
             initialDelaySeconds: 10
             periodSeconds: 3
             timeoutSeconds: 600
+      volumes:
+        - name: external-plugins-config
+          configMap:
+            name: external-plugins-config

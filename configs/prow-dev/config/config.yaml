@@ -1,3 +1,4 @@
+tichi-web-url: https://prow-dev.tidb.io/tichi
 prowjob_namespace: prow
 pod_namespace: prow-test-pods
 log_level: debug
