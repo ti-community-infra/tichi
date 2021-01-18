@@ -25,7 +25,7 @@ spec:
               containerPort: 3000
           env:
             - name: EXTERNAL_PLUGINS_CONFIG
-              value: "/etc/external_plugins_config/external_plugins_config.yaml"
+              value: /etc/external_plugins_config/external_plugins_config.yaml
           volumeMounts:
             - name: external-plugins-config
               mountPath: /etc/external_plugins_config
