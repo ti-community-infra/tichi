@@ -1,3 +1,4 @@
-export const COMMITTER = "committers";
-export const REVIEWER = "reviewers";
-export const GITHUB_BASE_URL = "https://github.com/";
+export const DEFAULT_GITHUB_ENDPOINT = "https://github.com/";
+export const LGTM_CONFIGURATION_KEY = "ti-community-lgtm";
+export const REPOS_KEY = "repos";
+export const PULL_OWNERS_ENDPOINT_KEY = "pull_owners_endpoint";
