@@ -67,10 +67,6 @@ ti-community-merge:
 
 ## Q&A
 
-### Can I `/merge` my own PR?
-
-No, because the lgtm control is loose and the lgtm-related labels are not automatically removed when there is a new commit, so if you are a committer or above, you can just relabel the `status/can-merge` label after you have a new commit and the bot will automatically merge the PR. This causes your latest commit to be merged without any code review。
-
 ### Will the `status/can-merge` label disappear if I update the master to PR locally without using the GitHub button?
 
 Yes, because when you do a merge locally, I can't tell if you're merging master or if there's a new commit. So we only trust merge commits that use the GitHub update button.

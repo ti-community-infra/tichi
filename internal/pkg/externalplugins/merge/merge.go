@@ -248,18 +248,7 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 	htmlURL := rc.htmlURL
 	org := rc.repo.Owner.Login
 	repoName := rc.repo.Name
-
-	// Author cannot merge own PR, comment and abort.
 	isAuthor := author == issueAuthor
-	if isAuthor && wantMerge {
-		resp := "you cannot `/merge` your own PR." +
-			"\r\nIf you have any questions about this limitation, please refer to " +
-			"[Can I `/merge` my own PR?](https://book.prow.tidb.io/#/en/plugins/merge?id=can-i-merge-my-own-pr)." +
-			"\r\n**Please do not add the `status/can-merge` label manually, otherwise it will affect the bot merge PR.**"
-		log.Infof("Commenting \"%s\".", resp)
-		return gc.CreateComment(rc.repo.Owner.Login, rc.repo.Name, rc.number,
-			externalplugins.FormatResponseRaw(rc.body, rc.htmlURL, rc.author, resp))
-	}
 
 	// Get ti-community-merge config.
 	opts := config.MergeFor(rc.repo.Owner.Login, rc.repo.Name)

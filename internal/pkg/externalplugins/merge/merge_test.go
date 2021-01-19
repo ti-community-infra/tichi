@@ -87,11 +87,12 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			shouldComment:    true,
 		},
 		{
-			name:          "merge comment by author",
-			body:          "/merge",
-			commenter:     "author",
-			shouldToggle:  false,
-			shouldComment: true,
+			name:             "merge comment by author",
+			body:             "/merge",
+			commenter:        "author",
+			currentLGTMLabel: lgtmTwo,
+			shouldToggle:     true,
+			shouldComment:    true,
 		},
 		{
 			name:             "merge cancel by author",
@@ -431,7 +432,7 @@ func TestMergeReviewCommentWithMergeNoti(t *testing.T) {
 			name:         "merge comment by author",
 			body:         "/merge",
 			commenter:    "author",
-			shouldDelete: false,
+			shouldDelete: true,
 		},
 		{
 			name:         "merge comment by committer collab2",
@@ -518,7 +519,7 @@ func TestMergeReviewCommentWithMergeNoti(t *testing.T) {
 		}
 
 		foc := &fakeOwnersClient{
-			committers: []string{"collab1", "collab2"},
+			committers: []string{"collab1", "collab2", "author"},
 			needsLgtm:  2,
 		}
 
