@@ -2,10 +2,12 @@
 package lgtm
 
 import (
+	"bytes"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
@@ -17,7 +19,12 @@ import (
 )
 
 // PluginName will register into prow.
-const PluginName = "ti-community-lgtm"
+const (
+	PluginName = "ti-community-lgtm"
+
+	// ReviewNotificationName defines the name used in the title for the review notifications.
+	ReviewNotificationName = "ReviewNotifier"
+)
 
 var (
 	configInfoReviewActsAsLgtm = "'Approve' review action will add a LGTM " +
@@ -26,7 +33,9 @@ var (
 	// LGTMRe is the regex that matches lgtm comments
 	LGTMRe = regexp.MustCompile(`(?mi)^/lgtm\s*$`)
 	// LGTMCancelRe is the regex that matches lgtm cancel comments
-	LGTMCancelRe = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
+	LGTMCancelRe      = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
+	notificationRegex = regexp.MustCompile(`(?is)^\[` + ReviewNotificationName + `\] *?([^\n]*)(?:\n\n(.*))?`)
+	reviewersRegex    = regexp.MustCompile(`(?i)- [@]*([a-z0-9](?:-?[a-z0-9]){0,38})`)
 )
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
@@ -74,6 +83,9 @@ type githubClient interface {
 	CreateComment(owner, repo string, number int, comment string) error
 	RemoveLabel(owner, repo string, number int, label string) error
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
+	BotUserChecker() (func(candidate string) bool, error)
+	ListIssueComments(org, repo string, number int) ([]github.IssueComment, error)
+	DeleteComment(org, repo string, ID int) error
 }
 
 // reviewCtx contains information about each review event.
@@ -190,6 +202,25 @@ func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *githu
 	return handle(wantLGTM, cfg, rc, gc, ol, log)
 }
 
+func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
+	_ *externalplugins.Configuration, log *logrus.Entry) error {
+	if pe.Action != github.PullRequestActionOpened && pe.Action != github.PullRequestActionReopened {
+		log.Debug("Not a pull request opened action, skipping...")
+		return nil
+	}
+
+	org := pe.PullRequest.Base.Repo.Owner.Login
+	repo := pe.PullRequest.Base.Repo.Name
+	number := pe.PullRequest.Number
+
+	reviewMsg, err := getMessage([]string{"a", "b", "hi-rusin", "Mini256"}, "", "", org, repo)
+	if err != nil {
+		return err
+	}
+
+	return gc.CreateComment(org, repo, number, *reviewMsg)
+}
+
 func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	gc githubClient, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	author := rc.author
@@ -199,6 +230,10 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	htmlURL := rc.htmlURL
 	org := rc.repo.Owner.Login
 	repoName := rc.repo.Name
+
+	fetchErr := func(context string, err error) error {
+		return fmt.Errorf("failed to get %s for %s/%s#%d: %v", context, org, repoName, number, err)
+	}
 
 	// Author cannot LGTM own PR, comment and abort.
 	isAuthor := author == issueAuthor
@@ -241,18 +276,57 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	labels, err := gc.GetIssueLabels(org, repoName, number)
 	if err != nil {
 		log.WithError(err).Error("Failed to get issue labels.")
+		return err
 	}
 
 	currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LgtmLabelPrefix, labels,
 		reviewersAndNeedsLGTM.NeedsLgtm)
 
+	botUserChecker, err := gc.BotUserChecker()
+	if err != nil {
+		return fetchErr("bot name", err)
+	}
+
+	issueComments, err := gc.ListIssueComments(org, repoName, number)
+	if err != nil {
+		return fetchErr("issue comments", err)
+	}
+	notifications := filterComments(issueComments, notificationMatcher(botUserChecker))
+	for _, notif := range notifications {
+		if err := gc.DeleteComment(org, repoName, notif.ID); err != nil {
+			log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repoName, number, notif.ID)
+		}
+	}
 	// Remove the label if necessary, we're done after this.
 	if currentLabel != "" && !wantLGTM {
 		log.Info("Removing LGTM label.")
 		if err := gc.RemoveLabel(org, repoName, number, currentLabel); err != nil {
 			return err
 		}
+		reviewMsg, err := getMessage(nil, "", "", org, repoName)
+		if err != nil {
+			return err
+		}
+		return gc.CreateComment(org, repoName, number, *reviewMsg)
 	} else if nextLabel != "" && wantLGTM {
+		latestNotification := getLast(notifications)
+		reviewedReviewers := getReviewersFromNotification(latestNotification)
+
+		if reviewedReviewers.Has(author) {
+			return nil
+		} else {
+			reviewedReviewers.Insert(author)
+		}
+
+		reviewMsg, err := getMessage(reviewedReviewers.List(), "", "", org, repoName)
+		if err != nil {
+			return err
+		}
+		err = gc.CreateComment(org, repoName, number, *reviewMsg)
+		if err != nil {
+			return err
+		}
+
 		log.Info("Adding LGTM label.")
 		// Remove current label.
 		if currentLabel != "" {
@@ -266,6 +340,38 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	}
 
 	return nil
+}
+
+func getReviewersFromNotification(latestNotification *github.IssueComment) sets.String {
+	result := sets.String{}
+	if latestNotification == nil {
+		return result
+	}
+
+	reviewers := reviewersRegex.FindAllStringSubmatch(latestNotification.Body, -1)
+	for _, reviewer := range reviewers {
+		if len(reviewer) == 3 {
+			result.Insert(reviewer[2])
+		}
+	}
+	return result
+}
+
+func filterComments(comments []github.IssueComment, filter func(comment *github.IssueComment) bool) []*github.IssueComment {
+	filtered := make([]*github.IssueComment, 0, len(comments))
+	for _, c := range comments {
+		if filter(&c) {
+			filtered = append(filtered, &c)
+		}
+	}
+	return filtered
+}
+
+func getLast(cs []*github.IssueComment) *github.IssueComment {
+	if len(cs) == 0 {
+		return nil
+	}
+	return cs[len(cs)-1]
 }
 
 // getCurrentAndNextLabel returns pull request current label and next required label.
@@ -286,4 +392,75 @@ func getCurrentAndNextLabel(prefix string, labels []github.Label, needsLgtm int)
 	}
 
 	return currentLabel, nextLabel
+}
+
+// getMessage returns the comment body that we want the approve plugin to display on PRs
+// The comment shows:
+// 	- a list of reviewers
+// 	- how an approver can indicate their lgtm
+// 	- how an approver can cancel their lgtm
+func getMessage(reviewers []string, commandHelpLink, prProcessLink, org, repo string) (*string, error) {
+	message, err := generateTemplate(`
+{{if .reviewers}}
+This pull request has been reviewed by:
+
+{{range $index, $reviewer := .reviewers}}- {{$reviewer}}`+"\n"+`{{end}}
+
+{{else}}
+This pull request has not been reviewed.
+{{end}}
+
+To complete the [pull request process]({{ .prProcessLink }}), please ask the reviewers in the [list]() to review by filling `+"`/cc @reviewer`"+` in the comment.
+After reviewing, you can assign this pull request to the committer in the [list]() by filling  `+"`/assign @committer`"+` in the comment to help you merge this pull request.
+
+The full list of commands accepted by this bot can be found [here]({{ .commandHelpLink }}?repo={{ .org }}%2F{{ .repo }}).
+
+<details>
+
+Reviewer can indicate their review by writing `+"`/lgtm`"+` in a comment.
+Reviewer can cancel approval by writing `+"`/lgtm cancel`"+` in a comment.
+</details>`, "message", map[string]interface{}{"reviewers": reviewers, "commandHelpLink": commandHelpLink, "prProcessLink": prProcessLink, "org": org, "repo": repo})
+	if err != nil {
+		return nil, err
+	}
+
+	return notification(ReviewNotificationName, "", message), nil
+}
+
+// generateTemplate takes a template, name and data, and generates
+// the corresponding string.
+func generateTemplate(templ, name string, data interface{}) (string, error) {
+	buf := bytes.NewBufferString("")
+	if messageTemplate, err := template.New(name).Parse(templ); err != nil {
+		return "", fmt.Errorf("failed to parse template for %s: %v", name, err)
+	} else if err := messageTemplate.Execute(buf, data); err != nil {
+		return "", fmt.Errorf("failed to execute template for %s: %v", name, err)
+	}
+	return buf.String(), nil
+}
+
+func notification(name, arguments, context string) *string {
+	str := "[" + strings.ToUpper(name) + "]"
+
+	args := strings.TrimSpace(arguments)
+	if args != "" {
+		str += " " + args
+	}
+
+	ctx := strings.TrimSpace(context)
+	if ctx != "" {
+		str += "\n\n" + ctx
+	}
+
+	return &str
+}
+
+func notificationMatcher(isBot func(string) bool) func(comment *github.IssueComment) bool {
+	return func(c *github.IssueComment) bool {
+		if !isBot(c.User.Login) {
+			return false
+		}
+		match := notificationRegex.FindStringSubmatch(c.Body)
+		return len(match) > 0
+	}
 }
