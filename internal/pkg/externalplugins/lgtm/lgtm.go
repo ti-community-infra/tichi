@@ -213,7 +213,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	repo := pe.PullRequest.Base.Repo.Name
 	number := pe.PullRequest.Number
 
-	reviewMsg, err := getMessage([]string{"a", "b", "hi-rusin", "Mini256"}, "", "", org, repo)
+	reviewMsg, err := getMessage(nil, "", "", org, repo)
 	if err != nil {
 		return err
 	}
@@ -271,17 +271,6 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
-	// Now we update the LGTM labels, having checked all cases where changing.
-	// Only add the label if it doesn't have it, and vice versa.
-	labels, err := gc.GetIssueLabels(org, repoName, number)
-	if err != nil {
-		log.WithError(err).Error("Failed to get issue labels.")
-		return err
-	}
-
-	currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LgtmLabelPrefix, labels,
-		reviewersAndNeedsLGTM.NeedsLgtm)
-
 	botUserChecker, err := gc.BotUserChecker()
 	if err != nil {
 		return fetchErr("bot name", err)
@@ -292,11 +281,17 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		return fetchErr("issue comments", err)
 	}
 	notifications := filterComments(issueComments, notificationMatcher(botUserChecker))
-	for _, notif := range notifications {
-		if err := gc.DeleteComment(org, repoName, notif.ID); err != nil {
-			log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repoName, number, notif.ID)
-		}
+
+	// Now we update the LGTM labels, having checked all cases where changing.
+	// Only add the label if it doesn't have it, and vice versa.
+	labels, err := gc.GetIssueLabels(org, repoName, number)
+	if err != nil {
+		log.WithError(err).Error("Failed to get issue labels.")
+		return err
 	}
+
+	currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LgtmLabelPrefix, labels,
+		reviewersAndNeedsLGTM.NeedsLgtm)
 	// Remove the label if necessary, we're done after this.
 	if currentLabel != "" && !wantLGTM {
 		log.Info("Removing LGTM label.")
@@ -307,6 +302,13 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		if err != nil {
 			return err
 		}
+
+		for _, notif := range notifications {
+			if err := gc.DeleteComment(org, repoName, notif.ID); err != nil {
+				log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repoName, number, notif.ID)
+			}
+		}
+
 		return gc.CreateComment(org, repoName, number, *reviewMsg)
 	} else if nextLabel != "" && wantLGTM {
 		latestNotification := getLast(notifications)
@@ -322,6 +324,13 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		if err != nil {
 			return err
 		}
+
+		for _, notif := range notifications {
+			if err := gc.DeleteComment(org, repoName, notif.ID); err != nil {
+				log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repoName, number, notif.ID)
+			}
+		}
+
 		err = gc.CreateComment(org, repoName, number, *reviewMsg)
 		if err != nil {
 			return err
