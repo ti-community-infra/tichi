@@ -189,6 +189,15 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 			shouldComment: true,
 			expectComment: "org/repo#5:@not-in-the-org: `/lgtm` is only allowed for the reviewers in [list](https://tichiWebLink/repos/org/repo/pulls/5/owners).\n\n<details>\n\nIn response to [this](<url>):\n\n>/lgtm \n\n\nInstructions for interacting with me using PR comments are available [here](https://prow.tidb.io/command-help).  If you have questions or suggestions related to my behavior, please file an issue against the [ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) repository.\n</details>",
 		},
+		{
+			name:          "lgtm comment by reviewer collab1, lgtm twice",
+			body:          "/lgtm",
+			commenter:     "collab1",
+			currentLabel:  lgtmOne,
+			lgtmComment:   "[REVIEW NOTIFICATION]\n\nThis pull request has been reviewed by:\n\n- collab1\n\n\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>",
+			shouldToggle:  false,
+			shouldComment: false,
+		},
 	}
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	for _, tc := range testcases {
