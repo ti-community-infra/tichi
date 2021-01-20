@@ -320,6 +320,14 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 
 		return gc.CreateComment(org, repo, number, *newMsg)
 	} else if nextLabel != "" && wantLGTM {
+		latestNotification := getLastComment(notifications)
+		reviewedReviewers := getReviewersFromNotification(latestNotification)
+		// Ignore already reviewed reviewer.
+		if reviewedReviewers.Has(author) {
+			log.Infof("Ignore %s's multiple reviews.", author)
+			return nil
+		}
+
 		log.Info("Adding LGTM label.")
 		// Remove current label.
 		if currentLabel != "" {
@@ -329,14 +337,6 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		}
 		if err := gc.AddLabel(org, repo, number, nextLabel); err != nil {
 			return err
-		}
-
-		latestNotification := getLastComment(notifications)
-		reviewedReviewers := getReviewersFromNotification(latestNotification)
-		// Ignore already reviewed reviewer.
-		if reviewedReviewers.Has(author) {
-			log.Infof("Ignore %s's multiple reviews.", author)
-			return nil
 		}
 
 		// Add author as reviewers and create new notification.
@@ -414,10 +414,10 @@ func getLastComment(issueComments []*github.IssueComment) *github.IssueComment {
 
 // getMessage returns the comment body that we want the approve plugin to display on PRs
 // The comment shows:
-// 	- a list of reviewers
+// 	- a list of reviewed reviewers
 // 	- how an approver can indicate their lgtm
 // 	- how an approver can cancel their lgtm
-func getMessage(reviewers []string, commandHelpLink, prProcessLink, org, repo string) (*string, error) {
+func getMessage(reviewedReviewers []string, commandHelpLink, prProcessLink, org, repo string) (*string, error) {
 	// nolint:lll
 	message, err := generateTemplate(`
 {{if .reviewers}}
@@ -438,7 +438,7 @@ The full list of commands accepted by this bot can be found [here]({{ .commandHe
 
 Reviewer can indicate their review by writing `+"`/lgtm`"+` in a comment.
 Reviewer can cancel approval by writing `+"`/lgtm cancel`"+` in a comment.
-</details>`, "message", map[string]interface{}{"reviewers": reviewers, "commandHelpLink": commandHelpLink,
+</details>`, "message", map[string]interface{}{"reviewers": reviewedReviewers, "commandHelpLink": commandHelpLink,
 		"prProcessLink": prProcessLink, "org": org, "repo": repo})
 	if err != nil {
 		return nil, err
