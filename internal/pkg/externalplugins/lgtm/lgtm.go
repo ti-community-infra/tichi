@@ -282,13 +282,12 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	if err != nil {
 		return fetchErr("bot name", err)
 	}
-
 	issueComments, err := gc.ListIssueComments(org, repoName, number)
 	if err != nil {
 		return fetchErr("issue comments", err)
 	}
 	notifications := filterComments(issueComments, notificationMatcher(botUserChecker))
-	log.Infof("Get notifications: %v", notifications)
+	log.Infof("Got notifications: %v", notifications)
 
 	// Now we update the LGTM labels, having checked all cases where changing.
 	// Only add the label if it doesn't have it, and vice versa.
@@ -317,9 +316,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 			}
 		}
 
-		if err := gc.CreateComment(org, repoName, number, *reviewMsg); err != nil {
-			log.WithError(err).Errorf("Failed to create comment on %s/%s#%d: %q.", org, repoName, number, *reviewMsg)
-		}
+		return gc.CreateComment(org, repoName, number, *reviewMsg)
 	} else if nextLabel != "" && wantLGTM {
 		log.Info("Adding LGTM label.")
 		// Remove current label.
@@ -354,9 +351,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 			}
 		}
 
-		if err := gc.CreateComment(org, repoName, number, *reviewMsg); err != nil {
-			log.WithError(err).Errorf("Failed to create comment on %s/%s#%d: %q.", org, repoName, number, *reviewMsg)
-		}
+		return gc.CreateComment(org, repoName, number, *reviewMsg)
 	}
 
 	return nil
