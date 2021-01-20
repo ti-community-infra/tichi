@@ -24,6 +24,8 @@ const (
 
 	// ReviewNotificationName defines the name used in the title for the review notifications.
 	ReviewNotificationName = "ReviewNotifier"
+	prProcessLink          = "https://book.prow.tidb.io/#/en/workflows/pr"
+	commandHelpLink        = "https://prow-dev.tidb.io/command-help"
 )
 
 var (
@@ -213,7 +215,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	repo := pe.PullRequest.Base.Repo.Name
 	number := pe.PullRequest.Number
 
-	reviewMsg, err := getMessage(nil, "", "", org, repo)
+	reviewMsg, err := getMessage(nil, commandHelpLink, prProcessLink, org, repo)
 	if err != nil {
 		return err
 	}
@@ -298,7 +300,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		if err := gc.RemoveLabel(org, repoName, number, currentLabel); err != nil {
 			return err
 		}
-		reviewMsg, err := getMessage(nil, "", "", org, repoName)
+		reviewMsg, err := getMessage(nil, commandHelpLink, prProcessLink, org, repoName)
 		if err != nil {
 			return err
 		}
@@ -320,7 +322,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 			reviewedReviewers.Insert(author)
 		}
 
-		reviewMsg, err := getMessage(reviewedReviewers.List(), "", "", org, repoName)
+		reviewMsg, err := getMessage(reviewedReviewers.List(), commandHelpLink, prProcessLink, org, repoName)
 		if err != nil {
 			return err
 		}
