@@ -31,19 +31,6 @@ func (f *fakeOwnersClient) LoadOwners(_ string,
 	}, nil
 }
 
-type fakePruner struct {
-	GitHubClient  *fakegithub.FakeClient
-	IssueComments []github.IssueComment
-}
-
-func (fp *fakePruner) PruneComments(shouldPrune func(github.IssueComment) bool) {
-	for _, comment := range fp.IssueComments {
-		if shouldPrune(comment) {
-			fp.GitHubClient.IssueCommentsDeleted = append(fp.GitHubClient.IssueCommentsDeleted, comment.Body)
-		}
-	}
-}
-
 func TestLGTMIssueAndReviewComment(t *testing.T) {
 	var testcases = []struct {
 		name         string
