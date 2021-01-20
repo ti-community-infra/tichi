@@ -32,10 +32,10 @@ var (
 	configInfoReviewActsAsLgtm = "'Approve' review action will add a LGTM " +
 		"and 'Request Changes' review action will remove the LGTM."
 
-	// LGTMRe is the regex that matches lgtm comments
-	LGTMRe = regexp.MustCompile(`(?mi)^/lgtm\s*$`)
-	// LGTMCancelRe is the regex that matches lgtm cancel comments
-	LGTMCancelRe      = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
+	// lgtmRe is the regex that matches lgtm comments
+	lgtmRe = regexp.MustCompile(`(?mi)^/lgtm\s*$`)
+	// lgtmCancelRe is the regex that matches lgtm cancel comments
+	lgtmCancelRe      = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
 	notificationRegex = regexp.MustCompile(`(?is)^\[` + ReviewNotificationName + `\] *?([^\n]*)(?:\n\n(.*))?`)
 	reviewersRegex    = regexp.MustCompile(`(?i)- [@]*([a-z0-9](?:-?[a-z0-9]){0,38})`)
 )
@@ -118,9 +118,9 @@ func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent, cfg
 	// If we create an "/lgtm" comment, add lgtm if necessary.
 	// If we create a "/lgtm cancel" comment, remove lgtm if necessary.
 	wantLGTM := false
-	if LGTMRe.MatchString(rc.body) {
+	if lgtmRe.MatchString(rc.body) {
 		wantLGTM = true
-	} else if LGTMCancelRe.MatchString(rc.body) {
+	} else if lgtmCancelRe.MatchString(rc.body) {
 		wantLGTM = false
 	} else {
 		return nil
@@ -192,9 +192,9 @@ func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *githu
 	// If we create an "/lgtm" comment, add lgtm if necessary.
 	// If we create a "/lgtm cancel" comment, remove lgtm if necessary.
 	wantLGTM := false
-	if LGTMRe.MatchString(rc.body) {
+	if lgtmRe.MatchString(rc.body) {
 		wantLGTM = true
-	} else if LGTMCancelRe.MatchString(rc.body) {
+	} else if lgtmCancelRe.MatchString(rc.body) {
 		wantLGTM = false
 	} else {
 		return nil
