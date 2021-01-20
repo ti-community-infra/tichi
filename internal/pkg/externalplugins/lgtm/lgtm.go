@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
@@ -32,9 +33,9 @@ var (
 	configInfoReviewActsAsLgtm = "'Approve' review action will add a LGTM " +
 		"and 'Request Changes' review action will remove the LGTM."
 
-	// lgtmRe is the regex that matches lgtm comments
+	// lgtmRe is the regex that matches lgtm comments.
 	lgtmRe = regexp.MustCompile(`(?mi)^/lgtm\s*$`)
-	// lgtmCancelRe is the regex that matches lgtm cancel comments
+	// lgtmCancelRe is the regex that matches lgtm cancel comments.
 	lgtmCancelRe      = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
 	notificationRegex = regexp.MustCompile(`(?is)^\[` + ReviewNotificationName + `\] *?([^\n]*)(?:\n\n(.*))?`)
 	reviewersRegex    = regexp.MustCompile(`(?i)- [@]*([a-z0-9](?:-?[a-z0-9]){0,38})`)
@@ -225,6 +226,11 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 
 func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	gc githubClient, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
+	funcStart := time.Now()
+	defer func() {
+		log.WithField("duration", time.Since(funcStart).String()).Debug("Completed handle")
+	}()
+
 	author := rc.author
 	issueAuthor := rc.issueAuthor
 	number := rc.number
@@ -232,7 +238,6 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	htmlURL := rc.htmlURL
 	org := rc.repo.Owner.Login
 	repoName := rc.repo.Name
-
 	fetchErr := func(context string, err error) error {
 		return fmt.Errorf("failed to get %s for %s/%s#%d: %v", context, org, repoName, number, err)
 	}
@@ -251,7 +256,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	tichiURL := fmt.Sprintf(ownersclient.OwnersURLFmt, config.TichiWebURL, org, repoName, number)
 	reviewersAndNeedsLGTM, err := ol.LoadOwners(opts.PullOwnersEndpoint, org, repoName, number)
 	if err != nil {
-		return err
+		return fetchErr("owners info", err)
 	}
 
 	reviewers := sets.String{}
@@ -283,14 +288,13 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		return fetchErr("issue comments", err)
 	}
 	notifications := filterComments(issueComments, notificationMatcher(botUserChecker))
-	log.Infof("%v", notifications)
+	log.Infof("Get notifications: %v", notifications)
 
 	// Now we update the LGTM labels, having checked all cases where changing.
 	// Only add the label if it doesn't have it, and vice versa.
 	labels, err := gc.GetIssueLabels(org, repoName, number)
 	if err != nil {
-		log.WithError(err).Error("Failed to get issue labels.")
-		return err
+		return fetchErr("issue labels", err)
 	}
 
 	currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LgtmLabelPrefix, labels,
@@ -313,12 +317,26 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 			}
 		}
 
-		return gc.CreateComment(org, repoName, number, *reviewMsg)
+		if err := gc.CreateComment(org, repoName, number, *reviewMsg); err != nil {
+			log.WithError(err).Errorf("Failed to create comment on %s/%s#%d: %q.", org, repoName, number, *reviewMsg)
+		}
 	} else if nextLabel != "" && wantLGTM {
+		log.Info("Adding LGTM label.")
+		// Remove current label.
+		if currentLabel != "" {
+			if err := gc.RemoveLabel(org, repoName, number, currentLabel); err != nil {
+				return err
+			}
+		}
+		if err := gc.AddLabel(org, repoName, number, nextLabel); err != nil {
+			return err
+		}
+
 		latestNotification := getLastComment(notifications)
 		reviewedReviewers := getReviewersFromNotification(latestNotification)
-
+		// Ignore already reviewed reviewer.
 		if reviewedReviewers.Has(author) {
+			log.Infof("Ignore %s's multiple reviews.", author)
 			return nil
 		}
 
@@ -336,20 +354,8 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 			}
 		}
 
-		err = gc.CreateComment(org, repoName, number, *reviewMsg)
-		if err != nil {
-			return err
-		}
-
-		log.Info("Adding LGTM label.")
-		// Remove current label.
-		if currentLabel != "" {
-			if err := gc.RemoveLabel(org, repoName, number, currentLabel); err != nil {
-				return err
-			}
-		}
-		if err := gc.AddLabel(org, repoName, number, nextLabel); err != nil {
-			return err
+		if err := gc.CreateComment(org, repoName, number, *reviewMsg); err != nil {
+			log.WithError(err).Errorf("Failed to create comment on %s/%s#%d: %q.", org, repoName, number, *reviewMsg)
 		}
 	}
 
