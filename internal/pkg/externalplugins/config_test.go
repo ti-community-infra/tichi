@@ -10,18 +10,22 @@ import (
 
 func TestValidateConfig(t *testing.T) {
 	testcases := []struct {
-		name           string
-		tichiWebURL    string
-		lgtm           *TiCommunityLgtm
-		merge          *TiCommunityMerge
-		owners         *TiCommunityOwners
-		autoresponders *TiCommunityAutoresponder
-		blunderbuss    *TiCommunityBlunderbuss
-		expected       error
+		name            string
+		tichiWebURL     string
+		prProcessLink   string
+		commandHelpLink string
+		lgtm            *TiCommunityLgtm
+		merge           *TiCommunityMerge
+		owners          *TiCommunityOwners
+		autoresponders  *TiCommunityAutoresponder
+		blunderbuss     *TiCommunityBlunderbuss
+		expected        error
 	}{
 		{
-			name:        "https pull owners URL",
-			tichiWebURL: "https://tichiWebURL",
+			name:            "https pull owners URL",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -53,8 +57,10 @@ func TestValidateConfig(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name:        "http pull owners URL",
-			tichiWebURL: "https://tichiWebURL",
+			name:            "http pull owners URL",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -86,8 +92,10 @@ func TestValidateConfig(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name:        "invalid lgtm pull owners URL",
-			tichiWebURL: "https://tichiWebURL",
+			name:            "invalid lgtm pull owners URL",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -119,8 +127,10 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
-			name:        "invalid merge pull owners URL",
-			tichiWebURL: "https://tichiWebURL",
+			name:            "invalid merge pull owners URL",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -152,8 +162,10 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
-			name:        "invalid owners sig endpoint",
-			tichiWebURL: "https://tichiWebURL",
+			name:            "invalid owners sig endpoint",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -185,8 +197,10 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
-			name:        "invalid blunderbuss regex",
-			tichiWebURL: "https://tichiWebURL",
+			name:            "invalid blunderbuss regex",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -218,8 +232,10 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("error parsing regexp: missing argument to repetition operator: `?`"),
 		},
 		{
-			name:        "invalid blunderbuss pull owners",
-			tichiWebURL: "https://tichiWebURL",
+			name:            "invalid blunderbuss pull owners",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -251,8 +267,10 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
-			name:        "invalid blunderbuss max reviewer count",
-			tichiWebURL: "https://tichiWebURL",
+			name:            "invalid blunderbuss max reviewer count",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -284,8 +302,10 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("max reviewer count must more than 0"),
 		},
 		{
-			name:        "invalid blunderbuss grace period duration",
-			tichiWebURL: "https://tichiWebURL",
+			name:            "invalid blunderbuss grace period duration",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"tidb-community-bots/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -318,8 +338,10 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("grace period duration must not less than 0"),
 		},
 		{
-			name:        "invalid tichiWebURL",
-			tichiWebURL: "https//tichiWebURL",
+			name:            "invalid tichiWebURL",
+			tichiWebURL:     "https//tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				ReviewActsAsLgtm:   true,
@@ -350,13 +372,85 @@ func TestValidateConfig(t *testing.T) {
 			},
 			expected: fmt.Errorf("parse \"https//tichiWebURL\": invalid URI for request"),
 		},
+		{
+			name:            "invalid prProcessLink",
+			tichiWebURL:     "https://tichiWebURL",
+			prProcessLink:   "https//prProcessLink",
+			commandHelpLink: "https://commandHelpLink",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"ti-community-infra/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"ti-community-infra/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			expected: fmt.Errorf("parse \"https//prProcessLink\": invalid URI for request"),
+		},
+		{
+			name:            "invalid commandHelpLink",
+			tichiWebURL:     "https://tichiWebURL",
+			prProcessLink:   "https://prProcessLink",
+			commandHelpLink: "https//commandHelpLink",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"ti-community-infra/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"ti-community-infra/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			expected: fmt.Errorf("parse \"https//commandHelpLink\": invalid URI for request"),
+		},
 	}
 
 	for _, testcase := range testcases {
 		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{
-				TichiWebURL: tc.tichiWebURL,
+				TichiWebURL:     tc.tichiWebURL,
+				PRProcessLink:   tc.prProcessLink,
+				CommandHelpLink: tc.commandHelpLink,
 				TiCommunityLgtm: []TiCommunityLgtm{
 					*tc.lgtm,
 				},
