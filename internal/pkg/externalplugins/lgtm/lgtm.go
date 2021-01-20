@@ -288,6 +288,15 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	}
 	notifications := filterComments(issueComments, notificationMatcher(botUserChecker))
 	log.Infof("Got notifications: %v", notifications)
+	// Delete old notifications.
+	defer func() {
+		for _, notification := range notifications {
+			notif := notification
+			if err := gc.DeleteComment(org, repoName, notif.ID); err != nil {
+				log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repoName, number, notif.ID)
+			}
+		}
+	}()
 
 	// Now we update the LGTM labels, having checked all cases where changing.
 	// Only add the label if it doesn't have it, and vice versa.
@@ -304,19 +313,12 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		if err := gc.RemoveLabel(org, repoName, number, currentLabel); err != nil {
 			return err
 		}
-		reviewMsg, err := getMessage(nil, commandHelpLink, prProcessLink, org, repoName)
+		newMsg, err := getMessage(nil, commandHelpLink, prProcessLink, org, repoName)
 		if err != nil {
 			return err
 		}
 
-		for _, notification := range notifications {
-			notif := notification
-			if err := gc.DeleteComment(org, repoName, notif.ID); err != nil {
-				log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repoName, number, notif.ID)
-			}
-		}
-
-		return gc.CreateComment(org, repoName, number, *reviewMsg)
+		return gc.CreateComment(org, repoName, number, *newMsg)
 	} else if nextLabel != "" && wantLGTM {
 		log.Info("Adding LGTM label.")
 		// Remove current label.
@@ -337,21 +339,14 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 			return nil
 		}
 
-		// Add author as reviewers and get new notification.
+		// Add author as reviewers and create new notification.
 		reviewedReviewers.Insert(author)
-		reviewMsg, err := getMessage(reviewedReviewers.List(), commandHelpLink, prProcessLink, org, repoName)
+		newMsg, err := getMessage(reviewedReviewers.List(), commandHelpLink, prProcessLink, org, repoName)
 		if err != nil {
 			return err
 		}
 
-		for _, notification := range notifications {
-			notif := notification
-			if err := gc.DeleteComment(org, repoName, notif.ID); err != nil {
-				log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repoName, number, notif.ID)
-			}
-		}
-
-		return gc.CreateComment(org, repoName, number, *reviewMsg)
+		return gc.CreateComment(org, repoName, number, *newMsg)
 	}
 
 	return nil
