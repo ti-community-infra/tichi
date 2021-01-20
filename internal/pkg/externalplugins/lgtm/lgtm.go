@@ -430,7 +430,7 @@ This pull request has not been reviewed.
 {{end}}
 
 To complete the [pull request process]({{ .prProcessLink }}), please ask the reviewers in the [list]() to review by filling `+"`/cc @reviewer`"+` in the comment.
-After reviewing, you can assign this pull request to the committer in the [list]() by filling  `+"`/assign @committer`"+` in the comment to help you merge this pull request.
+After your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list]() by filling  `+"`/assign @committer`"+` in the comment to help you merge this pull request.
 
 The full list of commands accepted by this bot can be found [here]({{ .commandHelpLink }}?repo={{ .org }}%2F{{ .repo }}).
 
