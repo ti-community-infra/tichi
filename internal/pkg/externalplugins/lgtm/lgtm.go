@@ -380,7 +380,7 @@ func getReviewersFromNotification(latestNotification *github.IssueComment) sets.
 
 	reviewers := reviewersRegex.FindAllStringSubmatch(latestNotification.Body, -1)
 
-	reviewerNameIndex := 2
+	reviewerNameIndex := 1
 	for _, reviewer := range reviewers {
 		// Example: - a => [[- a a]]
 		if len(reviewer) == reviewerNameIndex+1 {
