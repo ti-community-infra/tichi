@@ -422,12 +422,12 @@ func getMessage(reviewedReviewers []string, commandHelpLink,
 	// nolint:lll
 	message, err := generateTemplate(`
 {{if .reviewers}}
-This pull request has been reviewed by:
+This pull request has been approved by:
 
 {{range $index, $reviewer := .reviewers}}- {{$reviewer}}`+"\n"+`{{end}}
 
 {{else}}
-This pull request has not been reviewed.
+This pull request has not been approved.
 {{end}}
 
 To complete the [pull request process]({{ .prProcessLink }}), please ask the reviewers in the [list]({{ .ownersLink }}) to review by filling `+"`/cc @reviewer`"+` in the comment.
