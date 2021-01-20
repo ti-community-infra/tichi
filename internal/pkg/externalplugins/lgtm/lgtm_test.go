@@ -487,6 +487,96 @@ func TestLGTMFromApproveReview(t *testing.T) {
 	}
 }
 
+func TestHandlePullRequest(t *testing.T) {
+	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
+
+	testcases := []struct {
+		name  string
+		event github.PullRequestEvent
+
+		shouldComment bool
+		expectComment string
+	}{
+		{
+			name: "Open a pull request",
+			event: github.PullRequestEvent{
+				Action: github.PullRequestActionOpened,
+				PullRequest: github.PullRequest{
+					Number: 101,
+					Base: github.PullRequestBranch{
+						Repo: github.Repo{
+							Owner: github.User{
+								Login: "org",
+							},
+							Name: "repo",
+						},
+					},
+					Head: github.PullRequestBranch{
+						SHA: SHA,
+					},
+				},
+			},
+			shouldComment: true,
+			// nolint:lll
+			expectComment: "org/repo#101:[REVIEW NOTIFICATION]\n\nThis pull request has not been reviewed.\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/101/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/101/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>",
+		},
+		{
+			name: "Reopen a pull request",
+			event: github.PullRequestEvent{
+				Action: github.PullRequestActionReopened,
+				PullRequest: github.PullRequest{
+					Number: 101,
+					Base: github.PullRequestBranch{
+						Repo: github.Repo{
+							Owner: github.User{
+								Login: "org",
+							},
+							Name: "repo",
+						},
+					},
+					Head: github.PullRequestBranch{
+						SHA: SHA,
+					},
+				},
+			},
+			shouldComment: false,
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		fc := &fakegithub.FakeClient{
+			IssueComments:    make(map[int][]github.IssueComment),
+			IssueLabelsAdded: []string{},
+			PullRequests: map[int]*github.PullRequest{
+				101: &tc.event.PullRequest,
+			},
+		}
+		cfg := &externalplugins.Configuration{
+			TichiWebURL:     "https://tichiWebLink",
+			CommandHelpLink: "https://commandHelpLink",
+			PRProcessLink:   "https://prProcessLink",
+		}
+
+		err := HandlePullRequestEvent(fc, &tc.event, cfg, logrus.WithField("plugin", PluginName))
+		if err != nil {
+			t.Errorf("For case %s, didn't expect error: %v", tc.name, err)
+		}
+
+		if !tc.shouldComment && len(fc.IssueCommentsAdded) != 0 {
+			t.Errorf("unexpected comment %v", fc.IssueCommentsAdded)
+		}
+
+		if tc.shouldComment && len(fc.IssueCommentsAdded) == 0 {
+			t.Errorf("expected comment but got none")
+		}
+
+		if tc.expectComment != "" && fc.IssueCommentsAdded[0] != tc.expectComment {
+			t.Fatalf("review notifications mismatch: got %q, want %q", fc.IssueCommentsAdded[0], tc.expectComment)
+		}
+	}
+}
+
 func TestGetCurrentAndNextLabel(t *testing.T) {
 	var testcases = []struct {
 		name               string

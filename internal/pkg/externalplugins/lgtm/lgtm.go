@@ -205,7 +205,7 @@ func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *githu
 
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	config *externalplugins.Configuration, log *logrus.Entry) error {
-	if pe.Action != github.PullRequestActionOpened && pe.Action != github.PullRequestActionReopened {
+	if pe.Action != github.PullRequestActionOpened {
 		log.Debug("Not a pull request opened action, skipping...")
 		return nil
 	}
@@ -429,8 +429,8 @@ This pull request has been reviewed by:
 This pull request has not been reviewed.
 {{end}}
 
-To complete the [pull request process]({{ .prProcessLink }}), please ask the reviewers in the [list](.ownersLink) to review by filling `+"`/cc @reviewer`"+` in the comment.
-After your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](.ownersLink) by filling  `+"`/assign @committer`"+` in the comment to help you merge this pull request.
+To complete the [pull request process]({{ .prProcessLink }}), please ask the reviewers in the [list]({{ .ownersLink }}) to review by filling `+"`/cc @reviewer`"+` in the comment.
+After your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list]({{ .ownersLink }}) by filling  `+"`/assign @committer`"+` in the comment to help you merge this pull request.
 
 The full list of commands accepted by this bot can be found [here]({{ .commandHelpLink }}?repo={{ .org }}%2F{{ .repo }}).
 
