@@ -67,10 +67,6 @@ ti-community-merge:
 
 ## Q&A
 
-### 我可不可以 `/merge` 自己的 PR?
-
-不可以，因为 lgtm 控制宽松，当有新的提交时 lgtm 相关 label 不会自动取消，所以如果你是 committer 以上权限的人，你在有了新的提交之后，就可以直接重新打上 `status/can-merge` 标签，然后机器人就会自动合并该 PR。这样导致你最新的提交没有经过任何的 code review 就合并了。
-
 ### 我不使用 GitHub 的按钮，在本地去更新 master 到 PR，这样 `status/can-merge` 标签会消失吗？
 
 会，因为当你在本地做完合并之后，我无法判断你是在合并 master 还是有新的提交。所以我们只信任使用 GitHub 更新按钮的合并提交。
