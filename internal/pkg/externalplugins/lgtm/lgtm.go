@@ -23,7 +23,7 @@ const (
 	PluginName = "ti-community-lgtm"
 
 	// ReviewNotificationName defines the name used in the title for the review notifications.
-	ReviewNotificationName = "ReviewNotifier"
+	ReviewNotificationName = "Review Notification"
 	prProcessLink          = "https://book.prow.tidb.io/#/en/workflows/pr"
 	commandHelpLink        = "https://prow-dev.tidb.io/command-help"
 )
@@ -283,6 +283,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		return fetchErr("issue comments", err)
 	}
 	notifications := filterComments(issueComments, notificationMatcher(botUserChecker))
+	log.Infof("%v", notifications)
 
 	// Now we update the LGTM labels, having checked all cases where changing.
 	// Only add the label if it doesn't have it, and vice versa.
@@ -305,7 +306,8 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 			return err
 		}
 
-		for _, notif := range notifications {
+		for _, notification := range notifications {
+			notif := notification
 			if err := gc.DeleteComment(org, repoName, notif.ID); err != nil {
 				log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repoName, number, notif.ID)
 			}
@@ -313,21 +315,22 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 
 		return gc.CreateComment(org, repoName, number, *reviewMsg)
 	} else if nextLabel != "" && wantLGTM {
-		latestNotification := getLast(notifications)
+		latestNotification := getLastComment(notifications)
 		reviewedReviewers := getReviewersFromNotification(latestNotification)
 
 		if reviewedReviewers.Has(author) {
 			return nil
-		} else {
-			reviewedReviewers.Insert(author)
 		}
 
+		// Add author as reviewers and get new notification.
+		reviewedReviewers.Insert(author)
 		reviewMsg, err := getMessage(reviewedReviewers.List(), commandHelpLink, prProcessLink, org, repoName)
 		if err != nil {
 			return err
 		}
 
-		for _, notif := range notifications {
+		for _, notification := range notifications {
+			notif := notification
 			if err := gc.DeleteComment(org, repoName, notif.ID); err != nil {
 				log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repoName, number, notif.ID)
 			}
@@ -353,38 +356,6 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	return nil
 }
 
-func getReviewersFromNotification(latestNotification *github.IssueComment) sets.String {
-	result := sets.String{}
-	if latestNotification == nil {
-		return result
-	}
-
-	reviewers := reviewersRegex.FindAllStringSubmatch(latestNotification.Body, -1)
-	for _, reviewer := range reviewers {
-		if len(reviewer) == 3 {
-			result.Insert(reviewer[2])
-		}
-	}
-	return result
-}
-
-func filterComments(comments []github.IssueComment, filter func(comment *github.IssueComment) bool) []*github.IssueComment {
-	filtered := make([]*github.IssueComment, 0, len(comments))
-	for _, c := range comments {
-		if filter(&c) {
-			filtered = append(filtered, &c)
-		}
-	}
-	return filtered
-}
-
-func getLast(cs []*github.IssueComment) *github.IssueComment {
-	if len(cs) == 0 {
-		return nil
-	}
-	return cs[len(cs)-1]
-}
-
 // getCurrentAndNextLabel returns pull request current label and next required label.
 func getCurrentAndNextLabel(prefix string, labels []github.Label, needsLgtm int) (string, string) {
 	currentLabel := ""
@@ -405,12 +376,53 @@ func getCurrentAndNextLabel(prefix string, labels []github.Label, needsLgtm int)
 	return currentLabel, nextLabel
 }
 
+// getReviewersFromNotification get the reviewers from latest notification.
+func getReviewersFromNotification(latestNotification *github.IssueComment) sets.String {
+	result := sets.String{}
+	if latestNotification == nil {
+		return result
+	}
+
+	reviewers := reviewersRegex.FindAllStringSubmatch(latestNotification.Body, -1)
+
+	reviewerNameIndex := 2
+	for _, reviewer := range reviewers {
+		// Example: - a => [[- a a]]
+		if len(reviewer) == reviewerNameIndex+1 {
+			result.Insert(reviewer[reviewerNameIndex])
+		}
+	}
+	return result
+}
+
+// filterComments will filtering the issue comments by filter.
+func filterComments(comments []github.IssueComment,
+	filter func(comment *github.IssueComment) bool) []*github.IssueComment {
+	filtered := make([]*github.IssueComment, 0, len(comments))
+	for _, comment := range comments {
+		c := comment
+		if filter(&c) {
+			filtered = append(filtered, &c)
+		}
+	}
+	return filtered
+}
+
+// getLastComment get the last issue comment.
+func getLastComment(issueComments []*github.IssueComment) *github.IssueComment {
+	if len(issueComments) == 0 {
+		return nil
+	}
+	return issueComments[len(issueComments)-1]
+}
+
 // getMessage returns the comment body that we want the approve plugin to display on PRs
 // The comment shows:
 // 	- a list of reviewers
 // 	- how an approver can indicate their lgtm
 // 	- how an approver can cancel their lgtm
 func getMessage(reviewers []string, commandHelpLink, prProcessLink, org, repo string) (*string, error) {
+	// nolint:lll
 	message, err := generateTemplate(`
 {{if .reviewers}}
 This pull request has been reviewed by:
@@ -430,7 +442,8 @@ The full list of commands accepted by this bot can be found [here]({{ .commandHe
 
 Reviewer can indicate their review by writing `+"`/lgtm`"+` in a comment.
 Reviewer can cancel approval by writing `+"`/lgtm cancel`"+` in a comment.
-</details>`, "message", map[string]interface{}{"reviewers": reviewers, "commandHelpLink": commandHelpLink, "prProcessLink": prProcessLink, "org": org, "repo": repo})
+</details>`, "message", map[string]interface{}{"reviewers": reviewers, "commandHelpLink": commandHelpLink,
+		"prProcessLink": prProcessLink, "org": org, "repo": repo})
 	if err != nil {
 		return nil, err
 	}
@@ -450,6 +463,7 @@ func generateTemplate(templ, name string, data interface{}) (string, error) {
 	return buf.String(), nil
 }
 
+// notification create a notification message.
 func notification(name, arguments, context string) *string {
 	str := "[" + strings.ToUpper(name) + "]"
 
@@ -466,8 +480,10 @@ func notification(name, arguments, context string) *string {
 	return &str
 }
 
+// notificationMatcher matches issue comments for notifications.
 func notificationMatcher(isBot func(string) bool) func(comment *github.IssueComment) bool {
 	return func(c *github.IssueComment) bool {
+		// Only match robot's comment.
 		if !isBot(c.User.Login) {
 			return false
 		}
