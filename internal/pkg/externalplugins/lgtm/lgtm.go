@@ -25,8 +25,6 @@ const (
 
 	// ReviewNotificationName defines the name used in the title for the review notifications.
 	ReviewNotificationName = "Review Notification"
-	prProcessLink          = "https://book.prow.tidb.io/#/en/workflows/pr"
-	commandHelpLink        = "https://prow-dev.tidb.io/command-help"
 )
 
 var (
@@ -206,7 +204,7 @@ func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *githu
 }
 
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
-	_ *externalplugins.Configuration, log *logrus.Entry) error {
+	config *externalplugins.Configuration, log *logrus.Entry) error {
 	if pe.Action != github.PullRequestActionOpened && pe.Action != github.PullRequestActionReopened {
 		log.Debug("Not a pull request opened action, skipping...")
 		return nil
@@ -215,8 +213,9 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	org := pe.PullRequest.Base.Repo.Owner.Login
 	repo := pe.PullRequest.Base.Repo.Name
 	number := pe.PullRequest.Number
+	tichiURL := fmt.Sprintf(ownersclient.OwnersURLFmt, config.TichiWebURL, org, repo, number)
 
-	reviewMsg, err := getMessage(nil, commandHelpLink, prProcessLink, org, repo)
+	reviewMsg, err := getMessage(nil, config.CommandHelpLink, config.PRProcessLink, tichiURL, org, repo)
 	if err != nil {
 		return err
 	}
@@ -313,7 +312,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		if err := gc.RemoveLabel(org, repo, number, currentLabel); err != nil {
 			return err
 		}
-		newMsg, err := getMessage(nil, commandHelpLink, prProcessLink, org, repo)
+		newMsg, err := getMessage(nil, config.CommandHelpLink, config.PRProcessLink, tichiURL, org, repo)
 		if err != nil {
 			return err
 		}
@@ -341,7 +340,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 
 		// Add author as reviewers and create new notification.
 		reviewedReviewers.Insert(author)
-		newMsg, err := getMessage(reviewedReviewers.List(), commandHelpLink, prProcessLink, org, repo)
+		newMsg, err := getMessage(reviewedReviewers.List(), config.CommandHelpLink, config.PRProcessLink, tichiURL, org, repo)
 		if err != nil {
 			return err
 		}
@@ -417,7 +416,8 @@ func getLastComment(issueComments []*github.IssueComment) *github.IssueComment {
 // 	- a list of reviewed reviewers
 // 	- how an approver can indicate their lgtm
 // 	- how an approver can cancel their lgtm
-func getMessage(reviewedReviewers []string, commandHelpLink, prProcessLink, org, repo string) (*string, error) {
+func getMessage(reviewedReviewers []string, commandHelpLink,
+	prProcessLink, ownersLink, org, repo string) (*string, error) {
 	// nolint:lll
 	message, err := generateTemplate(`
 {{if .reviewers}}
@@ -429,8 +429,8 @@ This pull request has been reviewed by:
 This pull request has not been reviewed.
 {{end}}
 
-To complete the [pull request process]({{ .prProcessLink }}), please ask the reviewers in the [list]() to review by filling `+"`/cc @reviewer`"+` in the comment.
-After your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list]() by filling  `+"`/assign @committer`"+` in the comment to help you merge this pull request.
+To complete the [pull request process]({{ .prProcessLink }}), please ask the reviewers in the [list](.ownersLink) to review by filling `+"`/cc @reviewer`"+` in the comment.
+After your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](.ownersLink) by filling  `+"`/assign @committer`"+` in the comment to help you merge this pull request.
 
 The full list of commands accepted by this bot can be found [here]({{ .commandHelpLink }}?repo={{ .org }}%2F{{ .repo }}).
 
@@ -439,7 +439,7 @@ The full list of commands accepted by this bot can be found [here]({{ .commandHe
 Reviewer can indicate their review by writing `+"`/lgtm`"+` in a comment.
 Reviewer can cancel approval by writing `+"`/lgtm cancel`"+` in a comment.
 </details>`, "message", map[string]interface{}{"reviewers": reviewedReviewers, "commandHelpLink": commandHelpLink,
-		"prProcessLink": prProcessLink, "org": org, "repo": repo})
+		"prProcessLink": prProcessLink, "ownersLink": ownersLink, "org": org, "repo": repo})
 	if err != nil {
 		return nil, err
 	}
