@@ -46,13 +46,12 @@ func (fp *fakePruner) PruneComments(shouldPrune func(github.IssueComment) bool) 
 
 func TestLGTMIssueAndReviewComment(t *testing.T) {
 	var testcases = []struct {
-		name          string
-		body          string
-		commenter     string
-		currentLabel  string
-		isCancel      bool
-		shouldToggle  bool
-		storeTreeHash bool
+		name         string
+		body         string
+		commenter    string
+		currentLabel string
+		isCancel     bool
+		shouldToggle bool
 	}{
 		{
 			name:         "non-lgtm comment",
@@ -330,31 +329,28 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 
 func TestLGTMFromApproveReview(t *testing.T) {
 	var testcases = []struct {
-		name          string
-		state         github.ReviewState
-		action        github.ReviewEventAction
-		body          string
-		reviewer      string
-		currentLabel  string
-		isCancel      bool
-		shouldToggle  bool
-		storeTreeHash bool
+		name         string
+		state        github.ReviewState
+		action       github.ReviewEventAction
+		body         string
+		reviewer     string
+		currentLabel string
+		isCancel     bool
+		shouldToggle bool
 	}{
 		{
-			name:          "Edit approve review by reviewer, no lgtm on pr",
-			state:         github.ReviewStateApproved,
-			action:        github.ReviewActionEdited,
-			reviewer:      "collab1",
-			shouldToggle:  false,
-			storeTreeHash: true,
+			name:         "Edit approve review by reviewer, no lgtm on pr",
+			state:        github.ReviewStateApproved,
+			action:       github.ReviewActionEdited,
+			reviewer:     "collab1",
+			shouldToggle: false,
 		},
 		{
-			name:          "Dismiss approve review by reviewer, no lgtm on pr",
-			state:         github.ReviewStateApproved,
-			action:        github.ReviewActionDismissed,
-			reviewer:      "collab1",
-			shouldToggle:  false,
-			storeTreeHash: true,
+			name:         "Dismiss approve review by reviewer, no lgtm on pr",
+			state:        github.ReviewStateApproved,
+			action:       github.ReviewActionDismissed,
+			reviewer:     "collab1",
+			shouldToggle: false,
 		},
 		{
 			name:         "Request changes review by reviewer, no lgtm on pr",
@@ -373,16 +369,7 @@ func TestLGTMFromApproveReview(t *testing.T) {
 			shouldToggle: true,
 		},
 		{
-			name:          "Approve review by reviewer, no lgtm on pr",
-			state:         github.ReviewStateApproved,
-			action:        github.ReviewActionSubmitted,
-			reviewer:      "collab1",
-			currentLabel:  lgtmOne,
-			shouldToggle:  true,
-			storeTreeHash: true,
-		},
-		{
-			name:         "Approve review by reviewer, no lgtm on pr, do not store tree_hash",
+			name:         "Approve review by reviewer, no lgtm on pr",
 			state:        github.ReviewStateApproved,
 			action:       github.ReviewActionSubmitted,
 			reviewer:     "collab1",
@@ -398,12 +385,11 @@ func TestLGTMFromApproveReview(t *testing.T) {
 			shouldToggle: false,
 		},
 		{
-			name:          "Approve review by non-reviewer, no lgtm on pr",
-			state:         github.ReviewStateApproved,
-			action:        github.ReviewActionSubmitted,
-			reviewer:      "collab2",
-			shouldToggle:  false,
-			storeTreeHash: true,
+			name:         "Approve review by non-reviewer, no lgtm on pr",
+			state:        github.ReviewStateApproved,
+			action:       github.ReviewActionSubmitted,
+			reviewer:     "collab2",
+			shouldToggle: false,
 		},
 		{
 			name:         "Request changes review by non-reviewer, no lgtm on pr",
