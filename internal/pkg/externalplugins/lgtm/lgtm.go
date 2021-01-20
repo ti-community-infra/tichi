@@ -36,7 +36,7 @@ var (
 	lgtmCancelRe = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
 	// notificationRegex is the regex that matches the notifications.
 	notificationRegex = regexp.MustCompile(`(?is)^\[` + ReviewNotificationName + `\] *?([^\n]*)(?:\n\n(.*))?`)
-	// reviewersRegex is the regex that matches the reviewers, such as: - hi-rusin.
+	// reviewersRegex is the regex that matches the reviewers, such as: - hi-rustin.
 	reviewersRegex = regexp.MustCompile(`(?i)- [@]*([a-z0-9](?:-?[a-z0-9]){0,38})`)
 )
 
