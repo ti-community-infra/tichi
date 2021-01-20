@@ -19,10 +19,9 @@ import (
 	"k8s.io/test-infra/prow/pluginhelp"
 )
 
-// PluginName will register into prow.
 const (
+	// PluginName will register into prow.
 	PluginName = "ti-community-lgtm"
-
 	// ReviewNotificationName defines the name used in the title for the review notifications.
 	ReviewNotificationName = "Review Notification"
 )
@@ -34,9 +33,11 @@ var (
 	// lgtmRe is the regex that matches lgtm comments.
 	lgtmRe = regexp.MustCompile(`(?mi)^/lgtm\s*$`)
 	// lgtmCancelRe is the regex that matches lgtm cancel comments.
-	lgtmCancelRe      = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
+	lgtmCancelRe = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
+	// notificationRegex is the regex that matches the notifications.
 	notificationRegex = regexp.MustCompile(`(?is)^\[` + ReviewNotificationName + `\] *?([^\n]*)(?:\n\n(.*))?`)
-	reviewersRegex    = regexp.MustCompile(`(?i)- [@]*([a-z0-9](?:-?[a-z0-9]){0,38})`)
+	// reviewersRegex is the regex that matches the reviewers, such as: - hi-rusin.
+	reviewersRegex = regexp.MustCompile(`(?i)- [@]*([a-z0-9](?:-?[a-z0-9]){0,38})`)
 )
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
