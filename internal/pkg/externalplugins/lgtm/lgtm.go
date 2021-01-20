@@ -237,9 +237,9 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	body := rc.body
 	htmlURL := rc.htmlURL
 	org := rc.repo.Owner.Login
-	repoName := rc.repo.Name
+	repo := rc.repo.Name
 	fetchErr := func(context string, err error) error {
-		return fmt.Errorf("failed to get %s for %s/%s#%d: %v", context, org, repoName, number, err)
+		return fmt.Errorf("failed to get %s for %s/%s#%d: %v", context, org, repo, number, err)
 	}
 
 	// Author cannot LGTM own PR, comment and abort.
@@ -253,8 +253,8 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 
 	// Get ti-community-lgtm config.
 	opts := config.LgtmFor(rc.repo.Owner.Login, rc.repo.Name)
-	tichiURL := fmt.Sprintf(ownersclient.OwnersURLFmt, config.TichiWebURL, org, repoName, number)
-	reviewersAndNeedsLGTM, err := ol.LoadOwners(opts.PullOwnersEndpoint, org, repoName, number)
+	tichiURL := fmt.Sprintf(ownersclient.OwnersURLFmt, config.TichiWebURL, org, repo, number)
+	reviewersAndNeedsLGTM, err := ol.LoadOwners(opts.PullOwnersEndpoint, org, repo, number)
 	if err != nil {
 		return fetchErr("owners info", err)
 	}
@@ -268,21 +268,21 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	if !reviewers.Has(author) && wantLGTM {
 		resp := "`/lgtm` is only allowed for the reviewers in [list](" + tichiURL + ")."
 		log.Infof("Reply /lgtm request in comment: \"%s\"", resp)
-		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
+		return gc.CreateComment(org, repo, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
 	// Not author or reviewers but want to remove LGTM.
 	if !reviewers.Has(author) && !isAuthor && !wantLGTM {
 		resp := "`/lgtm cancel` is only allowed for the PR author or the reviewers in [list](" + tichiURL + ")."
 		log.Infof("Reply /lgtm cancel request in comment: \"%s\"", resp)
-		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
+		return gc.CreateComment(org, repo, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
 	botUserChecker, err := gc.BotUserChecker()
 	if err != nil {
 		return fetchErr("bot name", err)
 	}
-	issueComments, err := gc.ListIssueComments(org, repoName, number)
+	issueComments, err := gc.ListIssueComments(org, repo, number)
 	if err != nil {
 		return fetchErr("issue comments", err)
 	}
@@ -292,15 +292,15 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	defer func() {
 		for _, notification := range notifications {
 			notif := notification
-			if err := gc.DeleteComment(org, repoName, notif.ID); err != nil {
-				log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repoName, number, notif.ID)
+			if err := gc.DeleteComment(org, repo, notif.ID); err != nil {
+				log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repo, number, notif.ID)
 			}
 		}
 	}()
 
 	// Now we update the LGTM labels, having checked all cases where changing.
 	// Only add the label if it doesn't have it, and vice versa.
-	labels, err := gc.GetIssueLabels(org, repoName, number)
+	labels, err := gc.GetIssueLabels(org, repo, number)
 	if err != nil {
 		return fetchErr("issue labels", err)
 	}
@@ -310,24 +310,24 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	// Remove the label if necessary, we're done after this.
 	if currentLabel != "" && !wantLGTM {
 		log.Info("Removing LGTM label.")
-		if err := gc.RemoveLabel(org, repoName, number, currentLabel); err != nil {
+		if err := gc.RemoveLabel(org, repo, number, currentLabel); err != nil {
 			return err
 		}
-		newMsg, err := getMessage(nil, commandHelpLink, prProcessLink, org, repoName)
+		newMsg, err := getMessage(nil, commandHelpLink, prProcessLink, org, repo)
 		if err != nil {
 			return err
 		}
 
-		return gc.CreateComment(org, repoName, number, *newMsg)
+		return gc.CreateComment(org, repo, number, *newMsg)
 	} else if nextLabel != "" && wantLGTM {
 		log.Info("Adding LGTM label.")
 		// Remove current label.
 		if currentLabel != "" {
-			if err := gc.RemoveLabel(org, repoName, number, currentLabel); err != nil {
+			if err := gc.RemoveLabel(org, repo, number, currentLabel); err != nil {
 				return err
 			}
 		}
-		if err := gc.AddLabel(org, repoName, number, nextLabel); err != nil {
+		if err := gc.AddLabel(org, repo, number, nextLabel); err != nil {
 			return err
 		}
 
@@ -341,12 +341,12 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 
 		// Add author as reviewers and create new notification.
 		reviewedReviewers.Insert(author)
-		newMsg, err := getMessage(reviewedReviewers.List(), commandHelpLink, prProcessLink, org, repoName)
+		newMsg, err := getMessage(reviewedReviewers.List(), commandHelpLink, prProcessLink, org, repo)
 		if err != nil {
 			return err
 		}
 
-		return gc.CreateComment(org, repoName, number, *newMsg)
+		return gc.CreateComment(org, repo, number, *newMsg)
 	}
 
 	return nil
