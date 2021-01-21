@@ -242,7 +242,7 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 			}
 
 			if !tc.shouldDeleteComment && len(fc.IssueCommentsDeleted) != 0 {
-				t.Errorf("expected not to delete comments but deleted..")
+				t.Errorf("expected not to delete comments but deleted.")
 			}
 
 			if tc.shouldToggle {
