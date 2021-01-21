@@ -33,7 +33,7 @@ func (f *fakeOwnersClient) LoadOwners(_ string,
 }
 
 func TestLGTMIssueAndReviewComment(t *testing.T) {
-	var testcases = []struct {
+	type commentCase struct {
 		name         string
 		body         string
 		commenter    string
@@ -41,10 +41,13 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 		lgtmComment  string
 		isCancel     bool
 
-		shouldToggle  bool
-		shouldComment bool
-		expectComment string
-	}{
+		shouldToggle        bool
+		shouldComment       bool
+		expectComment       string
+		shouldDeleteComment bool
+	}
+
+	var testcases = []commentCase{
 		{
 			name:          "non-lgtm comment",
 			body:          "uh oh",
@@ -69,14 +72,15 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 			expectComment: "org/repo#5:[REVIEW NOTIFICATION]\n\nThis pull request has been approved by:\n\n- collab1\n\n\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
 		},
 		{
-			name:          "lgtm comment by reviewer collab1, lgtm on pr",
-			body:          "/lgtm",
-			commenter:     "collab1",
-			currentLabel:  lgtmOne,
-			lgtmComment:   "[REVIEW NOTIFICATION]\n\nThis pull request has been approved by:\n\n- collab2\n\n\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
-			shouldToggle:  true,
-			shouldComment: true,
-			expectComment: "org/repo#5:[REVIEW NOTIFICATION]\n\nThis pull request has been approved by:\n\n- collab1\n- collab2\n\n\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
+			name:                "lgtm comment by reviewer collab1, lgtm on pr",
+			body:                "/lgtm",
+			commenter:           "collab1",
+			currentLabel:        lgtmOne,
+			lgtmComment:         "[REVIEW NOTIFICATION]\n\nThis pull request has been approved by:\n\n- collab2\n\n\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
+			shouldToggle:        true,
+			shouldComment:       true,
+			shouldDeleteComment: true,
+			expectComment:       "org/repo#5:[REVIEW NOTIFICATION]\n\nThis pull request has been approved by:\n\n- collab1\n- collab2\n\n\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
 		},
 		{
 			name:          "lgtm comment by author",
@@ -121,15 +125,16 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 			expectComment: "org/repo#5:@not-in-the-org: `/lgtm` is only allowed for the reviewers in [list](https://tichiWebLink/repos/org/repo/pulls/5/owners).\n\n<details>\n\nIn response to [this](<url>):\n\n>/lgtm\n\n\nInstructions for interacting with me using PR comments are available [here](https://prow.tidb.io/command-help).  If you have questions or suggestions related to my behavior, please file an issue against the [ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) repository.\n</details>",
 		},
 		{
-			name:          "lgtm cancel by reviewer collab2",
-			body:          "/lgtm cancel",
-			commenter:     "collab2",
-			currentLabel:  lgtmOne,
-			lgtmComment:   "[REVIEW NOTIFICATION]\n\nThis pull request has been approved by:\n\n- collab1\n\n\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
-			isCancel:      true,
-			shouldToggle:  true,
-			shouldComment: true,
-			expectComment: "org/repo#5:[REVIEW NOTIFICATION]\n\nThis pull request has not been approved.\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
+			name:                "lgtm cancel by reviewer collab2",
+			body:                "/lgtm cancel",
+			commenter:           "collab2",
+			currentLabel:        lgtmOne,
+			lgtmComment:         "[REVIEW NOTIFICATION]\n\nThis pull request has been approved by:\n\n- collab1\n\n\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
+			isCancel:            true,
+			shouldToggle:        true,
+			shouldComment:       true,
+			shouldDeleteComment: true,
+			expectComment:       "org/repo#5:[REVIEW NOTIFICATION]\n\nThis pull request has not been approved.\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
 		},
 		{
 			name:          "lgtm cancel by random",
@@ -143,26 +148,28 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 			expectComment: "org/repo#5:@not-in-the-org: `/lgtm cancel` is only allowed for the PR author or the reviewers in [list](https://tichiWebLink/repos/org/repo/pulls/5/owners).\n\n<details>\n\nIn response to [this](<url>):\n\n>/lgtm cancel\n\n\nInstructions for interacting with me using PR comments are available [here](https://prow.tidb.io/command-help).  If you have questions or suggestions related to my behavior, please file an issue against the [ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) repository.\n</details>",
 		},
 		{
-			name:          "lgtm cancel comment by reviewer collab1",
-			body:          "/lgtm cancel",
-			commenter:     "collab1",
-			currentLabel:  lgtmOne,
-			lgtmComment:   "[REVIEW NOTIFICATION]\n\nThis pull request has been approved by:\n\n- collab1\n\n\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
-			isCancel:      true,
-			shouldToggle:  true,
-			shouldComment: true,
-			expectComment: "org/repo#5:[REVIEW NOTIFICATION]\n\nThis pull request has not been approved.\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
+			name:                "lgtm cancel comment by reviewer collab1",
+			body:                "/lgtm cancel",
+			commenter:           "collab1",
+			currentLabel:        lgtmOne,
+			lgtmComment:         "[REVIEW NOTIFICATION]\n\nThis pull request has been approved by:\n\n- collab1\n\n\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
+			isCancel:            true,
+			shouldToggle:        true,
+			shouldComment:       true,
+			shouldDeleteComment: true,
+			expectComment:       "org/repo#5:[REVIEW NOTIFICATION]\n\nThis pull request has not been approved.\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
 		},
 		{
-			name:          "lgtm cancel comment by reviewer collab1, with trailing space",
-			body:          "/lgtm cancel \r",
-			commenter:     "collab1",
-			lgtmComment:   "[REVIEW NOTIFICATION]\n\nThis pull request has been approved by:\n\n- collab1\n\n\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
-			currentLabel:  lgtmOne,
-			isCancel:      true,
-			shouldToggle:  true,
-			shouldComment: true,
-			expectComment: "org/repo#5:[REVIEW NOTIFICATION]\n\nThis pull request has not been approved.\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
+			name:                "lgtm cancel comment by reviewer collab1, with trailing space",
+			body:                "/lgtm cancel \r",
+			commenter:           "collab1",
+			lgtmComment:         "[REVIEW NOTIFICATION]\n\nThis pull request has been approved by:\n\n- collab1\n\n\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
+			currentLabel:        lgtmOne,
+			isCancel:            true,
+			shouldToggle:        true,
+			shouldComment:       true,
+			shouldDeleteComment: true,
+			expectComment:       "org/repo#5:[REVIEW NOTIFICATION]\n\nThis pull request has not been approved.\n\n\nTo complete the [pull request process](https://prProcessLink), please ask the reviewers in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) to review by filling `/cc @reviewer` in the comment.\nAfter your PR has acquired the required number of LGTMs, you can assign this pull request to the committer in the [list](https://tichiWebLink/repos/org/repo/pulls/5/owners) by filling  `/assign @committer` in the comment to help you merge this pull request.\n\nThe full list of commands accepted by this bot can be found [here](https://commandHelpLink?repo=org%2Frepo).\n\n<details>\n\nReviewer can indicate their review by writing `/lgtm` in a comment.\nReviewer can cancel approval by writing `/lgtm cancel` in a comment.\n</details>\n\n<!--Review Notification Identifier-->",
 		},
 		{
 			name:          "lgtm cancel comment by reviewer collab1, no lgtm",
@@ -200,7 +207,8 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 		},
 	}
 	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
-	for _, tc := range testcases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Logf("Running scenario %q", tc.name)
 		cfg := &externalplugins.Configuration{
 			TichiWebURL:     "https://tichiWebLink",
@@ -218,6 +226,42 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 		foc := &fakeOwnersClient{
 			reviewers: []string{"collab1", "collab2"},
 			needsLgtm: 2,
+		}
+
+		checkResult := func(tc *commentCase, fc *fakegithub.FakeClient) {
+			if !tc.shouldComment && len(fc.IssueCommentsAdded) != 0 {
+				t.Errorf("unexpected comment %v", fc.IssueCommentsAdded)
+			}
+
+			if tc.shouldComment && tc.expectComment != fc.IssueCommentsAdded[0] {
+				t.Fatalf("review notifications mismatch: got %q, want %q", fc.IssueCommentsAdded[0], tc.expectComment)
+			}
+
+			if tc.shouldDeleteComment && len(fc.IssueCommentsDeleted) == 0 {
+				t.Errorf("expected to delete comments but didn't.")
+			}
+
+			if !tc.shouldDeleteComment && len(fc.IssueCommentsDeleted) != 0 {
+				t.Errorf("expected not to delete comments but deleted..")
+			}
+
+			if tc.shouldToggle {
+				if tc.currentLabel != "" {
+					if len(fc.IssueLabelsRemoved) != 1 {
+						t.Error("should have removed " + lgtmOne + ".")
+					} else if len(fc.IssueLabelsAdded) != 2 && !tc.isCancel {
+						t.Error("should have added " + lgtmTwo + ".")
+					}
+				} else {
+					if len(fc.IssueLabelsAdded) == 0 {
+						t.Error("should have added " + lgtmOne + ".")
+					} else if len(fc.IssueLabelsRemoved) > 0 {
+						t.Error("should not have removed " + lgtmOne)
+					}
+				}
+			} else if len(fc.IssueLabelsRemoved) > 0 {
+				t.Error("should not have removed " + lgtmOne + ".")
+			}
 		}
 
 		// Test issue comments.
@@ -277,31 +321,7 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 				continue
 			}
 
-			if !tc.shouldComment && len(fc.IssueCommentsAdded) != 0 {
-				t.Errorf("unexpected comment %v", fc.IssueCommentsAdded)
-			}
-
-			if tc.shouldComment && tc.expectComment != fc.IssueCommentsAdded[0] {
-				t.Fatalf("review notifications mismatch: got %q, want %q", fc.IssueCommentsAdded[0], tc.expectComment)
-			}
-
-			if tc.shouldToggle {
-				if tc.currentLabel != "" {
-					if len(fc.IssueLabelsRemoved) != 1 {
-						t.Error("should have removed " + lgtmOne + ".")
-					} else if len(fc.IssueLabelsAdded) != 2 && !tc.isCancel {
-						t.Error("should have added " + lgtmTwo + ".")
-					}
-				} else {
-					if len(fc.IssueLabelsAdded) == 0 {
-						t.Error("should have added " + lgtmOne + ".")
-					} else if len(fc.IssueLabelsRemoved) > 0 {
-						t.Error("should not have removed " + lgtmOne)
-					}
-				}
-			} else if len(fc.IssueLabelsRemoved) > 0 {
-				t.Error("should not have removed " + lgtmOne + ".")
-			}
+			checkResult(&tc, fc)
 		}
 
 		// Test review comments.
@@ -355,31 +375,7 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 				continue
 			}
 
-			if !tc.shouldComment && len(fc.IssueCommentsAdded) != 0 {
-				t.Errorf("unexpected comment %v", fc.IssueCommentsAdded)
-			}
-
-			if tc.shouldComment && tc.expectComment != fc.IssueCommentsAdded[0] {
-				t.Fatalf("review notifications mismatch: got %q, want %q", fc.IssueCommentsAdded[0], tc.expectComment)
-			}
-
-			if tc.shouldToggle {
-				if tc.currentLabel != "" {
-					if len(fc.IssueLabelsRemoved) != 1 {
-						t.Error("should have removed " + lgtmOne + ".")
-					} else if len(fc.IssueLabelsAdded) != 2 && !tc.isCancel {
-						t.Error("should have added " + lgtmTwo + ".")
-					}
-				} else {
-					if len(fc.IssueLabelsAdded) == 0 {
-						t.Error("should have added " + lgtmOne + ".")
-					} else if len(fc.IssueLabelsRemoved) > 0 {
-						t.Error("should not have removed " + lgtmOne)
-					}
-				}
-			} else if len(fc.IssueLabelsRemoved) > 0 {
-				t.Error("should not have removed " + lgtmOne + ".")
-			}
+			checkResult(&tc, fc)
 		}
 	}
 }

@@ -289,16 +289,14 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		return fetchErr("issue comments", err)
 	}
 	notifications := filterComments(issueComments, notificationMatcher(botUserChecker))
-	log.Infof("Got notifications: %v", notifications)
-	// Delete old notifications.
-	defer func() {
+	clenupOldNotifications := func() {
 		for _, notification := range notifications {
 			notif := notification
 			if err := gc.DeleteComment(org, repo, notif.ID); err != nil {
 				log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repo, number, notif.ID)
 			}
 		}
-	}()
+	}
 
 	// Now we update the LGTM labels, having checked all cases where changing.
 	// Only add the label if it doesn't have it, and vice versa.
@@ -311,16 +309,21 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		reviewersAndNeedsLGTM.NeedsLgtm)
 	// Remove the label if necessary, we're done after this.
 	if currentLabel != "" && !wantLGTM {
-		log.Info("Removing LGTM label.")
-		if err := gc.RemoveLabel(org, repo, number, currentLabel); err != nil {
-			return err
-		}
 		newMsg, err := getMessage(nil, config.CommandHelpLink, config.PRProcessLink, tichiURL, org, repo)
 		if err != nil {
 			return err
 		}
+		log.Info("Removing LGTM label.")
+		if err := gc.RemoveLabel(org, repo, number, currentLabel); err != nil {
+			return err
+		}
+		err = gc.CreateComment(org, repo, number, *newMsg)
+		if err != nil {
+			return err
+		}
 
-		return gc.CreateComment(org, repo, number, *newMsg)
+		// Clean up old notifications after we added the new notification.
+		clenupOldNotifications()
 	} else if nextLabel != "" && wantLGTM {
 		latestNotification := getLastComment(notifications)
 		reviewedReviewers := getReviewersFromNotification(latestNotification)
@@ -328,6 +331,18 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		if reviewedReviewers.Has(author) {
 			log.Infof("Ignore %s's multiple reviews.", author)
 			return nil
+		}
+
+		// Add author as reviewers and create new notification.
+		reviewedReviewers.Insert(author)
+		newMsg, err := getMessage(reviewedReviewers.List(), config.CommandHelpLink, config.PRProcessLink, tichiURL, org, repo)
+		if err != nil {
+			return err
+		}
+
+		err = gc.CreateComment(org, repo, number, *newMsg)
+		if err != nil {
+			return err
 		}
 
 		log.Info("Adding LGTM label.")
@@ -341,14 +356,8 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 			return err
 		}
 
-		// Add author as reviewers and create new notification.
-		reviewedReviewers.Insert(author)
-		newMsg, err := getMessage(reviewedReviewers.List(), config.CommandHelpLink, config.PRProcessLink, tichiURL, org, repo)
-		if err != nil {
-			return err
-		}
-
-		return gc.CreateComment(org, repo, number, *newMsg)
+		// Clean up old notifications after we added the new notification.
+		clenupOldNotifications()
 	}
 
 	return nil
