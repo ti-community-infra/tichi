@@ -289,7 +289,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		return fetchErr("issue comments", err)
 	}
 	notifications := filterComments(issueComments, notificationMatcher(botUserChecker))
-	clenupOldNotifications := func() {
+	cleanupOldNotifications := func() {
 		for _, notification := range notifications {
 			notif := notification
 			if err := gc.DeleteComment(org, repo, notif.ID); err != nil {
@@ -323,7 +323,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		}
 
 		// Clean up old notifications after we added the new notification.
-		clenupOldNotifications()
+		cleanupOldNotifications()
 	} else if nextLabel != "" && wantLGTM {
 		latestNotification := getLastComment(notifications)
 		reviewedReviewers := getReviewersFromNotification(latestNotification)
@@ -357,7 +357,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		}
 
 		// Clean up old notifications after we added the new notification.
-		clenupOldNotifications()
+		cleanupOldNotifications()
 	}
 
 	return nil
