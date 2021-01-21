@@ -24,6 +24,8 @@ const (
 	PluginName = "ti-community-lgtm"
 	// ReviewNotificationName defines the name used in the title for the review notifications.
 	ReviewNotificationName = "Review Notification"
+	// ReviewNotificationName defines the identifier for the review notifications.
+	ReviewNotificationIdentifier = "Review Notification Identifier"
 )
 
 var (
@@ -35,7 +37,7 @@ var (
 	// lgtmCancelRe is the regex that matches lgtm cancel comments.
 	lgtmCancelRe = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
 	// notificationRegex is the regex that matches the notifications.
-	notificationRegex = regexp.MustCompile(`(?is)^\[` + ReviewNotificationName + `\] *?([^\n]*)(?:\n\n(.*))?`)
+	notificationRegex = regexp.MustCompile("<!--" + ReviewNotificationIdentifier + "-->$")
 	// reviewersRegex is the regex that matches the reviewers, such as: - hi-rustin.
 	reviewersRegex = regexp.MustCompile(`(?i)- [@]*([a-z0-9](?:-?[a-z0-9]){0,38})`)
 )
@@ -439,8 +441,11 @@ The full list of commands accepted by this bot can be found [here]({{ .commandHe
 
 Reviewer can indicate their review by writing `+"`/lgtm`"+` in a comment.
 Reviewer can cancel approval by writing `+"`/lgtm cancel`"+` in a comment.
-</details>`, "message", map[string]interface{}{"reviewers": reviewedReviewers, "commandHelpLink": commandHelpLink,
-		"prProcessLink": prProcessLink, "ownersLink": ownersLink, "org": org, "repo": repo})
+</details>
+
+<!--{{ .reviewNotificationIdentifier }}-->
+`, "message", map[string]interface{}{"reviewers": reviewedReviewers, "commandHelpLink": commandHelpLink,
+		"prProcessLink": prProcessLink, "ownersLink": ownersLink, "org": org, "repo": repo, "reviewNotificationIdentifier": ReviewNotificationIdentifier})
 	if err != nil {
 		return nil, err
 	}
