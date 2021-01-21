@@ -313,12 +313,12 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		if err != nil {
 			return err
 		}
-		log.Info("Removing LGTM label.")
-		if err := gc.RemoveLabel(org, repo, number, currentLabel); err != nil {
-			return err
-		}
 		err = gc.CreateComment(org, repo, number, *newMsg)
 		if err != nil {
+			return err
+		}
+		log.Info("Removing LGTM label.")
+		if err := gc.RemoveLabel(org, repo, number, currentLabel); err != nil {
 			return err
 		}
 
