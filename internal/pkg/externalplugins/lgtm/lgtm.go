@@ -24,7 +24,7 @@ const (
 	PluginName = "ti-community-lgtm"
 	// ReviewNotificationName defines the name used in the title for the review notifications.
 	ReviewNotificationName = "Review Notification"
-	// ReviewNotificationName defines the identifier for the review notifications.
+	// ReviewNotificationIdentifier defines the identifier for the review notifications.
 	ReviewNotificationIdentifier = "Review Notification Identifier"
 )
 
@@ -444,8 +444,15 @@ Reviewer can cancel approval by writing `+"`/lgtm cancel`"+` in a comment.
 </details>
 
 <!--{{ .reviewNotificationIdentifier }}-->
-`, "message", map[string]interface{}{"reviewers": reviewedReviewers, "commandHelpLink": commandHelpLink,
-		"prProcessLink": prProcessLink, "ownersLink": ownersLink, "org": org, "repo": repo, "reviewNotificationIdentifier": ReviewNotificationIdentifier})
+`, "message", map[string]interface{}{
+		"reviewers":                    reviewedReviewers,
+		"commandHelpLink":              commandHelpLink,
+		"prProcessLink":                prProcessLink,
+		"ownersLink":                   ownersLink,
+		"org":                          org,
+		"repo":                         repo,
+		"reviewNotificationIdentifier": ReviewNotificationIdentifier,
+	})
 	if err != nil {
 		return nil, err
 	}
