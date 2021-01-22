@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: prow
+  name: github-token
+stringData:
+  token: << insert-token-here >>
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: prow-test-pods
+  name: github-token
+stringData:
+  token: << insert-token-here >>
