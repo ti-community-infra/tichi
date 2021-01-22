@@ -6,12 +6,15 @@ prow-namespace:
 test-pods-namespace:
 	kubectl apply -f cluster/test-pods_namespace.yaml
 
+# Please create your own.
 github:
 	kubectl apply -f cluster/github-token.yaml
 
+# Please create your own.
 hmac:
 	kubectl apply -f cluster/hmac-token.yaml
 
+# Please create your own.
 gcs:
 	kubectl apply -f cluster/gcs-secrets.yaml
 
@@ -33,9 +36,8 @@ external-plugins-config: config/external_plugins_config.yaml
 labels: config/labels.yaml
 	kubectl create configmap labels-config -n prow --from-file=labels.yaml=config/labels.yaml --dry-run -o yaml | kubectl replace configmap labels-config -n prow -f -
 
+# Local files, never upload them.
 clean:
 	rm -f cluster/github-token.yaml
 	rm -f cluster/hmac-token.yaml
-	rm -f cluster/oauth-token.yaml
-	rm -f cluster/oauth-cookie.yaml
 	rm -f cluster/gcs-secrets.yaml
