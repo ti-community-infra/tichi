@@ -280,6 +280,10 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		return gc.CreateComment(org, repo, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
+	labels, err := gc.GetIssueLabels(org, repo, number)
+	if err != nil {
+		return fetchErr("issue labels", err)
+	}
 	botUserChecker, err := gc.BotUserChecker()
 	if err != nil {
 		return fetchErr("bot name", err)
@@ -289,7 +293,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		return fetchErr("issue comments", err)
 	}
 	notifications := filterComments(issueComments, notificationMatcher(botUserChecker))
-	clenupOldNotifications := func() {
+	cleanupOldNotifications := func() {
 		for _, notification := range notifications {
 			notif := notification
 			if err := gc.DeleteComment(org, repo, notif.ID); err != nil {
@@ -300,11 +304,6 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 
 	// Now we update the LGTM labels, having checked all cases where changing.
 	// Only add the label if it doesn't have it, and vice versa.
-	labels, err := gc.GetIssueLabels(org, repo, number)
-	if err != nil {
-		return fetchErr("issue labels", err)
-	}
-
 	currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LgtmLabelPrefix, labels,
 		reviewersAndNeedsLGTM.NeedsLgtm)
 	// Remove the label if necessary, we're done after this.
@@ -323,7 +322,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		}
 
 		// Clean up old notifications after we added the new notification.
-		clenupOldNotifications()
+		cleanupOldNotifications()
 	} else if nextLabel != "" && wantLGTM {
 		latestNotification := getLastComment(notifications)
 		reviewedReviewers := getReviewersFromNotification(latestNotification)
@@ -357,7 +356,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		}
 
 		// Clean up old notifications after we added the new notification.
-		clenupOldNotifications()
+		cleanupOldNotifications()
 	}
 
 	return nil
