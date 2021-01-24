@@ -10,7 +10,7 @@ use warp::{self, Filter};
 // Create alias for HMAC-SHA1.
 type HmacSha1 = Hmac<Sha1>;
 
-const SHA1_PREFIX: &str = "sha1";
+const SHA1_PREFIX: &str = "sha1=";
 
 #[derive(Deserialize)]
 pub struct Event {
@@ -34,7 +34,7 @@ async fn send_hook(
         .header("X-GitHub-Delivery", "GUID")
         .header(
             "X-Hub-Signature",
-            sign_payload(payload.as_bytes(), hmac.as_bytes()),
+            sign_payload(payload.as_bytes(), hmac.as_bytes()).await,
         )
         .header("Content-Type", "application/json")
         .send()
@@ -49,7 +49,7 @@ async fn send_hook(
     }
 }
 
-fn sign_payload(payload: &[u8], key: &[u8]) -> String {
+async fn sign_payload(payload: &[u8], key: &[u8]) -> String {
     let mut mac = HmacSha1::new_varkey(key).expect("HMAC can take key of any size");
     mac.update(payload);
 
@@ -94,15 +94,15 @@ async fn main() {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_sign_payload() {
+    #[tokio::test]
+    async fn test_sign_payload() {
         let cases = vec![
             (b"test1", b"my secret and secure key"),
             (b"test2", b"my secret and secure key"),
         ];
 
         for (payload, key) in cases {
-            assert!(sign_payload(payload, key).contains(SHA1_PREFIX))
+            assert!(sign_payload(payload, key).await.contains(SHA1_PREFIX))
         }
     }
 }
