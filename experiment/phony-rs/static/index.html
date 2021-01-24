@@ -75,7 +75,7 @@
             $.ajax({
                 type: "POST",
                 url: "/events/send",
-                data: JSON.stringify($('#eventForm').serializeObject()),
+                data: $('#eventForm').serializeObject(),
                 success: function (result) {
                     console.log(JSON.stringify(result));
                 },
