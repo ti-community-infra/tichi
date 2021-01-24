@@ -37,7 +37,7 @@ struct Label {
 
 #[tokio::main]
 pub async fn main() {
-    env_logger::init();
+    pretty_env_logger::init();
 
     let opts: Opts = Opts::parse();
     let octocrab = octocrab::OctocrabBuilder::new()
