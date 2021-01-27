@@ -508,7 +508,7 @@ func validateLabelBlockerAction(actions []string) error {
 			}
 		}
 
-		if allow == false {
+		if !allow {
 			return errors.New("actions contain illegal value " + action)
 		}
 	}

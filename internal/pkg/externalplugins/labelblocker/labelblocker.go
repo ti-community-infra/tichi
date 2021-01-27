@@ -56,7 +56,8 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 				trustedTeamNames := strings.Join(blockLabel.TrustedTeams, ", ")
 				trustedUserNames := strings.Join(blockLabel.TrustedUsers, ", ")
 
-				configInfoStrings = append(configInfoStrings, blockLabel.Regex+": trusted team ("+trustedTeamNames+") trusted user ("+trustedUserNames+")")
+				configInfoStrings = append(configInfoStrings, blockLabel.Regex+": trusted team ("+
+					trustedTeamNames+") trusted user ("+trustedUserNames+")")
 				configInfoStrings = append(configInfoStrings, "</li>")
 			}
 
@@ -78,7 +79,8 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 func HandlePullRequestEvent(gc githubClient, pullRequestEvent *github.PullRequestEvent,
 	cfg *externalplugins.Configuration, log *logrus.Entry) error {
 	// Only consider the labeled/unlabeled actions.
-	if pullRequestEvent.Action != github.PullRequestActionLabeled && pullRequestEvent.Action != github.PullRequestActionUnlabeled {
+	if pullRequestEvent.Action != github.PullRequestActionLabeled &&
+		pullRequestEvent.Action != github.PullRequestActionUnlabeled {
 		return nil
 	}
 
@@ -142,7 +144,8 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 }
 
 // listAllTrustedUserLogins used to obtain all trusted user login names, contains the members of trusted team.
-func listAllTrustedUserLogins(owner string, trustTeams, trustedUsers []string, gc githubClient, log *logrus.Entry) []string {
+func listAllTrustedUserLogins(owner string, trustTeams, trustedUsers []string,
+	gc githubClient, log *logrus.Entry) []string {
 	trustedUserSets := sets.String{}
 
 	// Treat members of the trusted team as trusted users.
