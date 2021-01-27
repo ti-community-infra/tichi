@@ -18,7 +18,6 @@ const PluginName = "ti-community-label-blocker"
 type githubClient interface {
 	AddLabel(org, repo string, number int, label string) error
 	RemoveLabel(org, repo string, number int, label string) error
-	TeamHasMember(org string, teamID int, memberLogin string) (bool, error)
 	GetTeamBySlug(slug string, org string) (*github.Team, error)
 	ListTeamMembers(org string, id int, role string) ([]github.TeamMember, error)
 }
@@ -57,7 +56,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 				trustedUserNames := strings.Join(blockLabel.TrustedUsers, ", ")
 
 				configInfoStrings = append(configInfoStrings, blockLabel.Regex+": trusted team ("+
-					trustedTeamNames+") trusted user ("+trustedUserNames+")")
+					trustedTeamNames+"), trusted user ("+trustedUserNames+")")
 				configInfoStrings = append(configInfoStrings, "</li>")
 			}
 
@@ -67,7 +66,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 			}
 		}
 		pluginHelp := &pluginhelp.PluginHelp{
-			Description: "The ti-community-label-blocker will trigger an automatic reply when the comment matches a regex.",
+			Description: "The ti-community-label-blocker will prevent untrusted users from adding or removing labels.",
 			Config:      configInfo,
 		}
 
@@ -78,7 +77,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 // HandleIssueEvent handles a GitHub issue event and auto respond it.
 func HandlePullRequestEvent(gc githubClient, pullRequestEvent *github.PullRequestEvent,
 	cfg *externalplugins.Configuration, log *logrus.Entry) error {
-	// Only consider the labeled/unlabeled actions.
+	// Only consider the labeled / unlabeled actions.
 	if pullRequestEvent.Action != github.PullRequestActionLabeled &&
 		pullRequestEvent.Action != github.PullRequestActionUnlabeled {
 		return nil
