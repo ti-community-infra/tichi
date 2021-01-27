@@ -2,10 +2,12 @@ package labelblocker
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/github/fakegithub"
 )
@@ -164,6 +166,71 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 
 			if !reflect.DeepEqual(fc.IssueLabelsRemoved, tc.expectLabelsRemoved) {
 				t.Errorf("labels removed for pull request mismatch: got %v, want %v", fc.IssueLabelsRemoved, tc.expectLabelsRemoved)
+			}
+		})
+	}
+}
+
+func TestHelpProvider(t *testing.T) {
+	enabledRepos := []config.OrgRepo{
+		{Org: "org1", Repo: "repo"},
+		{Org: "org2", Repo: "repo"},
+	}
+	testcases := []struct {
+		name               string
+		config             *externalplugins.Configuration
+		enabledRepos       []config.OrgRepo
+		err                bool
+		configInfoIncludes []string
+		configInfoExcludes []string
+	}{
+		{
+			name:               "Empty config",
+			config:             &externalplugins.Configuration{},
+			enabledRepos:       enabledRepos,
+			configInfoExcludes: []string{":"},
+		},
+		{
+			name: "All configs enabled",
+			config: &externalplugins.Configuration{
+				TiCommunityLabelBlocker: []externalplugins.TiCommunityLabelBlocker{
+					{
+						Repos: []string{"org2/repo"},
+						BlockLabels: []externalplugins.BlockLabel{
+							{
+								Regex:        `(?mi)^status/can-merge$`,
+								Actions:      []string{"labeled", "unlabeled"},
+								TrustedTeams: []string{"Admins"},
+								TrustedUsers: []string{"ti-chi-bot", "mini256"},
+							},
+						},
+					},
+				},
+			},
+			enabledRepos:       enabledRepos,
+			configInfoIncludes: []string{":"},
+		},
+	}
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			epa := &externalplugins.ConfigAgent{}
+			epa.Set(tc.config)
+
+			helpProvider := HelpProvider(epa)
+			pluginHelp, err := helpProvider(tc.enabledRepos)
+			if err != nil && !tc.err {
+				t.Fatalf("helpProvider error: %v", err)
+			}
+			for _, msg := range tc.configInfoExcludes {
+				if strings.Contains(pluginHelp.Config["org2/repo"], msg) {
+					t.Fatalf("helpProvider.Config error mismatch: got %v, but didn't want it", msg)
+				}
+			}
+			for _, msg := range tc.configInfoIncludes {
+				if !strings.Contains(pluginHelp.Config["org2/repo"], msg) {
+					t.Fatalf("helpProvider.Config error mismatch: didn't get %v, but wanted it", msg)
+				}
 			}
 		})
 	}

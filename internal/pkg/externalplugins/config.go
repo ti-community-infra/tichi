@@ -469,7 +469,7 @@ func validateBlunderbuss(blunderbusses []TiCommunityBlunderbuss) error {
 	return nil
 }
 
-// validateLabelBlocker will return an error if the regex cannot compile.
+// validateLabelBlocker will return an error if the regex cannot compile or actions is illegal.
 func validateLabelBlocker(labelBlockers []TiCommunityLabelBlocker) error {
 	for _, labelBlocker := range labelBlockers {
 		for _, blockLabel := range labelBlocker.BlockLabels {

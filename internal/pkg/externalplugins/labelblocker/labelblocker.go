@@ -24,10 +24,9 @@ type githubClient interface {
 
 // labelCtx contains information about each label event.
 type labelCtx struct {
-	repo          github.Repo
-	author, label string
-	action        string
-	number        int
+	repo                  github.Repo
+	sender, label, action string
+	number                int
 }
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
@@ -74,7 +73,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 	}
 }
 
-// HandleIssueEvent handles a GitHub issue event and auto respond it.
+// HandlePullRequestEvent handles a GitHub pull request event.
 func HandlePullRequestEvent(gc githubClient, pullRequestEvent *github.PullRequestEvent,
 	cfg *externalplugins.Configuration, log *logrus.Entry) error {
 	// Only consider the labeled / unlabeled actions.
@@ -85,7 +84,7 @@ func HandlePullRequestEvent(gc githubClient, pullRequestEvent *github.PullReques
 
 	ctx := labelCtx{
 		repo:   pullRequestEvent.Repo,
-		author: pullRequestEvent.Sender.Login,
+		sender: pullRequestEvent.Sender.Login,
 		label:  pullRequestEvent.Label.Name,
 		action: string(pullRequestEvent.Action),
 		number: pullRequestEvent.PullRequest.Number,
@@ -110,10 +109,10 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 
 		// If the operator is a trusted user, don’t trigger interception.
 		allTrustedUserLogins := listAllTrustedUserLogins(owner, blockLabel.TrustedTeams, blockLabel.TrustedUsers, gc, log)
-
 		trusted := false
+
 		for _, login := range allTrustedUserLogins {
-			if login == ctx.author {
+			if login == ctx.sender {
 				trusted = true
 				break
 			}
@@ -175,7 +174,7 @@ func listAllTrustedUserLogins(owner string, trustTeams, trustedUsers []string,
 	return trustedUserSets.List()
 }
 
-// isMatchAction used to determine whether it matches action.
+// isMatchAction used to determine whether given action matches block action.
 func isMatchAction(action string, blockActions []string) bool {
 	for _, blockAction := range blockActions {
 		if blockAction == action {
