@@ -141,6 +141,7 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 	// Get external plugins config.
 	config := s.configAgent.Config()
 	switch eventType {
+	// TODO: support label event of issue.
 	case "pull_request":
 		var pullRequestEvent github.PullRequestEvent
 		if err := json.Unmarshal(payload, &pullRequestEvent); err != nil {

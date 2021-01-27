@@ -8,6 +8,7 @@
   - [ti-community-tars](plugins/tars.md)
   - [ti-community-blunderbuss](plugins/blunderbuss.md)
   - [ti-community-label](plugins/label.md)
+  - [ti-community-label-blocker](plugins/label-blocker.md)
   - [require-matching-label](plugins/require-matching-label.md)
   - [hold](plugins/hold.md)
   - [wip](plugins/wip.md)

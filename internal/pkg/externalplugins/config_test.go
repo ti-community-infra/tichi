@@ -60,7 +60,7 @@ func TestValidateConfig(t *testing.T) {
 				BlockLabels: []BlockLabel{
 					{
 						Regex:        `(?mi)^status/can-merge$`,
-						Actions: 	  []string{"labeled", "unlabeled"},
+						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
@@ -106,7 +106,7 @@ func TestValidateConfig(t *testing.T) {
 				BlockLabels: []BlockLabel{
 					{
 						Regex:        `(?mi)^status/can-merge$`,
-						Actions: 	  []string{"labeled", "unlabeled"},
+						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
@@ -152,7 +152,7 @@ func TestValidateConfig(t *testing.T) {
 				BlockLabels: []BlockLabel{
 					{
 						Regex:        `(?mi)^status/can-merge$`,
-						Actions: 	  []string{"labeled", "unlabeled"},
+						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
@@ -198,7 +198,7 @@ func TestValidateConfig(t *testing.T) {
 				BlockLabels: []BlockLabel{
 					{
 						Regex:        `(?mi)^status/can-merge$`,
-						Actions: 	  []string{"labeled", "unlabeled"},
+						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
@@ -244,7 +244,7 @@ func TestValidateConfig(t *testing.T) {
 				BlockLabels: []BlockLabel{
 					{
 						Regex:        `(?mi)^status/can-merge$`,
-						Actions: 	  []string{"labeled", "unlabeled"},
+						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
@@ -290,7 +290,7 @@ func TestValidateConfig(t *testing.T) {
 				BlockLabels: []BlockLabel{
 					{
 						Regex:        `(?mi)^status/can-merge$`,
-						Actions: 	  []string{"labeled", "unlabeled"},
+						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
@@ -336,7 +336,7 @@ func TestValidateConfig(t *testing.T) {
 				BlockLabels: []BlockLabel{
 					{
 						Regex:        `(?mi)^status/can-merge$`,
-						Actions: 	  []string{"labeled", "unlabeled"},
+						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
@@ -382,7 +382,7 @@ func TestValidateConfig(t *testing.T) {
 				BlockLabels: []BlockLabel{
 					{
 						Regex:        `(?mi)^status/can-merge$`,
-						Actions: 	  []string{"labeled", "unlabeled"},
+						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
@@ -429,7 +429,7 @@ func TestValidateConfig(t *testing.T) {
 				BlockLabels: []BlockLabel{
 					{
 						Regex:        `(?mi)^status/can-merge$`,
-						Actions: 	  []string{"labeled", "unlabeled"},
+						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
@@ -475,7 +475,7 @@ func TestValidateConfig(t *testing.T) {
 				BlockLabels: []BlockLabel{
 					{
 						Regex:        `(?mi)^status/can-merge$`,
-						Actions: 	  []string{"labeled", "unlabeled"},
+						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
@@ -521,7 +521,7 @@ func TestValidateConfig(t *testing.T) {
 				BlockLabels: []BlockLabel{
 					{
 						Regex:        `(?mi)^status/can-merge$`,
-						Actions: 	  []string{"labeled", "unlabeled"},
+						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
@@ -567,7 +567,7 @@ func TestValidateConfig(t *testing.T) {
 				BlockLabels: []BlockLabel{
 					{
 						Regex:        `(?mi)^status/can-merge$`,
-						Actions: 	  []string{"labeled", "unlabeled"},
+						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
@@ -612,7 +612,7 @@ func TestValidateConfig(t *testing.T) {
 				Repos: []string{"ti-community-infra/test-dev"},
 				BlockLabels: []BlockLabel{
 					{
-						Regex: 	 "?[)",
+						Regex:   "?[)",
 						Actions: []string{"labeled", "unlabeled"},
 					},
 				},

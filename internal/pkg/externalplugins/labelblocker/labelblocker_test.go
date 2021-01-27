@@ -28,7 +28,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			blockLabels: []externalplugins.BlockLabel{
 				{
 					Regex:        `(?mi)^status/can-merge$`,
-					Actions: 	  []string{"labeled", "unlabeled"},
+					Actions:      []string{"labeled", "unlabeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
 				},
@@ -60,7 +60,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			blockLabels: []externalplugins.BlockLabel{
 				{
 					Regex:        `(?mi)^status/can-merge$`,
-					Actions: 	  []string{"labeled", "unlabeled"},
+					Actions:      []string{"labeled", "unlabeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
 				},
@@ -76,7 +76,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			blockLabels: []externalplugins.BlockLabel{
 				{
 					Regex:        `(?mi)^status/can-merge$`,
-					Actions: 	  []string{"labeled", "unlabeled"},
+					Actions:      []string{"labeled", "unlabeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
 				},

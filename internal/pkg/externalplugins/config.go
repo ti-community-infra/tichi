@@ -488,7 +488,6 @@ func validateLabelBlocker(labelBlockers []TiCommunityLabelBlocker) error {
 	return nil
 }
 
-
 // validateLabelBlockerAction used to check whether all actions filled in are allowed values.
 func validateLabelBlockerAction(actions []string) error {
 	allowActions := []string{
