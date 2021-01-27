@@ -28,6 +28,7 @@ type Configuration struct {
 	TiCommunityAutoresponder []TiCommunityAutoresponder `json:"ti-community-autoresponder,omitempty"`
 	TiCommunityBlunderbuss   []TiCommunityBlunderbuss   `json:"ti-community-blunderbuss,omitempty"`
 	TiCommunityTars          []TiCommunityTars          `json:"ti-community-tars,omitempty"`
+	TiCommunityLabelBlocker  []TiCommunityLabelBlocker  `json:"ti-community-label-blocker,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -155,6 +156,26 @@ type TiCommunityTars struct {
 	Message string `json:"message,omitempty"`
 	// OnlyWhenLabel specifies that the automatic update is triggered only when the PR has this label.
 	OnlyWhenLabel string `json:"only_when_label,omitempty"`
+}
+
+// TiCommunityLabelBlocker is the config for the label blocker plugin.
+type TiCommunityLabelBlocker struct {
+	// Repos is either of the form org/repos or just org.
+	Repos []string `json:"repos,omitempty"`
+	// BlockLabels is a set of label block rules.
+	BlockLabels []BlockLabel `json:"labels,omitempty"`
+}
+
+// BlockLabel is the config for label blocking.
+type BlockLabel struct {
+	// Regex specifies the regular expression for match the labels that need to be intercepted.
+	Regex string `json:"regex,omitempty"`
+	// Actions specifies the label actions that will trigger interception, you can fill in `labeled` or `unlabelled`.
+	Actions []string `json:"actions,omitempty"`
+	// TrustedTeams specifies the teams allowed to add/remove label.
+	TrustedTeams []string `json:"trusted_teams,omitempty"`
+	// TrustedUsers specifies the github login of the account allowed to add/remove label.
+	TrustedUsers []string `json:"trusted_users,omitempty"`
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists
@@ -304,6 +325,27 @@ func (c *Configuration) TarsFor(org, repo string) *TiCommunityTars {
 	return &TiCommunityTars{}
 }
 
+// LabelBlockerFor finds the TiCommunityLabelBlocker for a repo, if one exists.
+// TiCommunityLabelBlocker configuration can be listed for a repository
+// or an organization.
+func (c *Configuration) LabelBlockerFor(org, repo string) *TiCommunityLabelBlocker {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, labelBlocker := range c.TiCommunityLabelBlocker {
+		if !sets.NewString(labelBlocker.Repos...).Has(fullName) {
+			continue
+		}
+		return &labelBlocker
+	}
+	// If you don't find anything, loop again looking for an org config
+	for _, labelBlocker := range c.TiCommunityLabelBlocker {
+		if !sets.NewString(labelBlocker.Repos...).Has(org) {
+			continue
+		}
+		return &labelBlocker
+	}
+	return &TiCommunityLabelBlocker{}
+}
+
 // setDefaults will set the default value for the configuration of all plugins.
 func (c *Configuration) setDefaults() {
 	for i := range c.TiCommunityBlunderbuss {
@@ -349,6 +391,10 @@ func (c *Configuration) Validate() error {
 	}
 
 	if err := validateBlunderbuss(c.TiCommunityBlunderbuss); err != nil {
+		return err
+	}
+
+	if err := validateLabelBlocker(c.TiCommunityLabelBlocker); err != nil {
 		return err
 	}
 
@@ -417,6 +463,54 @@ func validateBlunderbuss(blunderbusses []TiCommunityBlunderbuss) error {
 		}
 		if blunderbuss.GracePeriodDuration < 0 {
 			return errors.New("grace period duration must not less than 0")
+		}
+	}
+
+	return nil
+}
+
+// validateLabelBlocker will return an error if the regex cannot compile.
+func validateLabelBlocker(labelBlockers []TiCommunityLabelBlocker) error {
+	for _, labelBlocker := range labelBlockers {
+		for _, blockLabel := range labelBlocker.BlockLabels {
+			_, err := regexp.Compile(blockLabel.Regex)
+			if err != nil {
+				return err
+			}
+
+			err = validateLabelBlockerAction(blockLabel.Actions)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+
+// validateLabelBlockerAction used to check whether all actions filled in are allowed values.
+func validateLabelBlockerAction(actions []string) error {
+	allowActions := []string{
+		"labeled", "unlabeled",
+	}
+
+	if len(actions) == 0 {
+		return errors.New("actions must not be empty")
+	}
+
+	for _, action := range actions {
+		allow := false
+
+		for _, allowAction := range allowActions {
+			if action == allowAction {
+				allow = true
+				break
+			}
+		}
+
+		if allow == false {
+			return errors.New("actions contain illegal value " + action)
 		}
 	}
 
