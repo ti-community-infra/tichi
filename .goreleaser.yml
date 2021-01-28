@@ -174,7 +174,8 @@ dockers:
       - "rustinliu/tichi-blunderbuss-plugin:{{ .Tag }}"
       - "rustinliu/tichi-blunderbuss-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/blunderbuss/Dockerfile
-  - binaries:
+  -
+    binaries:
       - ticommunitylabelblocker
     builds:
       - ti-community-label-blocker
