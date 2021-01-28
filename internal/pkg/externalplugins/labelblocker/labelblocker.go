@@ -15,6 +15,11 @@ import (
 
 const PluginName = "ti-community-label-blocker"
 
+const (
+	LabeledAction   = "labeled"
+	UnlabeledAction = "unlabeled"
+)
+
 type githubClient interface {
 	AddLabel(org, repo string, number int, label string) error
 	RemoveLabel(org, repo string, number int, label string) error
@@ -90,7 +95,7 @@ func HandlePullRequestEvent(gc githubClient, pullRequestEvent *github.PullReques
 		number: pullRequestEvent.PullRequest.Number,
 	}
 
-	// Use common handler to do the rest.
+	// Use a common handler to do the rest.
 	return handle(cfg, ctx, gc, log)
 }
 
@@ -104,36 +109,33 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 
 		// If this rule does not match, try to match the next rule.
 		if !regex.MatchString(ctx.label) || !isMatchAction(ctx.action, blockLabel.Actions) {
+			log.Infof("%s:%s no match regex or action", regex, ctx.action)
 			continue
 		}
 
-		// If the operator is a trusted user, don’t trigger interception.
+		// If the operator is a trusted user, don’t trigger blocking.
 		allTrustedUserLogins := listAllTrustedUserLogins(owner, blockLabel.TrustedTeams, blockLabel.TrustedUsers, gc, log)
-		trusted := false
-
-		for _, login := range allTrustedUserLogins {
-			if login == ctx.sender {
-				trusted = true
-				break
-			}
-		}
-
-		if trusted {
+		if allTrustedUserLogins.Has(ctx.sender) {
+			log.Infof(`operator %s is trusted by the %s rule`, ctx.sender, blockLabel.Regex)
 			continue
 		}
 
 		// Undo the illegal operation.
-		if ctx.action == "labeled" {
+		if ctx.action == LabeledAction {
 			err := gc.RemoveLabel(owner, repo, ctx.number, ctx.label)
 
-			if err != nil {
-				return fmt.Errorf("failed to remove illegal label added manually, %s", err)
+			if err == nil {
+				log.Infof("remove %s label added illegally", ctx.label)
+			} else {
+				return fmt.Errorf("failed to remove illegal label added illegally, %s", err)
 			}
-		} else if ctx.action == "unlabeled" {
+		} else if ctx.action == UnlabeledAction {
 			err := gc.AddLabel(owner, repo, ctx.number, ctx.label)
 
-			if err != nil {
-				return fmt.Errorf("failed to restore the manually removed label, %s", err)
+			if err == nil {
+				log.Infof("restore %s label removed illegally", ctx.label)
+			} else {
+				return fmt.Errorf("failed to restore the illegally removed label, %s", err)
 			}
 		}
 	}
@@ -143,35 +145,38 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 
 // listAllTrustedUserLogins used to obtain all trusted user login names, contains the members of trusted team.
 func listAllTrustedUserLogins(owner string, trustTeams, trustedUsers []string,
-	gc githubClient, log *logrus.Entry) []string {
-	trustedUserSets := sets.String{}
+	gc githubClient, log *logrus.Entry) sets.String {
+	trustedUserLogins := sets.String{}
+
+	trustedUserLogins.Insert(trustedUsers...)
+	log.Infof("trusted user: %s", trustedUsers)
 
 	// Treat members of the trusted team as trusted users.
 	for _, slug := range trustTeams {
 		team, err := gc.GetTeamBySlug(slug, owner)
 
-		if err != nil {
+		if err == nil {
+			log.Infof("get trusted team by slug %s successfully", slug)
+		} else {
 			log.Errorf("failed to get trusted team by slug %s", slug)
 			continue
 		}
 
-		trustTeamMembers, err := gc.ListTeamMembers(owner, team.ID, "all")
+		trustTeamMembers, err := gc.ListTeamMembers(owner, team.ID, github.RoleAll)
 
-		if err != nil {
-			log.Errorf("failed to get trusted team members %s", slug)
+		if err == nil {
+			log.Infof("get the members of trusted team named %s successfully", slug)
+		} else {
+			log.Errorf("failed to get the members of trusted team named %s", slug)
 			continue
 		}
 
 		for _, member := range trustTeamMembers {
-			trustedUserSets.Insert(member.Login)
+			trustedUserLogins.Insert(member.Login)
 		}
 	}
 
-	for _, trustUserLogin := range trustedUsers {
-		trustedUserSets.Insert(trustUserLogin)
-	}
-
-	return trustedUserSets.List()
+	return trustedUserLogins
 }
 
 // isMatchAction used to determine whether given action matches block action.

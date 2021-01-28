@@ -661,7 +661,7 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
-			expected: fmt.Errorf("actions must not be empty"),
+			expected: fmt.Errorf("there must be at least one action"),
 		},
 		{
 			name:            "invalid action value",

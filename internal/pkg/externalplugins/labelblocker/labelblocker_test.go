@@ -29,7 +29,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			action: github.PullRequestActionLabeled,
 			blockLabels: []externalplugins.BlockLabel{
 				{
-					Regex:        `(?mi)^status/can-merge$`,
+					Regex:        `^status/can-merge$`,
 					Actions:      []string{"labeled", "unlabeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
@@ -45,7 +45,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			action: github.PullRequestActionLabeled,
 			blockLabels: []externalplugins.BlockLabel{
 				{
-					Regex:        `(?mi)^status/can-merge$`,
+					Regex:        `^status/can-merge$`,
 					Actions:      []string{"unlabeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
@@ -61,7 +61,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			action: github.PullRequestActionLabeled,
 			blockLabels: []externalplugins.BlockLabel{
 				{
-					Regex:        `(?mi)^status/can-merge$`,
+					Regex:        `^status/can-merge$`,
 					Actions:      []string{"labeled", "unlabeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
@@ -77,7 +77,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			action: github.PullRequestActionLabeled,
 			blockLabels: []externalplugins.BlockLabel{
 				{
-					Regex:        `(?mi)^status/can-merge$`,
+					Regex:        `^status/can-merge$`,
 					Actions:      []string{"labeled", "unlabeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
@@ -93,7 +93,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			action: github.PullRequestActionLabeled,
 			blockLabels: []externalplugins.BlockLabel{
 				{
-					Regex:        `(?mi)^status/can-merge$`,
+					Regex:        `^status/can-merge$`,
 					Actions:      []string{"labeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
@@ -109,7 +109,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			action: github.PullRequestActionUnlabeled,
 			blockLabels: []externalplugins.BlockLabel{
 				{
-					Regex:        `(?mi)^status/can-merge$`,
+					Regex:        `^status/can-merge$`,
 					Actions:      []string{"unlabeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
@@ -198,7 +198,7 @@ func TestHelpProvider(t *testing.T) {
 						Repos: []string{"org2/repo"},
 						BlockLabels: []externalplugins.BlockLabel{
 							{
-								Regex:        `(?mi)^status/can-merge$`,
+								Regex:        `^status/can-merge$`,
 								Actions:      []string{"labeled", "unlabeled"},
 								TrustedTeams: []string{"Admins"},
 								TrustedUsers: []string{"ti-chi-bot", "mini256"},

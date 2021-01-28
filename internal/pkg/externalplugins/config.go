@@ -15,6 +15,11 @@ const (
 	defaultGracePeriodDuration = 5
 )
 
+var AllowActions = []string{
+	"labeled",
+	"unlabeled",
+}
+
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
 	TichiWebURL     string `json:"tichi-web-url,omitempty"`
@@ -163,7 +168,7 @@ type TiCommunityLabelBlocker struct {
 	// Repos is either of the form org/repos or just org.
 	Repos []string `json:"repos,omitempty"`
 	// BlockLabels is a set of label block rules.
-	BlockLabels []BlockLabel `json:"labels,omitempty"`
+	BlockLabels []BlockLabel `json:"block_labels,omitempty"`
 }
 
 // BlockLabel is the config for label blocking.
@@ -490,26 +495,17 @@ func validateLabelBlocker(labelBlockers []TiCommunityLabelBlocker) error {
 
 // validateLabelBlockerAction used to check whether all actions filled in are allowed values.
 func validateLabelBlockerAction(actions []string) error {
-	allowActions := []string{
-		"labeled", "unlabeled",
+	if len(actions) == 0 {
+		return errors.New("there must be at least one action")
 	}
 
-	if len(actions) == 0 {
-		return errors.New("actions must not be empty")
-	}
+	allowActionSet := sets.NewString(AllowActions...)
 
 	for _, action := range actions {
-		allow := false
-
-		for _, allowAction := range allowActions {
-			if action == allowAction {
-				allow = true
-				break
-			}
-		}
-
-		if !allow {
-			return errors.New("actions contain illegal value " + action)
+		if allowActionSet.Has(action) {
+			continue
+		} else {
+			return fmt.Errorf("actions contain illegal value %s", action)
 		}
 	}
 
