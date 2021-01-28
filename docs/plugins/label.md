@@ -48,7 +48,7 @@ ti-community-label:
 ## 参考文档
 
 - [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftichi#type)
-- [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/merge)
+- [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/label)
 
 ## Q&A
 
