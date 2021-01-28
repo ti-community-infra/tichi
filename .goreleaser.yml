@@ -70,6 +70,15 @@ builds:
     main: ./cmd/ticommunityblunderbuss/main.go
     env:
       - CGO_ENABLED=0
+  - id: "ti-community-label-blocker"
+    binary: ticommunitylabelblocker
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/ticommunitylabelblocker/main.go
+    env:
+      - CGO_ENABLED=0
   - id: "rerere"
     binary: rerere
     goos:
@@ -165,6 +174,15 @@ dockers:
       - "rustinliu/tichi-blunderbuss-plugin:{{ .Tag }}"
       - "rustinliu/tichi-blunderbuss-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/blunderbuss/Dockerfile
+  - binaries:
+      - ticommunity
+    builds:
+      - ti-community-label-blocker
+    image_templates:
+      - "rustinliu/tichi-label-blocker-plugin:latest"
+      - "rustinliu/tichi-label-blocker-plugin:{{ .Tag }}"
+      - "rustinliu/tichi-label-blocker-plugin:{{ .Major }}"
+    dockerfile: ./deployments/plugins/labelblocker/Dockerfile
   -
     binaries:
       - rerere
