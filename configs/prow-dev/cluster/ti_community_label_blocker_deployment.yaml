@@ -2,24 +2,24 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: prow
-  name: ti-community-autoresponder
+  name: ti-community-label-blocker
   labels:
-    app: ti-community-autoresponder
+    app: ti-community-label-blocker
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ti-community-autoresponder
+      app: ti-community-label-blocker
   template:
     metadata:
       labels:
-        app: ti-community-autoresponder
+        app: ti-community-label-blocker
     spec:
       serviceAccountName: "hook"
       terminationGracePeriodSeconds: 180
       containers:
-        - name: ti-community-autoresponder
-          image: rustinliu/tichi-autoresponder-plugin:v1.1.0
+        - name: ti-community-label-blocker
+          image: rustinliu/tichi-label-blocker-plugin:v1.1.0
           imagePullPolicy: Always
           args:
             - --dry-run=false
