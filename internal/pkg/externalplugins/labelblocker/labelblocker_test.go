@@ -14,11 +14,12 @@ import (
 
 func TestLabelBlockerPullRequest(t *testing.T) {
 	var testcases = []struct {
-		name                string
-		label               string
-		sender              string
-		action              github.PullRequestEventAction
-		blockLabels         []externalplugins.BlockLabel
+		name        string
+		label       string
+		sender      string
+		action      github.PullRequestEventAction
+		blockLabels []externalplugins.BlockLabel
+
 		expectLabelsRemoved []string
 		expectLabelsAdded   []string
 	}{
@@ -118,6 +119,22 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{"org/repo#5:status/can-merge"},
 		},
+		{
+			name:   "illegal action",
+			label:  "status/can-merge",
+			sender: "no-trust-user",
+			action: "nop",
+			blockLabels: []externalplugins.BlockLabel{
+				{
+					Regex:        `^status/can-merge$`,
+					Actions:      []string{"unlabeled"},
+					TrustedTeams: []string{"Admins"},
+					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+				},
+			},
+			expectLabelsRemoved: []string{},
+			expectLabelsAdded:   []string{},
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -177,10 +194,11 @@ func TestHelpProvider(t *testing.T) {
 		{Org: "org2", Repo: "repo"},
 	}
 	testcases := []struct {
-		name               string
-		config             *externalplugins.Configuration
-		enabledRepos       []config.OrgRepo
-		err                bool
+		name         string
+		config       *externalplugins.Configuration
+		enabledRepos []config.OrgRepo
+		err          bool
+
 		configInfoIncludes []string
 		configInfoExcludes []string
 	}{
@@ -188,7 +206,7 @@ func TestHelpProvider(t *testing.T) {
 			name:               "Empty config",
 			config:             &externalplugins.Configuration{},
 			enabledRepos:       enabledRepos,
-			configInfoExcludes: []string{":"},
+			configInfoExcludes: []string{"trusted team", "trusted user"},
 		},
 		{
 			name: "All configs enabled",
@@ -208,7 +226,7 @@ func TestHelpProvider(t *testing.T) {
 				},
 			},
 			enabledRepos:       enabledRepos,
-			configInfoIncludes: []string{":"},
+			configInfoIncludes: []string{"trusted team", "trusted user"},
 		},
 	}
 	for _, testcase := range testcases {

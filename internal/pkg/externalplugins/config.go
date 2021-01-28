@@ -15,10 +15,11 @@ const (
 	defaultGracePeriodDuration = 5
 )
 
-var AllowActions = []string{
-	"labeled",
-	"unlabeled",
-}
+// Allowed value of the action configuration of the label blocker plugin.
+const (
+	LabeledAction   = "labeled"
+	UnlabeledAction = "unlabeled"
+)
 
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
@@ -499,7 +500,7 @@ func validateLabelBlockerAction(actions []string) error {
 		return errors.New("there must be at least one action")
 	}
 
-	allowActionSet := sets.NewString(AllowActions...)
+	allowActionSet := sets.NewString(LabeledAction, UnlabeledAction)
 
 	for _, action := range actions {
 		if allowActionSet.Has(action) {

@@ -55,12 +55,18 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 
 			for _, blockLabel := range opts.BlockLabels {
 				configInfoStrings = append(configInfoStrings, "<li>")
+				configInfoStrings = append(configInfoStrings, blockLabel.Regex+": ")
 
-				trustedTeamNames := strings.Join(blockLabel.TrustedTeams, ", ")
-				trustedUserNames := strings.Join(blockLabel.TrustedUsers, ", ")
+				if len(blockLabel.TrustedTeams) != 0 {
+					trustedTeamNames := strings.Join(blockLabel.TrustedTeams, ", ")
+					configInfoStrings = append(configInfoStrings, "trusted team ("+trustedTeamNames+"), ")
+				}
 
-				configInfoStrings = append(configInfoStrings, blockLabel.Regex+": trusted team ("+
-					trustedTeamNames+"), trusted user ("+trustedUserNames+")")
+				if len(blockLabel.TrustedUsers) != 0 {
+					trustedUserNames := strings.Join(blockLabel.TrustedUsers, ", ")
+					configInfoStrings = append(configInfoStrings, "trusted user ("+trustedUserNames+")")
+				}
+
 				configInfoStrings = append(configInfoStrings, "</li>")
 			}
 
@@ -109,14 +115,14 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 
 		// If this rule does not match, try to match the next rule.
 		if !regex.MatchString(ctx.label) || !isMatchAction(ctx.action, blockLabel.Actions) {
-			log.Infof("%s:%s no match regex or action", regex, ctx.action)
+			log.Infof("%s:%s does not match regex or action", regex, ctx.action)
 			continue
 		}
 
 		// If the operator is a trusted user, don’t trigger blocking.
 		allTrustedUserLogins := listAllTrustedUserLogins(owner, blockLabel.TrustedTeams, blockLabel.TrustedUsers, gc, log)
 		if allTrustedUserLogins.Has(ctx.sender) {
-			log.Infof(`operator %s is trusted by the %s rule`, ctx.sender, blockLabel.Regex)
+			log.Infof("Operator %s is trusted by the %s rule", ctx.sender, blockLabel.Regex)
 			continue
 		}
 
@@ -125,7 +131,7 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 			err := gc.RemoveLabel(owner, repo, ctx.number, ctx.label)
 
 			if err == nil {
-				log.Infof("remove %s label added illegally", ctx.label)
+				log.Infof("Remove %s label added illegally", ctx.label)
 			} else {
 				return fmt.Errorf("failed to remove illegal label added illegally, %s", err)
 			}
@@ -133,7 +139,7 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 			err := gc.AddLabel(owner, repo, ctx.number, ctx.label)
 
 			if err == nil {
-				log.Infof("restore %s label removed illegally", ctx.label)
+				log.Infof("Restore %s label removed illegally", ctx.label)
 			} else {
 				return fmt.Errorf("failed to restore the illegally removed label, %s", err)
 			}
@@ -156,18 +162,18 @@ func listAllTrustedUserLogins(owner string, trustTeams, trustedUsers []string,
 		team, err := gc.GetTeamBySlug(slug, owner)
 
 		if err == nil {
-			log.Infof("get trusted team by slug %s successfully", slug)
+			log.Infof("Get trusted team by slug %s successfully", slug)
 		} else {
-			log.Errorf("failed to get trusted team by slug %s", slug)
+			log.Errorf("Failed to get trusted team by slug %s", slug)
 			continue
 		}
 
 		trustTeamMembers, err := gc.ListTeamMembers(owner, team.ID, github.RoleAll)
 
 		if err == nil {
-			log.Infof("get the members of trusted team named %s successfully", slug)
+			log.Infof("Get the members of trusted team named %s successfully", slug)
 		} else {
-			log.Errorf("failed to get the members of trusted team named %s", slug)
+			log.Errorf("Failed to get the members of trusted team named %s", slug)
 			continue
 		}
 
