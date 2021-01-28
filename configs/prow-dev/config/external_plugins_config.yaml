@@ -20,6 +20,8 @@ ti-community-owners:
     default_require_lgtm: 1
     sig_endpoint: https://bots.tidb.io/ti-community-bot
     default_sig_name: community-infra
+    trusted_teams:
+      - bots-test
     branches:
       try:
         default_require_lgtm: 2
@@ -54,4 +56,9 @@ ti-community-blunderbuss:
       - rustin-bot
       # Inactive reviewers
       - sykp241095
-      - AndreMouche
+
+ti-community-tars:
+  - repos:
+      - ti-community-infra/test-dev
+    only_when_label: "status/can-merge"
+    message: "Your PR has out-of-dated, I have automatically updated it for you."

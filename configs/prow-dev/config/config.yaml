@@ -14,8 +14,7 @@ branch-protection:
               required_status_checks:
                 contexts:
                   - "Semantic Pull Request"
-                  - "pull-test-dev-rerere"
-                strict: false
+                strict: true
 
 in_repo_config:
   enabled:
