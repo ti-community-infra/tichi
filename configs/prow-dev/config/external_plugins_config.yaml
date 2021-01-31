@@ -62,3 +62,23 @@ ti-community-tars:
       - ti-community-infra/test-dev
     only_when_label: "status/can-merge"
     message: "Your PR has out-of-dated, I have automatically updated it for you."
+
+ti-community-label-blocker:
+  - repos:
+      - ti-community-infra/test-dev
+    block_labels:
+      - regex: "^status/LGT[\d]+$"
+        actions:
+          - labeled
+        trusted_teams:
+          - bots-test
+        trusted_users:
+          - ti-chi-bot
+      - regex: "^status/can-merge$"
+        actions:
+          - labeled
+          - unlabeled
+        trusted_teams:
+          - bots-test
+        trusted_users:
+          - ti-chi-bot
