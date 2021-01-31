@@ -26,7 +26,7 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: rustinliu/rerere-component:v1.0.1
+        - image: rustinliu/rerere-component:v1.1.0
           command:
             - rerere
           args:

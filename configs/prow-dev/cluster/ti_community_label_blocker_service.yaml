@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: prow
+  name: ti-community-label-blocker
+spec:
+  selector:
+    app: ti-community-label-blocker
+  ports:
+    - port: 80
+  type: ClusterIP
