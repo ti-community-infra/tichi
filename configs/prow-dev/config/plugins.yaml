@@ -102,4 +102,3 @@ external_plugins:
     - name: ti-community-label-blocker
       events:
         - pull_request
-        - issues
