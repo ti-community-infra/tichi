@@ -99,3 +99,6 @@ external_plugins:
       events:
         - pull_request
         - issue_comment
+    - name: ti-community-label-blocker
+      events:
+        - pull_request
