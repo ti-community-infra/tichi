@@ -67,7 +67,7 @@ ti-community-label-blocker:
   - repos:
       - ti-community-infra/test-dev
     block_labels:
-      - regex: "^status/LGT[\d]+$"
+      - regex: "^status/LGT[\\d]+$"
         actions:
           - labeled
         trusted_teams:
