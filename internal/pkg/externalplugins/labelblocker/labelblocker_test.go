@@ -111,7 +111,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			expectCommentsAdded: []string{
 				"org/repo#5:@no-trust-user: You can't add the status/can-merge label.\n\n" +
 					"<details>\n\n" +
-					"no-trust-user labeled a label named status/can-merge, which is restricted, so I restored it.\n\n" +
+					"In response to adding label named status/can-merge.\n\n" +
 					"Instructions for interacting with me using PR comments are available " +
 					"[here](https://prow.tidb.io/command-help).  " +
 					"If you have questions or suggestions related to my behavior, please file an issue against the " +
@@ -139,7 +139,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			expectCommentsAdded: []string{
 				"org/repo#5:@no-trust-user: You can't remove the status/can-merge label.\n\n" +
 					"<details>\n\n" +
-					"no-trust-user unlabeled a label named status/can-merge, which is restricted, so I restored it.\n\n" +
+					"In response to removing label named status/can-merge.\n\n" +
 					"Instructions for interacting with me using PR comments are available " +
 					"[here](https://prow.tidb.io/command-help).  " +
 					"If you have questions or suggestions related to my behavior, please file an issue against the " +
@@ -322,7 +322,7 @@ func TestLabelBlockerIssue(t *testing.T) {
 			expectCommentsAdded: []string{
 				"org/repo#5:@no-trust-user: You can't add the status/can-merge label.\n\n" +
 					"<details>\n\n" +
-					"no-trust-user labeled a label named status/can-merge, which is restricted, so I restored it.\n\n" +
+					"In response to adding label named status/can-merge.\n\n" +
 					"Instructions for interacting with me using PR comments are available " +
 					"[here](https://prow.tidb.io/command-help).  " +
 					"If you have questions or suggestions related to my behavior, please file an issue against the " +
@@ -350,7 +350,7 @@ func TestLabelBlockerIssue(t *testing.T) {
 			expectCommentsAdded: []string{
 				"org/repo#5:@no-trust-user: You can't remove the status/can-merge label.\n\n" +
 					"<details>\n\n" +
-					"no-trust-user unlabeled a label named status/can-merge, which is restricted, so I restored it.\n\n" +
+					"In response to removing label named status/can-merge.\n\n" +
 					"Instructions for interacting with me using PR comments are available " +
 					"[here](https://prow.tidb.io/command-help).  " +
 					"If you have questions or suggestions related to my behavior, please file an issue against the " +

@@ -171,8 +171,14 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 
 		// Reply to a message explaining why robot do this.
 		if len(blockLabel.Message) != 0 {
-			reason := ctx.sender + " " + ctx.action + " a label named " + ctx.label +
-				", which is restricted, so I restored it."
+			var operate string
+			if ctx.action == LabeledAction {
+				operate = "adding"
+			} else if ctx.action == UnlabeledAction {
+				operate = "removing"
+			}
+
+			reason := fmt.Sprintf("In response to %s label named %s.", operate, ctx.label)
 			response := externalplugins.FormatResponse(ctx.sender, blockLabel.Message, reason)
 			err := gc.CreateComment(owner, repo, ctx.number, response)
 
