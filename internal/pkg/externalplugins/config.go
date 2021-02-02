@@ -486,10 +486,6 @@ func validateLabelBlocker(labelBlockers []TiCommunityLabelBlocker) error {
 				return err
 			}
 
-			if len(blockLabel.Message) == 0 {
-				return errors.New("message must not be empty")
-			}
-
 			err = validateLabelBlockerAction(blockLabel.Actions)
 			if err != nil {
 				return err
