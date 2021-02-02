@@ -20,7 +20,8 @@ func TestValidateConfig(t *testing.T) {
 		labelBlocker    *TiCommunityLabelBlocker
 		autoresponders  *TiCommunityAutoresponder
 		blunderbuss     *TiCommunityBlunderbuss
-		expected        error
+
+		expected error
 	}{
 		{
 			name:            "https pull owners URL",

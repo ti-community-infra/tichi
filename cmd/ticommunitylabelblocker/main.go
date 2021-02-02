@@ -141,7 +141,6 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 	// Get external plugins config.
 	config := s.configAgent.Config()
 	switch eventType {
-	// TODO: support label event of issue.
 	case "pull_request":
 		var pullRequestEvent github.PullRequestEvent
 		if err := json.Unmarshal(payload, &pullRequestEvent); err != nil {
@@ -149,6 +148,16 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 		}
 		go func() {
 			if err := labelblocker.HandlePullRequestEvent(s.gc, &pullRequestEvent, config, l); err != nil {
+				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
+			}
+		}()
+	case "issues":
+		var issueEvent github.IssueEvent
+		if err := json.Unmarshal(payload, &issueEvent); err != nil {
+			return err
+		}
+		go func() {
+			if err := labelblocker.HandleIssueEvent(s.gc, &issueEvent, config, l); err != nil {
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()

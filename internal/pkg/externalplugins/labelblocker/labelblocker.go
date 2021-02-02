@@ -25,6 +25,7 @@ type githubClient interface {
 	RemoveLabel(org, repo string, number int, label string) error
 	GetTeamBySlug(slug string, org string) (*github.Team, error)
 	ListTeamMembers(org string, id int, role string) ([]github.TeamMember, error)
+	CreateComment(org, repo string, number int, comment string) error
 }
 
 // labelCtx contains information about each label event.
@@ -55,7 +56,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 
 			for _, blockLabel := range opts.BlockLabels {
 				configInfoStrings = append(configInfoStrings, "<li>")
-				configInfoStrings = append(configInfoStrings, blockLabel.Regex+": ")
+				configInfoStrings = append(configInfoStrings, "<h6>"+blockLabel.Regex+": </h6>")
 
 				if len(blockLabel.TrustedTeams) != 0 {
 					trustedTeamNames := strings.Join(blockLabel.TrustedTeams, ", ")
@@ -105,6 +106,27 @@ func HandlePullRequestEvent(gc githubClient, pullRequestEvent *github.PullReques
 	return handle(cfg, ctx, gc, log)
 }
 
+// HandleIssueEvent handles a GitHub issue event.
+func HandleIssueEvent(gc githubClient, issueEvent *github.IssueEvent,
+	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	// Only consider the labeled / unlabeled actions.
+	if issueEvent.Action != github.IssueActionLabeled &&
+		issueEvent.Action != github.IssueActionUnlabeled {
+		return nil
+	}
+
+	ctx := labelCtx{
+		repo:   issueEvent.Repo,
+		sender: issueEvent.Sender.Login,
+		label:  issueEvent.Label.Name,
+		action: string(issueEvent.Action),
+		number: issueEvent.Issue.Number,
+	}
+
+	// Use a common handler to do the rest.
+	return handle(cfg, ctx, gc, log)
+}
+
 func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, log *logrus.Entry) error {
 	owner := ctx.repo.Owner.Login
 	repo := ctx.repo.Name
@@ -115,33 +137,53 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 
 		// If this rule does not match, try to match the next rule.
 		if !regex.MatchString(ctx.label) || !isMatchAction(ctx.action, blockLabel.Actions) {
-			log.Infof("%s:%s does not match regex or action", regex, ctx.action)
+			log.Infof("%s:%s does not match regex or action.", regex, ctx.action)
 			continue
 		}
 
 		// If the operator is a trusted user, don’t trigger blocking.
 		allTrustedUserLogins := listAllTrustedUserLogins(owner, blockLabel.TrustedTeams, blockLabel.TrustedUsers, gc, log)
 		if allTrustedUserLogins.Has(ctx.sender) {
-			log.Infof("Operator %s is trusted by the %s rule", ctx.sender, blockLabel.Regex)
+			log.Infof("Operator %s is trusted by the %s rule.", ctx.sender, blockLabel.Regex)
 			continue
 		}
 
 		// Undo the illegal operation.
 		if ctx.action == LabeledAction {
+			// Remove the label added illegally.
 			err := gc.RemoveLabel(owner, repo, ctx.number, ctx.label)
 
 			if err == nil {
-				log.Infof("Remove %s label added illegally", ctx.label)
+				log.Infof("Remove %s label added illegally.", ctx.label)
 			} else {
 				return fmt.Errorf("failed to remove illegal label added illegally, %s", err)
 			}
 		} else if ctx.action == UnlabeledAction {
+			// Restore the label removed illegally.
 			err := gc.AddLabel(owner, repo, ctx.number, ctx.label)
 
 			if err == nil {
-				log.Infof("Restore %s label removed illegally", ctx.label)
+				log.Infof("Restore %s label removed illegally.", ctx.label)
 			} else {
 				return fmt.Errorf("failed to restore the illegally removed label, %s", err)
+			}
+		}
+
+		// Reply to a message explaining why robot do this.
+		if len(blockLabel.Message) != 0 {
+			var operate string
+			if ctx.action == LabeledAction {
+				operate = "adding"
+			} else if ctx.action == UnlabeledAction {
+				operate = "removing"
+			}
+
+			reason := fmt.Sprintf("In response to %s label named %s.", operate, ctx.label)
+			response := externalplugins.FormatResponse(ctx.sender, blockLabel.Message, reason)
+			err := gc.CreateComment(owner, repo, ctx.number, response)
+
+			if err != nil {
+				return fmt.Errorf("failed to respond message, %s", err)
 			}
 		}
 	}

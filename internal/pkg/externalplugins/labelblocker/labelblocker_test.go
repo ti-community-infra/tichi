@@ -22,6 +22,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 
 		expectLabelsRemoved []string
 		expectLabelsAdded   []string
+		expectCommentsAdded []string
 	}{
 		{
 			name:   "no match block label",
@@ -38,6 +39,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 		{
 			name:   "no match action",
@@ -54,6 +56,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 		{
 			name:   "sender is the member of trusted team",
@@ -70,6 +73,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 		{
 			name:   "sender is trusted user",
@@ -86,6 +90,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 		{
 			name:   "add label blocked and the sender is not trusted",
@@ -98,10 +103,22 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 					Actions:      []string{"labeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+					Message:      "You can't add the status/can-merge label.",
 				},
 			},
 			expectLabelsRemoved: []string{"org/repo#5:status/can-merge"},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{
+				"org/repo#5:@no-trust-user: You can't add the status/can-merge label.\n\n" +
+					"<details>\n\n" +
+					"In response to adding label named status/can-merge.\n\n" +
+					"Instructions for interacting with me using PR comments are available " +
+					"[here](https://prow.tidb.io/command-help).  " +
+					"If you have questions or suggestions related to my behavior, please file an issue against the " +
+					"[ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) " +
+					"repository.\n" +
+					"</details>",
+			},
 		},
 		{
 			name:   "remove label blocked and the sender is not trusted",
@@ -114,10 +131,22 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 					Actions:      []string{"unlabeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+					Message:      "You can't remove the status/can-merge label.",
 				},
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{"org/repo#5:status/can-merge"},
+			expectCommentsAdded: []string{
+				"org/repo#5:@no-trust-user: You can't remove the status/can-merge label.\n\n" +
+					"<details>\n\n" +
+					"In response to removing label named status/can-merge.\n\n" +
+					"Instructions for interacting with me using PR comments are available " +
+					"[here](https://prow.tidb.io/command-help).  " +
+					"If you have questions or suggestions related to my behavior, please file an issue against the " +
+					"[ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) " +
+					"repository.\n" +
+					"</details>",
+			},
 		},
 		{
 			name:   "illegal action",
@@ -134,13 +163,14 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 	}
 
 	for _, testcase := range testcases {
 		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
-			fc := &fakegithub.FakeClient{
+			var fc = &fakegithub.FakeClient{
 				PullRequests: map[int]*github.PullRequest{
 					5: {
 						Number: 5,
@@ -149,10 +179,11 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 						},
 					},
 				},
+				IssueComments:      map[int][]github.IssueComment{},
+				IssueCommentsAdded: []string{},
 				IssueLabelsAdded:   []string{},
 				IssueLabelsRemoved: []string{},
 			}
-
 			e := &github.PullRequestEvent{
 				Action:      tc.action,
 				Repo:        github.Repo{Owner: github.User{Login: "org"}, Name: "repo"},
@@ -183,6 +214,222 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 
 			if !reflect.DeepEqual(fc.IssueLabelsRemoved, tc.expectLabelsRemoved) {
 				t.Errorf("labels removed for pull request mismatch: got %v, want %v", fc.IssueLabelsRemoved, tc.expectLabelsRemoved)
+			}
+
+			if !reflect.DeepEqual(fc.IssueCommentsAdded, tc.expectCommentsAdded) {
+				t.Errorf("message is mismatch: got %v, want %v", fc.IssueCommentsAdded, tc.expectCommentsAdded)
+			}
+		})
+	}
+}
+
+func TestLabelBlockerIssue(t *testing.T) {
+	var testcases = []struct {
+		name        string
+		label       string
+		sender      string
+		action      github.IssueEventAction
+		blockLabels []externalplugins.BlockLabel
+
+		expectLabelsRemoved []string
+		expectLabelsAdded   []string
+		expectCommentsAdded []string
+	}{
+		{
+			name:   "no match action",
+			label:  "status/can-merge",
+			sender: "default-sig-lead",
+			action: github.IssueActionLabeled,
+			blockLabels: []externalplugins.BlockLabel{
+				{
+					Regex:        `^status/can-merge$`,
+					Actions:      []string{"unlabeled"},
+					TrustedTeams: []string{"Admins"},
+					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+				},
+			},
+			expectLabelsRemoved: []string{},
+			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
+		},
+		{
+			name:   "no match block label",
+			label:  "sig/community-infra",
+			sender: "default-sig-lead",
+			action: github.IssueActionLabeled,
+			blockLabels: []externalplugins.BlockLabel{
+				{
+					Regex:        `^status/can-merge$`,
+					Actions:      []string{"labeled", "unlabeled"},
+					TrustedTeams: []string{"Admins"},
+					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+				},
+			},
+			expectLabelsRemoved: []string{},
+			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
+		},
+		{
+			name:   "sender is the member of trusted team",
+			label:  "status/can-merge",
+			sender: "default-sig-lead",
+			action: github.IssueActionLabeled,
+			blockLabels: []externalplugins.BlockLabel{
+				{
+					Regex:        `^status/can-merge$`,
+					Actions:      []string{"labeled", "unlabeled"},
+					TrustedTeams: []string{"Admins"},
+					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+				},
+			},
+			expectLabelsRemoved: []string{},
+			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
+		},
+		{
+			name:   "sender is trusted user",
+			label:  "status/can-merge",
+			sender: "ti-chi-bot",
+			action: github.IssueActionLabeled,
+			blockLabels: []externalplugins.BlockLabel{
+				{
+					Regex:        `^status/can-merge$`,
+					Actions:      []string{"labeled", "unlabeled"},
+					TrustedTeams: []string{"Admins"},
+					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+				},
+			},
+			expectLabelsRemoved: []string{},
+			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
+		},
+		{
+			name:   "add label blocked and the sender is not trusted",
+			label:  "status/can-merge",
+			sender: "no-trust-user",
+			action: github.IssueActionLabeled,
+			blockLabels: []externalplugins.BlockLabel{
+				{
+					Regex:        `^status/can-merge$`,
+					Actions:      []string{"labeled"},
+					TrustedTeams: []string{"Admins"},
+					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+					Message:      "You can't add the status/can-merge label.",
+				},
+			},
+			expectLabelsRemoved: []string{"org/repo#5:status/can-merge"},
+			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{
+				"org/repo#5:@no-trust-user: You can't add the status/can-merge label.\n\n" +
+					"<details>\n\n" +
+					"In response to adding label named status/can-merge.\n\n" +
+					"Instructions for interacting with me using PR comments are available " +
+					"[here](https://prow.tidb.io/command-help).  " +
+					"If you have questions or suggestions related to my behavior, please file an issue against the " +
+					"[ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) " +
+					"repository.\n" +
+					"</details>",
+			},
+		},
+		{
+			name:   "remove label blocked and the sender is not trusted",
+			label:  "status/can-merge",
+			sender: "no-trust-user",
+			action: github.IssueActionUnlabeled,
+			blockLabels: []externalplugins.BlockLabel{
+				{
+					Regex:        `^status/can-merge$`,
+					Actions:      []string{"unlabeled"},
+					TrustedTeams: []string{"Admins"},
+					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+					Message:      "You can't remove the status/can-merge label.",
+				},
+			},
+			expectLabelsRemoved: []string{},
+			expectLabelsAdded:   []string{"org/repo#5:status/can-merge"},
+			expectCommentsAdded: []string{
+				"org/repo#5:@no-trust-user: You can't remove the status/can-merge label.\n\n" +
+					"<details>\n\n" +
+					"In response to removing label named status/can-merge.\n\n" +
+					"Instructions for interacting with me using PR comments are available " +
+					"[here](https://prow.tidb.io/command-help).  " +
+					"If you have questions or suggestions related to my behavior, please file an issue against the " +
+					"[ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) " +
+					"repository.\n" +
+					"</details>",
+			},
+		},
+		{
+			name:   "illegal action",
+			label:  "status/can-merge",
+			sender: "no-trust-user",
+			action: "nop",
+			blockLabels: []externalplugins.BlockLabel{
+				{
+					Regex:        `^status/can-merge$`,
+					Actions:      []string{"unlabeled"},
+					TrustedTeams: []string{"Admins"},
+					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+				},
+			},
+			expectLabelsRemoved: []string{},
+			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			var fc = &fakegithub.FakeClient{
+				Issues: map[int]*github.Issue{
+					5: {
+						Number: 5,
+						Labels: []github.Label{
+							{Name: tc.label},
+						},
+					},
+				},
+				IssueComments:      map[int][]github.IssueComment{},
+				IssueCommentsAdded: []string{},
+				IssueLabelsAdded:   []string{},
+				IssueLabelsRemoved: []string{},
+			}
+
+			cfg := &externalplugins.Configuration{}
+			cfg.TiCommunityLabelBlocker = []externalplugins.TiCommunityLabelBlocker{
+				{
+					Repos:       []string{"org/repo"},
+					BlockLabels: tc.blockLabels,
+				},
+			}
+
+			e := &github.IssueEvent{
+				Action: tc.action,
+				Repo:   github.Repo{Owner: github.User{Login: "org"}, Name: "repo"},
+				Issue:  *fc.Issues[5],
+				Label: github.Label{
+					Name: tc.label,
+				},
+				Sender: github.User{
+					Login: tc.sender,
+				},
+			}
+
+			if err := HandleIssueEvent(fc, e, cfg, logrus.WithField("plugin", PluginName)); err != nil {
+				t.Errorf("didn't expect error from %s: %v", PluginName, err)
+			}
+
+			if !reflect.DeepEqual(fc.IssueLabelsAdded, tc.expectLabelsAdded) {
+				t.Errorf("labels added for issue mismatch: got %v, want %v", fc.IssueLabelsAdded, tc.expectLabelsAdded)
+			}
+
+			if !reflect.DeepEqual(fc.IssueLabelsRemoved, tc.expectLabelsRemoved) {
+				t.Errorf("labels removed for issue mismatch: got %v, want %v", fc.IssueLabelsRemoved, tc.expectLabelsRemoved)
+			}
+
+			if !reflect.DeepEqual(fc.IssueCommentsAdded, tc.expectCommentsAdded) {
+				t.Errorf("message is mismatch: got %v, want %v", fc.IssueCommentsAdded, tc.expectCommentsAdded)
 			}
 		})
 	}
