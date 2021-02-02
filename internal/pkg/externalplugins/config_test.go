@@ -20,7 +20,8 @@ func TestValidateConfig(t *testing.T) {
 		labelBlocker    *TiCommunityLabelBlocker
 		autoresponders  *TiCommunityAutoresponder
 		blunderbuss     *TiCommunityBlunderbuss
-		expected        error
+
+		expected error
 	}{
 		{
 			name:            "https pull owners URL",
@@ -63,6 +64,7 @@ func TestValidateConfig(t *testing.T) {
 						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
+						Message:      "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -109,6 +111,7 @@ func TestValidateConfig(t *testing.T) {
 						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
+						Message:      "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -155,6 +158,7 @@ func TestValidateConfig(t *testing.T) {
 						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
+						Message:      "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -201,6 +205,7 @@ func TestValidateConfig(t *testing.T) {
 						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
+						Message:      "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -247,6 +252,7 @@ func TestValidateConfig(t *testing.T) {
 						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
+						Message:      "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -293,6 +299,7 @@ func TestValidateConfig(t *testing.T) {
 						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
+						Message:      "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -339,6 +346,7 @@ func TestValidateConfig(t *testing.T) {
 						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
+						Message:      "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -385,6 +393,7 @@ func TestValidateConfig(t *testing.T) {
 						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
+						Message:      "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -432,6 +441,7 @@ func TestValidateConfig(t *testing.T) {
 						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
+						Message:      "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -478,6 +488,7 @@ func TestValidateConfig(t *testing.T) {
 						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
+						Message:      "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -524,6 +535,7 @@ func TestValidateConfig(t *testing.T) {
 						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
+						Message:      "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -570,6 +582,7 @@ func TestValidateConfig(t *testing.T) {
 						Actions:      []string{"labeled", "unlabeled"},
 						TrustedTeams: []string{"release-team"},
 						TrustedUsers: []string{"ti-chi-bot"},
+						Message:      "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -614,6 +627,7 @@ func TestValidateConfig(t *testing.T) {
 					{
 						Regex:   "?[)",
 						Actions: []string{"labeled", "unlabeled"},
+						Message: "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -658,6 +672,7 @@ func TestValidateConfig(t *testing.T) {
 					{
 						Regex:   `^status/can-merge$`,
 						Actions: []string{},
+						Message: "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
@@ -702,10 +717,56 @@ func TestValidateConfig(t *testing.T) {
 					{
 						Regex:   `^status/can-merge$`,
 						Actions: []string{"nop"},
+						Message: "You can't manually operate the `status/can-merge` label.",
 					},
 				},
 			},
 			expected: fmt.Errorf("actions contain illegal value nop"),
+		},
+		{
+			name:            "empty message for block label",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"ti-community-infra/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"ti-community-infra/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			labelBlocker: &TiCommunityLabelBlocker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				BlockLabels: []BlockLabel{
+					{
+						Regex:   `^status/can-merge$`,
+						Actions: []string{"nop"},
+						Message: "",
+					},
+				},
+			},
+			expected: fmt.Errorf("message must not be empty"),
 		},
 	}
 

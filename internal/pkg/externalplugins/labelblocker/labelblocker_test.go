@@ -22,6 +22,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 
 		expectLabelsRemoved []string
 		expectLabelsAdded   []string
+		expectCommentsAdded []string
 	}{
 		{
 			name:   "no match block label",
@@ -38,6 +39,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 		{
 			name:   "no match action",
@@ -54,6 +56,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 		{
 			name:   "sender is the member of trusted team",
@@ -70,6 +73,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 		{
 			name:   "sender is trusted user",
@@ -86,6 +90,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 		{
 			name:   "add label blocked and the sender is not trusted",
@@ -98,10 +103,20 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 					Actions:      []string{"labeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+					Message:      "You can't add the status/can-merge label.",
 				},
 			},
 			expectLabelsRemoved: []string{"org/repo#5:status/can-merge"},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{
+				"org/repo#5:@no-trust-user: You can't add the status/can-merge label.\n" +
+					"<details>\n" +
+					"Only trusted users or members of the trusted team can do this, the operation of " +
+					"others will be revoked by the robot.\n" +
+					"trusted teams: Admins\n" +
+					"trusted users: ti-chi-bot, mini256\n" +
+					"</details>",
+			},
 		},
 		{
 			name:   "remove label blocked and the sender is not trusted",
@@ -114,10 +129,20 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 					Actions:      []string{"unlabeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+					Message:      "You can't remove the status/can-merge label.",
 				},
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{"org/repo#5:status/can-merge"},
+			expectCommentsAdded: []string{
+				"org/repo#5:@no-trust-user: You can't remove the status/can-merge label.\n" +
+					"<details>\n" +
+					"Only trusted users or members of the trusted team can do this, the operation of " +
+					"others will be revoked by the robot.\n" +
+					"trusted teams: Admins\n" +
+					"trusted users: ti-chi-bot, mini256\n" +
+					"</details>",
+			},
 		},
 		{
 			name:   "illegal action",
@@ -134,6 +159,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 	}
 
@@ -150,6 +176,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 					},
 				},
 				IssueComments:      map[int][]github.IssueComment{},
+				IssueCommentsAdded: []string{},
 				IssueLabelsAdded:   []string{},
 				IssueLabelsRemoved: []string{},
 			}
@@ -184,6 +211,10 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			if !reflect.DeepEqual(fc.IssueLabelsRemoved, tc.expectLabelsRemoved) {
 				t.Errorf("labels removed for pull request mismatch: got %v, want %v", fc.IssueLabelsRemoved, tc.expectLabelsRemoved)
 			}
+
+			if !reflect.DeepEqual(fc.IssueCommentsAdded, tc.expectCommentsAdded) {
+				t.Errorf("message is mismatch: got %v, want %v", fc.IssueCommentsAdded, tc.expectCommentsAdded)
+			}
 		})
 	}
 }
@@ -198,6 +229,7 @@ func TestLabelBlockerIssue(t *testing.T) {
 
 		expectLabelsRemoved []string
 		expectLabelsAdded   []string
+		expectCommentsAdded []string
 	}{
 		{
 			name:   "no match action",
@@ -214,6 +246,7 @@ func TestLabelBlockerIssue(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 		{
 			name:   "no match block label",
@@ -230,6 +263,7 @@ func TestLabelBlockerIssue(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 		{
 			name:   "sender is the member of trusted team",
@@ -246,6 +280,7 @@ func TestLabelBlockerIssue(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 		{
 			name:   "sender is trusted user",
@@ -262,6 +297,7 @@ func TestLabelBlockerIssue(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 		{
 			name:   "add label blocked and the sender is not trusted",
@@ -274,10 +310,20 @@ func TestLabelBlockerIssue(t *testing.T) {
 					Actions:      []string{"labeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+					Message:      "You can't add the status/can-merge label.",
 				},
 			},
 			expectLabelsRemoved: []string{"org/repo#5:status/can-merge"},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{
+				"org/repo#5:@no-trust-user: You can't add the status/can-merge label.\n" +
+					"<details>\n" +
+					"Only trusted users or members of the trusted team can do this, the operation " +
+					"of others will be revoked by the robot.\n" +
+					"trusted teams: Admins\n" +
+					"trusted users: ti-chi-bot, mini256\n" +
+					"</details>",
+			},
 		},
 		{
 			name:   "remove label blocked and the sender is not trusted",
@@ -290,10 +336,20 @@ func TestLabelBlockerIssue(t *testing.T) {
 					Actions:      []string{"unlabeled"},
 					TrustedTeams: []string{"Admins"},
 					TrustedUsers: []string{"ti-chi-bot", "mini256"},
+					Message:      "You can't remove the status/can-merge label.",
 				},
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{"org/repo#5:status/can-merge"},
+			expectCommentsAdded: []string{
+				"org/repo#5:@no-trust-user: You can't remove the status/can-merge label.\n" +
+					"<details>\n" +
+					"Only trusted users or members of the trusted team can do this, the operation of " +
+					"others will be revoked by the robot.\n" +
+					"trusted teams: Admins\n" +
+					"trusted users: ti-chi-bot, mini256\n" +
+					"</details>",
+			},
 		},
 		{
 			name:   "illegal action",
@@ -310,6 +366,7 @@ func TestLabelBlockerIssue(t *testing.T) {
 			},
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{},
+			expectCommentsAdded: []string{},
 		},
 	}
 
@@ -326,6 +383,7 @@ func TestLabelBlockerIssue(t *testing.T) {
 					},
 				},
 				IssueComments:      map[int][]github.IssueComment{},
+				IssueCommentsAdded: []string{},
 				IssueLabelsAdded:   []string{},
 				IssueLabelsRemoved: []string{},
 			}
@@ -360,6 +418,10 @@ func TestLabelBlockerIssue(t *testing.T) {
 
 			if !reflect.DeepEqual(fc.IssueLabelsRemoved, tc.expectLabelsRemoved) {
 				t.Errorf("labels removed for issue mismatch: got %v, want %v", fc.IssueLabelsRemoved, tc.expectLabelsRemoved)
+			}
+
+			if !reflect.DeepEqual(fc.IssueCommentsAdded, tc.expectCommentsAdded) {
+				t.Errorf("message is mismatch: got %v, want %v", fc.IssueCommentsAdded, tc.expectCommentsAdded)
 			}
 		})
 	}

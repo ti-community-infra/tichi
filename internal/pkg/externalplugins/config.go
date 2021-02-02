@@ -178,10 +178,12 @@ type BlockLabel struct {
 	Regex string `json:"regex,omitempty"`
 	// Actions specifies the label actions that will trigger interception, you can fill in `labeled` or `unlabelled`.
 	Actions []string `json:"actions,omitempty"`
-	// TrustedTeams specifies the teams allowed to add/remove label.
+	// TrustedTeams specifies the teams allowed adding/removing label.
 	TrustedTeams []string `json:"trusted_teams,omitempty"`
-	// TrustedUsers specifies the github login of the account allowed to add/remove label.
+	// TrustedUsers specifies the github login of the account allowed adding/removing label.
 	TrustedUsers []string `json:"trusted_users,omitempty"`
+	// Message specifies the message feedback to the user after blocking the label.
+	Message string `json:"message,omitempty"`
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists
@@ -482,6 +484,10 @@ func validateLabelBlocker(labelBlockers []TiCommunityLabelBlocker) error {
 			_, err := regexp.Compile(blockLabel.Regex)
 			if err != nil {
 				return err
+			}
+
+			if len(blockLabel.Message) == 0 {
+				return errors.New("message must not be empty")
 			}
 
 			err = validateLabelBlockerAction(blockLabel.Actions)

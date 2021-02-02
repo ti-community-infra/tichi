@@ -137,18 +137,16 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 
 		// If this rule does not match, try to match the next rule.
 		if !regex.MatchString(ctx.label) || !isMatchAction(ctx.action, blockLabel.Actions) {
-			log.Infof("%s:%s does not match regex or action", regex, ctx.action)
+			log.Infof("%s:%s does not match regex or action.", regex, ctx.action)
 			continue
 		}
 
 		// If the operator is a trusted user, don’t trigger blocking.
 		allTrustedUserLogins := listAllTrustedUserLogins(owner, blockLabel.TrustedTeams, blockLabel.TrustedUsers, gc, log)
 		if allTrustedUserLogins.Has(ctx.sender) {
-			log.Infof("Operator %s is trusted by the %s rule", ctx.sender, blockLabel.Regex)
+			log.Infof("Operator %s is trusted by the %s rule.", ctx.sender, blockLabel.Regex)
 			continue
 		}
-
-		var operate string
 
 		// Undo the illegal operation.
 		if ctx.action == LabeledAction {
@@ -156,8 +154,7 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 			err := gc.RemoveLabel(owner, repo, ctx.number, ctx.label)
 
 			if err == nil {
-				operate = fmt.Sprintf("Remove %s label added illegally", ctx.label)
-				log.Infof(operate)
+				log.Infof("Remove %s label added illegally.", ctx.label)
 			} else {
 				return fmt.Errorf("failed to remove illegal label added illegally, %s", err)
 			}
@@ -166,26 +163,18 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 			err := gc.AddLabel(owner, repo, ctx.number, ctx.label)
 
 			if err == nil {
-				operate = fmt.Sprintf("Restore %s label removed illegally", ctx.label)
-				log.Infof(operate)
+				log.Infof("Restore %s label removed illegally.", ctx.label)
 			} else {
 				return fmt.Errorf("failed to restore the illegally removed label, %s", err)
 			}
 		}
 
-		// Leave a reply to explain why do this.
-		msg := fmt.Sprintf("%s, only trusted users and members of trusted teams can do it.\n"+
-			"<details>\n"+
-			"trusted teams: %s\n"+
-			"trusted users: %s\n"+
-			"</details>",
-			operate,
-			strings.Join(blockLabel.TrustedTeams, ", "),
-			strings.Join(blockLabel.TrustedUsers, ", "))
-		err := gc.CreateComment(owner, repo, ctx.number, msg)
+		// Reply to a message explaining why robot do this.
+		response := formatResponse(ctx.sender, blockLabel.Message, blockLabel)
+		err := gc.CreateComment(owner, repo, ctx.number, response)
 
 		if err != nil {
-			return fmt.Errorf("failed to , %s", err)
+			return fmt.Errorf("failed to respond message, %s", err)
 		}
 	}
 
@@ -237,4 +226,18 @@ func isMatchAction(action string, blockActions []string) bool {
 	}
 
 	return false
+}
+
+// formatResponse used to format the reply content of the robot.
+func formatResponse(to, message string, blockLabel externalplugins.BlockLabel) string {
+	return fmt.Sprintf(`@%s: %s
+<details>
+Only trusted users or members of the trusted team can do this, the operation of others will be revoked by the robot.
+trusted teams: %s
+trusted users: %s
+</details>`,
+		to,
+		message,
+		strings.Join(blockLabel.TrustedTeams, ", "),
+		strings.Join(blockLabel.TrustedUsers, ", "))
 }
