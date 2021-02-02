@@ -1,11 +1,9 @@
 package labelblocker
 
 import (
-	"bytes"
 	"fmt"
 	"regexp"
 	"strings"
-	"text/template"
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
@@ -173,13 +171,10 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 
 		// Reply to a message explaining why robot do this.
 		if len(blockLabel.Message) != 0 {
-			response, err := formatResponse(ctx.sender, blockLabel.Message, blockLabel)
-
-			if err != nil {
-				return err
-			}
-
-			err = gc.CreateComment(owner, repo, ctx.number, response)
+			reason := ctx.sender + " " + ctx.action + " a label named " + ctx.label +
+				", which is restricted, so I restored it."
+			response := externalplugins.FormatResponse(ctx.sender, blockLabel.Message, reason)
+			err := gc.CreateComment(owner, repo, ctx.number, response)
 
 			if err != nil {
 				return fmt.Errorf("failed to respond message, %s", err)
@@ -235,30 +230,4 @@ func isMatchAction(action string, blockActions []string) bool {
 	}
 
 	return false
-}
-
-// formatResponse used to format the reply content of the robot.
-func formatResponse(to, message string, blockLabel externalplugins.BlockLabel) (string, error) {
-	templateName := "block response"
-	templateContent := `@{{ .to }}: {{ .message }}
-<details>
-Only trusted users or members of the trusted team can do this, the operation of others will be revoked by the robot.
-trusted teams: {{ .trustedTeams }}
-trusted users: {{ .trustedUsers }}
-</details>`
-	data := map[string]interface{}{
-		"to":           to,
-		"message":      message,
-		"trustedTeams": strings.Join(blockLabel.TrustedTeams, ", "),
-		"trustedUsers": strings.Join(blockLabel.TrustedUsers, ", "),
-	}
-
-	buf := bytes.NewBufferString("")
-	if messageTemplate, err := template.New(templateName).Parse(templateContent); err != nil {
-		return "", fmt.Errorf("failed to parse template for %s: %v", templateName, err)
-	} else if err := messageTemplate.Execute(buf, data); err != nil {
-		return "", fmt.Errorf("failed to execute template for %s: %v", templateName, err)
-	}
-
-	return buf.String(), nil
 }

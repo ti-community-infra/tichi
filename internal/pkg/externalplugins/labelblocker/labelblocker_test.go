@@ -109,13 +109,13 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			expectLabelsRemoved: []string{"org/repo#5:status/can-merge"},
 			expectLabelsAdded:   []string{},
 			expectCommentsAdded: []string{
-				"org/repo#5:@no-trust-user: You can't add the status/can-merge label.\n" +
-					"<details>\n" +
-					"Only trusted users or members of the trusted team can do this, the operation of " +
-					"others will be revoked by the robot.\n" +
-					"trusted teams: Admins\n" +
-					"trusted users: ti-chi-bot, mini256\n" +
-					"</details>",
+				"org/repo#5:@no-trust-user: You can't add the status/can-merge label.\n\n" +
+				"<details>\n\nno-trust-user labeled a label named status/can-merge, which is restricted, so I restored it.\n\n" +
+				"Instructions for interacting with me using PR comments are available [here](https://prow.tidb.io/command-help).  " +
+				"If you have questions or suggestions related to my behavior, please file an issue against the " +
+				"[ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) " +
+				"repository.\n" +
+				"</details>",
 			},
 		},
 		{
@@ -135,13 +135,14 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{"org/repo#5:status/can-merge"},
 			expectCommentsAdded: []string{
-				"org/repo#5:@no-trust-user: You can't remove the status/can-merge label.\n" +
-					"<details>\n" +
-					"Only trusted users or members of the trusted team can do this, the operation of " +
-					"others will be revoked by the robot.\n" +
-					"trusted teams: Admins\n" +
-					"trusted users: ti-chi-bot, mini256\n" +
-					"</details>",
+				"org/repo#5:@no-trust-user: You can't remove the status/can-merge label.\n\n" +
+				"<details>\n\n" +
+				"no-trust-user unlabeled a label named status/can-merge, which is restricted, so I restored it.\n\n" +
+				"Instructions for interacting with me using PR comments are available [here](https://prow.tidb.io/command-help).  " +
+				"If you have questions or suggestions related to my behavior, please file an issue against the " +
+				"[ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) " +
+				"repository.\n" +
+				"</details>",
 			},
 		},
 		{
@@ -316,13 +317,14 @@ func TestLabelBlockerIssue(t *testing.T) {
 			expectLabelsRemoved: []string{"org/repo#5:status/can-merge"},
 			expectLabelsAdded:   []string{},
 			expectCommentsAdded: []string{
-				"org/repo#5:@no-trust-user: You can't add the status/can-merge label.\n" +
-					"<details>\n" +
-					"Only trusted users or members of the trusted team can do this, the operation " +
-					"of others will be revoked by the robot.\n" +
-					"trusted teams: Admins\n" +
-					"trusted users: ti-chi-bot, mini256\n" +
-					"</details>",
+				"org/repo#5:@no-trust-user: You can't add the status/can-merge label.\n\n" +
+				"<details>\n\n" +
+				"no-trust-user labeled a label named status/can-merge, which is restricted, so I restored it.\n\n" +
+				"Instructions for interacting with me using PR comments are available [here](https://prow.tidb.io/command-help).  " +
+				"If you have questions or suggestions related to my behavior, please file an issue against the " +
+				"[ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) " +
+				"repository.\n" +
+				"</details>",
 			},
 		},
 		{
@@ -342,13 +344,14 @@ func TestLabelBlockerIssue(t *testing.T) {
 			expectLabelsRemoved: []string{},
 			expectLabelsAdded:   []string{"org/repo#5:status/can-merge"},
 			expectCommentsAdded: []string{
-				"org/repo#5:@no-trust-user: You can't remove the status/can-merge label.\n" +
-					"<details>\n" +
-					"Only trusted users or members of the trusted team can do this, the operation of " +
-					"others will be revoked by the robot.\n" +
-					"trusted teams: Admins\n" +
-					"trusted users: ti-chi-bot, mini256\n" +
-					"</details>",
+				"org/repo#5:@no-trust-user: You can't remove the status/can-merge label.\n\n" +
+				"<details>\n\n" +
+				"no-trust-user unlabeled a label named status/can-merge, which is restricted, so I restored it.\n\n" +
+				"Instructions for interacting with me using PR comments are available [here](https://prow.tidb.io/command-help).  " +
+				"If you have questions or suggestions related to my behavior, please file an issue against the " +
+				"[ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) " +
+				"repository.\n" +
+				"</details>",
 			},
 		},
 		{
