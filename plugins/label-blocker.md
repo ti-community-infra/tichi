@@ -21,7 +21,7 @@
 | 参数名             | 类型         | 说明                                     |
 | ----------------- | ------------ | --------------------------------------- |
 | repos             | []string     | 配置生效仓库                              |
-| block_labels      | []BlockLabel | 被限制操作的标签                           |
+| block_labels      | []BlockLabel | 被限制操作的标签                          |
 
 ### BlockLabel
 
@@ -31,6 +31,7 @@
 | actions              | []string | 匹配的 action 类型, 可填 labeled、unlabeled，至少填写一个 |
 | trusted_teams        | []string | 设置信任的 GitHub teams                                |
 | trusted_users        | []string | 设置信任的 GitHub users                                |
+| message              | string   | 给用户的操作反馈提示，为空表示不提示                       |
 
 例如：
 
@@ -48,6 +49,7 @@ ti-community-label-blocker:
           - admins
         trusted_users:
           - ti-chi-bot
+        message: "You cannot manually add or delete the status/can-merge label, only the admins team and ti-chi-bot have permission to do so."
 ```
 
 ## 参考文档
