@@ -94,7 +94,7 @@ postsubmits:
             secretName: deployer-credentials
     annotations:
       description: deploys the configured version of prow by running scripts/deploy.sh
-  - name: post-configs-label-sync
+  - name: post-tichi-label-sync
     decorate: true
     run_if_changed: 'configs/prow-dev/config/labels.yaml'
     branches:
