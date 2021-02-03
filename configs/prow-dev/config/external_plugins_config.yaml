@@ -78,7 +78,6 @@ ti-community-label-blocker:
         actions:
           - labeled
           - unlabeled
-        trusted_teams:
-          - bots-test
         trusted_users:
           - ti-chi-bot
+        message: You can't add the status/can-merge label.
