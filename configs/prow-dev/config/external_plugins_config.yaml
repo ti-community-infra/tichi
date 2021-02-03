@@ -73,11 +73,11 @@ ti-community-label-blocker:
         trusted_teams:
           - bots-test
         trusted_users:
-          - ti-chi-bot
+          - rustin-bot
       - regex: "^status/can-merge$"
         actions:
           - labeled
           - unlabeled
         trusted_users:
-          - ti-chi-bot
+          - rustin-bot
         message: You can't add the status/can-merge label.
