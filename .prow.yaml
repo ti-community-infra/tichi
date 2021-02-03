@@ -44,6 +44,29 @@ presubmits:
         - name: github-token
           secret:
             secretName: github-token
+  - name: pull-tichi-validate-labels-yaml
+    decorate: true
+    run_if_changed: 'configs/prow-dev/config/labels.yaml'
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: gcr.io/k8s-prow/label_sync:v20201217-2de500de27
+          command:
+            - /app/label_sync/app.binary
+          args:
+            - --config=configs/prow-dev/config/labels.yaml
+            - --confirm=false
+            - --only=ti-community-infra/test-dev
+            - --token=/etc/github/token
+          volumeMounts:
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+      volumes:
+        - name: github-token
+          secret:
+            secretName: github-token
 postsubmits:
   - name: post-tichi-deploy-prow
     run_if_changed: 'configs/prow-dev/cluster/'
@@ -71,3 +94,26 @@ postsubmits:
             secretName: deployer-credentials
     annotations:
       description: deploys the configured version of prow by running scripts/deploy.sh
+  - name: post-configs-label-sync
+    decorate: true
+    run_if_changed: 'configs/prow-dev/config/labels.yaml'
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: gcr.io/k8s-prow/label_sync:v20201217-2de500de27
+          command:
+            - /app/label_sync/app.binary
+          args:
+            - --config=configs/prow-dev/config/labels.yaml
+            - --confirm=true
+            - --only=ti-community-infra/test-dev
+            - --token=/etc/github/token
+          volumeMounts:
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+      volumes:
+        - name: github-token
+          secret:
+            secretName: github-token
