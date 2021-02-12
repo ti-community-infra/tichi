@@ -293,7 +293,6 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	if useGitHubPermission {
 		return s.listOwnersByGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
 	}
-
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
 	if len(sigNames) == 0 {
 		return s.listOwnersByAllSigs(opts, trustTeamMembers.List(), requireLgtm)
