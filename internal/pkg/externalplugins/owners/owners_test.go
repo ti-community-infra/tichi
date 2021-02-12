@@ -17,7 +17,8 @@ import (
 )
 
 type fakegithub struct {
-	PullRequests map[int]*github.PullRequest
+	PullRequests  map[int]*github.PullRequest
+	Collaborators []github.User
 }
 
 // GetPullRequest returns details about the PR.
@@ -27,6 +28,11 @@ func (f *fakegithub) GetPullRequest(owner, repo string, number int) (*github.Pul
 		return nil, fmt.Errorf("pull request number %d does not exist", number)
 	}
 	return val, nil
+}
+
+// ListCollaborators lists the collaborators.
+func (f *fakegithub) ListCollaborators(org, repo string) ([]github.User, error) {
+	return f.Collaborators, nil
 }
 
 // ListTeams return a list of fake teams that correspond to the fake team members returned by ListTeamMembers.

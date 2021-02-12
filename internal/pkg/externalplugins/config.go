@@ -80,7 +80,8 @@ type TiCommunityOwners struct {
 	// compromised GitHub account) from merging arbitrary code. Use with caution.
 	//
 	// TrustTeams specifies the GitHub teams whose members are trusted.
-	TrustTeams []string `json:"trusted_teams,omitempty"`
+	TrustTeams          []string `json:"trusted_teams,omitempty"`
+	UseGitHubPermission bool     `json:"use_github_permission,omitempty"`
 	// Branches specifies the branch level configuration that will override the repository
 	// level configuration.
 	Branches map[string]TiCommunityOwnerBranchConfig `json:"branches,omitempty"`
@@ -91,7 +92,8 @@ type TiCommunityOwnerBranchConfig struct {
 	// DefaultRequireLgtm specifies the default require lgtm number of the branch.
 	DefaultRequireLgtm int `json:"default_require_lgtm,omitempty"`
 	// TrustTeams specifies the GitHub teams whose members are trusted by the branch.
-	TrustTeams []string `json:"trusted_teams,omitempty"`
+	TrustTeams          []string `json:"trusted_teams,omitempty"`
+	UseGitHubPermission bool     `json:"use_github_permission,omitempty"`
 }
 
 // TiCommunityLabel is the config for the label plugin.
