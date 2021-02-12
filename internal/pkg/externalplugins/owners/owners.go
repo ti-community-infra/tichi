@@ -284,15 +284,18 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	}
 
 	useGitHubPermission := false
+
+	// The branch configuration will override the total configuration.
 	if hasBranchConfig {
 		useGitHubPermission = branchConfig.UseGitHubPermission
 	} else {
 		useGitHubPermission = opts.UseGitHubPermission
 	}
-
+	// If we specify to use GitHub permissions, the people who have write and admin permissions will be reviewers and committers.
 	if useGitHubPermission {
 		return s.listOwnersByGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
 	}
+
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
 	if len(sigNames) == 0 {
 		return s.listOwnersByAllSigs(opts, trustTeamMembers.List(), requireLgtm)
