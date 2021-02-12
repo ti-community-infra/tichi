@@ -56,7 +56,7 @@ type Server struct {
 	Log            *logrus.Entry
 }
 
-func (s *Server) listOwnersForNonSig(opts *tiexternalplugins.TiCommunityOwners,
+func (s *Server) listOwnersByAllSigs(opts *tiexternalplugins.TiCommunityOwners,
 	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	var committers []string
 	var reviewers []string
@@ -117,7 +117,7 @@ func (s *Server) listOwnersForNonSig(opts *tiexternalplugins.TiCommunityOwners,
 	}, nil
 }
 
-func (s *Server) listOwnersForSigs(sigNames []string,
+func (s *Server) listOwnersBySigs(sigNames []string,
 	opts *tiexternalplugins.TiCommunityOwners, trustTeamMembers []string,
 	requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	var committers []string
@@ -192,7 +192,7 @@ func (s *Server) listOwnersForSigs(sigNames []string,
 	}, nil
 }
 
-func (s *Server) listOwnersByUseGitHubPermission(org string, repo string,
+func (s *Server) listOwnersByGitHubPermission(org string, repo string,
 	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	collaborators, err := s.Gc.ListCollaborators(org, repo)
 	if err != nil {
@@ -291,15 +291,15 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	}
 
 	if useGitHubPermission {
-		return s.listOwnersByUseGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
+		return s.listOwnersByGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
 	}
 
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
 	if len(sigNames) == 0 {
-		return s.listOwnersForNonSig(opts, trustTeamMembers.List(), requireLgtm)
+		return s.listOwnersByAllSigs(opts, trustTeamMembers.List(), requireLgtm)
 	}
 
-	return s.listOwnersForSigs(sigNames, opts, trustTeamMembers.List(), requireLgtm)
+	return s.listOwnersBySigs(sigNames, opts, trustTeamMembers.List(), requireLgtm)
 }
 
 // getSigNamesByLabels returns the names of sig when the label prefix matches.

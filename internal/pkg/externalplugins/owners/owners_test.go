@@ -206,6 +206,33 @@ func TestListOwners(t *testing.T) {
 		Message: "Test members.",
 	}
 
+	collaborators := []github.User{
+		{
+			Login: "collab1",
+			Permissions: github.RepoPermissions{
+				Pull:  true,
+				Push:  false,
+				Admin: false,
+			},
+		},
+		{
+			Login: "collab2",
+			Permissions: github.RepoPermissions{
+				Pull:  true,
+				Push:  true,
+				Admin: false,
+			},
+		},
+		{
+			Login: "collab3",
+			Permissions: github.RepoPermissions{
+				Pull:  true,
+				Push:  true,
+				Admin: true,
+			},
+		},
+	}
+
 	org := "ti-community-infra"
 	repoName := "test-dev"
 	pullNumber := 1
@@ -566,6 +593,7 @@ func TestListOwners(t *testing.T) {
 						State:  "open",
 					},
 				},
+				Collaborators: collaborators,
 			}
 
 			// NOTICE: adds labels.
