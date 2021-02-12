@@ -624,7 +624,7 @@ func TestListOwners(t *testing.T) {
 				repoConfig.TrustTeams = tc.trustTeams
 			}
 
-			if tc.requireLgtmLabelPrefix != "" {
+			if len(tc.requireLgtmLabelPrefix) != 0 {
 				repoConfig.RequireLgtmLabelPrefix = tc.requireLgtmLabelPrefix
 			}
 
