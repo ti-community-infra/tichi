@@ -291,7 +291,8 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	} else {
 		useGitHubPermission = opts.UseGitHubPermission
 	}
-	// If we specify to use GitHub permissions, the people who have write and admin permissions will be reviewers and committers.
+	// If we specify to use GitHub permissions,
+	// the people who have write and admin permissions will be reviewers and committers.
 	if useGitHubPermission {
 		return s.listOwnersByGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
 	}
