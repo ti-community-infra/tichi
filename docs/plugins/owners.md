@@ -35,7 +35,7 @@
 但是可能确实存在一些特殊情况找不到对应的sig：
 - 一些模块暂时未划分清楚 sig：使用 TiDB 社区所有 sig 的 reviewers 和 committers
 - 一些小型仓库直接隶属于某个 sig: 支持为该仓库配置默认的 sig
-- 一些仓库跟 sig 无关：支持使用 GitHub 的权限，将拥有 write 和 admin 的协作者作为 reviewer 和 committer
+- 一些仓库跟 sig 无关：支持使用仓库的 GitHub 权限，将拥有 write 和 admin 的协作者作为 reviewer 和 committer
 
 这样基本上就能够实现该服务。
 
