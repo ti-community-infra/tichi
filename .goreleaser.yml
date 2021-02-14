@@ -110,9 +110,9 @@ dockers:
     builds:
       - ti-community-lgtm
     image_templates:
-      - "rustinliu/tichi-lgtm-plugin:latest"
-      - "rustinliu/tichi-lgtm-plugin:{{ .Tag }}"
-      - "rustinliu/tichi-lgtm-plugin:{{ .Major }}"
+      - "ticommunityinfra/tichi-lgtm-plugin:latest"
+      - "ticommunityinfra/tichi-lgtm-plugin:{{ .Tag }}"
+      - "ticommunityinfra/tichi-lgtm-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/lgtm/Dockerfile
   -
     binaries:
@@ -120,9 +120,9 @@ dockers:
     builds:
       - ti-community-merge
     image_templates:
-      - "rustinliu/tichi-merge-plugin:latest"
-      - "rustinliu/tichi-merge-plugin:{{ .Tag }}"
-      - "rustinliu/tichi-merge-plugin:{{ .Major }}"
+      - "ticommunityinfra/tichi-merge-plugin:latest"
+      - "ticommunityinfra/tichi-merge-plugin:{{ .Tag }}"
+      - "ticommunityinfra/tichi-merge-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/merge/Dockerfile
   -
     binaries:
@@ -130,9 +130,9 @@ dockers:
     builds:
       - ti-community-owners
     image_templates:
-      - "rustinliu/tichi-owners-plugin:latest"
-      - "rustinliu/tichi-owners-plugin:{{ .Tag }}"
-      - "rustinliu/tichi-owners-plugin:{{ .Major }}"
+      - "ticommunityinfra/tichi-owners-plugin:latest"
+      - "ticommunityinfra/tichi-owners-plugin:{{ .Tag }}"
+      - "ticommunityinfra/tichi-owners-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/owners/Dockerfile
   -
     binaries:
@@ -140,9 +140,9 @@ dockers:
     builds:
       - ti-community-label
     image_templates:
-      - "rustinliu/tichi-label-plugin:latest"
-      - "rustinliu/tichi-label-plugin:{{ .Tag }}"
-      - "rustinliu/tichi-label-plugin:{{ .Major }}"
+      - "ticommunityinfra/tichi-label-plugin:latest"
+      - "ticommunityinfra/tichi-label-plugin:{{ .Tag }}"
+      - "ticommunityinfra/tichi-label-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/label/Dockerfile
   -
     binaries:
@@ -150,9 +150,9 @@ dockers:
     builds:
       - ti-community-tars
     image_templates:
-      - "rustinliu/tichi-tars-plugin:latest"
-      - "rustinliu/tichi-tars-plugin:{{ .Tag }}"
-      - "rustinliu/tichi-tars-plugin:{{ .Major }}"
+      - "ticommunityinfra/tichi-tars-plugin:latest"
+      - "ticommunityinfra/tichi-tars-plugin:{{ .Tag }}"
+      - "ticommunityinfra/tichi-tars-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/tars/Dockerfile
   -
     binaries:
@@ -160,9 +160,9 @@ dockers:
     builds:
       - ti-community-autoresponder
     image_templates:
-      - "rustinliu/tichi-autoresponder-plugin:latest"
-      - "rustinliu/tichi-autoresponder-plugin:{{ .Tag }}"
-      - "rustinliu/tichi-autoresponder-plugin:{{ .Major }}"
+      - "ticommunityinfra/tichi-autoresponder-plugin:latest"
+      - "ticommunityinfra/tichi-autoresponder-plugin:{{ .Tag }}"
+      - "ticommunityinfra/tichi-autoresponder-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/autoresponder/Dockerfile
   -
     binaries:
@@ -170,9 +170,9 @@ dockers:
     builds:
       - ti-community-blunderbuss
     image_templates:
-      - "rustinliu/tichi-blunderbuss-plugin:latest"
-      - "rustinliu/tichi-blunderbuss-plugin:{{ .Tag }}"
-      - "rustinliu/tichi-blunderbuss-plugin:{{ .Major }}"
+      - "ticommunityinfra/tichi-blunderbuss-plugin:latest"
+      - "ticommunityinfra/tichi-blunderbuss-plugin:{{ .Tag }}"
+      - "ticommunityinfra/tichi-blunderbuss-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/blunderbuss/Dockerfile
   -
     binaries:
@@ -180,9 +180,9 @@ dockers:
     builds:
       - ti-community-label-blocker
     image_templates:
-      - "rustinliu/tichi-label-blocker-plugin:latest"
-      - "rustinliu/tichi-label-blocker-plugin:{{ .Tag }}"
-      - "rustinliu/tichi-label-blocker-plugin:{{ .Major }}"
+      - "ticommunityinfra/tichi-label-blocker-plugin:latest"
+      - "ticommunityinfra/tichi-label-blocker-plugin:{{ .Tag }}"
+      - "ticommunityinfra/tichi-label-blocker-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/labelblocker/Dockerfile
   -
     binaries:
@@ -190,15 +190,15 @@ dockers:
     builds:
       - rerere
     image_templates:
-      - "rustinliu/rerere-component:latest"
-      - "rustinliu/rerere-component:{{ .Tag }}"
-      - "rustinliu/rerere-component:{{ .Major }}"
+      - "ticommunityinfra/rerere-component:latest"
+      - "ticommunityinfra/rerere-component:{{ .Tag }}"
+      - "ticommunityinfra/rerere-component:{{ .Major }}"
     dockerfile: ./deployments/components/rerere/Dockerfile
   -
     image_templates:
-      - "rustinliu/tichi-web:latest"
-      - "rustinliu/tichi-web:{{ .Tag }}"
-      - "rustinliu/tichi-web:{{ .Major }}"
+      - "ticommunityinfra/tichi-web:latest"
+      - "ticommunityinfra/tichi-web:{{ .Tag }}"
+      - "ticommunityinfra/tichi-web:{{ .Major }}"
     dockerfile: ./deployments/web/Dockerfile
     extra_files:
       - web/
