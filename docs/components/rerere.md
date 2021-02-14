@@ -46,7 +46,7 @@ presubmits:
         - ^master$
       spec:
         containers:
-          - image: rustinliu/rerere-component:latest
+          - image: ticommunityinfra/rerere-component:latest
             command:
               - rerere
             args:
