@@ -41,6 +41,7 @@ const (
 
 type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
+	ListCollaborators(org, repo string) ([]github.User, error)
 	ListTeams(org string) ([]github.Team, error)
 	ListTeamMembers(org string, id int, role string) ([]github.TeamMember, error)
 }
@@ -55,7 +56,7 @@ type Server struct {
 	Log            *logrus.Entry
 }
 
-func (s *Server) listOwnersForNonSig(opts *tiexternalplugins.TiCommunityOwners,
+func (s *Server) listOwnersByAllSigs(opts *tiexternalplugins.TiCommunityOwners,
 	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	var committers []string
 	var reviewers []string
@@ -116,7 +117,7 @@ func (s *Server) listOwnersForNonSig(opts *tiexternalplugins.TiCommunityOwners,
 	}, nil
 }
 
-func (s *Server) listOwnersForSigs(sigNames []string,
+func (s *Server) listOwnersBySigs(sigNames []string,
 	opts *tiexternalplugins.TiCommunityOwners, trustTeamMembers []string,
 	requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	var committers []string
@@ -191,6 +192,37 @@ func (s *Server) listOwnersForSigs(sigNames []string,
 	}, nil
 }
 
+func (s *Server) listOwnersByGitHubPermission(org string, repo string,
+	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
+	collaborators, err := s.Gc.ListCollaborators(org, repo)
+	if err != nil {
+		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed to get collaborators.")
+		return nil, err
+	}
+
+	var collaboratorsLogin []string
+	for _, collaborator := range collaborators {
+		// Only write and admin permission can lgtm and merge PR.
+		if collaborator.Permissions.Push || collaborator.Permissions.Admin {
+			collaboratorsLogin = append(collaboratorsLogin, collaborator.Login)
+		}
+	}
+	committers := sets.NewString(collaboratorsLogin...).Insert(trustTeamMembers...).List()
+
+	if requireLgtm == 0 {
+		requireLgtm = defaultRequireLgtmNum
+	}
+
+	return &ownersclient.OwnersResponse{
+		Data: ownersclient.Owners{
+			Committers: committers,
+			Reviewers:  committers,
+			NeedsLgtm:  requireLgtm,
+		},
+		Message: listOwnersSuccessMessage,
+	}, nil
+}
+
 // ListOwners returns owners of tidb community PR.
 func (s *Server) ListOwners(org string, repo string, number int,
 	config *tiexternalplugins.Configuration) (*ownersclient.OwnersResponse, error) {
@@ -204,16 +236,16 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	// Get the configuration.
 	opts := config.OwnersFor(org, repo)
 
+	// Get the configuration according to the name of the branch which the current PR belongs to.
+	branchName := pull.Base.Ref
+	branchConfig, hasBranchConfig := opts.Branches[branchName]
+
 	// Get the require lgtm number from PR's label.
 	requireLgtm, err := getRequireLgtmByLabel(pull.Labels, opts.RequireLgtmLabelPrefix)
 	if err != nil {
 		s.Log.WithField("pullNumber", number).WithError(err).Error("Failed to parse require lgtm.")
 		return nil, err
 	}
-
-	// Get the configuration according to the name of the branch which the current PR belongs to.
-	branchName := pull.Base.Ref
-	branchConfig, hasBranchConfig := opts.Branches[branchName]
 
 	// When we cannot find the require label from the PR, try to use the default require lgtm.
 	if requireLgtm == 0 {
@@ -251,12 +283,26 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		sigNames = append(sigNames, opts.DefaultSigName)
 	}
 
-	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
-	if len(sigNames) == 0 {
-		return s.listOwnersForNonSig(opts, trustTeamMembers.List(), requireLgtm)
+	useGitHubPermission := false
+
+	// The branch configuration will override the total configuration.
+	if hasBranchConfig {
+		useGitHubPermission = branchConfig.UseGitHubPermission
+	} else {
+		useGitHubPermission = opts.UseGitHubPermission
+	}
+	// If we specify to use GitHub permissions,
+	// the people who have write and admin permissions will be reviewers and committers.
+	if useGitHubPermission {
+		return s.listOwnersByGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
 	}
 
-	return s.listOwnersForSigs(sigNames, opts, trustTeamMembers.List(), requireLgtm)
+	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
+	if len(sigNames) == 0 {
+		return s.listOwnersByAllSigs(opts, trustTeamMembers.List(), requireLgtm)
+	}
+
+	return s.listOwnersBySigs(sigNames, opts, trustTeamMembers.List(), requireLgtm)
 }
 
 // getSigNamesByLabels returns the names of sig when the label prefix matches.

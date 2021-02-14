@@ -81,6 +81,9 @@ type TiCommunityOwners struct {
 	//
 	// TrustTeams specifies the GitHub teams whose members are trusted.
 	TrustTeams []string `json:"trusted_teams,omitempty"`
+	// UseGitHubPermission specifies the permissions to use GitHub.
+	// People with write and admin permissions have reviewer and committer permissions.
+	UseGitHubPermission bool `json:"use_github_permission,omitempty"`
 	// Branches specifies the branch level configuration that will override the repository
 	// level configuration.
 	Branches map[string]TiCommunityOwnerBranchConfig `json:"branches,omitempty"`
@@ -92,6 +95,9 @@ type TiCommunityOwnerBranchConfig struct {
 	DefaultRequireLgtm int `json:"default_require_lgtm,omitempty"`
 	// TrustTeams specifies the GitHub teams whose members are trusted by the branch.
 	TrustTeams []string `json:"trusted_teams,omitempty"`
+	// UseGitHubPermission specifies the permissions to use GitHub.
+	// People with write and admin permissions have reviewer and committer permissions.
+	UseGitHubPermission bool `json:"use_github_permission,omitempty"`
 }
 
 // TiCommunityLabel is the config for the label plugin.
