@@ -35,6 +35,7 @@
 但是可能确实存在一些特殊情况找不到对应的sig：
 - 一些模块暂时未划分清楚 sig：使用 TiDB 社区所有 sig 的 reviewers 和 committers
 - 一些小型仓库直接隶属于某个 sig: 支持为该仓库配置默认的 sig
+- 一些仓库跟 sig 无关：支持使用仓库的 GitHub 权限，将拥有 write 和 admin 的协作者作为 reviewer 和 committer
 
 这样基本上就能够实现该服务。
 
@@ -50,14 +51,16 @@
 | default_require_lgtm      | int                     | 为该仓库设置默认需要的 lgtm 个数                                           |
 | require_lgtm_label_prefix | string                  | 插件支持通过标签指定当前 PR 需要的 lgtm 个数，该选项用于设置相关标签的前缀 |
 | trusted_teams             | []string                | 信任的 GitHub team 名称列表（一般为 maintainers team）                     |
+| use_github_permission     | bool                    | 使用 GitHub 权限，拥有 write 和 admin 的协作者作为 reviewer 和 committer   |
 | branches                  | map[string]BranchConfig | 分支粒度的参数配置, map结构的key是分支名称，对分支的配置会覆盖对仓库的配置 |
 
 ### BranchConfig
 
-| 参数名               | 类型     | 说明                             |
-| -------------------- | -------- | -------------------------------- |
-| default_require_lgtm | int      | 为该分支设置默认需要的 lgtm 个数 |
-| trusted_teams        | []string | 为该分支设置信任的 GitHub team   |
+| 参数名                | 类型     | 说明                                                                     |
+| --------------------- | -------- | ------------------------------------------------------------------------ |
+| default_require_lgtm  | int      | 为该分支设置默认需要的 lgtm 个数                                         |
+| trusted_teams         | []string | 为该分支设置信任的 GitHub team                                           |
+| use_github_permission | bool     | 使用 GitHub 权限，拥有 write 和 admin 的协作者作为 reviewer 和 committer |
 
 例如：
 
@@ -78,6 +81,7 @@ ti-community-owners:
         default_require_lgtm: 2
         trusted_teams:
           - bots-maintainers
+        use_github_permission: true
 ```
 
 ## Q&A
