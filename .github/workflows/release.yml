@@ -20,7 +20,7 @@ jobs:
       - name: Login to Docker Registry
         run: |
           echo "${{ secrets.DOCKER_TOKEN }}" | \
-          docker login -u rustinliu --password-stdin
+          docker login -u ticommunityinfra --password-stdin
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
