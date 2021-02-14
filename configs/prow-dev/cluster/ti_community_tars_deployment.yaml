@@ -19,7 +19,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
         - name: ti-community-tars
-          image: rustinliu/tichi-tars-plugin:v1.1.1
+          image: ticommunityinfra/tichi-tars-plugin:v1.2.0
           imagePullPolicy: Always
           args:
             - --dry-run=false
