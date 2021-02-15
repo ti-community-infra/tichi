@@ -10,6 +10,6 @@ require (
 	github.com/sirupsen/logrus v1.7.0
 	gotest.tools v2.2.0+incompatible
 	k8s.io/apimachinery v0.20.2
-	k8s.io/test-infra v0.0.0-20210201044549-a404539b5614
+	k8s.io/test-infra v0.0.0-20210214041705-f425fbca8d53
 	sigs.k8s.io/yaml v1.2.0
 )
