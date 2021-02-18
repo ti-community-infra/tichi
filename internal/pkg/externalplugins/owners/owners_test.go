@@ -506,13 +506,9 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
-			name:         "use GitHub permission",
-			sigResponses: []SigResponse{sig1Res},
-			labels: []github.Label{
-				{
-					Name: "sig/sig1",
-				},
-			},
+			name:                "use GitHub permission",
+			sigResponses:        []SigResponse{sig1Res},
+			labels:              []github.Label{},
 			useGitHubPermission: true,
 			expectCommitters: []string{
 				"collab2", "collab3",
@@ -526,9 +522,6 @@ func TestListOwners(t *testing.T) {
 			name:         "use GitHub permission and require one lgtm",
 			sigResponses: []SigResponse{sig1Res},
 			labels: []github.Label{
-				{
-					Name: "sig/sig1",
-				},
 				{
 					Name: "require-LGT1",
 				},
@@ -544,13 +537,9 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: 1,
 		},
 		{
-			name:         "use GitHub permission and a trust team",
-			sigResponses: []SigResponse{sig1Res},
-			labels: []github.Label{
-				{
-					Name: "sig/sig1",
-				},
-			},
+			name:                   "use GitHub permission and a trust team",
+			sigResponses:           []SigResponse{sig1Res},
+			labels:                 []github.Label{},
 			trustTeams:             []string{"Leads"},
 			requireLgtmLabelPrefix: "require-LGT",
 			useGitHubPermission:    true,
@@ -567,13 +556,9 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
-			name:         "use GitHub permission and owners plugin config contains branch config",
-			sigResponses: []SigResponse{sig1Res},
-			labels: []github.Label{
-				{
-					Name: "sig/sig1",
-				},
-			},
+			name:               "use GitHub permission and owners plugin config contains branch config",
+			sigResponses:       []SigResponse{sig1Res},
+			labels:             []github.Label{},
 			defaultRequireLgtm: 2,
 			trustTeams:         []string{"Leads"},
 			branchesConfig: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
@@ -598,6 +583,25 @@ func TestListOwners(t *testing.T) {
 				"admin1", "admin2",
 			},
 			expectNeedsLgtm: 3,
+		},
+		{
+			name:         "use GitHub permission and has one sig label",
+			sigResponses: []SigResponse{sig1Res},
+			labels: []github.Label{
+				{
+					Name: "sig/sig1",
+				},
+			},
+			useGitHubPermission: true,
+			expectCommitters: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2",
+			},
+			expectReviewers: []string{
+				"leader1", "leader2", "coLeader1", "coLeader2",
+				"committer1", "committer2", "reviewer1", "reviewer2",
+			},
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 	}
 

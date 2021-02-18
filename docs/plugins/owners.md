@@ -33,9 +33,9 @@
 因为要基于 sig 来划分权限，所以要求这些 PR 中能够获取到当前 PR 所属的 sig。owners 会在当前 PR 中查找以 `sig/` 开头的标签，然后查找该 sig 的信息。最终根据获取到的 sig 的信息生成 owners。
 
 但是可能确实存在一些特殊情况找不到对应的sig：
-- 一些模块暂时未划分清楚 sig：使用 TiDB 社区所有 sig 的 reviewers 和 committers
+- 一些模块暂时未划分清楚 sig 所属：使用 TiDB 社区所有 sig 的 reviewers 和 committers
 - 一些小型仓库直接隶属于某个 sig: 支持为该仓库配置默认的 sig
-- 一些仓库跟 sig 无关：支持使用仓库的 GitHub 权限，将拥有 write 和 admin 的协作者作为 reviewer 和 committer
+- 一些仓库的 PR 跟 sig 无关：支持使用仓库的 GitHub 权限，将拥有 write 和 admin 的协作者作为 reviewer 和 committer（只在没有 sig 标签时生效）
 
 这样基本上就能够实现该服务。
 
