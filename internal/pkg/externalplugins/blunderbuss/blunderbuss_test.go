@@ -42,28 +42,6 @@ func (c *fakeGitHubClient) GetPullRequest(_, _ string, _ int) (*github.PullReque
 	return c.pr, nil
 }
 
-func (c *fakeGitHubClient) UnrequestReview(_, _ string, _ int, unRequestReviewerLogins []string) error {
-	var remainReviewers []string
-
-	for _, requestedReviewerLogin := range c.requested {
-		existed := false
-		for _, unRequestReviewerLogin := range unRequestReviewerLogins {
-			if requestedReviewerLogin == unRequestReviewerLogin {
-				existed = true
-				break
-			}
-		}
-
-		if !existed {
-			remainReviewers = append(remainReviewers, requestedReviewerLogin)
-		}
-	}
-
-	c.requested = remainReviewers
-
-	return nil
-}
-
 func (c *fakeGitHubClient) GetIssueLabels(_, _ string, _ int) ([]github.Label, error) {
 	return c.pr.Labels, nil
 }
@@ -356,7 +334,6 @@ func TestHandlePullRequest(t *testing.T) {
 			excludeReviewers: []string{
 				"collab2",
 			},
-
 			expectReviewerCount: 1,
 		},
 		{
@@ -387,6 +364,15 @@ func TestHandlePullRequest(t *testing.T) {
 			expectReviewerCount: 0,
 		},
 		{
+			name:                "add new sig label for open PR with /cc",
+			action:              github.PullRequestActionLabeled,
+			state:               "open",
+			body:                "/cc @hi-rustin",
+			label:               "sig/planner",
+			maxReviewersCount:   2,
+			expectReviewerCount: 0,
+		},
+		{
 			name:   "add new sig label for open PR contained pending reviewers",
 			action: github.PullRequestActionLabeled,
 			state:  "open",
@@ -397,7 +383,7 @@ func TestHandlePullRequest(t *testing.T) {
 				"admin1",
 			},
 			maxReviewersCount:   2,
-			expectReviewerCount: 2,
+			expectReviewerCount: 1,
 		},
 	}
 
@@ -574,7 +560,7 @@ func TestHelpProvider(t *testing.T) {
 	}
 }
 
-func TestContainIssueLabels(t *testing.T) {
+func TestContainSigLabels(t *testing.T) {
 	testcases := []struct {
 		name        string
 		labelNames  []string
