@@ -34,7 +34,8 @@ func TestOptions(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testcases {
+	for _, testcase := range testcases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			flags := flag.NewFlagSet(tc.name, flag.ContinueOnError)
 			var actualOptions options
@@ -67,7 +68,8 @@ func TestValidate(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for _, testcase := range testCases {
+		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			if err := validate(tc.opts); err != nil {
 				t.Fatalf("validation failed: %v", err)

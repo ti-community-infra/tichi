@@ -4,11 +4,11 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
-	"io/ioutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -36,7 +36,8 @@ func parseOptions() (options, error) {
 }
 
 func (o *options) gatherOptions(flag *flag.FlagSet, args []string) error {
-	flag.StringVar(&o.externalPluginConfigPath, "external-plugin-config-path", "", "Path to external_plugin_config.yaml.")
+	flag.StringVar(&o.externalPluginConfigPath, "external-plugin-config-path", "",
+		"Path to external_plugin_config.yaml.")
 
 	if err := flag.Parse(args); err != nil {
 		return fmt.Errorf("parse flags: %v", err)
