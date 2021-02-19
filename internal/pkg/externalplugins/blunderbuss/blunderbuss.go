@@ -108,13 +108,13 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	repo := &pe.Repo
 	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
 	// If there is already /cc, the author has specified reviewers.
-	openPrWithoutCcCommand := !assign.CCRegexp.MatchString(pr.Body)
+	prBodyWithoutCcCommand := !assign.CCRegexp.MatchString(pr.Body)
 
 	isPrLabeledEvent := pe.Action == github.PullRequestActionLabeled
 	openPrWithSigLabel := pe.PullRequest.State == "open" && strings.Contains(pe.Label.Name, externalplugins.SigPrefix)
 
 	// Only handle the event of add SIG label to the open PR.
-	if isPrLabeledEvent && openPrWithSigLabel && openPrWithoutCcCommand {
+	if isPrLabeledEvent && openPrWithSigLabel && prBodyWithoutCcCommand {
 		return handle(
 			gc,
 			opts,
@@ -129,7 +129,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	repoNonRequireSigLabel := !opts.RequireSigLabel
 
 	// Only handle the event of opening non-CC PR, when the require_sig_label option is not turned on.
-	if isPrOpenedEvent && repoNonRequireSigLabel && openPrWithoutCcCommand {
+	if isPrOpenedEvent && repoNonRequireSigLabel && prBodyWithoutCcCommand {
 		// Wait a few seconds to allow other automation plugin to apply labels (Mainly SIG label).
 		gracePeriod := time.Duration(opts.GracePeriodDuration) * time.Second
 		sleep(gracePeriod)
