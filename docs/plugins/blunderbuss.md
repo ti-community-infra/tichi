@@ -16,7 +16,7 @@ ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划
 
 该插件主要参考了 Kubernetes 的 blunderbuss 插件设计。在它的基础上，我们依托于 ti-community-owners 实现当前 PR 的 reviewers 自动分配。
 
-如果一个仓库要求 PR 带有 sig 标签才能进行自动分配，在 PR 被添加上 sig 相关标签之前，创建 PR、对 PR 评论 `/auto-cc` 命令都不会进行自动分配。当我们打上 sig 标签之后，如果插件检测到没有 reviewers 被分配，插件才会自动的分配 reviewers。
+如果一个仓库要求 PR 带有 sig 标签才能进行自动分配，那么在 PR 被添加上 sig 相关标签之前，创建 PR、对 PR 评论 `/auto-cc` 命令都不会进行自动分配。当我们打上 sig 标签之后，如果插件检测到没有 reviewers 被分配，插件才会自动的分配 reviewers。
 
 ## 参数配置
 
