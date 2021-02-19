@@ -107,12 +107,14 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 
 	repo := &pe.Repo
 	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
+	// If there is already /cc, the author has specified reviewers.
+	openPrWithoutCcCommand := !assign.CCRegexp.MatchString(pr.Body)
 
 	isPrLabeledEvent := pe.Action == github.PullRequestActionLabeled
 	openPrWithSigLabel := pe.PullRequest.State == "open" && strings.Contains(pe.Label.Name, externalplugins.SigPrefix)
 
 	// Only handle the event of add SIG label to the open PR.
-	if isPrLabeledEvent && openPrWithSigLabel {
+	if isPrLabeledEvent && openPrWithSigLabel && openPrWithoutCcCommand {
 		return handle(
 			gc,
 			opts,
@@ -125,7 +127,6 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 
 	isPrOpenedEvent := pe.Action == github.PullRequestActionOpened
 	repoNonRequireSigLabel := !opts.RequireSigLabel
-	openPrWithoutCcCommand := !assign.CCRegexp.MatchString(pr.Body)
 
 	// Only handle the event of opening non-CC PR, when the require_sig_label option is not turned on.
 	if isPrOpenedEvent && repoNonRequireSigLabel && openPrWithoutCcCommand {
