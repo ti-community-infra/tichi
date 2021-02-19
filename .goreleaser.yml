@@ -88,6 +88,15 @@ builds:
     main: ./cmd/rerere/main.go
     env:
       - CGO_ENABLED=0
+  - id: "checkpluginconfig"
+    binary: checkpluginconfig
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/checkpluginconfig/main.go
+    env:
+      - CGO_ENABLED=0
 source:
   enabled: true
 checksum:
@@ -202,3 +211,13 @@ dockers:
     dockerfile: ./deployments/web/Dockerfile
     extra_files:
       - web/
+  -
+    binaries:
+      - checkpluginconfig
+    builds:
+      - checkpluginconfig
+    image_templates:
+      - "ticommunityinfra/tichi-checkpluginconfig:latest"
+      - "ticommunityinfra/tichi-checkpluginconfig:{{ .Tag }}"
+      - "ticommunityinfra/tichi-checkpluginconfig:{{ .Major }}"
+    dockerfile: ./deployments/plugins/checkpluginconfig/Dockerfile
