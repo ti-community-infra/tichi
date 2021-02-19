@@ -364,6 +364,15 @@ func TestHandlePullRequest(t *testing.T) {
 			expectReviewerCount: 0,
 		},
 		{
+			name:                "add new sig label for open PR with /cc",
+			action:              github.PullRequestActionLabeled,
+			state:               "open",
+			body:                "/cc @hi-rustin",
+			label:               "sig/planner",
+			maxReviewersCount:   2,
+			expectReviewerCount: 0,
+		},
+		{
 			name:   "add new sig label for open PR contained pending reviewers",
 			action: github.PullRequestActionLabeled,
 			state:  "open",
