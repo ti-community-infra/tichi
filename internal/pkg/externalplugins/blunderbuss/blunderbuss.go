@@ -32,7 +32,6 @@ var sleep = time.Sleep
 type githubClient interface {
 	RequestReview(org, repo string, number int, logins []string) error
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
-	UnrequestReview(org, repo string, number int, logins []string) error
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
 }
 
@@ -72,9 +71,10 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
 		}
 		pluginHelp := &pluginhelp.PluginHelp{
-			Description: "The blunderbuss plugin automatically requests reviews from reviewers when a new PR is created.",
-			Config:      configInfo,
-			Snippet:     yamlSnippet,
+			Description: "The blunderbuss plugin automatically requests reviews from reviewers when a new PR is created or " +
+				"when a sig label is labeled.",
+			Config:  configInfo,
+			Snippet: yamlSnippet,
 		}
 		pluginHelp.AddCommand(pluginhelp.Command{
 			Usage:       "/auto-cc",
@@ -100,15 +100,20 @@ func configString(maxReviewerCount int) string {
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	pr := &pe.PullRequest
+	// If a PR already has reviewers, we do not automatically assign them.
+	if len(pr.RequestedReviewers) > 0 {
+		return nil
+	}
+
 	repo := &pe.Repo
 	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
 
 	isPrLabeledEvent := pe.Action == github.PullRequestActionLabeled
 	openPrWithSigLabel := pe.PullRequest.State == "open" && strings.Contains(pe.Label.Name, externalplugins.SigPrefix)
 
-	// Only handle the event of assigning SIG label to the open PR.
+	// Only handle the event of add SIG label to the open PR.
 	if isPrLabeledEvent && openPrWithSigLabel {
-		return handlePullRequestLabeled(
+		return handle(
 			gc,
 			opts,
 			repo,
@@ -151,33 +156,6 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	}
 
 	return nil
-}
-
-// handlePullRequestLabeled handles the sig label labeled event.
-func handlePullRequestLabeled(gc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo *github.Repo,
-	pr *github.PullRequest, log *logrus.Entry, ol ownersclient.OwnersLoader) error {
-	// Cancel requesting all pending reviewers.
-	var reviewerLogins []string
-	for _, reviewer := range pr.RequestedReviewers {
-		reviewerLogins = append(reviewerLogins, reviewer.Login)
-	}
-
-	err := gc.UnrequestReview(repo.Owner.Login, repo.Name, pr.Number, reviewerLogins)
-
-	if err != nil {
-		log.WithError(err).Warn("Failed to cancel requesting reviewers of the SIG that the label specified.")
-	} else {
-		log.Infof("Cancel requesting reviews of users %s.", reviewerLogins)
-	}
-
-	return handle(
-		gc,
-		opts,
-		repo,
-		pr,
-		log,
-		ol,
-	)
 }
 
 // HandleIssueCommentEvent handles a GitHub issue comment event and requests review.
