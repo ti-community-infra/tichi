@@ -25,7 +25,7 @@ presubmits:
       containers:
         - image: ticommunityinfra/tichi-check-external-plugin-config:v1.3.0
           command:
-            - /check-external-plugin-config
+            - check-external-plugin-config
           args:
             - --external-plugin-config-path=configs/prow-dev/config/external_plugins_config.yaml
   - name: pull-tichi-rerere
