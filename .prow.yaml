@@ -16,6 +16,18 @@ presubmits:
             - --warnings=validate-urls
             - --warnings=unknown-fields
             - --warnings=duplicate-job-refs
+  - name: pull-tichi-validate-external-plugin-yaml
+    decorate: true
+    run_if_changed: 'configs/prow-dev/config/external_plugins_config.yaml'
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: ticommunityinfra/tichi-check-external-plugin-config:v1.3.0
+          command:
+            - check-external-plugin-config
+          args:
+            - --external-plugin-config-path=configs/prow-dev/config/external_plugins_config.yaml
   - name: pull-tichi-rerere
     decorate: true
     always_run: true
@@ -26,7 +38,7 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: ticommunityinfra/rerere-component:v1.2.1
+        - image: ticommunityinfra/rerere-component:v1.3.0
           command:
             - rerere
           args:
