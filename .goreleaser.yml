@@ -220,4 +220,4 @@ dockers:
       - "ticommunityinfra/tichi-check-external-plugin-config:latest"
       - "ticommunityinfra/tichi-check-external-plugin-config:{{ .Tag }}"
       - "ticommunityinfra/tichi-check-external-plugin-config:{{ .Major }}"
-    dockerfile: ./deployments/plugins/check-external-plugin-config/Dockerfile
+    dockerfile: ./deployments/utils/check-external-plugin-config/Dockerfile
