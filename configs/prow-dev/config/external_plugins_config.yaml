@@ -41,7 +41,7 @@ ti-community-autoresponder:
   - repos:
       - ti-community-infra/test-dev
     auto_responds:
-      - regex: "(?mierror)^/ping\\s*$"
+      - regex: "(?mi)^/ping\\s*$"
         message: "pong"
 
 ti-community-blunderbuss:
