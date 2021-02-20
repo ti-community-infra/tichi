@@ -63,7 +63,7 @@ func TestValidate(t *testing.T) {
 		{
 			name: "combined config",
 			opts: options{
-				externalPluginConfigPath: "testdata/external_plugins_config.yaml",
+				externalPluginConfigPath: "../../test/testdata/config_combine.yaml",
 			},
 		},
 	}
