@@ -1,0 +1,83 @@
+tichi-web-url: https://prow-dev.tidb.io/tichi
+pr-process-link: https://book.prow.tidb.io/#/en/workflows/pr
+command-help-link: https://prow-dev.tidb.io/command-help
+
+ti-community-lgtm:
+  - repos:
+      - ti-community-infra/test-dev
+    review_acts_as_lgtm: true
+    pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
+
+ti-community-merge:
+  - repos:
+      - ti-community-infra/test-dev
+    store_tree_hash: true
+    pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
+
+ti-community-owners:
+  - repos:
+      - ti-community-infra/test-dev
+    default_require_lgtm: 1
+    sig_endpoint: https://bots.tidb.io/ti-community-bot
+    default_sig_name: community-infra
+    trusted_teams:
+      - bots-test
+    branches:
+      try:
+        default_require_lgtm: 2
+        trusted_teams:
+          - bots-test
+
+ti-community-label:
+  - repos:
+      - ti-community-infra/test-dev
+    prefixes:
+      - type
+      - status
+    exclude_labels:
+      - status/can-merge
+
+ti-community-autoresponder:
+  - repos:
+      - ti-community-infra/test-dev
+    auto_responds:
+      - regex: "(?mi)^/ping\\s*$"
+        message: "pong"
+
+ti-community-blunderbuss:
+  - repos:
+      - ti-community-infra/test-dev
+    pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
+    max_request_count: 2
+    require_sig_label: true
+    exclude_reviewers:
+      # Bots
+      - ti-chi-bot
+      - rustin-bot
+      # Inactive reviewers
+      - sykp241095
+
+ti-community-tars:
+  - repos:
+      - ti-community-infra/test-dev
+    only_when_label: "status/can-merge"
+    message: "Your PR has out-of-dated, I have automatically updated it for you."
+
+ti-community-label-blocker:
+  - repos:
+      - ti-community-infra/test-dev
+    block_labels:
+      - regex: "^status/LGT[\\d]+$"
+        actions:
+          - labeled
+        trusted_teams:
+          - bots-test
+        trusted_users:
+          - rustin-bot
+      - regex: "^status/can-merge$"
+        actions:
+          - labeled
+          - unlabeled
+        trusted_users:
+          - rustin-bot
+        message: You can't add the status/can-merge label.
