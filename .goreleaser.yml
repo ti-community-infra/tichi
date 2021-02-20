@@ -88,13 +88,13 @@ builds:
     main: ./cmd/rerere/main.go
     env:
       - CGO_ENABLED=0
-  - id: "checkpluginconfig"
-    binary: checkpluginconfig
+  - id: "check-external-plugin-config"
+    binary: check-external-plugin-config
     goos:
       - linux
     goarch:
       - amd64
-    main: ./cmd/checkpluginconfig/main.go
+    main: ./cmd/check-external-plugin-config/main.go
     env:
       - CGO_ENABLED=0
 source:
@@ -213,11 +213,11 @@ dockers:
       - web/
   -
     binaries:
-      - checkpluginconfig
+      - check-external-plugin-config
     builds:
-      - checkpluginconfig
+      - check-external-plugin-config
     image_templates:
-      - "ticommunityinfra/tichi-checkpluginconfig:latest"
-      - "ticommunityinfra/tichi-checkpluginconfig:{{ .Tag }}"
-      - "ticommunityinfra/tichi-checkpluginconfig:{{ .Major }}"
-    dockerfile: ./deployments/plugins/checkpluginconfig/Dockerfile
+      - "ticommunityinfra/tichi-check-external-plugin-config:latest"
+      - "ticommunityinfra/tichi-check-external-plugin-config:{{ .Tag }}"
+      - "ticommunityinfra/tichi-check-external-plugin-config:{{ .Major }}"
+    dockerfile: ./deployments/plugins/check-external-plugin-config/Dockerfile
