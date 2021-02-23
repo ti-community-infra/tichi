@@ -6,7 +6,7 @@ periodics:
       description: Closes rotten issues after 30d of inactivity
     spec:
       containers:
-        - image: gcr.io/k8s-prow/commenter:v20210211-72696ce111
+        - image: gcr.io/k8s-prow/commenter:v20210222-37d809a6d8
           command:
             - /app/robots/commenter/app.binary
           args:
@@ -42,7 +42,7 @@ periodics:
       description: Adds lifecycle/rotten to stale issues after 30d of inactivity
     spec:
       containers:
-        - image: gcr.io/k8s-prow/commenter:v20210211-72696ce111
+        - image: gcr.io/k8s-prow/commenter:v20210222-37d809a6d8
           command:
             - /app/robots/commenter/app.binary
           args:
@@ -81,7 +81,7 @@ periodics:
       description: Adds lifecycle/stale to issues after 30d of inactivity
     spec:
       containers:
-        - image: gcr.io/k8s-prow/commenter:v20210211-72696ce111
+        - image: gcr.io/k8s-prow/commenter:v20210222-37d809a6d8
           command:
             - /app/robots/commenter/app.binary
           args:
