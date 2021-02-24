@@ -36,9 +36,9 @@ cover:
 	echo "Uploading coverage results..."
 	@curl -s https://codecov.io/bash | bash
 
-dev: check test
+dev: check test staticcheck
 
-check: fmt tidy staticcheck
+check: fmt tidy
 
 fmt:
 	@echo "gofmt (simplify)"
