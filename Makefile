@@ -31,8 +31,10 @@ test:
 	$(GOTEST) $(PACKAGES)
 	@>&2 echo "Great, all tests passed."
 
-test-with-coverage:
+cover:
 	$(GOTEST) $(PACKAGES) -race -coverprofile=coverage.txt -covermode=atomic
+	echo "Uploading coverage results..."
+	@curl -s https://codecov.io/bash | bash
 
 dev: check test
 

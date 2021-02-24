@@ -31,31 +31,15 @@ presubmits:
   - name: pull-tichi-rerere
     decorate: true
     always_run: true
-    trigger: "(?mi)^/(merge|rerere)\\s*$"
-    rerun_command: "/rerere"
-    max_concurrency: 1
     branches:
       - ^master$
     spec:
       containers:
-        - image: ticommunityinfra/rerere-component:v1.3.0
+        - image: golang:1.15
           command:
-            - rerere
-          args:
-            - --github-token-path=/etc/github/token
-            - --dry-run=false
-            - --github-endpoint=https://api.github.com
-            - --require-contexts=build
-            - --require-contexts=lint
-            - --labels=status/can-merge
-          volumeMounts:
-            - name: github-token
-              mountPath: /etc/github
-              readOnly: true
-      volumes:
-        - name: github-token
-          secret:
-            secretName: github-token
+            - /bin/bash
+            - -c
+            - "GIT_COMMIT=${PULL_PULL_SHA} make check cover"
   - name: pull-tichi-validate-labels-yaml
     decorate: true
     run_if_changed: 'configs/prow-dev/config/labels.yaml'
