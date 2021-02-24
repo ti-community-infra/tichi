@@ -28,7 +28,7 @@ presubmits:
             - check-external-plugin-config
           args:
             - --external-plugin-config-path=configs/prow-dev/config/external_plugins_config.yaml
-  - name: pull-tichi-rerere
+  - name: pull-tichi-unit-test
     decorate: true
     always_run: true
     branches:
