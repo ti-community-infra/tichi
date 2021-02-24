@@ -40,6 +40,12 @@ presubmits:
             - /bin/bash
             - -c
             - "GIT_COMMIT=${PULL_PULL_SHA} make check cover"
+          env:
+            - name: CODECOV_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: codecov-tokens
+                  key: ti-community-infra-tichi-codecov-token
   - name: pull-tichi-validate-labels-yaml
     decorate: true
     run_if_changed: 'configs/prow-dev/config/labels.yaml'
