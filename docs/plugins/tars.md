@@ -33,7 +33,7 @@ ti-community-tars:
   - repos:
       - ti-community-infra/test-dev
     only_when_label: "status/can-merge"
-    message: "Your PR has out-of-dated, I have automatically updated it for you."
+    message: "Your PR was out of date, I have automatically updated it for you."
 ```
 
 ## 参考文档
