@@ -363,7 +363,7 @@ func TestHandlePullRequest(t *testing.T) {
 			excludeReviewers: []string{
 				"collab2",
 			},
-			expectReviewerCount: 1,
+			expectReviewerCount: 2,
 		},
 		{
 			name:                "add new sig label for open PR",
@@ -500,7 +500,7 @@ func TestHandlePullRequest(t *testing.T) {
 		}
 
 		foc := &fakeOwnersClient{
-			reviewers: []string{"collab1", "collab2"},
+			reviewers: []string{"collab1", "collab2", "collab3"},
 			needsLgtm: 2,
 		}
 
