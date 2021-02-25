@@ -70,7 +70,7 @@ presubmits:
           secret:
             secretName: github-token
   - name: prow-autobump
-    cluster: test-infra-trusted
+    always_run: true
     decorate: true
     extra_refs:
       - org: ti-community-infra
