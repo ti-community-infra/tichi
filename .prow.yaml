@@ -72,10 +72,6 @@ presubmits:
   - name: prow-autobump
     always_run: true
     decorate: true
-    extra_refs:
-      - org: ti-community-infra
-        repo: tichi
-        base_ref: master
     spec:
       containers:
         - image: gcr.io/k8s-prow/autobump
