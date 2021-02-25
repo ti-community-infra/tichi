@@ -436,6 +436,16 @@ func TestHandlePullRequest(t *testing.T) {
 						Login: "author",
 					},
 				},
+				{
+					Author: github.User{
+						Login: "author",
+					},
+				},
+				{
+					Author: github.User{
+						Login: "collab2",
+					},
+				},
 			},
 		}
 		fc := newFakeGitHubClient(&pr, prChanges, fileCommits)
