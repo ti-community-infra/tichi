@@ -2,17 +2,18 @@ package blunderbuss
 
 import (
 	"fmt"
+	"math/rand"
 	"regexp"
 	"strings"
 	"time"
 
+	wr "github.com/mroth/weightedrand"
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
-	"k8s.io/test-infra/prow/pkg/layeredsets"
 	"k8s.io/test-infra/prow/pluginhelp"
 	"k8s.io/test-infra/prow/plugins"
 	"k8s.io/test-infra/prow/plugins/assign"
@@ -33,6 +34,8 @@ type githubClient interface {
 	RequestReview(org, repo string, number int, logins []string) error
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
+	GetPullRequestChanges(org, repo string, number int) ([]github.PullRequestChange, error)
+	ListFileCommits(org, repo, path string) ([]github.RepositoryCommit, error)
 }
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
@@ -196,47 +199,110 @@ func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg 
 	)
 }
 
-func handle(ghc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo *github.Repo, pr *github.PullRequest,
+func handle(gc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo *github.Repo, pr *github.PullRequest,
 	log *logrus.Entry, ol ownersclient.OwnersLoader) error {
 	owners, err := ol.LoadOwners(opts.PullOwnersEndpoint, repo.Owner.Login, repo.Name, pr.Number)
 	if err != nil {
-		return fmt.Errorf("error loading RepoOwners: %v", err)
+		return fmt.Errorf("error loading repo owners: %v", err)
 	}
 
-	reviewers := getReviewers(pr.User.Login, owners.Reviewers, opts.ExcludeReviewers, log)
+	// List all available reviewers.
+	availableReviewers := listAvailableReviewers(pr.User.Login, owners.Reviewers,
+		opts.ExcludeReviewers, pr.RequestedReviewers)
+
 	maxReviewerCount := opts.MaxReviewerCount
-
-	// If the maximum count of reviewers greater than 0, it needs to be split.
-	if maxReviewerCount > 0 && len(reviewers) > maxReviewerCount {
-		log.Infof("Limiting request of %d reviewers to %d maxReviewers.", len(reviewers), maxReviewerCount)
-		reviewers = reviewers[:maxReviewerCount]
+	// If maxReviewerCount is not set or there are not enough reviewers, then all reviewers are assigned.
+	if maxReviewerCount == 0 || len(availableReviewers) <= maxReviewerCount {
+		log.Infof("Requesting reviews from users %s.", availableReviewers.List())
+		return gc.RequestReview(repo.Owner.Login, repo.Name, pr.Number, availableReviewers.List())
 	}
 
-	if len(reviewers) > 0 {
-		log.Infof("Requesting reviews from users %s.", reviewers)
-		return ghc.RequestReview(repo.Owner.Login, repo.Name, pr.Number, reviewers)
+	// Always seed random!
+	rand.Seed(time.Now().UTC().UnixNano())
+	// List the contributors of the changes.
+	contributors, err := listChangesContributors(gc, repo.Owner.Login, repo.Name, pr.Number, log)
+	if err != nil {
+		return err
 	}
-	return nil
+
+	// Filter out unavailable contributors.
+	for contributor := range contributors {
+		if !availableReviewers.Has(contributor) {
+			delete(contributors, contributor)
+		}
+	}
+
+	for _, reviewer := range availableReviewers.List() {
+		_, ok := contributors[reviewer]
+		if !ok {
+			contributors[reviewer] = 1
+		}
+	}
+	// Create weighted selectors chooser on the number of changes made to the code.
+	var choices []wr.Choice
+	for contributor, count := range contributors {
+		choices = append(choices, wr.Choice{
+			Item:   contributor,
+			Weight: count,
+		})
+	}
+	reviewers := sets.NewString()
+
+	chooser, err := wr.NewChooser(
+		choices...,
+	)
+	if err != nil {
+		return err
+	}
+	for len(reviewers) < maxReviewerCount {
+		// Rand pick.
+		reviewers.Insert(chooser.Pick().(string))
+	}
+
+	log.Infof("Requesting reviews from users %s.", reviewers.List())
+	return gc.RequestReview(repo.Owner.Login, repo.Name, pr.Number, reviewers.List())
 }
 
-func getReviewers(author string, reviewers []string, excludeReviewers []string, log *logrus.Entry) []string {
+func listAvailableReviewers(author string, reviewers []string, excludeReviewers []string,
+	requestedReviewers []github.User) sets.String {
 	authorSet := sets.NewString(github.NormLogin(author))
 	excludeReviewersSet := sets.NewString(excludeReviewers...)
+	requestedReviewersSet := sets.NewString()
+	for _, reviewer := range requestedReviewers {
+		requestedReviewersSet.Insert(reviewer.Login)
+	}
 	reviewersSet := sets.NewString()
 	reviewersSet.Insert(reviewers...)
 
-	var result []string
-	// Exclude the author.
-	availableReviewers := layeredsets.NewString(
-		reviewersSet.Difference(authorSet).Difference(excludeReviewersSet).List()...)
+	return reviewersSet.Difference(authorSet).Difference(excludeReviewersSet).Difference(requestedReviewersSet)
+}
 
-	for availableReviewers.Len() > 0 {
-		reviewer := availableReviewers.PopRandom()
-		result = append(result, reviewer)
-		log.Infof("Added %s as reviewers. %d reviewers found.", reviewer, len(result))
+func listChangesContributors(gc githubClient, org string, repo string, num int,
+	log *logrus.Entry) (map[string]uint, error) {
+	changes, err := gc.GetPullRequestChanges(org, repo, num)
+	if err != nil {
+		return nil, fmt.Errorf("error get pull request changes: %v", err)
 	}
 
-	return result
+	contributors := make(map[string]uint)
+	for _, change := range changes {
+		commits, err := gc.ListFileCommits(org, repo, change.Filename)
+		if err != nil {
+			log.WithError(err).Warnf("Failed list file commits of %s.", change.Filename)
+		}
+
+		for _, commit := range commits {
+			contributor := commit.Author.Login
+			count, ok := contributors[contributor]
+			if ok {
+				contributors[contributor] = count + 1
+			} else {
+				contributors[contributor] = 1
+			}
+		}
+	}
+
+	return contributors, nil
 }
 
 func containSigLabel(labels []github.Label) bool {
