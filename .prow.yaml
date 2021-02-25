@@ -84,7 +84,7 @@ presubmits:
           args:
             - /etc/github-token/token
             - "ti-chi-bot"
-            - bot.email@gmail.com
+            - ti-community-prow-bot@tidb.io
           volumeMounts:
             - name: github
               mountPath: /etc/github-token
