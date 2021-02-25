@@ -18,18 +18,25 @@ ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划
 
 如果一个仓库要求 PR 带有 sig 标签才能进行自动分配，那么在 PR 被添加上 sig 相关标签之前，创建 PR、对 PR 评论 `/auto-cc` 命令都不会进行自动分配。当我们打上 sig 标签之后，如果插件检测到没有 reviewers 被分配，插件才会自动的分配 reviewers。
 
+插件的分配策略为：
+
+- 有权限的 reviewers 数量小于或等于 `max_request_count`
+  - 分配所有有权限的 reviewers
+- 有权限的 reviewers 数量大于 `max_request_count`
+  - 获取 PR 的所有文件改动，找出这些改动文件的历史贡献者，然后和有权限的 reviewers 求交集，并用总的改动次数作为权重来进行加权随机分配
+
 **需要特别注意的是**：当 PR 的 Body 中使用了 `/cc` 命令指定了 reviewers 之后，插件在响应 PR 创建和打上 sig 标签事件时，不会再进行自动分配。但是使用 `/auto-cc` 命令无该限制。
 
 ## 参数配置
 
-| 参数名               | 类型     | 说明                                                        |
-| -------------------- | -------- | --------------------------------------------------------- |
-| repos                | []string | 配置生效仓库                                                |
-| pull_owners_endpoint | string   | PR owners RESTFUL 接口地址                                 |
-| max_request_count    | int      | 最多的分配人数                                              |
-| exclude_reviewers    | []string | 不参与自动分配的 reviewers（针对一些可能不活跃的 reviewers ）   |
-| grace_period_duration| int      | 配置等待其它插件添加 sig 标签的等待时间，单位为秒，默认为 5 秒    |
-| require_sig_label    | bool     | PR 是否必须带有 SIG 标签才允许自动分配 reviewers               |
+| 参数名                | 类型     | 说明                                                           |
+| --------------------- | -------- | -------------------------------------------------------------- |
+| repos                 | []string | 配置生效仓库                                                   |
+| pull_owners_endpoint  | string   | PR owners RESTFUL 接口地址                                     |
+| max_request_count     | int      | 最多的分配人数（不配置将请求分配所有 reviewers）               |
+| exclude_reviewers     | []string | 不参与自动分配的 reviewers（针对一些可能不活跃的 reviewers ）  |
+| grace_period_duration | int      | 配置等待其它插件添加 sig 标签的等待时间，单位为秒，默认为 5 秒 |
+| require_sig_label     | bool     | PR 是否必须带有 SIG 标签才允许自动分配 reviewers               |
 
 例如：
 
