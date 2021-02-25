@@ -21,7 +21,8 @@ import (
 
 const (
 	// PluginName defines this plugin's registered name.
-	PluginName = "ti-community-blunderbuss"
+	PluginName    = "ti-community-blunderbuss"
+	defaultWeight = 1
 )
 
 var (
@@ -232,18 +233,19 @@ func handle(gc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo 
 		}
 	}
 
+	// The default weight for other reviewers is 1.
 	for _, reviewer := range availableReviewers.List() {
 		_, ok := contributors[reviewer]
 		if !ok {
-			contributors[reviewer] = 1
+			contributors[reviewer] = defaultWeight
 		}
 	}
 	// Create weighted selectors chooser on the number of changes made to the code.
 	var choices []wr.Choice
-	for contributor, count := range contributors {
+	for contributor, weight := range contributors {
 		choices = append(choices, wr.Choice{
 			Item:   contributor,
-			Weight: count,
+			Weight: weight,
 		})
 	}
 	reviewers := sets.NewString()
@@ -293,11 +295,11 @@ func listChangesContributors(gc githubClient, org string, repo string, num int,
 
 		for _, commit := range commits {
 			contributor := commit.Author.Login
-			count, ok := contributors[contributor]
+			weight, ok := contributors[contributor]
 			if ok {
-				contributors[contributor] = count + 1
+				contributors[contributor] = weight + defaultWeight
 			} else {
-				contributors[contributor] = 1
+				contributors[contributor] = defaultWeight
 			}
 		}
 	}
