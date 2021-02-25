@@ -69,6 +69,43 @@ presubmits:
         - name: github-token
           secret:
             secretName: github-token
+  - name: prow-autobump
+    cluster: test-infra-trusted
+    decorate: true
+    extra_refs:
+      - org: ti-community-infra
+        repo: tichi
+        base_ref: master
+    spec:
+      containers:
+        - image: gcr.io/k8s-prow/autobump
+          command:
+            - /autobump.sh
+          args:
+            - /etc/github-token/token
+            - "Bot Name"
+            - bot.email@gmail.com
+          volumeMounts:
+            - name: github
+              mountPath: /etc/github-token
+              readOnly: true
+          env:
+            - name: GH_ORG
+              value: ti-community-infra
+            - name: GH_REPO
+              value: tichi
+            - name: PLANK_DEPLOYMENT_FILE
+              value: configs/prow-dev/cluster/plank_deployment.yaml
+            - name: COMPONENT_FILE_DIR
+              value: configs/prow-dev/cluster
+            - name: CONFIG_PATH
+              value: configs/prow-dev/config/config.yaml
+            - name: JOB_CONFIG_PATH
+              value: configs/prow-dev/jobs
+      volumes:
+        - name: github
+          secret:
+            secretName: oauth-token
 postsubmits:
   - name: post-tichi-deploy-prow
     run_if_changed: 'configs/prow-dev/cluster/'
