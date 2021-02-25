@@ -83,7 +83,7 @@ presubmits:
             - /autobump.sh
           args:
             - /etc/github-token/token
-            - "Bot Name"
+            - "ti-chi-bot"
             - bot.email@gmail.com
           volumeMounts:
             - name: github
