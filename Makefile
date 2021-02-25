@@ -21,7 +21,12 @@ PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/ti-community-infra/$(
 FILES     := $$(find $$($(PACKAGE_DIRECTORIES)) -name "*.go")
 
 
-.PHONY: clean test dev check tidy
+.PHONY: clean test cover fmt tidy staticcheck dev check
+
+
+dev: check staticcheck test
+
+check: fmt tidy
 
 clean:
 	$(GO) clean -i ./...
@@ -35,10 +40,6 @@ cover:
 	$(GOTEST) $(PACKAGES) -race -coverprofile=coverage.txt -covermode=atomic
 	echo "Uploading coverage results..."
 	@curl -s https://codecov.io/bash | bash
-
-dev: check test staticcheck
-
-check: fmt tidy
 
 fmt:
 	@echo "gofmt (simplify)"
