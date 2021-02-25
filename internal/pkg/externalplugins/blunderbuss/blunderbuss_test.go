@@ -304,8 +304,8 @@ func TestHandlePullRequest(t *testing.T) {
 			body:                "/auto-cc",
 			requireSigLabel:     false,
 			state:               "open",
-			maxReviewersCount:   2,
-			expectReviewerCount: 2,
+			maxReviewersCount:   1,
+			expectReviewerCount: 1,
 		},
 		{
 			name:                "PR opened in a repository that require SIG label",
