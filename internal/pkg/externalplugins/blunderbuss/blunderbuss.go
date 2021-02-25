@@ -214,7 +214,7 @@ func handle(gc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo 
 	maxReviewerCount := opts.MaxReviewerCount
 	// If maxReviewerCount is not set or there are not enough reviewers, then all reviewers are assigned.
 	if maxReviewerCount == 0 || len(availableReviewers) <= maxReviewerCount {
-		log.Infof("Requesting reviews from users %s.", availableReviewers.List())
+		log.Infof("Requesting all available reviewers %s.", availableReviewers.List())
 		return gc.RequestReview(repo.Owner.Login, repo.Name, pr.Number, availableReviewers.List())
 	}
 
