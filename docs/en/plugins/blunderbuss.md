@@ -18,14 +18,14 @@ This plugin is mainly based on the blunderbuss plugin for Kubernetes. Based on i
 
 The allocation strategy is:
 
-- The number of reviewers with permission is less than or equal to `max_request_count`
+- If the number of reviewers with permission is less than or equal to `max_request_count`
   - Assign all reviewers with permissions
-- The number of reviewers with permission is greater than `max_request_count`
-  - Get all the file changes of PR, find the historical contributors of these changed files, and use the total number of changes as weights for weighted random assignment
+- If the number of reviewers with permission is greater than `max_request_count`
+  - Get all the file changes of PR, find out the historical contributors of these changed files, and calculate the weights based on the number of changes made by the contributors to the files for weighted random assignment
 
-If a repository requires the PR with a sig label for auto-assignment, then creating a PR and using the `/auto-cc` command will not auto-assign until the PR is labeled with the sig-related label. After we put the sig label on, the plugin will automatically assign reviewers if it detects that no reviewers have been assigned.
+If a repository requires a PR with a sig label for auto-assignment, then creating the PR, using the `/auto-cc` command will not auto-assign until the PR is labeled with the sig-related label. The plugin will only automatically assign reviewers after we add the sig labels.
 
-**Special note**: When reviewers are specified in the body of a PR with the `/cc` command, the plugin will not automatically assign them. However, there is no such restriction with the `/auto-cc` command.
+**Special note**: When the `/cc` command is used in the body of a PR or reviewers have been manually specified, the plugin will not automatically assign them. However, there is no such restriction with the `/auto-cc` command.
 
 ## Parameter Configuration 
 
