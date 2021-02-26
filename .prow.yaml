@@ -70,7 +70,6 @@ presubmits:
           secret:
             secretName: github-token
   - name: prow-autobump
-    cluster: test-infra-trusted
     decorate: true
     extra_refs:
       - org: kubernetes
