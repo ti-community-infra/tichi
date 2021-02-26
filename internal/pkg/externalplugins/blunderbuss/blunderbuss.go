@@ -21,8 +21,9 @@ import (
 
 const (
 	// PluginName defines this plugin's registered name.
-	PluginName    = "ti-community-blunderbuss"
-	defaultWeight = 1
+	PluginName      = "ti-community-blunderbuss"
+	defaultWeight   = 1
+	weightIncrement = 1
 )
 
 var (
@@ -297,7 +298,7 @@ func listChangesContributors(gc githubClient, org string, repo string, num int,
 			contributor := commit.Author.Login
 			weight, ok := contributors[contributor]
 			if ok {
-				contributors[contributor] = weight + defaultWeight
+				contributors[contributor] = weight + weightIncrement
 			} else {
 				contributors[contributor] = defaultWeight
 			}
