@@ -21,8 +21,10 @@ import (
 
 const (
 	// PluginName defines this plugin's registered name.
-	PluginName      = "ti-community-blunderbuss"
-	defaultWeight   = 1
+	PluginName = "ti-community-blunderbuss"
+	// defaultWeight specifies the default contribution weight.
+	defaultWeight = 1
+	// weightIncrement specifies the weight of the contribution added by each code change.
 	weightIncrement = 1
 )
 
