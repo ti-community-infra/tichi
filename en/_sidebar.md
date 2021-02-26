@@ -1,4 +1,5 @@
 - [Plugins](en/plugins.md)
   - [ti-community-merge](en/plugins/merge.md)
+  - [ti-community-blunderbuss](en/plugins/blunderbuss.md)
 - [Workflows](en/workflows.md)
   - [PR workflow](en/workflows/pr.md)
