@@ -214,7 +214,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		return nil
 	}
 	var buf bytes.Buffer
-	fmt.Fprint(&buf, "archived:false is:pr is:open")
+	fmt.Fprint(&buf, "archived:false is:pr is:open sort:created-asc")
 	for _, org := range orgs {
 		fmt.Fprintf(&buf, " org:\"%s\"", org)
 	}
@@ -237,15 +237,20 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 			"pr":   num,
 		})
 
-		err = handleAll(l, ghc, &pr, externalConfig)
+		// Only one PR is processed at a time, because even if other PRs are updated,
+		// they still need to be queued for another update and merge.
+		// To save testing resources we only process one PR at a time.
+		err = handle(l, ghc, &pr, externalConfig)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
+		} else {
+			break
 		}
 	}
 	return nil
 }
 
-func handleAll(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *externalplugins.Configuration) error {
+func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *externalplugins.Configuration) error {
 	if pr.Merged {
 		return nil
 	}
