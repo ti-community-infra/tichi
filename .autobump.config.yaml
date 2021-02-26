@@ -1,0 +1,33 @@
+gitHubLogin: "ti-chi-bot"
+gitHubToken: "/etc/github-token/oauth"
+gitName: "ti-chi-bot"
+gitEmail: "ti-community-prow-bot@tidb.io"
+onCallAddress: "https://storage.googleapis.com/kubernetes-jenkins/oncall.json"
+skipPullRequest: false
+gitHubOrg: "ti-community-infra"
+gitHubRepo: "tichi"
+remoteName: "tichi"
+upstreamURLBase: "https://raw.githubusercontent.com/ti-community-infra/tichi/master"
+includedConfigPaths:
+  - "."
+excludedConfigPaths: []
+extraFiles: []
+targetVersion: "latest"
+prefixes:
+  - name: "Prow"
+    prefix: "gcr.io/k8s-prow/"
+    refConfigFile: "configs/prow-dev/cluster/deck_deployment.yaml"
+    stagingRefConfigFile: "config/prow-staging/cluster/deck_deployment.yaml"
+    repo: "https://github.com/kubernetes/test-infra"
+    summarise: true
+    consistentImages: true
+  - name: "Boskos"
+    prefix: "gcr.io/k8s-staging-boskos/"
+    repo: "https://github.com/kubernetes-sigs/boskos"
+    summarise: false
+    consistentImages: true
+  - name: "Prow-Test-Images"
+    prefix: "gcr.io/k8s-testimages/"
+    repo: "https://github.com/kubernetes/test-infra"
+    summarise: false
+    consistentImages: false

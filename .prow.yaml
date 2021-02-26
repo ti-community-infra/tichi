@@ -70,38 +70,37 @@ presubmits:
           secret:
             secretName: github-token
   - name: prow-autobump
-    always_run: true
+    cluster: test-infra-trusted
     decorate: true
+    extra_refs:
+      - org: kubernetes
+        repo: test-infra
+        base_ref: master
     spec:
       containers:
-        - image: gcr.io/k8s-prow/autobump
+        - image: gcr.io/k8s-testimages/generic_autobump:v20210224-8a51e1a
           command:
-            - /autobump.sh
+            - /generic_autobump
           args:
-            - /etc/github-token/token
-            - "ti-chi-bot"
-            - ti-community-prow-bot@tidb.io
+            - --config=.autobump.config.yaml
           volumeMounts:
             - name: github
               mountPath: /etc/github-token
               readOnly: true
-          env:
-            - name: GH_ORG
-              value: ti-community-infra
-            - name: GH_REPO
-              value: tichi
-            - name: PLANK_DEPLOYMENT_FILE
-              value: configs/prow-dev/cluster/plank_deployment.yaml
-            - name: COMPONENT_FILE_DIR
-              value: configs/prow-dev/cluster
-            - name: CONFIG_PATH
-              value: configs/prow-dev/config/config.yaml
-            - name: JOB_CONFIG_PATH
-              value: configs/prow-dev/jobs
+            - name: ssh
+              mountPath: /root/.ssh
       volumes:
         - name: github
           secret:
             secretName: oauth-token
+        - name: ssh
+          secret:
+            secretName: k8s-ci-robot-ssh-keys
+            defaultMode: 0400
+    annotations:
+      testgrid-dashboards: sig-testing-prow
+      testgrid-tab-name: autobump-prow
+      description: runs prow/autobump.sh to create/update a PR that bumps prow to the latest RC
 postsubmits:
   - name: post-tichi-deploy-prow
     run_if_changed: 'configs/prow-dev/cluster/'
