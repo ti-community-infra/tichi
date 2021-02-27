@@ -17,14 +17,16 @@ import (
 )
 
 const (
-	// PluginName is the name of this plugin
+	// PluginName is the name of this plugin.
 	PluginName = "ti-community-tars"
-	refPrefix  = "refs/heads"
+	// branchRefsPrefix specifies the prefix of branch refs.
+	// See also: https://docs.github.com/en/rest/reference/git#references.
+	branchRefsPrefix = "refs/heads"
 )
 
-var sleep = time.Sleep
+const configInfoAutoUpdatedMessagePrefix = "Auto updated message: "
 
-var configInfoAutoUpdatedMessagePrefix = "Auto updated message: "
+var sleep = time.Sleep
 
 type githubClient interface {
 	CreateComment(org, repo string, number int, comment string) error
@@ -38,6 +40,7 @@ type githubClient interface {
 	Query(context.Context, interface{}, map[string]interface{}) error
 }
 
+// See: https://developer.github.com/v4/object/pullrequest/.
 type pullRequest struct {
 	Number     githubql.Int
 	Repository struct {
@@ -204,9 +207,10 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 	return takeAction(log, ghc, org, repo, number, &prCommits[lastCommitIndex].SHA, pr.User.Login, tars.Message)
 }
 
+// HandlePushEvent handles a GitHub push event and update the PR
 func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 	cfg *externalplugins.Configuration) error {
-	if !strings.HasPrefix(pe.Ref, refPrefix) {
+	if !strings.HasPrefix(pe.Ref, branchRefsPrefix) {
 		log.Infof("Ignoring ref %s push event", pe.Ref)
 		return nil
 	}
@@ -252,7 +256,7 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 }
 
 func getRefBranch(ref string) string {
-	return strings.TrimPrefix(ref, refPrefix)
+	return strings.TrimPrefix(ref, branchRefsPrefix)
 }
 
 // HandleAll checks all orgs and repos that enabled this plugin for open PRs to
