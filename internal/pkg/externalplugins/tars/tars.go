@@ -211,7 +211,7 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 	cfg *externalplugins.Configuration) error {
 	if !strings.HasPrefix(pe.Ref, branchRefsPrefix) {
-		log.Infof("Ignoring ref %s push event", pe.Ref)
+		log.Infof("Ignoring ref %s push event.", pe.Ref)
 		return nil
 	}
 
