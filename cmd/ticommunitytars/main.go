@@ -178,6 +178,16 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
+	case "push":
+		var pe github.PushEvent
+		if err := json.Unmarshal(payload, &pe); err != nil {
+			return err
+		}
+		go func() {
+			if err := tars.HandlePushEvent(l, s.ghc, &pe, config); err != nil {
+				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
+			}
+		}()
 	default:
 		s.log.Debugf("received an event of type %q but didn't ask for it", eventType)
 	}

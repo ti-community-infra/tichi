@@ -19,6 +19,7 @@ import (
 const (
 	// PluginName is the name of this plugin
 	PluginName = "ti-community-tars"
+	refPrefix  = "refs/heads"
 )
 
 var sleep = time.Sleep
@@ -201,6 +202,52 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 
 	lastCommitIndex := len(prCommits) - 1
 	return takeAction(log, ghc, org, repo, number, &prCommits[lastCommitIndex].SHA, pr.User.Login, tars.Message)
+}
+
+func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
+	cfg *externalplugins.Configuration) error {
+	org := pe.Repo.Owner.Login
+	repo := pe.Repo.Name
+	branch := getRefBranch(pe.Ref)
+	log.Infof("Checking %s/%s#%s PRs.", org, repo, branch)
+
+	var buf bytes.Buffer
+	fmt.Fprint(&buf, "archived:false is:pr is:open sort:created-asc")
+	fmt.Fprintf(&buf, " org:\"%s\"", org)
+	fmt.Fprintf(&buf, " repo:\"%s\"", repo)
+	fmt.Fprintf(&buf, " base:\"%s\"", branch)
+
+	prs, err := search(context.Background(), log, ghc, buf.String())
+	if err != nil {
+		return err
+	}
+	log.Infof("Considering %d PRs.", len(prs))
+	for i := range prs {
+		pr := prs[i]
+		org := string(pr.Repository.Owner.Login)
+		repo := string(pr.Repository.Name)
+		num := int(pr.Number)
+		l := log.WithFields(logrus.Fields{
+			"org":  org,
+			"repo": repo,
+			"pr":   num,
+		})
+
+		// Only one PR is processed at a time, because even if other PRs are updated,
+		// they still need to be queued for another update and merge.
+		// To save testing resources we only process one PR at a time.
+		err = handle(l, ghc, &pr, cfg)
+		if err != nil {
+			l.WithError(err).Error("Error handling PR.")
+		} else {
+			break
+		}
+	}
+	return nil
+}
+
+func getRefBranch(ref string) string {
+	return strings.TrimPrefix(ref, refPrefix)
 }
 
 // HandleAll checks all orgs and repos that enabled this plugin for open PRs to
