@@ -206,6 +206,11 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 
 func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 	cfg *externalplugins.Configuration) error {
+	if !strings.HasPrefix(pe.Ref, refPrefix) {
+		log.Infof("Ignoring ref %s push event", pe.Ref)
+		return nil
+	}
+
 	org := pe.Repo.Owner.Login
 	repo := pe.Repo.Name
 	branch := getRefBranch(pe.Ref)
