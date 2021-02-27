@@ -518,7 +518,7 @@ func TestHandlePushEvent(t *testing.T) {
 		expectUpdate   bool
 	}{
 		{
-			name: "Tag ref, ignoring",
+			name: "tags ref, ignoring",
 			pe: &github.PushEvent{
 				Ref: "refs/tags/simple-tag",
 			},
@@ -635,7 +635,7 @@ func TestHandlePushEvent(t *testing.T) {
 			// For now we only add one pr.
 			var prs []pullRequest
 			if tc.pr != nil {
-				prs = mockPullRequests("org1", "repo1", tc.pr, tc.prCommits, tc.labels, tc.merged)
+				prs = generatePullRequests("org1", "repo1", tc.pr, tc.prCommits, tc.labels, tc.merged)
 			}
 			fc := newFakeGithubClient(prs, tc.pr, tc.baseCommit, tc.prCommits, tc.outOfDate)
 			externalConfig := &externalplugins.Configuration{}
@@ -800,7 +800,7 @@ func TestHandleAll(t *testing.T) {
 			// For now we only add one pr.
 			var prs []pullRequest
 			if tc.pr != nil {
-				prs = mockPullRequests("org", "repo", tc.pr, tc.prCommits, tc.labels, tc.merged)
+				prs = generatePullRequests("org", "repo", tc.pr, tc.prCommits, tc.labels, tc.merged)
 			}
 			fc := newFakeGithubClient(prs, tc.pr, tc.baseCommit, tc.prCommits, tc.outOfDate)
 			cfg := &plugins.Configuration{
@@ -822,7 +822,7 @@ func TestHandleAll(t *testing.T) {
 	}
 }
 
-func mockPullRequests(org string, repo string, pr *github.PullRequest,
+func generatePullRequests(org string, repo string, pr *github.PullRequest,
 	prCommits []github.RepositoryCommit, labels []github.Label, merged bool) []pullRequest {
 	var prs []pullRequest
 
