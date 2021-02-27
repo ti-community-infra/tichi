@@ -237,14 +237,9 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 			"pr":   num,
 		})
 
-		// Only one PR is processed at a time, because even if other PRs are updated,
-		// they still need to be queued for another update and merge.
-		// To save testing resources we only process one PR at a time.
 		err = handle(l, ghc, &pr, externalConfig)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
-		} else {
-			break
 		}
 	}
 	return nil
