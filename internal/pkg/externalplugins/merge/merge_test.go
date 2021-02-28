@@ -16,8 +16,9 @@ import (
 )
 
 var (
-	lgtmOne = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 1)
-	lgtmTwo = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 2)
+	lgtmOne   = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 1)
+	lgtmTwo   = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 2)
+	lgtmThree = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 3)
 )
 
 type fakeOwnersClient struct {
@@ -83,6 +84,15 @@ func TestMergeIssueAndReviewComment(t *testing.T) {
 			body:             "/merge",
 			commenter:        "collab1",
 			currentLGTMLabel: lgtmTwo,
+			shouldToggle:     true,
+			shouldComment:    true,
+		},
+		{
+			name: "merge comment by committer collab1, " +
+				"lgtm is greater than the required number and no can merge on pr",
+			body:             "/merge",
+			commenter:        "collab1",
+			currentLGTMLabel: lgtmThree,
 			shouldToggle:     true,
 			shouldComment:    true,
 		},
