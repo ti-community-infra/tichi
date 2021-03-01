@@ -222,8 +222,7 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 
 	var buf bytes.Buffer
 	fmt.Fprint(&buf, "archived:false is:pr is:open sort:created-asc")
-	fmt.Fprintf(&buf, " org:\"%s\"", org)
-	fmt.Fprintf(&buf, " repo:\"%s\"", repo)
+	fmt.Fprintf(&buf, " repo:\"%s/%s\"", org, repo)
 	fmt.Fprintf(&buf, " base:\"%s\"", branch)
 
 	prs, err := search(context.Background(), log, ghc, buf.String())
