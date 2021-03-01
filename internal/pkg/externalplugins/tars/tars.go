@@ -244,6 +244,11 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 		// Only one PR is processed at a time, because even if other PRs are updated,
 		// they still need to be queued for another update and merge.
 		// To save testing resources we only process one PR at a time.
+
+		// Skips PRs that cannot be conflicting or unknown state.
+		if pr.Mergeable != githubql.MergeableStateMergeable {
+			continue
+		}
 		err = handle(l, ghc, &pr, cfg)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
@@ -291,7 +296,10 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 			"repo": repo,
 			"pr":   num,
 		})
-
+		// Skips PRs that cannot be conflicting or unknown state.
+		if pr.Mergeable != githubql.MergeableStateMergeable {
+			continue
+		}
 		err = handle(l, ghc, &pr, externalConfig)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
@@ -301,11 +309,6 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 }
 
 func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *externalplugins.Configuration) error {
-	// Skips PRs that cannot be conflicting.
-	if pr.Mergeable != githubql.MergeableStateMergeable {
-		return nil
-	}
-
 	org := string(pr.Repository.Owner.Login)
 	repo := string(pr.Repository.Name)
 	number := int(pr.Number)
