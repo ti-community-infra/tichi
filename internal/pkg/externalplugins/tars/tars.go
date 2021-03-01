@@ -17,13 +17,16 @@ import (
 )
 
 const (
-	// PluginName is the name of this plugin
+	// PluginName is the name of this plugin.
 	PluginName = "ti-community-tars"
+	// branchRefsPrefix specifies the prefix of branch refs.
+	// See also: https://docs.github.com/en/rest/reference/git#references.
+	branchRefsPrefix = "refs/heads"
 )
 
-var sleep = time.Sleep
+const configInfoAutoUpdatedMessagePrefix = "Auto updated message: "
 
-var configInfoAutoUpdatedMessagePrefix = "Auto updated message: "
+var sleep = time.Sleep
 
 type githubClient interface {
 	CreateComment(org, repo string, number int, comment string) error
@@ -37,6 +40,7 @@ type githubClient interface {
 	Query(context.Context, interface{}, map[string]interface{}) error
 }
 
+// See: https://developer.github.com/v4/object/pullrequest/.
 type pullRequest struct {
 	Number     githubql.Int
 	Repository struct {
@@ -203,6 +207,58 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 	return takeAction(log, ghc, org, repo, number, &prCommits[lastCommitIndex].SHA, pr.User.Login, tars.Message)
 }
 
+// HandlePushEvent handles a GitHub push event and update the PR.
+func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
+	cfg *externalplugins.Configuration) error {
+	if !strings.HasPrefix(pe.Ref, branchRefsPrefix) {
+		log.Infof("Ignoring ref %s push event.", pe.Ref)
+		return nil
+	}
+
+	org := pe.Repo.Owner.Login
+	repo := pe.Repo.Name
+	branch := getRefBranch(pe.Ref)
+	log.Infof("Checking %s/%s#%s PRs.", org, repo, branch)
+
+	var buf bytes.Buffer
+	fmt.Fprint(&buf, "archived:false is:pr is:open sort:created-asc")
+	fmt.Fprintf(&buf, " org:\"%s\"", org)
+	fmt.Fprintf(&buf, " repo:\"%s\"", repo)
+	fmt.Fprintf(&buf, " base:\"%s\"", branch)
+
+	prs, err := search(context.Background(), log, ghc, buf.String())
+	if err != nil {
+		return err
+	}
+	log.Infof("Considering %d PRs.", len(prs))
+	for i := range prs {
+		pr := prs[i]
+		org := string(pr.Repository.Owner.Login)
+		repo := string(pr.Repository.Name)
+		num := int(pr.Number)
+		l := log.WithFields(logrus.Fields{
+			"org":  org,
+			"repo": repo,
+			"pr":   num,
+		})
+
+		// Only one PR is processed at a time, because even if other PRs are updated,
+		// they still need to be queued for another update and merge.
+		// To save testing resources we only process one PR at a time.
+		err = handle(l, ghc, &pr, cfg)
+		if err != nil {
+			l.WithError(err).Error("Error handling PR.")
+		} else {
+			break
+		}
+	}
+	return nil
+}
+
+func getRefBranch(ref string) string {
+	return strings.TrimPrefix(ref, branchRefsPrefix)
+}
+
 // HandleAll checks all orgs and repos that enabled this plugin for open PRs to
 // determine if the issue is a PR based on whether the PR out-of-date.
 func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuration,
@@ -214,7 +270,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		return nil
 	}
 	var buf bytes.Buffer
-	fmt.Fprint(&buf, "archived:false is:pr is:open")
+	fmt.Fprint(&buf, "archived:false is:pr is:open sort:created-asc")
 	for _, org := range orgs {
 		fmt.Fprintf(&buf, " org:\"%s\"", org)
 	}
@@ -237,7 +293,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 			"pr":   num,
 		})
 
-		err = handleAll(l, ghc, &pr, externalConfig)
+		err = handle(l, ghc, &pr, externalConfig)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
 		}
@@ -245,7 +301,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 	return nil
 }
 
-func handleAll(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *externalplugins.Configuration) error {
+func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *externalplugins.Configuration) error {
 	if pr.Merged {
 		return nil
 	}
