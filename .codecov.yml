@@ -5,5 +5,5 @@ coverage:
   status:
     project:
       default:
-        # Fail the status if coverage drops by >= 5%
-        threshold: 5
+        # Fail the status if coverage drops by >= 1%
+        threshold: 1
