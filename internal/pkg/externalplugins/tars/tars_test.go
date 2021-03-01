@@ -179,14 +179,14 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 	defer func() { sleep = oldSleep }()
 
 	testcases := []struct {
-		name       string
-		pr         *github.PullRequest
-		labels     []github.Label
-		merged     bool
-		baseCommit github.RepositoryCommit
-		prCommits  []github.RepositoryCommit
-		outOfDate  bool
-		message    string
+		name        string
+		pr          *github.PullRequest
+		labels      []github.Label
+		conflicting bool
+		baseCommit  github.RepositoryCommit
+		prCommits   []github.RepositoryCommit
+		outOfDate   bool
+		message     string
 
 		expectComment  bool
 		expectDeletion bool
@@ -272,9 +272,9 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectUpdate:   true,
 		},
 		{
-			name:   "merged pr is ignored",
-			pr:     getPullRequest("org", "repo", 5),
-			merged: true,
+			name:        "conflicting pr is ignored",
+			pr:          getPullRequest("org", "repo", 5),
+			conflicting: true,
 		},
 	}
 
@@ -344,7 +344,6 @@ func TestHandlePullRequestEvent(t *testing.T) {
 
 	testcases := []struct {
 		name       string
-		merged     bool
 		labels     []github.Label
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
@@ -426,11 +425,6 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectComment:  true,
 			expectUpdate:   true,
 		},
-
-		{
-			name:   "merged pr is ignored",
-			merged: true,
-		},
 	}
 
 	for _, testcase := range testcases {
@@ -446,7 +440,6 @@ func TestHandlePullRequestEvent(t *testing.T) {
 							Owner: github.User{Login: "org"},
 						},
 					},
-					Merged: tc.merged,
 					Number: 5,
 					Labels: tc.labels,
 				},
@@ -503,15 +496,15 @@ func TestHandlePushEvent(t *testing.T) {
 	}
 
 	testcases := []struct {
-		name       string
-		pe         *github.PushEvent
-		pr         *github.PullRequest
-		merged     bool
-		labels     []github.Label
-		baseCommit github.RepositoryCommit
-		prCommits  []github.RepositoryCommit
-		outOfDate  bool
-		message    string
+		name        string
+		pe          *github.PushEvent
+		pr          *github.PullRequest
+		conflicting bool
+		labels      []github.Label
+		baseCommit  github.RepositoryCommit
+		prCommits   []github.RepositoryCommit
+		outOfDate   bool
+		message     string
 
 		expectComment  bool
 		expectDeletion bool
@@ -615,13 +608,13 @@ func TestHandlePushEvent(t *testing.T) {
 			expectUpdate:   true,
 		},
 		{
-			name: "merged pr is ignored",
+			name: "conflicting pr is ignored",
 			pe: &github.PushEvent{
 				Ref: "refs/heads/main",
 			},
-			pr:        getPullRequest("org1", "repo1", 6),
-			merged:    true,
-			prCommits: updatedPrCommits(),
+			pr:          getPullRequest("org1", "repo1", 6),
+			conflicting: true,
+			prCommits:   updatedPrCommits(),
 		},
 	}
 
@@ -635,7 +628,7 @@ func TestHandlePushEvent(t *testing.T) {
 			// For now we only add one pr.
 			var prs []pullRequest
 			if tc.pr != nil {
-				prs = generatePullRequests("org1", "repo1", tc.pr, tc.prCommits, tc.labels, tc.merged)
+				prs = generatePullRequests("org1", "repo1", tc.pr, tc.prCommits, tc.labels, tc.conflicting)
 			}
 			fc := newFakeGithubClient(prs, tc.pr, tc.baseCommit, tc.prCommits, tc.outOfDate)
 			externalConfig := &externalplugins.Configuration{}
@@ -690,14 +683,14 @@ func TestHandleAll(t *testing.T) {
 	}
 
 	testcases := []struct {
-		name       string
-		pr         *github.PullRequest
-		merged     bool
-		labels     []github.Label
-		baseCommit github.RepositoryCommit
-		prCommits  []github.RepositoryCommit
-		outOfDate  bool
-		message    string
+		name        string
+		pr          *github.PullRequest
+		conflicting bool
+		labels      []github.Label
+		baseCommit  github.RepositoryCommit
+		prCommits   []github.RepositoryCommit
+		outOfDate   bool
+		message     string
 
 		expectComment  bool
 		expectDeletion bool
@@ -783,10 +776,10 @@ func TestHandleAll(t *testing.T) {
 			expectUpdate:   true,
 		},
 		{
-			name:      "merged pr is ignored",
-			pr:        getPullRequest("org", "repo", 5),
-			merged:    true,
-			prCommits: updatedPrCommits(),
+			name:        "conflicting pr is ignored",
+			pr:          getPullRequest("org", "repo", 5),
+			conflicting: true,
+			prCommits:   updatedPrCommits(),
 		},
 	}
 
@@ -800,7 +793,7 @@ func TestHandleAll(t *testing.T) {
 			// For now we only add one pr.
 			var prs []pullRequest
 			if tc.pr != nil {
-				prs = generatePullRequests("org", "repo", tc.pr, tc.prCommits, tc.labels, tc.merged)
+				prs = generatePullRequests("org", "repo", tc.pr, tc.prCommits, tc.labels, tc.conflicting)
 			}
 			fc := newFakeGithubClient(prs, tc.pr, tc.baseCommit, tc.prCommits, tc.outOfDate)
 			cfg := &plugins.Configuration{
@@ -823,7 +816,7 @@ func TestHandleAll(t *testing.T) {
 }
 
 func generatePullRequests(org string, repo string, pr *github.PullRequest,
-	prCommits []github.RepositoryCommit, labels []github.Label, merged bool) []pullRequest {
+	prCommits []github.RepositoryCommit, labels []github.Label, conflicting bool) []pullRequest {
 	var prs []pullRequest
 
 	graphPr := pullRequest{}
@@ -833,7 +826,11 @@ func generatePullRequests(org string, repo string, pr *github.PullRequest,
 	graphPr.Repository.Owner.Login = githubql.String(org)
 	graphPr.Author.Login = githubql.String(pr.User.Login)
 	graphPr.BaseRef.Name = githubql.String(pr.Base.Ref)
-	graphPr.Merged = githubql.Boolean(merged)
+	if !conflicting {
+		graphPr.Mergeable = githubql.MergeableStateMergeable
+	} else {
+		graphPr.Mergeable = githubql.MergeableStateConflicting
+	}
 
 	// Convert the commit.
 	lastCommit := prCommits[len(prCommits)-1]

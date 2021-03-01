@@ -72,7 +72,7 @@ type pullRequest struct {
 			Name githubql.String
 		}
 	} `graphql:"labels(first:100)"`
-	Merged githubql.Boolean
+	Mergeable githubql.MergeableState
 }
 
 type searchQuery struct {
@@ -301,7 +301,8 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 }
 
 func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *externalplugins.Configuration) error {
-	if pr.Merged {
+	// Skips PRs that cannot be conflicting.
+	if pr.Mergeable != githubql.MergeableStateMergeable {
 		return nil
 	}
 
