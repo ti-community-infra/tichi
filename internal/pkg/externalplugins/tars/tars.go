@@ -207,7 +207,7 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 	return takeAction(log, ghc, org, repo, number, &prCommits[lastCommitIndex].SHA, pr.User.Login, tars.Message)
 }
 
-// HandlePushEvent handles a GitHub push event and update the PR
+// HandlePushEvent handles a GitHub push event and update the PR.
 func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 	cfg *externalplugins.Configuration) error {
 	if !strings.HasPrefix(pe.Ref, branchRefsPrefix) {
