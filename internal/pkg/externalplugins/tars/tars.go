@@ -21,7 +21,7 @@ const (
 	PluginName = "ti-community-tars"
 	// branchRefsPrefix specifies the prefix of branch refs.
 	// See also: https://docs.github.com/en/rest/reference/git#references.
-	branchRefsPrefix = "refs/heads"
+	branchRefsPrefix = "refs/heads/"
 )
 
 const configInfoAutoUpdatedMessagePrefix = "Auto updated message: "
