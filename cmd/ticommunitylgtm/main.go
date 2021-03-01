@@ -12,6 +12,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/lgtm"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
 	"k8s.io/test-infra/pkg/flagutil"
@@ -152,7 +153,7 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 	// Get external plugins config.
 	config := s.configAgent.Config()
 	switch eventType {
-	case "issue_comment":
+	case tiexternalplugins.IssueCommentEvent:
 		var ice github.IssueCommentEvent
 		if err := json.Unmarshal(payload, &ice); err != nil {
 			return err
@@ -162,7 +163,7 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
-	case "pull_request_review_comment":
+	case tiexternalplugins.PullRequestReviewCommentEvent:
 		var pullReviewCommentEvent github.ReviewCommentEvent
 		if err := json.Unmarshal(payload, &pullReviewCommentEvent); err != nil {
 			return err
@@ -172,7 +173,7 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
-	case "pull_request_review":
+	case tiexternalplugins.PullRequestReviewEvent:
 		var prre github.ReviewEvent
 		if err := json.Unmarshal(payload, &prre); err != nil {
 			return err
@@ -182,7 +183,7 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
-	case "pull_request":
+	case tiexternalplugins.PullRequestEvent:
 		var pe github.PullRequestEvent
 		if err := json.Unmarshal(payload, &pe); err != nil {
 			return err

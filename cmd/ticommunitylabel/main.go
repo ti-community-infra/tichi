@@ -11,6 +11,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/label"
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"
@@ -140,7 +141,7 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 	// Get external plugins config.
 	config := s.configAgent.Config()
 	switch eventType {
-	case "issue_comment":
+	case tiexternalplugins.IssueCommentEvent:
 		var ice github.IssueCommentEvent
 		if err := json.Unmarshal(payload, &ice); err != nil {
 			return err
