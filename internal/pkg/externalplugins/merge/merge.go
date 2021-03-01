@@ -349,7 +349,7 @@ func isLGTMSatisfy(prefix string, labels []github.Label, needsLgtm int) bool {
 		}
 	}
 
-	return needsLgtm <= currentLgtmNumber
+	return currentLgtmNumber >= needsLgtm
 }
 
 func isAllGuaranteed(prCommits []github.RepositoryCommit, lastCanMergeTreeHash string, log *logrus.Entry) bool {
