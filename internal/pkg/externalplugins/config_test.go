@@ -14,6 +14,7 @@ func TestValidateConfig(t *testing.T) {
 		tichiWebURL     string
 		prProcessLink   string
 		commandHelpLink string
+		logLevel        string
 		lgtm            *TiCommunityLgtm
 		merge           *TiCommunityMerge
 		owners          *TiCommunityOwners
@@ -708,6 +709,53 @@ func TestValidateConfig(t *testing.T) {
 			},
 			expected: fmt.Errorf("actions contain illegal value nop"),
 		},
+		{
+			name:            "invalid log level",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
+			logLevel:        "nop",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"ti-community-infra/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"ti-community-infra/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			labelBlocker: &TiCommunityLabelBlocker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				BlockLabels: []BlockLabel{
+					{
+						Regex:        `^status/can-merge$`,
+						Actions:      []string{"labeled", "unlabeled"},
+						TrustedTeams: []string{"release-team"},
+						TrustedUsers: []string{"ti-chi-bot"},
+					},
+				},
+			},
+			expected: fmt.Errorf("logLevel nop is invalid"),
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -717,6 +765,7 @@ func TestValidateConfig(t *testing.T) {
 				TichiWebURL:     tc.tichiWebURL,
 				PRProcessLink:   tc.prProcessLink,
 				CommandHelpLink: tc.commandHelpLink,
+				LogLevel:        tc.logLevel,
 				TiCommunityLgtm: []TiCommunityLgtm{
 					*tc.lgtm,
 				},

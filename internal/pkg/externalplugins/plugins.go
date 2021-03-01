@@ -38,6 +38,13 @@ func (pa *ConfigAgent) Load(path string) error {
 		return err
 	}
 
+	// Set the log level according to the configuration.
+	lvl, err := logrus.ParseLevel(np.LogLevel)
+	if err != nil {
+		return err
+	}
+	logrus.SetLevel(lvl)
+
 	pa.Set(np)
 	return nil
 }

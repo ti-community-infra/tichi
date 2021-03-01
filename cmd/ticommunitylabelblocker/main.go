@@ -69,7 +69,6 @@ func main() {
 	}
 
 	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetLevel(logrus.InfoLevel)
 	log := logrus.StandardLogger().WithField("plugin", labelblocker.PluginName)
 
 	secretAgent := &secret.Agent{}

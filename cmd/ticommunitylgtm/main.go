@@ -69,8 +69,6 @@ func main() {
 	}
 
 	logrus.SetFormatter(&logrus.JSONFormatter{})
-	// TODO: Use global option from the prow config.
-	logrus.SetLevel(logrus.InfoLevel)
 	log := logrus.StandardLogger().WithField("plugin", lgtm.PluginName)
 
 	secretAgent := &secret.Agent{}

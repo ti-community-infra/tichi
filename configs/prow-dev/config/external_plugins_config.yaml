@@ -1,7 +1,7 @@
 tichi-web-url: https://prow-dev.tidb.io/tichi
 pr-process-link: https://book.prow.tidb.io/#/en/workflows/pr
 command-help-link: https://prow-dev.tidb.io/command-help
-
+log-level: trace
 ti-community-lgtm:
   - repos:
       - ti-community-infra/test-dev
