@@ -241,7 +241,7 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 			"pr":   num,
 		})
 
-		// Skips PRs that cannot be conflicting or unknown state.
+		// Skips PRs with conflicting or unknown status.
 		if pr.Mergeable != githubql.MergeableStateMergeable {
 			continue
 		}
@@ -295,7 +295,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 			"repo": repo,
 			"pr":   num,
 		})
-		// Skips PRs that cannot be conflicting or unknown state.
+		// Skips PRs with conflicting or unknown status.
 		if pr.Mergeable != githubql.MergeableStateMergeable {
 			continue
 		}
