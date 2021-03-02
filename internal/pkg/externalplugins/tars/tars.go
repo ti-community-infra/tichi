@@ -215,6 +215,8 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 		return nil
 	}
 
+	// Before checking mergeability wait a few seconds to give github a chance to calculate it.
+	sleep(time.Second * 5)
 	org := pe.Repo.Owner.Login
 	repo := pe.Repo.Name
 	branch := getRefBranch(pe.Ref)
@@ -224,14 +226,11 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 	fmt.Fprint(&buf, "archived:false is:pr is:open sort:created-asc")
 	fmt.Fprintf(&buf, " repo:\"%s/%s\"", org, repo)
 	fmt.Fprintf(&buf, " base:\"%s\"", branch)
-
 	prs, err := search(context.Background(), log, ghc, buf.String())
 	if err != nil {
 		return err
 	}
 	log.Infof("Considering %d PRs.", len(prs))
-	// Before checking mergeability wait a few seconds to give github a chance to calculate it.
-	sleep(time.Second * 5)
 	for i := range prs {
 		pr := prs[i]
 		org := string(pr.Repository.Owner.Login)
@@ -245,7 +244,7 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 
 		// Skips PRs with conflicting or unknown status.
 		if pr.Mergeable != githubql.MergeableStateMergeable {
-			l.Infof("Skipped because have conflicting or unknown status.")
+			l.Infof("Skipped because have conflicting or unknown status: %s.", pr.Mergeable)
 			continue
 		}
 		takenAction, err := handle(l, ghc, &pr, cfg)
@@ -257,7 +256,7 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 		// they still need to be queued for another update and merge.
 		// To save testing resources we only process one PR at a time.
 		if takenAction {
-			l.Infof("Successfully updated and completed this push event response process.")
+			l.Info("Successfully updated and completed this push event response process.")
 			break
 		}
 	}
@@ -303,7 +302,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		})
 		// Skips PRs with conflicting or unknown status.
 		if pr.Mergeable != githubql.MergeableStateMergeable {
-			l.Infof("Skipped because have conflicting or unknown status.")
+			l.Infof("Skipped because have conflicting or unknown status: %s.", pr.Mergeable)
 			continue
 		}
 		_, err = handle(l, ghc, &pr, externalConfig)
