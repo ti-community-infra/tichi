@@ -153,14 +153,10 @@ func HandleIssueCommentEvent(log *logrus.Entry, ghc githubClient, ice *github.Is
 
 func handlePullRequest(log *logrus.Entry, ghc githubClient,
 	pr *github.PullRequest, cfg *externalplugins.Configuration) error {
-	if pr.Merged {
-		return nil
-	}
-
 	org := pr.Base.Repo.Owner.Login
 	repo := pr.Base.Repo.Name
 	number := pr.Number
-	mergeable := false
+	updated := false
 	tars := cfg.TarsFor(org, repo)
 
 	// If the OnlyWhenLabel configuration is set, the pr will only be updated if it has this label.
@@ -193,12 +189,12 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 	for _, prCommit := range prCommits {
 		for _, parentCommit := range prCommit.Parents {
 			if parentCommit.SHA == currentBaseCommit.SHA {
-				mergeable = true
+				updated = true
 			}
 		}
 	}
 
-	if mergeable {
+	if updated {
 		return nil
 	}
 
