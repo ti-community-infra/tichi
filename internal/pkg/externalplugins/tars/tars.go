@@ -248,10 +248,12 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 		takenAction, err := handle(l, ghc, &pr, cfg)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
-		} else if takenAction {
-			// Only one PR is processed at a time, because even if other PRs are updated,
-			// they still need to be queued for another update and merge.
-			// To save testing resources we only process one PR at a time.
+			continue
+		}
+		// Only one PR is processed at a time, because even if other PRs are updated,
+		// they still need to be queued for another update and merge.
+		// To save testing resources we only process one PR at a time.
+		if takenAction {
 			break
 		}
 	}
@@ -336,7 +338,7 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *externalp
 	// Check if we update the base into PR.
 	currentBaseCommit, err := ghc.GetSingleCommit(org, repo, string(pr.BaseRef.Name))
 	if err != nil {
-		return false, nil
+		return false, err
 	}
 	for _, prCommitParent := range pr.Commits.Nodes[0].Commit.Parents.Nodes {
 		if string(prCommitParent.OID) == currentBaseCommit.SHA {
