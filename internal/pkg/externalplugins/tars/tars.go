@@ -245,10 +245,10 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 		if pr.Mergeable != githubql.MergeableStateMergeable {
 			continue
 		}
-		tryUpdate, err := handle(l, ghc, &pr, cfg)
+		takenAction, err := handle(l, ghc, &pr, cfg)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
-		} else if tryUpdate {
+		} else if takenAction {
 			// Only one PR is processed at a time, because even if other PRs are updated,
 			// they still need to be queued for another update and merge.
 			// To save testing resources we only process one PR at a time.
