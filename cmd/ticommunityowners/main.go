@@ -17,6 +17,7 @@ import (
 	"k8s.io/test-infra/prow/config/secret"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
 	"k8s.io/test-infra/prow/interrupts"
+	"k8s.io/test-infra/prow/logrusutil"
 	"k8s.io/test-infra/prow/pjutil"
 	"k8s.io/test-infra/prow/plugins/lgtm"
 )
@@ -66,16 +67,21 @@ func main() {
 		logrus.Fatalf("Invalid options: %v", err)
 	}
 
+	logrusutil.Init(
+		&logrusutil.DefaultFieldsFormatter{
+			PrintLineNumber: true,
+		},
+	)
 	log := logrus.StandardLogger().WithField("plugin", lgtm.PluginName)
-
-	secretAgent := &secret.Agent{}
-	if err := secretAgent.Start([]string{o.github.TokenPath, o.webhookSecretFile}); err != nil {
-		logrus.WithError(err).Fatal("Error starting secrets agent.")
-	}
 
 	epa := &tiexternalplugins.ConfigAgent{}
 	if err := epa.Start(o.externalPluginsConfig, false); err != nil {
 		log.WithError(err).Fatalf("Error loading external plugin config from %q.", o.externalPluginsConfig)
+	}
+
+	secretAgent := &secret.Agent{}
+	if err := secretAgent.Start([]string{o.github.TokenPath, o.webhookSecretFile}); err != nil {
+		logrus.WithError(err).Fatal("Error starting secrets agent.")
 	}
 
 	githubClient, err := o.github.GitHubClient(secretAgent, o.dryRun)

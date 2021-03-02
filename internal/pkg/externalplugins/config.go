@@ -38,7 +38,7 @@ type Configuration struct {
 	// "trace" "debug", "info", "warn", "warning", "error", "fatal", "panic"
 	//
 	// Defaults to "info".
-	LogLevel string `json:"log-level,omitempty"`
+	LogLevel string `json:"log_level,omitempty"`
 
 	TiCommunityLgtm          []TiCommunityLgtm          `json:"ti-community-lgtm,omitempty"`
 	TiCommunityMerge         []TiCommunityMerge         `json:"ti-community-merge,omitempty"`
