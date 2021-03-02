@@ -754,7 +754,7 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
-			expected: fmt.Errorf("logLevel nop is invalid"),
+			expected: fmt.Errorf("not a valid logrus Level: \"nop\""),
 		},
 	}
 

@@ -14,6 +14,8 @@ const (
 	// defaultGracePeriodDuration define the time for blunderbuss plugin to wait
 	// before requesting a review (default five seconds).
 	defaultGracePeriodDuration = 5
+	// defaultLogLevel defines the default log level of all ti community plugins.
+	defaultLogLevel = logrus.InfoLevel
 )
 
 // Allowed value of the action configuration of the label blocker plugin.
@@ -378,7 +380,7 @@ func (c *Configuration) setDefaults() {
 	}
 
 	if len(c.LogLevel) == 0 {
-		c.LogLevel = logrus.InfoLevel.String()
+		c.LogLevel = defaultLogLevel.String()
 	}
 }
 
@@ -435,12 +437,9 @@ func (c *Configuration) Validate() error {
 
 // validateLogLevel will return an error if the value of the log level is invalid.
 func validateLogLevel(logLevel string) error {
-	allowLogLevels := sets.NewString(
-		"trace", "debug", "info", "warn", "warning", "error", "fatal", "panic",
-	)
-
-	if !allowLogLevels.Has(logLevel) {
-		return fmt.Errorf("logLevel %s is invalid", logLevel)
+	_, err := logrus.ParseLevel(logLevel)
+	if err != nil {
+		return err
 	}
 
 	return nil
