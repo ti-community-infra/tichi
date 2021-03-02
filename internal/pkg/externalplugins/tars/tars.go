@@ -72,7 +72,6 @@ type pullRequest struct {
 			Name githubql.String
 		}
 	} `graphql:"labels(first:100)"`
-	Mergeable githubql.MergeableState
 }
 
 type searchQuery struct {
@@ -242,11 +241,6 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 			"pr":   num,
 		})
 
-		// Skips PRs with conflicting or unknown status.
-		if pr.Mergeable != githubql.MergeableStateMergeable {
-			l.Infof("Skipped because have conflicting or unknown status: %s.", pr.Mergeable)
-			continue
-		}
 		takenAction, err := handle(l, ghc, &pr, cfg)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
@@ -300,11 +294,6 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 			"repo": repo,
 			"pr":   num,
 		})
-		// Skips PRs with conflicting or unknown status.
-		if pr.Mergeable != githubql.MergeableStateMergeable {
-			l.Infof("Skipped because have conflicting or unknown status: %s.", pr.Mergeable)
-			continue
-		}
 		_, err = handle(l, ghc, &pr, externalConfig)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
