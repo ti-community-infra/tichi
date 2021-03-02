@@ -43,7 +43,11 @@ func (pa *ConfigAgent) Load(path string) error {
 	if err != nil {
 		return err
 	}
+
 	logrus.SetLevel(lvl)
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+	// Output line number and call function information.
+	logrus.SetReportCaller(true)
 
 	pa.Set(np)
 	return nil

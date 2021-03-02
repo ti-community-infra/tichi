@@ -17,7 +17,6 @@ import (
 	"k8s.io/test-infra/prow/config/secret"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
 	"k8s.io/test-infra/prow/interrupts"
-	"k8s.io/test-infra/prow/logrusutil"
 	"k8s.io/test-infra/prow/pjutil"
 	"k8s.io/test-infra/prow/plugins/lgtm"
 )
@@ -67,11 +66,6 @@ func main() {
 		logrus.Fatalf("Invalid options: %v", err)
 	}
 
-	logrusutil.Init(
-		&logrusutil.DefaultFieldsFormatter{
-			PrintLineNumber: true,
-		},
-	)
 	log := logrus.StandardLogger().WithField("plugin", lgtm.PluginName)
 
 	epa := &tiexternalplugins.ConfigAgent{}

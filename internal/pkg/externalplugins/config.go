@@ -26,9 +26,9 @@ const (
 
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
-	TichiWebURL     string `json:"tichi-web-url,omitempty"`
-	PRProcessLink   string `json:"pr-process-link,omitempty"`
-	CommandHelpLink string `json:"command-help-link,omitempty"`
+	TichiWebURL     string `json:"tichi_web_url,omitempty"`
+	PRProcessLink   string `json:"pr_process_link,omitempty"`
+	CommandHelpLink string `json:"command_help_link,omitempty"`
 
 	// LogLevel enables dynamically updating the log level of the
 	// standard logger that is used by all ti community plugin.

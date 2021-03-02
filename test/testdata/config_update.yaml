@@ -1,6 +1,6 @@
-tichi-web-url: "https://tichi"
-pr-process-link: "https://pr"
-command-help-link: "https://command"
+tichi_web_url: "https://tichi"
+pr_process_link: "https://pr"
+command_help_link: "https://command"
 ti-community-lgtm:
   - repos:
       - ti-community-infra/test-dev
