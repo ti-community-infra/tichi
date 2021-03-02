@@ -245,7 +245,7 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 
 		// Skips PRs with conflicting or unknown status.
 		if pr.Mergeable != githubql.MergeableStateMergeable {
-			l.Infof("Skipped becasue have conflicting or unknown status.")
+			l.Infof("Skipped because have conflicting or unknown status.")
 			continue
 		}
 		takenAction, err := handle(l, ghc, &pr, cfg)
@@ -303,7 +303,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		})
 		// Skips PRs with conflicting or unknown status.
 		if pr.Mergeable != githubql.MergeableStateMergeable {
-			l.Infof("Skipped becasue have conflicting or unknown status.")
+			l.Infof("Skipped because have conflicting or unknown status.")
 			continue
 		}
 		_, err = handle(l, ghc, &pr, externalConfig)
