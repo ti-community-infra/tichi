@@ -245,10 +245,10 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 		if pr.Mergeable != githubql.MergeableStateMergeable {
 			continue
 		}
-		err = handle(l, ghc, &pr, cfg)
+		tryUpdate, err := handle(l, ghc, &pr, cfg)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
-		} else {
+		} else if tryUpdate {
 			// Only one PR is processed at a time, because even if other PRs are updated,
 			// they still need to be queued for another update and merge.
 			// To save testing resources we only process one PR at a time.
@@ -299,7 +299,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		if pr.Mergeable != githubql.MergeableStateMergeable {
 			continue
 		}
-		err = handle(l, ghc, &pr, externalConfig)
+		_, err = handle(l, ghc, &pr, externalConfig)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
 		}
@@ -307,11 +307,11 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 	return nil
 }
 
-func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *externalplugins.Configuration) error {
+func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *externalplugins.Configuration) (bool, error) {
 	org := string(pr.Repository.Owner.Login)
 	repo := string(pr.Repository.Name)
 	number := int(pr.Number)
-	mergeable := false
+	updated := false
 	tars := cfg.TarsFor(org, repo)
 
 	// If the OnlyWhenLabel configuration is set, the pr will only be updated if it has this label.
@@ -324,33 +324,33 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *externalp
 		}
 		if !hasTriggerLabel {
 			log.Infof("Ignore PR %s/%s#%d without trigger label %s.", org, repo, number, tars.OnlyWhenLabel)
-			return nil
+			return false, nil
 		}
 	}
 
 	// Must have last commit.
 	if len(pr.Commits.Nodes) == 0 || len(pr.Commits.Nodes) != 1 {
-		return nil
+		return false, nil
 	}
 
 	// Check if we update the base into PR.
 	currentBaseCommit, err := ghc.GetSingleCommit(org, repo, string(pr.BaseRef.Name))
 	if err != nil {
-		return err
+		return false, nil
 	}
 	for _, prCommitParent := range pr.Commits.Nodes[0].Commit.Parents.Nodes {
 		if string(prCommitParent.OID) == currentBaseCommit.SHA {
-			mergeable = true
+			updated = true
 		}
 	}
 
-	if mergeable {
-		return nil
+	if updated {
+		return false, nil
 	}
 
 	lastCommitIndex := 0
 	lastCommitSHA := string(pr.Commits.Nodes[lastCommitIndex].Commit.OID)
-	return takeAction(log, ghc, org, repo, number, &lastCommitSHA, string(pr.Author.Login), tars.Message)
+	return true, takeAction(log, ghc, org, repo, number, &lastCommitSHA, string(pr.Author.Login), tars.Message)
 }
 
 func search(ctx context.Context, log *logrus.Entry, ghc githubClient, q string) ([]pullRequest, error) {
