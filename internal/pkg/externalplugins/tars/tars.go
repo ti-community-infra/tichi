@@ -214,8 +214,6 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 		return nil
 	}
 
-	// Before checking mergeability wait 30 seconds to give github a chance to calculate it.
-	sleep(time.Second * 30)
 	org := pe.Repo.Owner.Login
 	repo := pe.Repo.Name
 	branch := getRefBranch(pe.Ref)
