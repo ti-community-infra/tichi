@@ -69,7 +69,6 @@ func main() {
 		logrus.Fatalf("Invalid options: %v", err)
 	}
 
-	logrus.SetFormatter(&logrus.JSONFormatter{})
 	log := logrus.StandardLogger().WithField("plugin", merge.PluginName)
 
 	secretAgent := &secret.Agent{}
