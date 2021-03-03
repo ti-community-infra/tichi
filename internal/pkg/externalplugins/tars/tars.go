@@ -72,7 +72,6 @@ type pullRequest struct {
 			Name githubql.String
 		}
 	} `graphql:"labels(first:100)"`
-	Mergeable githubql.MergeableState
 }
 
 type searchQuery struct {
@@ -154,14 +153,10 @@ func HandleIssueCommentEvent(log *logrus.Entry, ghc githubClient, ice *github.Is
 
 func handlePullRequest(log *logrus.Entry, ghc githubClient,
 	pr *github.PullRequest, cfg *externalplugins.Configuration) error {
-	if pr.Merged {
-		return nil
-	}
-
 	org := pr.Base.Repo.Owner.Login
 	repo := pr.Base.Repo.Name
 	number := pr.Number
-	mergeable := false
+	updated := false
 	tars := cfg.TarsFor(org, repo)
 
 	// If the OnlyWhenLabel configuration is set, the pr will only be updated if it has this label.
@@ -194,12 +189,12 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 	for _, prCommit := range prCommits {
 		for _, parentCommit := range prCommit.Parents {
 			if parentCommit.SHA == currentBaseCommit.SHA {
-				mergeable = true
+				updated = true
 			}
 		}
 	}
 
-	if mergeable {
+	if updated {
 		return nil
 	}
 
@@ -215,8 +210,6 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 		return nil
 	}
 
-	// Before checking mergeability wait 30 seconds to give github a chance to calculate it.
-	sleep(time.Second * 30)
 	org := pe.Repo.Owner.Login
 	repo := pe.Repo.Name
 	branch := getRefBranch(pe.Ref)
@@ -242,11 +235,6 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 			"pr":   num,
 		})
 
-		// Skips PRs with conflicting or unknown status.
-		if pr.Mergeable != githubql.MergeableStateMergeable {
-			l.Infof("Skipped because have conflicting or unknown status: %s.", pr.Mergeable)
-			continue
-		}
 		takenAction, err := handle(l, ghc, &pr, cfg)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
@@ -300,11 +288,6 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 			"repo": repo,
 			"pr":   num,
 		})
-		// Skips PRs with conflicting or unknown status.
-		if pr.Mergeable != githubql.MergeableStateMergeable {
-			l.Infof("Skipped because have conflicting or unknown status: %s.", pr.Mergeable)
-			continue
-		}
 		_, err = handle(l, ghc, &pr, externalConfig)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
