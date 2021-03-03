@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"regexp"
 
+	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/sets"
 )
 
@@ -13,6 +14,8 @@ const (
 	// defaultGracePeriodDuration define the time for blunderbuss plugin to wait
 	// before requesting a review (default five seconds).
 	defaultGracePeriodDuration = 5
+	// defaultLogLevel defines the default log level of all ti community plugins.
+	defaultLogLevel = logrus.InfoLevel
 )
 
 // Allowed value of the action configuration of the label blocker plugin.
@@ -23,9 +26,19 @@ const (
 
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
-	TichiWebURL     string `json:"tichi-web-url,omitempty"`
-	PRProcessLink   string `json:"pr-process-link,omitempty"`
-	CommandHelpLink string `json:"command-help-link,omitempty"`
+	TichiWebURL     string `json:"tichi_web_url,omitempty"`
+	PRProcessLink   string `json:"pr_process_link,omitempty"`
+	CommandHelpLink string `json:"command_help_link,omitempty"`
+
+	// LogLevel enables dynamically updating the log level of the
+	// standard logger that is used by all ti community plugin.
+	//
+	// Valid values:
+	//
+	// "trace" "debug", "info", "warn", "warning", "error", "fatal", "panic"
+	//
+	// Defaults to "info".
+	LogLevel string `json:"log_level,omitempty"`
 
 	TiCommunityLgtm          []TiCommunityLgtm          `json:"ti-community-lgtm,omitempty"`
 	TiCommunityMerge         []TiCommunityMerge         `json:"ti-community-merge,omitempty"`
@@ -365,6 +378,10 @@ func (c *Configuration) setDefaults() {
 	for i := range c.TiCommunityBlunderbuss {
 		c.TiCommunityBlunderbuss[i].setDefaults()
 	}
+
+	if len(c.LogLevel) == 0 {
+		c.LogLevel = defaultLogLevel.String()
+	}
 }
 
 // Validate will return an error if there are any invalid external plugin config.
@@ -384,6 +401,10 @@ func (c *Configuration) Validate() error {
 
 	// Validate command help link.
 	if _, err := url.ParseRequestURI(c.CommandHelpLink); err != nil {
+		return err
+	}
+
+	if err := validateLogLevel(c.LogLevel); err != nil {
 		return err
 	}
 
@@ -408,6 +429,16 @@ func (c *Configuration) Validate() error {
 	}
 
 	if err := validateLabelBlocker(c.TiCommunityLabelBlocker); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// validateLogLevel will return an error if the value of the log level is invalid.
+func validateLogLevel(logLevel string) error {
+	_, err := logrus.ParseLevel(logLevel)
+	if err != nil {
 		return err
 	}
 
