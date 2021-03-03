@@ -52,4 +52,4 @@ ti-community-tars:
 
 ### How often will regular scans be performed?
 
-It is currently one hour, and will be adjusted later according to the number of warehouses used.
+It is currently one hour, and will be adjusted later according to the number of repositories used.
