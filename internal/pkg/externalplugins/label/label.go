@@ -44,14 +44,14 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 
 			var prefixConfigMsg, additionalLabelsConfigMsg, excludeLabelsConfigMsg string
 			if opts.Prefixes != nil {
-				prefixConfigMsg = fmt.Sprintf("The label plugin also includes commands based on %v prefixes.", opts.Prefixes)
+				prefixConfigMsg = fmt.Sprintf("The label plugin includes commands based on %v prefixes.\n", opts.Prefixes)
 			}
 			if opts.AdditionalLabels != nil {
-				additionalLabelsConfigMsg = fmt.Sprintf("%v labels can be used with the `/[remove-]label` command.",
+				additionalLabelsConfigMsg = fmt.Sprintf("%v labels can be used with the `/[remove-]label` command.\n",
 					opts.AdditionalLabels)
 			}
 			if opts.ExcludeLabels != nil {
-				excludeLabelsConfigMsg = fmt.Sprintf("%v labels cannot be added by command.",
+				excludeLabelsConfigMsg = fmt.Sprintf("%v labels cannot be added by command.\n",
 					opts.ExcludeLabels)
 			}
 			labelConfig[repo.String()] = prefixConfigMsg + additionalLabelsConfigMsg + excludeLabelsConfigMsg
