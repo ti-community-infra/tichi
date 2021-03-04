@@ -54,7 +54,7 @@ func gatherOptions() options {
 	fs.StringVar(&o.externalPluginsConfig, "external-plugins-config",
 		"/etc/external_plugins_config/external_plugins_config.yaml", "Path to external plugin config file.")
 	fs.BoolVar(&o.dryRun, "dry-run", true, "Dry run for testing. Uses API tokens but does not mutate.")
-	fs.DurationVar(&o.updatePeriod, "update-period", time.Minute*30, "Period duration for periodic scans of all PRs.")
+	fs.DurationVar(&o.updatePeriod, "update-period", time.Minute*60, "Period duration for periodic scans of all PRs.")
 	fs.StringVar(&o.webhookSecretFile, "hmac-secret-file", "/etc/webhook/hmac",
 		"Path to the file containing the GitHub HMAC secret.")
 
