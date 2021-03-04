@@ -554,9 +554,9 @@ func TestLabelIssueComment(t *testing.T) {
 }
 
 func TestHelpProvider(t *testing.T) {
-	configInfoHasPrefixesPrefix := "The label plugin also includes commands based on"
-	configInfoHasAdditionalLabelsSuffix := "labels can be used with the `/[remove-]label` command."
-	configInfoHasExcludeLabelsSuffix := "labels cannot be added by command."
+	configInfoHasPrefixesPrefix := "The label plugin includes commands based on"
+	configInfoHasAdditionalLabelsSuffix := "labels can be used with the `/[remove-]label` command.\n"
+	configInfoHasExcludeLabelsSuffix := "labels cannot be added by command.\n"
 	enabledRepos := []config.OrgRepo{
 		{Org: "org1", Repo: "repo"},
 		{Org: "org2", Repo: "repo"},
