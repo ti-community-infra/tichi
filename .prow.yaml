@@ -39,7 +39,7 @@ presubmits:
           command:
             - /bin/bash
             - -c
-            - "make check cover"
+            - "GIT_COMMIT=${PULL_PULL_SHA} make check cover"
           env:
             - name: CODECOV_TOKEN
               valueFrom:
