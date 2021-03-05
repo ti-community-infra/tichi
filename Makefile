@@ -37,6 +37,7 @@ test:
 	@>&2 echo "Great, all tests passed."
 
 cover:
+	rm -rf coverage.txt
 	$(GOTEST) $(PACKAGES) -race -coverprofile=coverage.txt -covermode=atomic
 	echo "Uploading coverage results..."
 	@curl -s https://codecov.io/bash | bash
