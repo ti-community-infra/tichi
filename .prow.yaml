@@ -119,3 +119,20 @@ postsubmits:
         - name: github-token
           secret:
             secretName: github-token
+  - name: post-tichi-unit-test
+    decorate: true
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: golang:1.15
+          command:
+            - /bin/bash
+            - -c
+            - "GIT_COMMIT=${PULL_PULL_SHA} make check cover"
+          env:
+            - name: CODECOV_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: codecov-tokens
+                  key: ti-community-infra-tichi-codecov-token
