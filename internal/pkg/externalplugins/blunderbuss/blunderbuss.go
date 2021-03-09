@@ -9,14 +9,16 @@ import (
 
 	wr "github.com/mroth/weightedrand"
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
+	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
 	"k8s.io/test-infra/prow/plugins"
 	"k8s.io/test-infra/prow/plugins/assign"
+
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
 const (
@@ -44,8 +46,7 @@ type githubClient interface {
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(epa *externalplugins.ConfigAgent) func(
-	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 		configInfo := map[string]string{}
 		cfg := epa.Config()
@@ -64,8 +65,8 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
 			}
 		}
-		yamlSnippet, err := plugins.CommentMap.GenYaml(&externalplugins.Configuration{
-			TiCommunityBlunderbuss: []externalplugins.TiCommunityBlunderbuss{
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
+			TiCommunityBlunderbuss: []tiexternalplugins.TiCommunityBlunderbuss{
 				{
 					Repos:              []string{"ti-community-infra/test-dev"},
 					MaxReviewerCount:   2,
@@ -105,7 +106,7 @@ func configString(maxReviewerCount int) string {
 
 // HandleIssueCommentEvent handles a GitHub pull request event and requests review.
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
-	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	pr := &pe.PullRequest
 	// If a PR already has reviewers, we do not automatically assign them.
 	if len(pr.RequestedReviewers) > 0 {
@@ -118,7 +119,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	prBodyWithoutCcCommand := !assign.CCRegexp.MatchString(pr.Body)
 
 	isPrLabeledEvent := pe.Action == github.PullRequestActionLabeled
-	openPrWithSigLabel := pe.PullRequest.State == "open" && strings.Contains(pe.Label.Name, externalplugins.SigPrefix)
+	openPrWithSigLabel := pe.PullRequest.State == "open" && strings.Contains(pe.Label.Name, tiexternalplugins.SigPrefix)
 
 	// Only handle the event of add SIG label to the open PR.
 	if isPrLabeledEvent && openPrWithSigLabel && prBodyWithoutCcCommand {
@@ -167,7 +168,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 }
 
 // HandleIssueCommentEvent handles a GitHub issue comment event and requests review.
-func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg *externalplugins.Configuration,
+func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg *tiexternalplugins.Configuration,
 	ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	// Only consider open PRs and new comments.
 	if ce.Action != github.IssueCommentActionCreated || !ce.Issue.IsPullRequest() || ce.Issue.State == "closed" {
@@ -203,7 +204,7 @@ func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg 
 	)
 }
 
-func handle(gc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo *github.Repo, pr *github.PullRequest,
+func handle(gc githubClient, opts *tiexternalplugins.TiCommunityBlunderbuss, repo *github.Repo, pr *github.PullRequest,
 	log *logrus.Entry, ol ownersclient.OwnersLoader) error {
 	owners, err := ol.LoadOwners(opts.PullOwnersEndpoint, repo.Owner.Login, repo.Name, pr.Number)
 	if err != nil {
@@ -312,7 +313,7 @@ func listChangesContributors(gc githubClient, org string, repo string, num int,
 
 func containSigLabel(labels []github.Label) bool {
 	for _, label := range labels {
-		if strings.HasPrefix(label.Name, externalplugins.SigPrefix) {
+		if strings.HasPrefix(label.Name, tiexternalplugins.SigPrefix) {
 			return true
 		}
 	}

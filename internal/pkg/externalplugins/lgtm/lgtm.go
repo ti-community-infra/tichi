@@ -11,12 +11,14 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
+	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
+
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
 const (
@@ -44,8 +46,7 @@ var (
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(epa *externalplugins.ConfigAgent) func(
-	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 		configInfo := map[string]string{}
 		cfg := epa.Config()
@@ -101,7 +102,7 @@ type reviewCtx struct {
 
 // HandleIssueCommentEvent handles a GitHub issue comment event and adds or removes a
 // "status/LGT{number}" label.
-func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent, cfg *externalplugins.Configuration,
+func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent, cfg *tiexternalplugins.Configuration,
 	ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	// Only consider open PRs and new comments.
 	if !ice.Issue.IsPullRequest() || ice.Issue.State != "open" || ice.Action != github.IssueCommentActionCreated {
@@ -133,7 +134,7 @@ func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent, cfg
 }
 
 func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
-	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	// If ReviewActsAsLgtm is disabled, ignore review event.
 	opts := cfg.LgtmFor(pullReviewEvent.Repo.Owner.Login, pullReviewEvent.Repo.Name)
 	if !opts.ReviewActsAsLgtm {
@@ -175,7 +176,7 @@ func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
 }
 
 func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *github.ReviewCommentEvent,
-	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	// Only consider open PRs and new comments.
 	if pullReviewCommentEvent.PullRequest.State != "open" ||
 		pullReviewCommentEvent.Action != github.ReviewCommentActionCreated {
@@ -207,7 +208,7 @@ func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *githu
 }
 
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
-	config *externalplugins.Configuration, log *logrus.Entry) error {
+	config *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	if pe.Action != github.PullRequestActionOpened {
 		log.Debug("Not a pull request opened action, skipping...")
 		return nil
@@ -226,7 +227,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	return gc.CreateComment(org, repo, number, *reviewMsg)
 }
 
-func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
+func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx,
 	gc githubClient, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	funcStart := time.Now()
 	defer func() {
@@ -250,7 +251,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		resp := "you cannot `/lgtm` your own PR."
 		log.Infof("Commenting \"%s\".", resp)
 		return gc.CreateComment(rc.repo.Owner.Login, rc.repo.Name, rc.number,
-			externalplugins.FormatResponseRaw(rc.body, rc.htmlURL, rc.author, resp))
+			tiexternalplugins.FormatResponseRaw(rc.body, rc.htmlURL, rc.author, resp))
 	}
 
 	// Get ti-community-lgtm config.
@@ -270,14 +271,14 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	if !reviewers.Has(author) && wantLGTM {
 		resp := "`/lgtm` is only allowed for the reviewers in [list](" + tichiURL + ")."
 		log.Infof("Reply /lgtm request in comment: \"%s\"", resp)
-		return gc.CreateComment(org, repo, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
+		return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
 	// Not author or reviewers but want to remove LGTM.
 	if !reviewers.Has(author) && !isAuthor && !wantLGTM {
 		resp := "`/lgtm cancel` is only allowed for the PR author or the reviewers in [list](" + tichiURL + ")."
 		log.Infof("Reply /lgtm cancel request in comment: \"%s\"", resp)
-		return gc.CreateComment(org, repo, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
+		return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
 	labels, err := gc.GetIssueLabels(org, repo, number)
@@ -304,7 +305,7 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 
 	// Now we update the LGTM labels, having checked all cases where changing.
 	// Only add the label if it doesn't have it, and vice versa.
-	currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LgtmLabelPrefix, labels,
+	currentLabel, nextLabel := getCurrentAndNextLabel(tiexternalplugins.LgtmLabelPrefix, labels,
 		reviewersAndNeedsLGTM.NeedsLgtm)
 	// Remove the label if necessary, we're done after this.
 	if currentLabel != "" && !wantLGTM {
