@@ -6,11 +6,13 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
+	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
+
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
 const PluginName = "ti-community-label"
@@ -33,8 +35,7 @@ type githubClient interface {
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(epa *externalplugins.ConfigAgent) func(
-	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 		labelConfig := map[string]string{}
 		cfg := epa.Config()
@@ -75,7 +76,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 }
 
 func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent,
-	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	opts := cfg.LabelFor(ice.Repo.Owner.Login, ice.Repo.Name)
 	var additionalLabels []string
 	var prefixes []string
@@ -234,7 +235,7 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 	if len(noSuchLabelsOnIssue) > 0 {
 		msg := fmt.Sprintf(nonExistentLabelOnIssue, strings.Join(noSuchLabelsOnIssue, ", "))
 		return gc.CreateComment(org, repo, e.Issue.Number,
-			externalplugins.FormatResponseRaw(e.Comment.Body, e.Comment.HTMLURL, e.Comment.User.Login, msg))
+			tiexternalplugins.FormatResponseRaw(e.Comment.Body, e.Comment.HTMLURL, e.Comment.User.Login, msg))
 	}
 
 	return nil

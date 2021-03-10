@@ -5,10 +5,12 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
+	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
+
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
 const PluginName = "ti-community-autoresponder"
@@ -26,8 +28,7 @@ type reviewCtx struct {
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(epa *externalplugins.ConfigAgent) func(
-	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 		configInfo := map[string]string{}
 		cfg := epa.Config()
@@ -63,7 +64,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 
 // HandleIssueCommentEvent handles a GitHub issue comment event and auto respond it.
 func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent,
-	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	// Only consider open issues or PRs and new comments.
 	if ice.Issue.State != "open" || ice.Action != github.IssueCommentActionCreated {
 		return nil
@@ -82,7 +83,7 @@ func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent,
 
 // HandlePullReviewCommentEvent handles a GitHub pull request review comment event and auto respond it.
 func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *github.ReviewCommentEvent,
-	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	// Only consider open PRs and new comments.
 	if pullReviewCommentEvent.PullRequest.State != "open" ||
 		pullReviewCommentEvent.Action != github.ReviewCommentActionCreated {
@@ -103,7 +104,7 @@ func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *githu
 
 // HandlePullReviewEvent handles a GitHub pull request review event and auto respond it.
 func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
-	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	// Only consider open PRs and submit actions.
 	if pullReviewEvent.PullRequest.State != "open" || pullReviewEvent.Action != github.ReviewActionSubmitted {
 		return nil
@@ -123,7 +124,7 @@ func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
 
 // HandlePullRequestEvent handles a GitHub pull request event and auto respond it.
 func HandlePullRequestEvent(gc githubClient, pullRequestEvent *github.PullRequestEvent,
-	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	// Only consider open PRs and opened/edited actions.
 	if pullRequestEvent.PullRequest.State != "open" ||
 		(pullRequestEvent.Action != github.PullRequestActionOpened &&
@@ -145,7 +146,7 @@ func HandlePullRequestEvent(gc githubClient, pullRequestEvent *github.PullReques
 
 // HandleIssueEvent handles a GitHub issue event and auto respond it.
 func HandleIssueEvent(gc githubClient, issueEvent *github.IssueEvent,
-	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	// Only consider open issues and opened/edited actions.
 	if issueEvent.Issue.State != "open" ||
 		(issueEvent.Action != github.IssueActionOpened &&
@@ -165,7 +166,7 @@ func HandleIssueEvent(gc githubClient, issueEvent *github.IssueEvent,
 	return handle(cfg, rc, gc, log)
 }
 
-func handle(cfg *externalplugins.Configuration, rc reviewCtx, gc githubClient, log *logrus.Entry) error {
+func handle(cfg *tiexternalplugins.Configuration, rc reviewCtx, gc githubClient, log *logrus.Entry) error {
 	owner := rc.repo.Owner.Login
 	repo := rc.repo.Name
 	body := rc.body
@@ -176,7 +177,7 @@ func handle(cfg *externalplugins.Configuration, rc reviewCtx, gc githubClient, l
 		if regex.MatchString(body) {
 			resp := autoRespond.Message
 			log.Infof("Commenting \"%s\".", resp)
-			err := gc.CreateComment(owner, repo, rc.number, externalplugins.FormatSimpleResponse(rc.author, resp))
+			err := gc.CreateComment(owner, repo, rc.number, tiexternalplugins.FormatSimpleResponse(rc.author, resp))
 			// When we got an err direly return.
 			if err != nil {
 				return err

@@ -9,11 +9,13 @@ import (
 
 	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
+	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
 	"k8s.io/test-infra/prow/plugins"
+
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
 const (
@@ -92,8 +94,7 @@ type searchQuery struct {
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(epa *externalplugins.ConfigAgent) func(
-	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 		configInfo := map[string]string{}
 		cfg := epa.Config()
@@ -127,7 +128,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 // HandlePullRequestEvent handles a GitHub pull request event and update the PR
 // if the issue is a PR based on whether the PR out-of-date.
 func HandlePullRequestEvent(log *logrus.Entry, ghc githubClient, pre *github.PullRequestEvent,
-	cfg *externalplugins.Configuration) error {
+	cfg *tiexternalplugins.Configuration) error {
 	if pre.Action != github.PullRequestActionOpened &&
 		pre.Action != github.PullRequestActionSynchronize && pre.Action != github.PullRequestActionReopened {
 		return nil
@@ -139,7 +140,7 @@ func HandlePullRequestEvent(log *logrus.Entry, ghc githubClient, pre *github.Pul
 // HandleIssueCommentEvent handles a GitHub issue comment event and update the PR
 // if the issue is a PR based on whether the PR out-of-date.
 func HandleIssueCommentEvent(log *logrus.Entry, ghc githubClient, ice *github.IssueCommentEvent,
-	cfg *externalplugins.Configuration) error {
+	cfg *tiexternalplugins.Configuration) error {
 	if !ice.Issue.IsPullRequest() {
 		return nil
 	}
@@ -152,7 +153,7 @@ func HandleIssueCommentEvent(log *logrus.Entry, ghc githubClient, ice *github.Is
 }
 
 func handlePullRequest(log *logrus.Entry, ghc githubClient,
-	pr *github.PullRequest, cfg *externalplugins.Configuration) error {
+	pr *github.PullRequest, cfg *tiexternalplugins.Configuration) error {
 	org := pr.Base.Repo.Owner.Login
 	repo := pr.Base.Repo.Name
 	number := pr.Number
@@ -204,7 +205,7 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 
 // HandlePushEvent handles a GitHub push event and update the PR.
 func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
-	cfg *externalplugins.Configuration) error {
+	cfg *tiexternalplugins.Configuration) error {
 	if !strings.HasPrefix(pe.Ref, branchRefsPrefix) {
 		log.Infof("Ignoring ref %s push event.", pe.Ref)
 		return nil
@@ -258,7 +259,7 @@ func getRefBranch(ref string) string {
 // HandleAll checks all orgs and repos that enabled this plugin for open PRs to
 // determine if the issue is a PR based on whether the PR out-of-date.
 func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuration,
-	externalConfig *externalplugins.Configuration) error {
+	externalConfig *tiexternalplugins.Configuration) error {
 	log.Info("Checking all PRs.")
 	orgs, repos := config.EnabledReposForExternalPlugin(PluginName)
 	if len(orgs) == 0 && len(repos) == 0 {
@@ -296,7 +297,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 	return nil
 }
 
-func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *externalplugins.Configuration) (bool, error) {
+func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *tiexternalplugins.Configuration) (bool, error) {
 	org := string(pr.Repository.Owner.Login)
 	repo := string(pr.Repository.Name)
 	number := int(pr.Number)
@@ -394,7 +395,7 @@ func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, 
 		// Delay the reply because we may trigger the test in the reply.
 		// See: https://github.com/ti-community-infra/tichi/issues/181.
 		sleep(time.Second * 5)
-		msg := externalplugins.FormatSimpleResponse(author, message)
+		msg := tiexternalplugins.FormatSimpleResponse(author, message)
 		return ghc.CreateComment(org, repo, num, msg)
 	}
 	return nil
