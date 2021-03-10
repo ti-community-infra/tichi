@@ -4,7 +4,7 @@
 
 在 TiDB 社区中，我们采用了多阶段 code review 的方式来进行协作。一个 PR 一般会经过多个人的 review，才能达到合并的基本条件。例如：当 PR 被第一个人 review 之后，会为该 PR 打上 `status/LGT1` 的标签。然后当 PR 被第二个 review 之后，会为该 PR 打上 `status/LGT2` 的标签。每个 sig 都会设置默认需要的 LGTM 的个数，一般为 2 个。
 
-ti-community-lgtm 是用来根据权限自动的为 PR 添加 LGTM 对应 label 的插件。它会作为一个独立的服务部署，由 Prow Hook 将 GitHub 的 webhook 事件转发给该插件进行处理。
+ti-community-lgtm 是会根据命令和权限自动的为 PR 添加 LGTM 对应 label 的插件。它会作为一个独立的服务部署，由 Prow Hook 将 GitHub 的 webhook 事件转发给该插件进行处理。
 
 ## 权限设计
 
@@ -30,7 +30,7 @@ ti-community-lgtm 是用来根据权限自动的为 PR 添加 LGTM 对应 label 
 
 ## 设计思路
 
-实现该插件不仅要考虑到它作为 `/lgtm` 这样的评论命令，而且要考虑它作为 code review 的协作工具怎么和 GitHub 本身的 review 功能结合起来。**因为我们是在 GitHub 的基础上进行协作功能的拓展和增强，所以 GitHub 本身的设计逻辑和操作规范我们需要严格适配和遵循**。
+实现该插件不仅要考虑到它支持 `/lgtm` 这样的评论命令，而且要考虑它作为 code review 的协作工具怎么和 GitHub 本身的 review 功能结合起来。**因为我们是在 GitHub 的基础上进行协作功能的拓展和增强，所以 GitHub 本身的设计逻辑和操作规范我们需要严格适配和遵循**。
 
 在实现插件之前我们需要定义清楚如下三个事件：
 - Issue Comment
@@ -71,11 +71,6 @@ ti-community-lgtm:
       - tikv/pd
     review_acts_as_lgtm: true
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners # 你可以定义不同的获取 owners 的链接
-  - repos:
-      - tikv/community
-      - pingcap/community
-    review_acts_as_lgtm: true
-    pull_owners_endpoint: https://bots.tidb.io/ti-community-bot # 我们针对 community 做了 owners 的定制
 ```
 
 ## 参考文档
