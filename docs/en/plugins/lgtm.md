@@ -94,5 +94,4 @@ Because when a reviewer thinks that the code is faulty and needs to be re-review
 
 ### Why do I have new commits LGTM related labels still kept?
 
-This is because currently the TiDB community has a lot of code review phases, so if you cancel the LGTM as soon as a new commit is made, it can lead to a long PR review process and make PR merging difficult. So we loosened this part up to the reviewer and the author, and you can `/lgtm cancel` yourself when you feel you need to review again.
-
+This is because currently the TiDB community has a lot of code review phases, so if the bot cancels the LGTM as soon as a new commit is made, it can lead to a long PR review process and make PR merging difficult. So we loosened this part up to the reviewer and the author, and you can `/lgtm cancel` yourself when you feel you need to review again.
