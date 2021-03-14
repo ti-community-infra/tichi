@@ -1,3 +1,5 @@
+- [Components](en/components.md)
+  - [Tide](en/components/tide.md)
 - [Plugins](en/plugins.md)
   - [ti-community-owners](en/plugins/owners.md)
   - [ti-community-lgtm](en/plugins/lgtm.md)
@@ -9,5 +11,7 @@
   - [require-matching-label](en/plugins/require-matching-label.md)
   - [hold](en/plugins/hold.md)
   - [wip](en/plugins/wip.md)
+- [tools](tools.md)
+  - [label_sync](en/tools/label_sync.md)
 - [Workflows](en/workflows.md)
   - [PR workflow](en/workflows/pr.md)

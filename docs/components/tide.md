@@ -10,7 +10,7 @@ Tide 是 Prow 的一个核心组件，主要通过一些给定条件来管理 Gi
 - Prometheus 指标。
 - 支持具有“可选”状态，这些状态上下文对于合并不是强制的。
 - 提供有关当前 PR 池的实时数据和尝试合并历史记录，可以在 [Deck](https://github.com/kubernetes/test-infra/tree/master/prow/cmd/deck)、[Tide Dashboard](https://prow.tidb.io/tide) 、[PR Status](https://prow.tidb.io/pr) 和 [Tide History](https://prow.tidb.io/tide-history) 中展示这些数据。
-- 有效地进行扩展，使具有单个 bot 令牌的单个实例可以为满足合并条件的数十个组织和存储库提供合并自动化。每个不同的 'org/repo:branch' 组合都定义了一个不干扰的合并池，因此合并仅影响同一分支中的其他 PR。
+- 有效地进行扩展，使具有单个 bot 令牌的单个实例可以为满足合并条件的数十个组织和存储库提供合并自动化。每个不同的 `org/repo:branch` 组合都定义了一个互不干扰的合并池，因此合并仅影响同一分支中的其他 PR。
 - 提供可配置的合并模式（'merge', 'squash', or 'rebase'）。
 
 ## Tide 合并规则
@@ -69,7 +69,7 @@ Tide 在 TiDB 社区使用基本正常，但是还是遇到了一个棘手的问
 
 #### 我在哪里可以找到我的 PR 状态？
 
-从这几个地方获取 PR 状态
+从这几个地方获取 PR 状态：
 
 - PR 下面的 CI 状态上下文。状态要么告诉你的 PR 在合并池了，要么告诉你为什么它不在合并池中。 点击详情会跳转到 [Tide Dashboard](https://prow.tidb.io/tide)。例如：![example](https://user-images.githubusercontent.com/29879298/98230629-54037400-1f96-11eb-8a9c-1144905fbbd5.png ':size=70%')
 - 在 [PR status](https://prow.tidb.io/pr) 中，你的每一个 PR 都会有一个卡片，每个卡片都显示了测试结果和合并要求。（推荐使用）
@@ -83,19 +83,20 @@ Tide 在 TiDB 社区使用基本正常，但是还是遇到了一个棘手的问
 
 如果是你刚刚更新完 PR，请等待一下让 Tide 有时间去检测（默认一分钟）。
 
-决定你的 PR 在不在队列中由以下两个部分决定：
+你的 PR 在不在队列中由以下两个要求决定：
 - 检查你的 PR label 是否满足要求。
-- 检查你要求的 CI 是否都通过了。
+- 检查要求的 CI 是否都通过了。
 
 #### 为什么 PR 合并了，但是 Tide 的状态还是 Penning?
 
-因为有些情况下可能它检测到了 PR 已经满足了要求，但是还没来得及将状态更新到 GitHub 就已经合并了。
+因为有些情况下可能它检测到了 PR 已经满足了要求并且进行了合并，但是还没来得及将状态更新到 GitHub 就已经合并了。
 
 #### 如果我的 PR 的其中某个测试失败了，我是需要全部重新跑，还是只跑一个？
 
 只需要重新跑失败的测试即可。
 
-## 其他参考资料
+## 参考资料
+
 - [Maintainer's Guide to Tide](https://github.com/kubernetes/test-infra/blob/master/prow/cmd/tide/maintainers.md)
 - [bors-ng](https://github.com/bors-ng/bors-ng)
 

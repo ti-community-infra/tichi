@@ -1,6 +1,5 @@
 - [基础组件](components.md)
   - [Tide](components/tide.md)
-  - [rerere](components/rerere.md)
 - [插件](plugins.md)
   - [ti-community-owners](plugins/owners.md)
   - [ti-community-lgtm](plugins/lgtm.md)
