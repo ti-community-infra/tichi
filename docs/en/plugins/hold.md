@@ -14,7 +14,7 @@ Designed and developed by the Kubernetes community, this plugin is a simple impl
 
 No configuration
 
-## 参考文档
+## Reference documents
 
 - [command-help](https://prow.tidb.io/command-help#hold)
 - [code](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/hold)
