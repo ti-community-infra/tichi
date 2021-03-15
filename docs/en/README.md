@@ -38,8 +38,6 @@ The following shows some of the more commonly used components or plugins in the 
 | welcome                    | external plugin | Send a welcome message to contributors who have contributed for the first time through a robot.                                                |
 | label_sync                 | tool            | Able to synchronize the labels configured in the yaml file to one or more repositories.                                                        |
 
-
-
 At the same time, you can find all currently available components or plugins in [Plugins](https://prow.tidb.io/plugins) page, or in [Command](https://prow.tidb.io/command-help) to view the commands available in the specified repository.
 
 If you want to implement a new functional module through tichi, you can propose it through [RFC](https://github.com/ti-community-infra/rfcs) so that we can communicate widely about it in the community. So as to finally determine the specific requirements of the new function.
