@@ -14,7 +14,7 @@ This plugin is mainly responsible for adding labels to Issues or PRs, so we set 
 
 The plugin mainly refers to the Kubernetes label plugin design and extends on it to support custom label prefixes (categories) for each repository. This allows you to organize labels for repositories in categories during use.
 
-In addition, in the process of implementing the plugin, you should pay attention to:**Because the plugin permissions are set loosely, so you can only add labels that have been created by the repository, otherwise there is a risk of being labeled with something useless.**
+In addition, in the process of implementing the plugin, you should pay attention to: **Because the plugin permissions are set loosely, so you can only add labels that have been created by the repository, otherwise there is a risk of being labeled with something useless.**
 
 ## Parameter Configuration
 
