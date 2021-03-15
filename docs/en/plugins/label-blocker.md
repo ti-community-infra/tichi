@@ -26,7 +26,7 @@ For trusted users, i.e. trusted Github users or members of a trusted Github team
 | Parameter Name | Type     | Description                                                        |
 | -------------- | -------- | ------------------------------------------------------------------ |
 | regex          | string   | Regular expressions for matching label                             |
-| actions        | []string | Matching action type, can fill in labeled, unlabeled, at least one |
+| actions        | []string | Matching action type, can fill in `labeled` or `unlabeled`, at least one |
 | trusted_teams  | []string | Trusted GitHub teams                                               |
 | trusted_users  | []string | Trusted GitHub users                                               |
 | message        | string   | Feedback hints to the user, empty means no hints                   |
