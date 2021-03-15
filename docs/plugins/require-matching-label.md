@@ -4,11 +4,11 @@
 
 在我们创建 Issue 或者提交 PR 时，有一些 label 是必须要添加的。比如针对 Issue 我们必须要打上 type/xxx 标签来区分该 Issue 属于什么类型。但是有些时候我们会忘了添加这些关键的标签，后续再去查找和添加这些 label 费时费力。所以我们希望能够自动化这个过程，督促大家尽快的添加相关 label。
 
-[require-matching-label](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/require-matching-label) 通过正则的方式去匹配要求的 labels，**当 labels 缺失时打上对应缺失标签或者回复评论**。
+[require-matching-label](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/require-matching-label) 通过正则的方式去检测必须添加的 labels，**当 labels 缺失时打上对应缺失标签并且回复评论**。
 
 ## 设计思路
 
-该插件由 Kubernetes 社区设计开发，他们在设计时，除了实现核心的根据正则去匹配 labels 之外，还考虑到了当 Issue 或者 PR 刚创建时可能会有自动化的工具去协助打上 labels，所以支持延时检测（默认为 5 秒）,在等待一段时间之后再去匹配和检测 labels 是否满足要求。
+该插件由 Kubernetes 社区设计开发，除了实现核心的根据正则表达式去匹配 labels 功能之外，还考虑到了当 Issue 或者 PR 刚创建时可能会有自动化的工具去协助打上 labels，所以支持延时检测（默认为 5 秒）,在等待一段时间之后再去匹配和检测 labels 是否满足要求。
 
 ## 参数配置
 
