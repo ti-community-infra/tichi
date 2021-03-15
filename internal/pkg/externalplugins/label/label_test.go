@@ -681,7 +681,8 @@ func TestLabelIssueComment(t *testing.T) {
 			if len(fakeClient.IssueComments) < 1 {
 				t.Errorf("expected actual: %v", fakeClient.IssueComments)
 			}
-			if len(fakeClient.IssueComments[1]) != 1 || !strings.Contains(fakeClient.IssueComments[1][0].Body, tc.expectedCommentText) {
+			if len(fakeClient.IssueComments[1]) != 1 ||
+				!strings.Contains(fakeClient.IssueComments[1][0].Body, tc.expectedCommentText) {
 				t.Errorf("expected: `%v`, actual: `%v`", tc.expectedCommentText, fakeClient.IssueComments[1][0].Body)
 			}
 		}
