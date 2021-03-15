@@ -131,7 +131,8 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedNewLabels:     formatLabels(),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
-			expectedCommentText:   "The label(s) `priority/critical` cannot be applied, because the repository doesn't have them.",
+			expectedCommentText: "The label(s) `priority/critical` cannot be applied, " +
+				"because the repository doesn't have them.",
 		},
 		{
 			name:        "Non Org Member Can't Add",
@@ -161,7 +162,8 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedNewLabels:     formatLabels(),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
-			expectedCommentText:   "The label(s) `component/lgtm` cannot be applied, because the repository doesn't have them.",
+			expectedCommentText: "The label(s) `component/lgtm` cannot be applied, " +
+				"because the repository doesn't have them.",
 		},
 		{
 			name:        "Add Multiple Component Labels",
@@ -199,7 +201,8 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedNewLabels:     formatLabels(),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
-			expectedCommentText:   "The label(s) `component/urgent` cannot be applied, because the repository doesn't have them.",
+			expectedCommentText: "The label(s) `component/urgent` cannot be applied, " +
+				"because the repository doesn't have them.",
 		},
 		{
 			name:        "Label Prefix Must Match Command (Priority-Component Mismatch)",
@@ -210,7 +213,8 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedNewLabels:     formatLabels(),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
-			expectedCommentText:   "The label(s) `priority/infra` cannot be applied, because the repository doesn't have them.",
+			expectedCommentText: "The label(s) `priority/infra` cannot be applied, " +
+				"because the repository doesn't have them.",
 		},
 		{
 			name:        "Add Multiple Component Labels (Some Valid)",
@@ -221,7 +225,8 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedNewLabels:     formatLabels("component/infra"),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
-			expectedCommentText:   "The label(s) `component/lgtm` cannot be applied, because the repository doesn't have them.",
+			expectedCommentText: "The label(s) `component/lgtm` cannot be applied, " +
+				"because the repository doesn't have them.",
 		},
 		{
 			name:        "Add Multiple Committee Labels (Some Valid)",
@@ -233,7 +238,8 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedNewLabels:     formatLabels("committee/steering"),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
-			expectedCommentText:   " The label(s) `committee/calamity` cannot be applied, because the repository doesn't have them.",
+			expectedCommentText: " The label(s) `committee/calamity` cannot be applied, " +
+				"because the repository doesn't have them.",
 		},
 		{
 			name:        "Add Multiple Types of Labels Different Lines",
@@ -410,7 +416,8 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedNewLabels:     []string{},
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
-			expectedCommentText:   "The label(s) `orchestrator/foo` cannot be applied. These labels are supported: `orchestrator/jar, orchestrator/bar`.",
+			expectedCommentText: "The label(s) `orchestrator/foo` cannot be applied. " +
+				"These labels are supported: `orchestrator/jar, orchestrator/bar`.",
 		},
 		{
 			name:             "Adding additional labels contains uppercase letters",
@@ -452,7 +459,8 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedNewLabels:     []string{},
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
-			expectedCommentText:   "The label(s) `orchestrator/jar` cannot be applied. These labels are supported: `orchestrator/foo, orchestrator/bar`.",
+			expectedCommentText: "The label(s) `orchestrator/jar` cannot be applied. " +
+				"These labels are supported: `orchestrator/foo, orchestrator/bar`.",
 		},
 		{
 			name:             "Support add multiple labels by one comment",
@@ -516,7 +524,8 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedNewLabels:     []string{},
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
-			expectedCommentText:   "The label(s) `orchestrator/bar` cannot be applied, because the repository doesn't have them.",
+			expectedCommentText: "The label(s) `orchestrator/bar` cannot be applied, " +
+				"because the repository doesn't have them.",
 		},
 		{
 			name:        "Remove custom prefixed label",
@@ -649,7 +658,8 @@ func TestLabelIssueComment(t *testing.T) {
 		sort.Strings(expectLabels)
 		sort.Strings(fakeClient.IssueLabelsAdded)
 		if !reflect.DeepEqual(expectLabels, fakeClient.IssueLabelsAdded) {
-			t.Errorf("expected the labels %q to be added, but %q were added.", expectLabels, fakeClient.IssueLabelsAdded)
+			t.Errorf("expected the labels %q to be added, but %q were added.",
+				expectLabels, fakeClient.IssueLabelsAdded)
 		}
 
 		sort.Strings(tc.expectedRemovedLabels)

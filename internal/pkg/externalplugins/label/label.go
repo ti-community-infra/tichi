@@ -24,7 +24,7 @@ var (
 	customRemoveLabelRegex      = regexp.MustCompile(`(?m)^/remove-label\s*(.*)$`)
 	nonExistentAdditionalLabels = "The label(s) `%s` cannot be applied. These labels are supported: `%s`."
 	nonExistentLabelInRepo      = "The label(s) `%s` cannot be applied, because the repository doesn't have them."
-	nonExistentLabelOnIssue     = "Those labels are not set on the issue: `%v`"
+	nonExistentLabelOnIssue     = "These labels are not set on the issue: `%v`."
 )
 
 type githubClient interface {
@@ -101,6 +101,9 @@ func getLabelsFromREMatches(matches [][]string) (labels []string) {
 	for _, match := range matches {
 		parts := strings.Split(strings.TrimSpace(match[0]), " ")
 		for _, label := range parts[1:] {
+			if len(strings.TrimSpace(label)) == 0 {
+				continue
+			}
 			label = strings.ToLower(match[1] + "/" + strings.TrimSpace(label))
 			labels = append(labels, label)
 		}
