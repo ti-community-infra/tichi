@@ -14,7 +14,7 @@ This plugin was designed and developed by the Kubernetes community and is very s
 
 No configuration
 
-## 参考文档
+## Reference documents
 
 - [wip doc](https://prow.tidb.io/plugins?repo=ti-community-infra%2Ftichi)
 - [code](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/wip)
