@@ -14,7 +14,7 @@ The TiDB community has customized a number of its own plugins based on this feat
 
 ## Common plugin list
 
-The following shows some of the more commonly used components or plug-ins in the TiDB community. The external plug-ins beginning with `ti-community-` are those developed and maintained by ti-community-infra.
+The following shows some of the more commonly used components or plugins in the TiDB community. The external plugins beginning with `ti-community-` are those developed and maintained by ti-community-infra SIG.
 
 | plugin name                | plugin type     | introduction                                                                                                                                   |
 | -------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
