@@ -2,7 +2,7 @@
 
 ## Design Background
 
-When we submit a PR, we may need to submit multiple changes to complete the PR for some of the more complex fixes, and we would prefer that reviewers not come in and do Code Review while we are still in the process of modifying the PR.
+When we submit a PR, we may need to commit multiple changes to complete the PR for some of the more complex fixes, and we would prefer that reviewers not come in and do Code Review while we are still in the process of modifying the PR.
 
 [wip](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/wip) adds or removes `do-not-merge/work-in-progress` label, and with [tide](components/tide.md) to prevent merging of PRs.
 
