@@ -6,5 +6,6 @@
   - [ti-community-blunderbuss](en/plugins/blunderbuss.md)
   - [require-matching-label](en/plugins/require-matching-label.md)
   - [hold](en/plugins/hold.md)
+  - [wip](en/plugins/wip.md)
 - [Workflows](en/workflows.md)
   - [PR workflow](en/workflows/pr.md)
