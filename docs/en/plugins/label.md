@@ -52,6 +52,6 @@ ti-community-label:
 
 ## Q&A
 
-### Why is there no response to adding tags using this feature?
+### Why is there no response to adding labels using this feature?
 
 Please check if the label exists in the repository, the plugin will only add labels that have already been created by the repository.
