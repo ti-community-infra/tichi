@@ -238,7 +238,7 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedNewLabels:     formatLabels("committee/steering"),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
-			expectedCommentText: " The label(s) `committee/calamity` cannot be applied, " +
+			expectedCommentText: "The label(s) `committee/calamity` cannot be applied, " +
 				"because the repository doesn't have them.",
 		},
 		{
