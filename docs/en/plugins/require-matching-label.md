@@ -20,7 +20,7 @@ This plugin was designed and developed by the Kubernetes community. In addition 
 | prs             | bool   | Whether to apply to PR                                |
 | issues          | bool   | Whether to apply to Issue                             |
 | regexp          | string | label regular expressions                             |
-| missing_label   | string | When no matching label is found, the label is added   |
+| missing_label   | string | When no matching label is found, add this label to the Issue / PR   |
 | missing_comment | string | When no matching label is found, reply to the comment |
 | grace_period    | string | Delayed detection time (default is 5 seconds)         |
 
