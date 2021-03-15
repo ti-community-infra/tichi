@@ -26,7 +26,7 @@
 | 参数名        | 类型     | 说明                                                      |
 | ------------- | -------- | --------------------------------------------------------- |
 | regex         | string   | 匹配标签的正则表达式                                      |
-| actions       | []string | 匹配的 action 类型, 可填 labeled、unlabeled，至少填写一个 |
+| actions       | []string | 匹配的 action 类型, 可填 `labeled` 或 `unlabeled`，至少填写一个 |
 | trusted_teams | []string | 信任的 GitHub teams                                       |
 | trusted_users | []string | 信任的 GitHub users                                       |
 | message       | string   | 给用户的操作反馈提示，为空表示不提示                      |
