@@ -20,7 +20,7 @@
 | rerere                     | 基础组件 | 将代码 push 到专门用来重新测试的分支上进行重新测试。                                  |
 | ti-community-owners        | 外部插件 | 根据 SIG 或 Github 权限等信息来确定 PR 的 reviewer 和 committer。                  |
 | ti-community-lgtm          | 外部插件 | 添加命令添加或取消 `status/LGT*` 标签。                                           |
-| ti-community-merge         | 外部插件 | 通过命令添加或取消 PR 的 `can-merge` 状态。                                       |
+| ti-community-merge         | 外部插件 | 通过命令添加或删除 PR 的 `status/can-merge` 标签。                                       |
 | ti-community-blunderbuss   | 外部插件 | 主要负责基于 SIG 或 Github 权限自动分配 reviewer。。                               |
 | ti-community-autoresponder | 外部插件 | 根据评论内容自动回复。                                                            |
 | ti-community-tars          | 外部插件 | 主要负责自动将主分支合并到当前 PR，以确保当前 PR 的 Base 保持最新。                    |
@@ -43,4 +43,3 @@
 ## 关于本书
 
 编写本书的目的：一方面是希望本书作为一本手册能够让 TiDB 相关社区的协作者查阅，另外一方面也希望能够作为一个使用 Prow 的例子供其他社区参考。
-
