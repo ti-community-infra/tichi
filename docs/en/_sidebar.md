@@ -4,6 +4,8 @@
   - [ti-community-merge](en/plugins/merge.md)
   - [ti-community-tars](en/plugins/tars.md)
   - [ti-community-blunderbuss](en/plugins/blunderbuss.md)
+  - [ti-community-label](en/plugins/label.md)
+  - [ti-community-label-blocker](en/plugins/label-blocker.md)
   - [require-matching-label](en/plugins/require-matching-label.md)
   - [hold](en/plugins/hold.md)
   - [wip](en/plugins/wip.md)
