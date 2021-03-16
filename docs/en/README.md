@@ -14,7 +14,7 @@ The TiDB community has customized a number of its own plugins based on this feat
 
 ## Common plugin list
 
-The following shows some of the more commonly used components or plugins in the TiDB community. The external plugins beginning with `ti-community-` are those developed and maintained by ti-community-infra SIG.
+The following shows some commonly used components or plugins in the TiDB community. The external plugins whose name begin with `ti-community-` are developed and maintained by the [Community Infra SIG](https://developer.tidb.io/SIG/community-infra) of TiDB community. If you encounter any problems during use, you can contact us in [Slack](https://slack.tidb.io/invite?team=tidb-community&channel=sig-community-infra&ref=github).
 
 | plugin name                | plugin type     | introduction                                                                                                                                   |
 | -------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -22,7 +22,7 @@ The following shows some of the more commonly used components or plugins in the 
 | rerere                     | basic component | Push the code to a branch dedicated to re-testing for re-testing.                                                                              |
 | ti-community-owners        | external plugin | Determine the reviewer and committer of the PR based on information such as SIG or Github permissions.                                         |
 | ti-community-lgtm          | external plugin | Add command to add or cancel the `status/LGT*` label.                                                                                          |
-| ti-community-merge         | external plugin | Add or cancel the PR's `can-merge` status via commands.                                                                                        |
+| ti-community-merge         | external plugin | Add or delete the `status/can-merge` label for PR by command.                                                                                  |
 | ti-community-blunderbuss   | external plugin | Mainly responsible for automatically assigning reviewers based on SIG or Github permissions.                                                   |
 | ti-community-autoresponder | external plugin | Automatically reply based on the content of the comment.                                                                                       |
 | ti-community-tars          | external plugin | Mainly responsible for automatically merging the main branch into the current PR to ensure that the current PR's Base is kept up to date.      |
@@ -34,13 +34,13 @@ The following shows some of the more commonly used components or plugins in the 
 | assign                     | external plugin | Add or cancel the assignee of PR or Issue through the `/[un]assign` command.                                                                   |
 | size                       | external plugin | Evaluate the size of the PR based on the number of lines of code modification, and label the PR with `size/*`.                                 |
 | lifecycle                  | external plugin | Use labels to mark the life cycle of Issue or PR.                                                                                              |
-| wip                        | external plugin | Mark the PR that is still under development as `work-in-process` status, and prevent the automatic allocation of reviewer and PR from merging. |
+| wip                        | external plugin | Add the `do-not-merge/work-in-progress` label to the PR under development to prevent the automatic assignment of reviewer and PR merge.        |
 | welcome                    | external plugin | Send a welcome message to contributors who have contributed for the first time through a robot.                                                |
 | label_sync                 | tool            | Able to synchronize the labels configured in the yaml file to one or more repositories.                                                        |
 
 At the same time, you can find all currently available components or plugins in [Plugins](https://prow.tidb.io/plugins) page, or in [Command](https://prow.tidb.io/command-help) to view the commands available in the specified repository.
 
-If you want to implement a new functional module through tichi, you can propose it through [RFC](https://github.com/ti-community-infra/rfcs) so that we can communicate widely about it in the community. So as to finally determine the specific requirements of the new function.
+If you want to implement a new feature through tichi, you can put forward your requirements through [RFC](https://github.com/ti-community-infra/rfcs) so that we can communicate widely in the community. So as to finally determine the specific requirements and implementation plan of the new feature.
 
 ## About the book
 
