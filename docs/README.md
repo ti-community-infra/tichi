@@ -38,7 +38,7 @@
 
 同时，你可以在 [Plugins](https://prow.tidb.io/plugins) 当中找到目前所有可用的组件或插件，也可以在 [Command](https://prow.tidb.io/command-help) 当中查看指定仓库可用的命令。
 
-如果你想通过 tichi 实现一个新的功能模块，你可以通过 [RFC](https://github.com/ti-community-infra/rfcs) 方式提出，以便能够在社区当中展开广泛的沟通和交流，从而最终确定新功能的具体需求。 
+如果你想通过 tichi 实现一个新的功能，你可以通过 [RFC](https://github.com/ti-community-infra/rfcs) 方式提出需求，以便能够在社区当中展开广泛的沟通和交流，从而最终确定新功能的具体需求和实施方案。 
 
 ## 关于本书
 
