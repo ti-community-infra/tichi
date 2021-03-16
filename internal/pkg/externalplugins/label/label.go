@@ -96,11 +96,12 @@ func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent,
 	return handle(gc, log, additionalLabels, prefixes, excludeLabels, ice)
 }
 
-// Get labels from Regexp matches.
+// Get labels from RegExp matches.
 func getLabelsFromREMatches(matches [][]string) (labels []string) {
 	for _, match := range matches {
 		parts := strings.Split(strings.TrimSpace(match[0]), " ")
 		for _, label := range parts[1:] {
+			// Filter out invisible characters that may be matched.
 			if len(strings.TrimSpace(label)) == 0 {
 				continue
 			}
@@ -125,6 +126,7 @@ func getLabelsFromGenericMatches(matches [][]string, additionalLabels []string, 
 	}
 
 	for _, match := range matches {
+		// Use trim to filter out \r characters that may be matched.
 		parts := strings.Split(strings.TrimSpace(match[0]), " ")
 		if ((parts[0] != "/label") && (parts[0] != "/remove-label")) || len(parts) != 2 {
 			continue
@@ -193,7 +195,7 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 		labelsToRemove      []string
 	)
 
-	// Get labels to add and labels to remove from the Regexp matches.
+	// Get labels to add and labels to remove from the RegExp matches.
 	// Notice: The returned label is lowercase.
 	labelsToAdd = append(getLabelsFromREMatches(labelMatches),
 		getLabelsFromGenericMatches(customLabelMatches, additionalLabels, &nonexistent)...)
@@ -245,7 +247,7 @@ func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 		}
 	}
 
-	// Tried to add / remove labels that were not in the configuration.
+	// Tried to add/remove labels that were not in the configuration.
 	if len(nonexistent) > 0 {
 		log.Infof("Nonexistent labels: %v", nonexistent)
 		msg := fmt.Sprintf(nonExistentAdditionalLabels, strings.Join(nonexistent, ", "),
