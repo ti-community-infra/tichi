@@ -6,7 +6,7 @@ The collaboration process of PR has changed a bit after the introduction of Tide
 The main adjustment is in the PR merge phase, where instead of a one-time `/merge` command that triggers a bot to run tests and merge code, `/merge` is now only responsible for tagging `status/can-merge`. 
 When the PR labels are satisfied and all tests pass, the PR will be merged automatically without human intervention.
 
-**⚠️ Note: Please read the [Tide](en/components/tide.md), [ti-community-lgtm](en/plugins/lgtm.md), [ti-community-tars](en/plugins/tars.md), [rerere](en/components/rerere.md), [ti-community-blunderbuss](en/plugins/blunderbuss.md), and [ti-community-merge](en/plugins/merge.md) chapters carefully before reading the following.**
+**⚠️ Note: Please read the [Tide](en/components/tide.md), [ti-community-lgtm](en/plugins/lgtm.md), [ti-community-tars](en/plugins/tars.md), [ti-community-blunderbuss](en/plugins/blunderbuss.md), and [ti-community-merge](en/plugins/merge.md) chapters carefully before reading the following.**
 
 ## PR Collaboration Process
 
@@ -59,10 +59,6 @@ This feature requires the PR to merge the current master to the PR before mergin
 2. PR merge current master to PR causes `status/can-merge` label to disappear
 
 **The first problem is solved by using [ti-community-tars](en/plugins/tars.md) to automatically update. The second problem is that we can identify the committer of the commit that updates master to PR using the GitHub update button as `web-flow`, so we can determine if we trust that commit based on the committer.**
-
-### Large repositories are recommended to use rerere 
-
-We use [ti-community-tars](en/plugins/tars.md) and turn on `Require branches to be up to date before merging` to solve the PR merging problem, but for large repositories, this is a huge waste of test for large repositories. So we recommend using rerere to solve this problem, see [rerere](en/components/rerere.md) for details.
 
 ## Q&A
 

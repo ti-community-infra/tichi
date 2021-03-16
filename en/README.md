@@ -19,7 +19,6 @@ The following shows some commonly used components or plugins in the TiDB communi
 | plugin name                | plugin type     | introduction                                                                                                                                   |
 | -------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | tide                       | basic component | Manage the GitHub PR pool through some given conditions and automatically merge PR that meets the conditions.                                  |
-| rerere                     | basic component | Push the code to a branch dedicated to re-testing for re-testing.                                                                              |
 | ti-community-owners        | external plugin | Determine the reviewer and committer of the PR based on information such as SIG or Github permissions.                                         |
 | ti-community-lgtm          | external plugin | Add command to add or cancel the `status/LGT*` label.                                                                                          |
 | ti-community-merge         | external plugin | Add or delete the `status/can-merge` label for PR by command.                                                                                  |
