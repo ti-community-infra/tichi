@@ -79,15 +79,6 @@ builds:
     main: ./cmd/ticommunitylabelblocker/main.go
     env:
       - CGO_ENABLED=0
-  - id: "rerere"
-    binary: rerere
-    goos:
-      - linux
-    goarch:
-      - amd64
-    main: ./cmd/rerere/main.go
-    env:
-      - CGO_ENABLED=0
   - id: "check-external-plugin-config"
     binary: check-external-plugin-config
     goos:
@@ -193,16 +184,6 @@ dockers:
       - "ticommunityinfra/tichi-label-blocker-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-label-blocker-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/labelblocker/Dockerfile
-  -
-    binaries:
-      - rerere
-    builds:
-      - rerere
-    image_templates:
-      - "ticommunityinfra/rerere-component:latest"
-      - "ticommunityinfra/rerere-component:{{ .Tag }}"
-      - "ticommunityinfra/rerere-component:{{ .Major }}"
-    dockerfile: ./deployments/components/rerere/Dockerfile
   -
     image_templates:
       - "ticommunityinfra/tichi-web:latest"
