@@ -675,8 +675,7 @@ func TestLabelIssueComment(t *testing.T) {
 			}
 			if len(fakeClient.IssueCommentsAdded) == 0 {
 				t.Error("expected a bot comment but got none")
-			}
-			if !strings.Contains(fakeClient.IssueCommentsAdded[0], tc.expectedCommentText) {
+			} else if !strings.Contains(fakeClient.IssueCommentsAdded[0], tc.expectedCommentText) {
 				t.Errorf("expected bot comment: `%v`, but actual comment: `%v`",
 					tc.expectedCommentText, fakeClient.IssueCommentsAdded[0])
 			}
