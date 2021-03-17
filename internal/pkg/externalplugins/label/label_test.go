@@ -636,6 +636,12 @@ func TestLabelIssueComment(t *testing.T) {
 		if tc.prefixes == nil {
 			tc.prefixes = []string{"component", "type", "priority", "status"}
 		}
+
+		// Check if the expectedCommentText is added correctly.
+		if tc.expectedBotComment && len(tc.expectedCommentText) == 0 {
+			t.Error("expected a bot comment but no expected comment content is specified")
+		}
+
 		cfg := &externalplugins.Configuration{
 			TiCommunityLabel: []externalplugins.TiCommunityLabel{{
 				Repos:            []string{"org/repo"},
@@ -672,12 +678,11 @@ func TestLabelIssueComment(t *testing.T) {
 		if !tc.expectedBotComment && len(fakeClient.IssueCommentsAdded) > 0 {
 			t.Errorf("unexpected bot comments: %#v", fakeClient.IssueCommentsAdded)
 		}
-		if tc.expectedBotComment && len(tc.expectedCommentText) == 0 {
-			t.Error("expected a bot comment but no expected comment content is specified")
-		}
+
 		if tc.expectedBotComment && len(fakeClient.IssueCommentsAdded) == 0 {
 			t.Error("expected a bot comment but got none")
 		}
+
 		if tc.expectedBotComment && len(fakeClient.IssueCommentsAdded) > 0 &&
 			!strings.Contains(fakeClient.IssueCommentsAdded[0], tc.expectedCommentText) {
 			t.Errorf("expected bot comment: `%v`, but actual comment: `%v`",
