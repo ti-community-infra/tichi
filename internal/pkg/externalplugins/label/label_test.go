@@ -669,18 +669,19 @@ func TestLabelIssueComment(t *testing.T) {
 				tc.expectedRemovedLabels, fakeClient.IssueLabelsRemoved)
 		}
 
-		if tc.expectedBotComment {
-			if len(tc.expectedCommentText) == 0 {
-				t.Error("expected a bot comment but no expected comment content is specified")
-			}
-			if len(fakeClient.IssueCommentsAdded) == 0 {
-				t.Error("expected a bot comment but got none")
-			} else if !strings.Contains(fakeClient.IssueCommentsAdded[0], tc.expectedCommentText) {
-				t.Errorf("expected bot comment: `%v`, but actual comment: `%v`",
-					tc.expectedCommentText, fakeClient.IssueCommentsAdded[0])
-			}
-		} else if len(fakeClient.IssueCommentsAdded) > 0 {
+		if !tc.expectedBotComment && len(fakeClient.IssueCommentsAdded) > 0 {
 			t.Errorf("unexpected bot comments: %#v", fakeClient.IssueCommentsAdded)
+		}
+		if tc.expectedBotComment && len(tc.expectedCommentText) == 0 {
+			t.Error("expected a bot comment but no expected comment content is specified")
+		}
+		if tc.expectedBotComment && len(fakeClient.IssueCommentsAdded) == 0 {
+			t.Error("expected a bot comment but got none")
+		}
+		if tc.expectedBotComment && len(fakeClient.IssueCommentsAdded) > 0 &&
+			!strings.Contains(fakeClient.IssueCommentsAdded[0], tc.expectedCommentText) {
+			t.Errorf("expected bot comment: `%v`, but actual comment: `%v`",
+				tc.expectedCommentText, fakeClient.IssueCommentsAdded[0])
 		}
 	}
 }
