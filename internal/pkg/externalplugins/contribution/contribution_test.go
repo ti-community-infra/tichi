@@ -29,7 +29,8 @@ func TestHandlePullRequest(t *testing.T) {
 			action:            github.PullRequestActionOpened,
 			author:            "author",
 			authorAssociation: "CONTRIBUTOR",
-			expectAddedLabels: []string{"org/repo#101:contribution"},
+
+			expectAddedLabels: externalplugins.FormatTestLabels("contribution"),
 			shouldComment:     false,
 		},
 		{
@@ -38,7 +39,8 @@ func TestHandlePullRequest(t *testing.T) {
 			author:            "author",
 			message:           "Message",
 			authorAssociation: "CONTRIBUTOR",
-			expectAddedLabels: []string{"org/repo#101:contribution"},
+
+			expectAddedLabels: externalplugins.FormatTestLabels("contribution"),
 			shouldComment:     true,
 		},
 		{
@@ -46,6 +48,7 @@ func TestHandlePullRequest(t *testing.T) {
 			action:            github.PullRequestActionReopened,
 			author:            "author",
 			authorAssociation: "CONTRIBUTOR",
+
 			expectAddedLabels: []string{},
 			shouldComment:     false,
 		},
@@ -54,6 +57,7 @@ func TestHandlePullRequest(t *testing.T) {
 			action:            github.PullRequestActionOpened,
 			author:            "member1",
 			authorAssociation: "MEMBER",
+
 			expectAddedLabels: []string{},
 			shouldComment:     false,
 		},
@@ -63,6 +67,7 @@ func TestHandlePullRequest(t *testing.T) {
 			author:            "member1",
 			message:           "Message",
 			authorAssociation: "MEMBER",
+
 			expectAddedLabels: []string{},
 			shouldComment:     false,
 		},
@@ -71,7 +76,8 @@ func TestHandlePullRequest(t *testing.T) {
 			action:            github.PullRequestActionOpened,
 			author:            "author",
 			authorAssociation: firstTimeContributor,
-			expectAddedLabels: []string{"org/repo#101:contribution", "org/repo#101:first-time-contributor"},
+
+			expectAddedLabels: externalplugins.FormatTestLabels("contribution", "first-time-contributor"),
 			shouldComment:     false,
 		},
 		{
@@ -80,7 +86,8 @@ func TestHandlePullRequest(t *testing.T) {
 			author:            "author",
 			message:           "Message",
 			authorAssociation: firstTimeContributor,
-			expectAddedLabels: []string{"org/repo#101:contribution", "org/repo#101:first-time-contributor"},
+
+			expectAddedLabels: externalplugins.FormatTestLabels("contribution", "first-time-contributor"),
 			shouldComment:     true,
 		},
 		{
@@ -88,7 +95,8 @@ func TestHandlePullRequest(t *testing.T) {
 			action:            github.PullRequestActionOpened,
 			author:            "author",
 			authorAssociation: firstTimer,
-			expectAddedLabels: []string{"org/repo#101:contribution", "org/repo#101:first-time-contributor"},
+
+			expectAddedLabels: externalplugins.FormatTestLabels("contribution", "first-time-contributor"),
 			shouldComment:     false,
 		},
 		{
@@ -97,7 +105,8 @@ func TestHandlePullRequest(t *testing.T) {
 			author:            "author",
 			message:           "Message",
 			authorAssociation: firstTimer,
-			expectAddedLabels: []string{"org/repo#101:contribution", "org/repo#101:first-time-contributor"},
+
+			expectAddedLabels: externalplugins.FormatTestLabels("contribution", "first-time-contributor"),
 			shouldComment:     true,
 		},
 	}
@@ -126,7 +135,7 @@ func TestHandlePullRequest(t *testing.T) {
 
 		pe := &github.PullRequestEvent{
 			Action: tc.action,
-			Number: 101,
+			Number: 1,
 			PullRequest: github.PullRequest{
 				User: github.User{
 					Login: tc.author,
