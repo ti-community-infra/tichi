@@ -82,14 +82,14 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	config *tiexternalplugins.Configuration, log *logrus.Entry) error {
-	if pe.Action != github.PullRequestActionOpened && pe.Action != github.PullRequestActionReopened {
+	if pe.Action != github.PullRequestActionOpened {
 		log.Debug("Not a pull request opened or reopened action, skipping...")
 		return nil
 	}
 
-	org := pe.PullRequest.Base.Repo.Owner.Login
-	repo := pe.PullRequest.Base.Repo.Name
-	num := pe.PullRequest.Number
+	org := pe.Repo.Owner.Login
+	repo := pe.Repo.Name
+	num := pe.Number
 	author := pe.PullRequest.User.Login
 
 	var needsAddLabels []string
