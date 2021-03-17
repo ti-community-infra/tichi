@@ -31,7 +31,7 @@ ti-community-merge:
     message: "Thank you for your contribution, we have some references for you."
 ```
 
-## 参考文档
+## Reference Documents
 
 - [RFC](https://github.com/ti-community-infra/rfcs/blob/main/active-rfcs/0001-contribution.md)
 - [code](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/contribution)
