@@ -22,6 +22,8 @@ const (
 	FirstTimeContributorLabel = "first-time-contributor"
 )
 
+// FormatTestLabels will prefix the label with org/repo#1.
+// TODO(hi-rustin): Support passing in org, repo, num.
 func FormatTestLabels(labels ...string) []string {
 	var r []string
 	for _, l := range labels {
