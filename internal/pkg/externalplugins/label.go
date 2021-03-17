@@ -14,6 +14,8 @@ const (
 )
 
 const (
-	ContributionLabel         = "contribution"
+	// ContributionLabel is the name of the contribution label applied by the contribution plugin.
+	ContributionLabel = "contribution"
+	// FirstTimeContributorLabel is the name of the first-time-contributor label applied by the contribution plugin.
 	FirstTimeContributorLabel = "first-time-contributor"
 )

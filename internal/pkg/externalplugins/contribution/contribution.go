@@ -1,6 +1,7 @@
 package contribution
 
 import (
+	"fmt"
 	"strings"
 
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
@@ -67,8 +68,9 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		}
 
 		pluginHelp := &pluginhelp.PluginHelp{
-			Description: "The ti-community-contribution plugin will add contribution or first-time-contributor " +
+			Description: fmt.Sprintf("The %s plugin will add %s or %s "+
 				"labels to the PRs of external contributors.",
+				PluginName, tiexternalplugins.ContributionLabel, tiexternalplugins.FirstTimeContributorLabel),
 			Config:  configInfo,
 			Snippet: yamlSnippet,
 			Events:  []string{tiexternalplugins.PullRequestEvent},
@@ -87,9 +89,9 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 
 	org := pe.PullRequest.Base.Repo.Owner.Login
 	repo := pe.PullRequest.Base.Repo.Name
-	author := pe.PullRequest.User.Login
 	num := pe.PullRequest.Number
-	opts := config.ContributionFor(org, repo)
+	author := pe.PullRequest.User.Login
+
 	var needsAddLabels []string
 
 	isMember, err := gc.IsMember(org, author)
@@ -97,22 +99,27 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 		return err
 	}
 
+	// If the author is not a member of the organization, we need to add a contribution label.
 	if !isMember {
 		needsAddLabels = append(needsAddLabels, tiexternalplugins.ContributionLabel)
 	}
 
 	isFirstTime := pe.PullRequest.AuthorAssociation == firstTimer ||
 		pe.PullRequest.AuthorAssociation == firstTimeContributor
-
+	// If it is the first contribution, you need to add the first first-time-contributor label.
 	if isFirstTime {
 		needsAddLabels = append(needsAddLabels, tiexternalplugins.FirstTimeContributorLabel)
 	}
 
-	err = gc.AddLabels(org, repo, num, needsAddLabels...)
-	if err != nil {
-		return err
+	if len(needsAddLabels) > 0 {
+		log.Infof("Adding labels %v.", needsAddLabels)
+		err = gc.AddLabels(org, repo, num, needsAddLabels...)
+		if err != nil {
+			return err
+		}
 	}
 
+	opts := config.ContributionFor(org, repo)
 	if len(needsAddLabels) > 0 && len(opts.Message) != 0 {
 		return gc.CreateComment(org, repo, num, tiexternalplugins.FormatSimpleResponse(author, opts.Message))
 	}
