@@ -79,6 +79,15 @@ builds:
     main: ./cmd/ticommunitylabelblocker/main.go
     env:
       - CGO_ENABLED=0
+  - id: "ti-community-contribution"
+    binary: ticommunitycontribution
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/ticommunitycontribution/main.go
+    env:
+      - CGO_ENABLED=0
   - id: "check-external-plugin-config"
     binary: check-external-plugin-config
     goos:
@@ -184,6 +193,16 @@ dockers:
       - "ticommunityinfra/tichi-label-blocker-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-label-blocker-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/labelblocker/Dockerfile
+  -
+    binaries:
+      - ticommunitycontribution
+    builds:
+      - ti-community-contribution
+    image_templates:
+      - "ticommunityinfra/tichi-contribution-plugin:latest"
+      - "ticommunityinfra/tichi-contribution-plugin:{{ .Tag }}"
+      - "ticommunityinfra/tichi-contribution-plugin:{{ .Major }}"
+    dockerfile: ./deployments/plugins/contribution/Dockerfile
   -
     image_templates:
       - "ticommunityinfra/tichi-web:latest"
