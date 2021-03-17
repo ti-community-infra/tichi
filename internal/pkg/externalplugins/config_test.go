@@ -1296,3 +1296,59 @@ func TestLabelBlockerFor(t *testing.T) {
 		})
 	}
 }
+
+func TestContributionFor(t *testing.T) {
+	testcases := []struct {
+		name         string
+		contribution *TiCommunityContribution
+		org          string
+		repo         string
+		expectEmpty  *TiCommunityContribution
+	}{
+		{
+			name: "Full name",
+			contribution: &TiCommunityContribution{
+				Repos:   []string{"ti-community-infra/test-dev"},
+				Message: "message",
+			},
+			org:  "ti-community-infra",
+			repo: "test-dev",
+		},
+		{
+			name: "Only org",
+			contribution: &TiCommunityContribution{
+				Repos:   []string{"ti-community-infra"},
+				Message: "message",
+			},
+			org:  "ti-community-infra",
+			repo: "test-dev",
+		},
+		{
+			name: "Can not find",
+			contribution: &TiCommunityContribution{
+				Repos:   []string{"ti-community-infra"},
+				Message: "message",
+			},
+			org:         "ti-community-infra1",
+			repo:        "test-dev1",
+			expectEmpty: &TiCommunityContribution{},
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			config := Configuration{TiCommunityContribution: []TiCommunityContribution{
+				*tc.contribution,
+			}}
+
+			contribution := config.ContributionFor(tc.org, tc.repo)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, contribution, &TiCommunityContribution{})
+			} else {
+				assert.DeepEqual(t, contribution.Repos, tc.contribution.Repos)
+			}
+		})
+	}
+}
