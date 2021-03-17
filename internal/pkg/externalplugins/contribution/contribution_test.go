@@ -50,7 +50,7 @@ func TestHandlePullRequest(t *testing.T) {
 			shouldComment:     false,
 		},
 		{
-			name:              "Member open a pull request without message configuration",
+			name:              "Member opens a pull request without message configuration",
 			action:            github.PullRequestActionOpened,
 			author:            "member1",
 			authorAssociation: "MEMBER",
@@ -58,7 +58,7 @@ func TestHandlePullRequest(t *testing.T) {
 			shouldComment:     false,
 		},
 		{
-			name:              "Member open a pull request with a message configuration",
+			name:              "Member opens a pull request with a message configuration",
 			action:            github.PullRequestActionOpened,
 			author:            "member1",
 			message:           "Message",
@@ -67,7 +67,7 @@ func TestHandlePullRequest(t *testing.T) {
 			shouldComment:     false,
 		},
 		{
-			name:              "Not a member first time open a pull request to repo without message configuration",
+			name:              "Not a member first time opens a pull request to repo without message configuration",
 			action:            github.PullRequestActionOpened,
 			author:            "author",
 			authorAssociation: firstTimeContributor,
@@ -75,7 +75,7 @@ func TestHandlePullRequest(t *testing.T) {
 			shouldComment:     false,
 		},
 		{
-			name:              "Not a member first time open a pull request to repo with a message configuration",
+			name:              "Not a member first time opens a pull request to repo with a message configuration",
 			action:            github.PullRequestActionOpened,
 			author:            "author",
 			message:           "Message",
@@ -84,7 +84,7 @@ func TestHandlePullRequest(t *testing.T) {
 			shouldComment:     true,
 		},
 		{
-			name:              "Not a member first time open a pull request to GitHub without message configuration",
+			name:              "Not a member first time opens a pull request to GitHub without message configuration",
 			action:            github.PullRequestActionOpened,
 			author:            "author",
 			authorAssociation: firstTimer,
@@ -92,7 +92,7 @@ func TestHandlePullRequest(t *testing.T) {
 			shouldComment:     false,
 		},
 		{
-			name:              "Not a member first time open a pull request to GitHub with a message configuration",
+			name:              "Not a member first time opens a pull request to GitHub with a message configuration",
 			action:            github.PullRequestActionOpened,
 			author:            "author",
 			message:           "Message",
