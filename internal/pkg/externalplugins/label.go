@@ -12,3 +12,8 @@ const (
 	// SigPrefix is a default sig label prefix.
 	SigPrefix = "sig/"
 )
+
+const (
+	ContributionLabel         = "contribution"
+	FirstTimeContributorLabel = "first-time-contributor"
+)
