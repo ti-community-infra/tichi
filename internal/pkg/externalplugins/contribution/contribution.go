@@ -83,7 +83,7 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	config *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	if pe.Action != github.PullRequestActionOpened {
-		log.Debug("Not a pull request opened or reopened action, skipping...")
+		log.Debug("Not a pull request opened action, skipping...")
 		return nil
 	}
 
