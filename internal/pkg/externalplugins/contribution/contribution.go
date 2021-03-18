@@ -21,6 +21,8 @@ const (
 	firstTimer = "FIRST_TIMER"
 	// firstTimeContributor means author has not previously committed to the repository.
 	firstTimeContributor = "FIRST_TIME_CONTRIBUTOR"
+	// none means author has no association with the repository.
+	none = "NONE"
 )
 
 type githubClient interface {
@@ -104,8 +106,10 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 		needsAddLabels = append(needsAddLabels, tiexternalplugins.ContributionLabel)
 	}
 
+	log.Infof("Pull reuqest author association is %s", pe.PullRequest.AuthorAssociation)
 	isFirstTime := pe.PullRequest.AuthorAssociation == firstTimer ||
-		pe.PullRequest.AuthorAssociation == firstTimeContributor
+		pe.PullRequest.AuthorAssociation == firstTimeContributor ||
+		pe.PullRequest.AuthorAssociation == none
 	// If it is the first contribution, we need to add the first first-time-contributor label.
 	if isFirstTime {
 		needsAddLabels = append(needsAddLabels, tiexternalplugins.FirstTimeContributorLabel)
