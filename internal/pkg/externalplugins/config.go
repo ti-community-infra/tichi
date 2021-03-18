@@ -208,7 +208,7 @@ type BlockLabel struct {
 
 // TiCommunityContribution is the config for the contribution plugin.
 type TiCommunityContribution struct {
-	// Repos is either of the form org/repos or just org.
+	// Repos is either of the form org/repo or just org.
 	Repos []string `json:"repos,omitempty"`
 	// Message specifies the tips for the contributor's PR.
 	Message string `json:"message,omitempty"`
