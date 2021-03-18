@@ -106,7 +106,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 
 	isFirstTime := pe.PullRequest.AuthorAssociation == firstTimer ||
 		pe.PullRequest.AuthorAssociation == firstTimeContributor
-	// If it is the first contribution, you need to add the first first-time-contributor label.
+	// If it is the first contribution, we need to add the first first-time-contributor label.
 	if isFirstTime {
 		needsAddLabels = append(needsAddLabels, tiexternalplugins.FirstTimeContributorLabel)
 	}
