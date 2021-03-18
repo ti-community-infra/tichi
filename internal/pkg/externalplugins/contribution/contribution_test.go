@@ -109,6 +109,16 @@ func TestHandlePullRequest(t *testing.T) {
 			expectAddedLabels: externalplugins.FormatTestLabels("contribution", "first-time-contributor"),
 			shouldComment:     true,
 		},
+		{
+			name:              "Not a member with none association opens a pull request to GitHub with a message configuration",
+			action:            github.PullRequestActionOpened,
+			author:            "author",
+			message:           "Message",
+			authorAssociation: none,
+
+			expectAddedLabels: externalplugins.FormatTestLabels("contribution", "first-time-contributor"),
+			shouldComment:     true,
+		},
 	}
 
 	for _, testcase := range testcases {
