@@ -103,3 +103,6 @@ external_plugins:
     - name: ti-community-label-blocker
       events:
         - pull_request
+    - name: ti-community-contribution
+      events:
+        - pull_request
