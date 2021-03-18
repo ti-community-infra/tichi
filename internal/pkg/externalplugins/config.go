@@ -48,6 +48,7 @@ type Configuration struct {
 	TiCommunityBlunderbuss   []TiCommunityBlunderbuss   `json:"ti-community-blunderbuss,omitempty"`
 	TiCommunityTars          []TiCommunityTars          `json:"ti-community-tars,omitempty"`
 	TiCommunityLabelBlocker  []TiCommunityLabelBlocker  `json:"ti-community-label-blocker,omitempty"`
+	TiCommunityContribution  []TiCommunityContribution  `json:"ti-community-contribution,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -205,6 +206,14 @@ type BlockLabel struct {
 	Message string `json:"message,omitempty"`
 }
 
+// TiCommunityContribution is the config for the contribution plugin.
+type TiCommunityContribution struct {
+	// Repos is either of the form org/repo or just org.
+	Repos []string `json:"repos,omitempty"`
+	// Message specifies the tips for the contributor's PR.
+	Message string `json:"message,omitempty"`
+}
+
 // LgtmFor finds the Lgtm for a repo, if one exists
 // a trigger can be listed for the repo itself or for the
 // owning organization
@@ -350,6 +359,27 @@ func (c *Configuration) TarsFor(org, repo string) *TiCommunityTars {
 		return &tars
 	}
 	return &TiCommunityTars{}
+}
+
+// ContributionFor finds the TiCommunityContribution for a repo, if one exists.
+// TiCommunityContribution configuration can be listed for a repository
+// or an organization.
+func (c *Configuration) ContributionFor(org, repo string) *TiCommunityContribution {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, contribution := range c.TiCommunityContribution {
+		if !sets.NewString(contribution.Repos...).Has(fullName) {
+			continue
+		}
+		return &contribution
+	}
+	// If you don't find anything, loop again looking for an org config
+	for _, contribution := range c.TiCommunityContribution {
+		if !sets.NewString(contribution.Repos...).Has(org) {
+			continue
+		}
+		return &contribution
+	}
+	return &TiCommunityContribution{}
 }
 
 // LabelBlockerFor finds the TiCommunityLabelBlocker for a repo, if one exists.
