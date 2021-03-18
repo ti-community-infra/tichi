@@ -8,7 +8,7 @@ ti-community-contribution will help us distinguish between the PRs of internal a
 
 ## Design
 
-This plugin adds a `contribution` label to a PR based on whether the author is a member of the Org where the repository is located, and also adds a `first-time-contributor` tag to a PR if it is the first time the author has submitted a PR to the repository or the first time the PR has been submitted on GitHub.
+This plugin adds a `contribution` label to a PR based on whether the author is a member of the Org where the repository is located, and also adds a `first-time-contributor` label to a PR if it is the first time the author has submitted a PR to the repository or the first time the PR has been submitted on GitHub.
 
 ## Parameter Configuration 
 
