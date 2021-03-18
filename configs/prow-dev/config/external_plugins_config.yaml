@@ -92,3 +92,8 @@ ti-community-label-blocker:
         trusted_users:
           - rustin-bot
         message: You can't add the status/can-merge label.
+
+ti-community-contribution:
+  - repos:
+      - ti-community-infra/test-dev
+    message: "Thanks for your contribution, but this is just a code repository for testing."
