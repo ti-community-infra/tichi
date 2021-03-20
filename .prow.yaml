@@ -74,10 +74,6 @@ presubmits:
     # cron: "05 7-15 * * 1-5"
     decorate: true
     always_run: true
-    extra_refs:
-      - org: ti-community-infra
-        repo: tichi
-        base_ref: master
     spec:
       containers:
         - image: gcr.io/k8s-prow/autobump:v20210316-7c62dd64c8
