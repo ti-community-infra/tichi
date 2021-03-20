@@ -111,7 +111,7 @@ presubmits:
             # Omit this if ProwJobs are only defined in config.yaml (or are not configured at all).
             # Use spaces to separate, the parameter will be passed to the grep command as multiple parameters.
             - name: JOB_CONFIG_PATH
-              value: "configs/prow-dev/jobs"
+              value: "configs/prow-dev/jobs\" \".prow.yaml"
       volumes:
         - name: github-token
           secret:
