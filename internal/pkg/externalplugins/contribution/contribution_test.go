@@ -14,6 +14,10 @@ import (
 )
 
 func TestHandlePullRequest(t *testing.T) {
+	formatTestLabels := func(labels ...string) []string {
+		return externalplugins.FormatTestLabels("org", "repo", 1, labels...)
+	}
+
 	testcases := []struct {
 		name              string
 		action            github.PullRequestEventAction
@@ -30,7 +34,7 @@ func TestHandlePullRequest(t *testing.T) {
 			author:            "author",
 			authorAssociation: "CONTRIBUTOR",
 
-			expectAddedLabels: externalplugins.FormatTestLabels("contribution"),
+			expectAddedLabels: formatTestLabels("contribution"),
 			shouldComment:     false,
 		},
 		{
@@ -40,7 +44,7 @@ func TestHandlePullRequest(t *testing.T) {
 			message:           "Message",
 			authorAssociation: "CONTRIBUTOR",
 
-			expectAddedLabels: externalplugins.FormatTestLabels("contribution"),
+			expectAddedLabels: formatTestLabels("contribution"),
 			shouldComment:     true,
 		},
 		{
@@ -77,7 +81,7 @@ func TestHandlePullRequest(t *testing.T) {
 			author:            "author",
 			authorAssociation: firstTimeContributor,
 
-			expectAddedLabels: externalplugins.FormatTestLabels("contribution", "first-time-contributor"),
+			expectAddedLabels: formatTestLabels("contribution", "first-time-contributor"),
 			shouldComment:     false,
 		},
 		{
@@ -87,7 +91,7 @@ func TestHandlePullRequest(t *testing.T) {
 			message:           "Message",
 			authorAssociation: firstTimeContributor,
 
-			expectAddedLabels: externalplugins.FormatTestLabels("contribution", "first-time-contributor"),
+			expectAddedLabels: formatTestLabels("contribution", "first-time-contributor"),
 			shouldComment:     true,
 		},
 		{
@@ -96,7 +100,7 @@ func TestHandlePullRequest(t *testing.T) {
 			author:            "author",
 			authorAssociation: firstTimer,
 
-			expectAddedLabels: externalplugins.FormatTestLabels("contribution", "first-time-contributor"),
+			expectAddedLabels: formatTestLabels("contribution", "first-time-contributor"),
 			shouldComment:     false,
 		},
 		{
@@ -106,7 +110,7 @@ func TestHandlePullRequest(t *testing.T) {
 			message:           "Message",
 			authorAssociation: firstTimer,
 
-			expectAddedLabels: externalplugins.FormatTestLabels("contribution", "first-time-contributor"),
+			expectAddedLabels: formatTestLabels("contribution", "first-time-contributor"),
 			shouldComment:     true,
 		},
 		{
@@ -116,7 +120,7 @@ func TestHandlePullRequest(t *testing.T) {
 			message:           "Message",
 			authorAssociation: none,
 
-			expectAddedLabels: externalplugins.FormatTestLabels("contribution", "first-time-contributor"),
+			expectAddedLabels: formatTestLabels("contribution", "first-time-contributor"),
 			shouldComment:     true,
 		},
 	}

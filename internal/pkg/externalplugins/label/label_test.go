@@ -14,6 +14,10 @@ import (
 )
 
 func TestLabelIssueComment(t *testing.T) {
+	formatTestLabels := func(labels ...string) []string {
+		return externalplugins.FormatTestLabels("org", "repo", 1, labels...)
+	}
+
 	type testCase struct {
 		name             string
 		body             string
@@ -53,7 +57,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("component/infra"),
+			expectedNewLabels:     formatTestLabels("component/infra"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -71,7 +75,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "priority/critical"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("priority/critical"),
+			expectedNewLabels:     formatTestLabels("priority/critical"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -80,7 +84,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "priority/critical", "type/bug"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("type/bug"),
+			expectedNewLabels:     formatTestLabels("type/bug"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -89,7 +93,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "status/needs-information"},
 			issueLabels: []string{"component/infra"},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("status/needs-information"),
+			expectedNewLabels:     formatTestLabels("status/needs-information"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -98,7 +102,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "priority/critical", "type/bug"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("type/bug"),
+			expectedNewLabels:     formatTestLabels("type/bug"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -107,7 +111,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "priority/critical", "type/BUG"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("type/BUG"),
+			expectedNewLabels:     formatTestLabels("type/BUG"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -116,7 +120,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels(),
+			expectedNewLabels:     formatTestLabels(),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
 			expectedCommentText: "The label(s) `priority/critical` cannot be applied, " +
@@ -128,7 +132,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "priority/critical", "type/bug"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("component/infra"),
+			expectedNewLabels:     formatTestLabels("component/infra"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -138,7 +142,7 @@ func TestLabelIssueComment(t *testing.T) {
 				"priority/urgent", "priority/important", "type/bug"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels(),
+			expectedNewLabels:     formatTestLabels(),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -147,7 +151,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "component/api", "priority/critical"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels(),
+			expectedNewLabels:     formatTestLabels(),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
 			expectedCommentText: "The label(s) `component/lgtm` cannot be applied, " +
@@ -159,7 +163,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "component/api", "priority/critical", "priority/urgent"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("component/api", "component/infra"),
+			expectedNewLabels:     formatTestLabels("component/api", "component/infra"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -168,7 +172,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "component/api", "priority/critical", "priority/urgent"},
 			issueLabels: []string{"component/api"},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("component/infra"),
+			expectedNewLabels:     formatTestLabels("component/infra"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -177,7 +181,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"priority/critical", "priority/important"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("priority/critical", "priority/important"),
+			expectedNewLabels:     formatTestLabels("priority/critical", "priority/important"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -186,7 +190,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "component/api", "priority/critical", "priority/urgent"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels(),
+			expectedNewLabels:     formatTestLabels(),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
 			expectedCommentText: "The label(s) `component/urgent` cannot be applied, " +
@@ -198,7 +202,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "component/api", "priority/critical", "priority/urgent"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels(),
+			expectedNewLabels:     formatTestLabels(),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
 			expectedCommentText: "The label(s) `priority/infra` cannot be applied, " +
@@ -210,7 +214,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "component/api"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("component/infra"),
+			expectedNewLabels:     formatTestLabels("component/infra"),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
 			expectedCommentText: "The label(s) `component/lgtm` cannot be applied, " +
@@ -223,7 +227,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"committee/conduct", "committee/steering"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("committee/steering"),
+			expectedNewLabels:     formatTestLabels("committee/steering"),
 			expectedRemovedLabels: []string{},
 			expectedBotComment:    true,
 			expectedCommentText: "The label(s) `committee/calamity` cannot be applied, " +
@@ -235,7 +239,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "priority/urgent"},
 			issueLabels: []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("priority/urgent", "component/infra"),
+			expectedNewLabels:     formatTestLabels("priority/urgent", "component/infra"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -267,7 +271,7 @@ func TestLabelIssueComment(t *testing.T) {
 			issueLabels: []string{"component/infra"},
 
 			expectedNewLabels:     []string{},
-			expectedRemovedLabels: externalplugins.FormatTestLabels("component/infra"),
+			expectedRemovedLabels: formatTestLabels("component/infra"),
 		},
 		{
 			name:        "Remove Committee Label",
@@ -277,7 +281,7 @@ func TestLabelIssueComment(t *testing.T) {
 			issueLabels: []string{"component/infra", "sig/testing", "committee/infinite-monkeys"},
 
 			expectedNewLabels:     []string{},
-			expectedRemovedLabels: externalplugins.FormatTestLabels("committee/infinite-monkeys"),
+			expectedRemovedLabels: formatTestLabels("committee/infinite-monkeys"),
 		},
 		{
 			name:        "Remove Type Label",
@@ -286,7 +290,7 @@ func TestLabelIssueComment(t *testing.T) {
 			issueLabels: []string{"component/infra", "priority/high", "type/bug"},
 
 			expectedNewLabels:     []string{},
-			expectedRemovedLabels: externalplugins.FormatTestLabels("type/bug"),
+			expectedRemovedLabels: formatTestLabels("type/bug"),
 		},
 		{
 			name:        "Remove Priority Label",
@@ -295,7 +299,7 @@ func TestLabelIssueComment(t *testing.T) {
 			issueLabels: []string{"component/infra", "priority/high"},
 
 			expectedNewLabels:     []string{},
-			expectedRemovedLabels: externalplugins.FormatTestLabels("priority/high"),
+			expectedRemovedLabels: formatTestLabels("priority/high"),
 		},
 		{
 			name:        "Remove SIG Label",
@@ -305,7 +309,7 @@ func TestLabelIssueComment(t *testing.T) {
 			issueLabels: []string{"component/infra", "sig/testing"},
 
 			expectedNewLabels:     []string{},
-			expectedRemovedLabels: externalplugins.FormatTestLabels("sig/testing"),
+			expectedRemovedLabels: formatTestLabels("sig/testing"),
 		},
 		{
 			name:        "Remove WG Policy",
@@ -315,7 +319,7 @@ func TestLabelIssueComment(t *testing.T) {
 			issueLabels: []string{"component/infra", "wg/policy"},
 
 			expectedNewLabels:     []string{},
-			expectedRemovedLabels: externalplugins.FormatTestLabels("wg/policy"),
+			expectedRemovedLabels: formatTestLabels("wg/policy"),
 		},
 		{
 			name:        "Remove Status Label",
@@ -324,7 +328,7 @@ func TestLabelIssueComment(t *testing.T) {
 			issueLabels: []string{"component/infra", "status/needs-information"},
 
 			expectedNewLabels:     []string{},
-			expectedRemovedLabels: externalplugins.FormatTestLabels("status/needs-information"),
+			expectedRemovedLabels: formatTestLabels("status/needs-information"),
 		},
 		{
 			name:        "Remove Multiple Labels",
@@ -333,7 +337,7 @@ func TestLabelIssueComment(t *testing.T) {
 			issueLabels: []string{"component/infra", "priority/high", "priority/low", "type/bug"},
 
 			expectedNewLabels: []string{},
-			expectedRemovedLabels: externalplugins.FormatTestLabels("priority/low", "priority/high",
+			expectedRemovedLabels: formatTestLabels("priority/low", "priority/high",
 				"type/bug", "component/infra"),
 		},
 		{
@@ -342,8 +346,8 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:  []string{"component/infra", "component/test"},
 			issueLabels: []string{"component/infra"},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("component/test"),
-			expectedRemovedLabels: externalplugins.FormatTestLabels("component/infra"),
+			expectedNewLabels:     formatTestLabels("component/test"),
+			expectedRemovedLabels: formatTestLabels("component/infra"),
 		},
 		{
 			name:        "Add and Remove the same Label",
@@ -352,7 +356,7 @@ func TestLabelIssueComment(t *testing.T) {
 			issueLabels: []string{"component/infra"},
 
 			expectedNewLabels:     []string{},
-			expectedRemovedLabels: externalplugins.FormatTestLabels("component/infra"),
+			expectedRemovedLabels: formatTestLabels("component/infra"),
 		},
 		{
 			name: "Multiple Add and Delete Labels",
@@ -361,8 +365,8 @@ func TestLabelIssueComment(t *testing.T) {
 				"type/cli", "type/srv", "priority/h", "priority/m", "priority/l"},
 			issueLabels: []string{"component/ruby", "type/srv", "priority/l", "priority/m"},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("component/go", "type/cli", "priority/h"),
-			expectedRemovedLabels: externalplugins.FormatTestLabels("component/ruby", "type/srv", "priority/l", "priority/m"),
+			expectedNewLabels:     formatTestLabels("component/go", "type/cli", "priority/h"),
+			expectedRemovedLabels: formatTestLabels("component/ruby", "type/srv", "priority/l", "priority/m"),
 		},
 		// Test for /[remove]-label.
 		{
@@ -392,7 +396,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:       []string{"orchestrator/foo"},
 			issueLabels:      []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("orchestrator/foo"),
+			expectedNewLabels:     formatTestLabels("orchestrator/foo"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -415,7 +419,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:       []string{"require-LGT2"},
 			issueLabels:      []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("require-LGT2"),
+			expectedNewLabels:     formatTestLabels("require-LGT2"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -425,7 +429,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:       []string{"require-LGT2"},
 			issueLabels:      []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("require-LGT2"),
+			expectedNewLabels:     formatTestLabels("require-LGT2"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -436,7 +440,7 @@ func TestLabelIssueComment(t *testing.T) {
 			issueLabels:      []string{"orchestrator/foo"},
 
 			expectedNewLabels:     []string{},
-			expectedRemovedLabels: externalplugins.FormatTestLabels("orchestrator/foo"),
+			expectedRemovedLabels: formatTestLabels("orchestrator/foo"),
 		},
 		{
 			name:             "Cannot remove missing custom label",
@@ -457,7 +461,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:       []string{"needs-cherry-pick-1.1", "needs-cherry-pick-1.0"},
 			additionalLabels: []string{"needs-cherry-pick-1.1", "needs-cherry-pick-1.0"},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("needs-cherry-pick-1.1", "needs-cherry-pick-1.0"),
+			expectedNewLabels:     formatTestLabels("needs-cherry-pick-1.1", "needs-cherry-pick-1.0"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -490,7 +494,7 @@ func TestLabelIssueComment(t *testing.T) {
 			repoLabels:       []string{"orchestrator/foo"},
 			issueLabels:      []string{},
 
-			expectedNewLabels:     externalplugins.FormatTestLabels("orchestrator/foo"),
+			expectedNewLabels:     formatTestLabels("orchestrator/foo"),
 			expectedRemovedLabels: []string{},
 		},
 		{
@@ -524,7 +528,7 @@ func TestLabelIssueComment(t *testing.T) {
 			issueLabels: []string{"orchestrator/foo", "orchestrator/bar"},
 
 			expectedNewLabels:     []string{},
-			expectedRemovedLabels: externalplugins.FormatTestLabels("orchestrator/foo"),
+			expectedRemovedLabels: formatTestLabels("orchestrator/foo"),
 		},
 		{
 			name:        "Remove already missing custom prefixed label",
@@ -646,7 +650,7 @@ func TestLabelIssueComment(t *testing.T) {
 		}
 
 		// Check that all the correct labels (and only the correct labels) were added.
-		expectLabels := append(externalplugins.FormatTestLabels(tc.issueLabels...), tc.expectedNewLabels...)
+		expectLabels := append(formatTestLabels(tc.issueLabels...), tc.expectedNewLabels...)
 		if expectLabels == nil {
 			expectLabels = []string{}
 		}
