@@ -22,12 +22,11 @@ const (
 	FirstTimeContributorLabel = "first-time-contributor"
 )
 
-// FormatTestLabels will prefix the label with org/repo#1.
-// TODO(hi-rustin): Support passing in org, repo, num.
-func FormatTestLabels(labels ...string) []string {
+// FormatTestLabels will prefix the label with org/repo#number.
+func FormatTestLabels(org, repo string, number int, labels ...string) []string {
 	var r []string
 	for _, l := range labels {
-		r = append(r, fmt.Sprintf("%s/%s#%d:%s", "org", "repo", 1, l))
+		r = append(r, fmt.Sprintf("%s/%s#%d:%s", org, repo, number, l))
 	}
 	if len(r) == 0 {
 		return nil
