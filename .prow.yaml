@@ -46,7 +46,7 @@ presubmits:
                 secretKeyRef:
                   name: codecov-tokens
                   key: ti-community-infra-tichi-codecov-token
-  - name: pull-tichi-web-unit-test
+  - name: pull-tichi-web-lint
     decorate: true
     always_run: true
     branches:
