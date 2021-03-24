@@ -46,6 +46,21 @@ presubmits:
                 secretKeyRef:
                   name: codecov-tokens
                   key: ti-community-infra-tichi-codecov-token
+  - name: pull-tichi-web-unit-test
+    decorate: true
+    always_run: true
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: node:12
+          command:
+            - /bin/bash
+            - -c
+            - >
+              cd ./web
+              npm ci &&
+              npm run build-dev
   - name: pull-tichi-validate-labels-yaml
     decorate: true
     run_if_changed: 'configs/prow-dev/config/labels.yaml'
