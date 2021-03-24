@@ -60,7 +60,8 @@ presubmits:
             - >
               cd ./web
               npm ci &&
-              npm run build-dev
+              npm run build
+              npm run lint
   - name: pull-tichi-validate-labels-yaml
     decorate: true
     run_if_changed: 'configs/prow-dev/config/labels.yaml'
