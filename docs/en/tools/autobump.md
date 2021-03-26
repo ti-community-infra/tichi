@@ -96,6 +96,6 @@ You can submit a pull request of a ProwJob of type `presubmit` to test the above
 
 ## Reference Documents
 
-- [README]( https://github.com/kubernetes/test-infra/blob/master/prow/cmd/autobump/README.md )
+- [README](https://github.com/kubernetes/test-infra/blob/master/prow/cmd/autobump/README.md)
 - [code](https://github.com/kubernetes/test-infra/tree/master/prow/cmd/autobump)
 - [official configuration example](https://github.com/kubernetes/test-infra/blob/master/prow/cmd/autobump/example-periodic.yaml)
