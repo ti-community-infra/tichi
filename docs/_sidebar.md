@@ -14,5 +14,6 @@
   - [wip](plugins/wip.md)
 - [工具](tools.md)
   - [label_sync](tools/label_sync.md)
+  - [autobump](tools/autobump.md)
 - [工作流](workflows.md)
   - [PR 工作流](workflows/pr.md)
