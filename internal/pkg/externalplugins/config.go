@@ -24,6 +24,10 @@ const (
 	UnlabeledAction = "unlabeled"
 )
 
+const (
+	DefaultCherryPickLabelPrefix = "needs-cherry-pick-"
+)
+
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
 	TichiWebURL     string `json:"tichi_web_url,omitempty"`
@@ -223,6 +227,13 @@ type TiCommunityCherrypicker struct {
 	IssueOnConflict bool     `json:"create_issue_on_conflict,omitempty"`
 	LabelPrefix     string   `json:"label_prefix,omitempty"`
 	ExcludeLabels   []string `json:"excludeLabels,omitempty"`
+}
+
+// setDefaults will set the default value for the config of blunderbuss plugin.
+func (c *TiCommunityCherrypicker) setDefaults() {
+	if len(c.LabelPrefix) == 0 {
+		c.LabelPrefix = DefaultCherryPickLabelPrefix
+	}
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists
@@ -439,6 +450,10 @@ func (c *Configuration) CherrypickerFor(org, repo string) *TiCommunityCherrypick
 func (c *Configuration) setDefaults() {
 	for i := range c.TiCommunityBlunderbuss {
 		c.TiCommunityBlunderbuss[i].setDefaults()
+	}
+
+	for i := range c.TiCommunityCherrypicker {
+		c.TiCommunityCherrypicker[i].setDefaults()
 	}
 
 	if len(c.LogLevel) == 0 {
