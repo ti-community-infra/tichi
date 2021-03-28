@@ -1312,6 +1312,62 @@ func TestContributionFor(t *testing.T) {
 	}
 }
 
+func TestCherrypickerFor(t *testing.T) {
+	testcases := []struct {
+		name         string
+		cherrypicker *TiCommunityCherrypicker
+		org          string
+		repo         string
+		expectEmpty  *TiCommunityCherrypicker
+	}{
+		{
+			name: "Full name",
+			cherrypicker: &TiCommunityCherrypicker{
+				Repos:       []string{"ti-community-infra/test-dev"},
+				LabelPrefix: "cherrypick/",
+			},
+			org:  "ti-community-infra",
+			repo: "test-dev",
+		},
+		{
+			name: "Only org",
+			cherrypicker: &TiCommunityCherrypicker{
+				Repos:       []string{"ti-community-infra"},
+				LabelPrefix: "cherrypick/",
+			},
+			org:  "ti-community-infra",
+			repo: "test-dev",
+		},
+		{
+			name: "Can not find",
+			cherrypicker: &TiCommunityCherrypicker{
+				Repos:       []string{"ti-community-infra"},
+				LabelPrefix: "cherrypick/",
+			},
+			org:         "ti-community-infra1",
+			repo:        "test-dev1",
+			expectEmpty: &TiCommunityCherrypicker{},
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			config := Configuration{TiCommunityCherrypicker: []TiCommunityCherrypicker{
+				*tc.cherrypicker,
+			}}
+
+			cherrypicker := config.CherrypickerFor(tc.org, tc.repo)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, cherrypicker, &TiCommunityCherrypicker{})
+			} else {
+				assert.DeepEqual(t, cherrypicker.Repos, tc.cherrypicker.Repos)
+			}
+		})
+	}
+}
+
 func TestSetBlunderbussDefaults(t *testing.T) {
 	testcases := []struct {
 		name                      string
