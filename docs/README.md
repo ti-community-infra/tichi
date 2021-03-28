@@ -35,7 +35,7 @@
 | wip                             | 内置插件 | 为正在开发的 PR 添加 `do-not-merge/work-in-progress` 标签，阻止自动分配 reviewer 和 PR 合并。 |
 | welcome                         | 内置插件 | 通过机器人向首次贡献的贡献者发送欢迎语。                                                      |
 | label_sync                      | 工具     | 能够将 yaml 文件当中配置的标签同步到一个或多个仓库。                                          |
-| autobump                        | 工具     | 通过提交 Pull Request 的方式自动更新上游 Prow 及其相关组件和插件的版本号。                      |
+| autobump                        | 工具     | 通过自动提交 Pull Request 的方式更新上游 Prow 及其相关组件和插件的版本。                      |
 
 同时，你可以在 [Plugins](https://prow.tidb.io/plugins) 当中找到目前所有可用的组件或插件，也可以在 [Command](https://prow.tidb.io/command-help) 当中查看指定仓库可用的命令。
 

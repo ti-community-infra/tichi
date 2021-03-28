@@ -2,18 +2,18 @@
 
 ## Design Background
 
-In the process of maintaining Ti Chi, we need to frequently update the upstream Prow and its related components and plugins. We need to manually modify the version number in the relevant file locally, and then submit the update to the master branch by Pull Request to trigger Automatic deployment scripts enable new versions of components and plugins. 
+In the process of maintaining TiChi, we need to frequently update the upstream Prow and its related components and plugins. We need to manually modify the version number in the relevant file locally, and then submit the update to the master branch by Pull Request to trigger Automatic deployment scripts enable new versions of components and plugins. 
 
 If the update dependency step can be automatically completed through scripts, the maintenance efficiency will be improved to a certain extent.
 
-Therefore, we can use the [autobump](https://github.com/kubernetes/test-infra/tree/master/prow/cmd/autobump) tool designed and developed by the Kubernetes community to automatically submit a Pull Request that updates the dependent version number.
+Therefore, we can use the [`autobump`](https://github.com/kubernetes/test-infra/tree/master/prow/cmd/autobump) tool designed and developed by the Kubernetes community to automatically submit a Pull Request that updates the dependent version number.
 ## Design
 
 The `autobump` tool of the Kubernetes community is packaged in the Docker image, which contains two scripts:
 
-- The `bump.sh` script will update the mirror version number of the component or plug-in in the relevant file to the upstream version, the latest version or a specific version.
+- The [`bump.sh`](https://github.com/kubernetes/test-infra/blob/master/prow/cmd/autobump/bump.sh) script will update the mirror version number of the component or plug-in in the relevant file to the upstream version, the latest version or a specific version.
 
-- The `autobump.sh` script will update the version number through the `bump.sh` script, then push the modified configuration file to the Github repository forked from the repository to be updated, and finally use `pr-creator` to create a Pull Request.
+- The [`autobump.sh`](https://github.com/kubernetes/test-infra/blob/master/prow/cmd/autobump/autobump.sh) script will update the version number through the `bump.sh` script, then push the modified configuration file to the Github repository forked from the repository to be updated, and finally use [`pr-creator`](https://github.com/kubernetes/test-infra/tree/master/robots/pr-creator) to create a Pull Request.
 
 If you want to implement regular automatic updates, we can define a `periodic` type ProwJob to periodically execute the `autobump` script, the specific configuration can refer to the "Configuration Instruction" below.
 

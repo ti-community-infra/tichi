@@ -2,19 +2,19 @@
 
 ## 设计背景
 
-在维护 Ti Chi 的过程当中，我们需要经常更新上游的 Prow 及其相关的组件和插件，需要在本地手动地修改相关文件中的版本号，然后以 Pull Request 的方式将更新提交到 master 分支，触发自动部署脚本启用新版本的组件和插件。
+在维护 TiChi 的过程当中，我们需要经常更新上游的 Prow 及其相关的组件和插件，需要在本地手动地修改相关文件中的版本号，然后以 Pull Request 的方式将更新提交到 master 分支，触发自动部署脚本启用新版本的组件和插件。
 
 如果能够通过脚本的方式自动地完成更新依赖这个步骤，将在一定程度上提高维护的效率。
 
-因此，我们可以使用 Kubernetes 社区设计开发的 [autobump](https://github.com/kubernetes/test-infra/tree/master/prow/cmd/autobump) 工具来自动提交更新依赖版本号的 Pull Request。
+因此，我们可以使用 Kubernetes 社区设计开发的 [`autobump`](https://github.com/kubernetes/test-infra/tree/master/prow/cmd/autobump) 工具来自动提交更新依赖版本号的 Pull Request。
 
 ## 设计思路
 
 Kubernetes 社区的 `autobump` 工具被打包在 Docker 镜像当中，其中包含了两个脚本：
 
-- `bump.sh` 脚本会将相关文件当中组件或插件的镜像版本号更新至上游版本、最新版本或特定版本。
+- [`bump.sh`](https://github.com/kubernetes/test-infra/blob/master/prow/cmd/autobump/bump.sh) 脚本会将相关文件当中组件或插件的镜像版本号更新至上游版本、最新版本或特定版本。
   
-- `autobump.sh` 会通过 `bump.sh` 脚本完成版本号的更新，然后将修改好的配置文件推送到从待更新仓库 fork 出来的 Github 仓库，最后使用 `pr-creator` 来创建一个 Pull Request。
+- [`autobump.sh`](https://github.com/kubernetes/test-infra/blob/master/prow/cmd/autobump/autobump.sh) 会通过 `bump.sh` 脚本完成版本号的更新，然后将修改好的配置文件推送到从待更新仓库 fork 出来的 Github 仓库，最后使用 [`pr-creator`](https://github.com/kubernetes/test-infra/tree/master/robots/pr-creator) 来创建一个 Pull Request。
 
 如果要实现定期的自动更新，我们可以定义一个 `periodic` 类型的 ProwJob 来定期执行 `autobump` 脚本，具体配置可以参考下文的 “配置说明”。
 

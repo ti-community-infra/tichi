@@ -37,7 +37,7 @@ The following shows some commonly used components or plugins in the TiDB communi
 | wip                        | external plugin | Add the `do-not-merge/work-in-progress` label to the PR under development to prevent the automatic assignment of reviewer and PR merge.   |
 | welcome                    | external plugin | Send a welcome message to contributors who have contributed for the first time through a robot.                                           |
 | label_sync                 | tool            | Able to synchronize the labels configured in the yaml file to one or more repositories.                                                   |
-| autobump                   | tool            | Automatically update the version numbers of upstream Prow and its related components and plugins by submitting a Pull Request.            |
+| autobump                   | tool            | Update the version of upstream Prow and its related components and plugins by automatically submitting Pull Requests.                     |
 
 At the same time, you can find all currently available components or plugins in [Plugins](https://prow.tidb.io/plugins) page, or in [Command](https://prow.tidb.io/command-help) to view the commands available in the specified repository.
 
