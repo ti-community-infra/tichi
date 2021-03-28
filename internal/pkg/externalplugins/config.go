@@ -49,6 +49,7 @@ type Configuration struct {
 	TiCommunityTars          []TiCommunityTars          `json:"ti-community-tars,omitempty"`
 	TiCommunityLabelBlocker  []TiCommunityLabelBlocker  `json:"ti-community-label-blocker,omitempty"`
 	TiCommunityContribution  []TiCommunityContribution  `json:"ti-community-contribution,omitempty"`
+	TiCommunityCherrypicker  []TiCommunityCherrypicker  `json:"ti-community-cherrypicker,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -212,6 +213,18 @@ type TiCommunityContribution struct {
 	Repos []string `json:"repos,omitempty"`
 	// Message specifies the tips for the contributor's PR.
 	Message string `json:"message,omitempty"`
+}
+
+// TiCommunityCherrypicker is the config for the cherrypicker plugin.
+type TiCommunityCherrypicker struct {
+	// Repos is either of the form org/repo or just org.
+	Repos           []string `json:"repos,omitempty"`
+	AllowAll        bool     `json:"allow_all,omitempty"`
+	IssueOnConflict bool     `json:"create_issue_on_conflict,omitempty"`
+	LabelPrefix     string   `json:"label_prefix,omitempty"`
+	Milestones      []string `json:"milestones,omitempty"`
+	Labels          []string `json:"labels,omitempty"`
+	ExcludeLabels   []string `json:"excludeLabels,omitempty"`
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists
@@ -401,6 +414,27 @@ func (c *Configuration) LabelBlockerFor(org, repo string) *TiCommunityLabelBlock
 		return &labelBlocker
 	}
 	return &TiCommunityLabelBlocker{}
+}
+
+// CherrypickerFor finds the TiCommunityCherrypicker for a repo, if one exists.
+// TiCommunityCherrypicker configuration can be listed for a repository
+// or an organization.
+func (c *Configuration) CherrypickerFor(org, repo string) *TiCommunityCherrypicker {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, cherrypicker := range c.TiCommunityCherrypicker {
+		if !sets.NewString(cherrypicker.Repos...).Has(fullName) {
+			continue
+		}
+		return &cherrypicker
+	}
+	// If you don't find anything, loop again looking for an org config
+	for _, cherrypicker := range c.TiCommunityCherrypicker {
+		if !sets.NewString(cherrypicker.Repos...).Has(org) {
+			continue
+		}
+		return &cherrypicker
+	}
+	return &TiCommunityCherrypicker{}
 }
 
 // setDefaults will set the default value for the configuration of all plugins.
