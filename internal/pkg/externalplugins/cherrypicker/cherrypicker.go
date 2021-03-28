@@ -13,7 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-The original file of the code is at: https://github.com/kubernetes/test-infra/blob/master/prow/external-plugins/cherrypicker/server.go,
+The original file of the code is at:
+https://github.com/kubernetes/test-infra/blob/master/prow/external-plugins/cherrypicker/server.go,
 which we modified to add support for copying the labels and reviewers.
 */
 package cherrypicker
