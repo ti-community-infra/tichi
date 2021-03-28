@@ -1188,6 +1188,47 @@ func TestTarsFor(t *testing.T) {
 	}
 }
 
+func TestSetBlunderbussDefaults(t *testing.T) {
+	testcases := []struct {
+		name                      string
+		gracePeriodDuration       int
+		expectGracePeriodDuration int
+	}{
+		{
+			name:                      "default",
+			gracePeriodDuration:       0,
+			expectGracePeriodDuration: 5,
+		},
+		{
+			name:                      "overwrite",
+			gracePeriodDuration:       3,
+			expectGracePeriodDuration: 3,
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			c := &Configuration{
+				TiCommunityBlunderbuss: []TiCommunityBlunderbuss{
+					{
+						GracePeriodDuration: tc.gracePeriodDuration,
+					},
+				},
+			}
+
+			c.setDefaults()
+
+			for _, blunderbuss := range c.TiCommunityBlunderbuss {
+				if blunderbuss.GracePeriodDuration != tc.expectGracePeriodDuration {
+					t.Errorf("unexpected grace_period_duration: %v, expected: %v",
+						blunderbuss.GracePeriodDuration, tc.expectGracePeriodDuration)
+				}
+			}
+		})
+	}
+}
+
 func TestLabelBlockerFor(t *testing.T) {
 	testcases := []struct {
 		name         string
@@ -1363,47 +1404,6 @@ func TestCherrypickerFor(t *testing.T) {
 				assert.DeepEqual(t, cherrypicker, &TiCommunityCherrypicker{})
 			} else {
 				assert.DeepEqual(t, cherrypicker.Repos, tc.cherrypicker.Repos)
-			}
-		})
-	}
-}
-
-func TestSetBlunderbussDefaults(t *testing.T) {
-	testcases := []struct {
-		name                      string
-		gracePeriodDuration       int
-		expectGracePeriodDuration int
-	}{
-		{
-			name:                      "default",
-			gracePeriodDuration:       0,
-			expectGracePeriodDuration: 5,
-		},
-		{
-			name:                      "overwrite",
-			gracePeriodDuration:       3,
-			expectGracePeriodDuration: 3,
-		},
-	}
-
-	for _, testcase := range testcases {
-		tc := testcase
-		t.Run(tc.name, func(t *testing.T) {
-			c := &Configuration{
-				TiCommunityBlunderbuss: []TiCommunityBlunderbuss{
-					{
-						GracePeriodDuration: tc.gracePeriodDuration,
-					},
-				},
-			}
-
-			c.setDefaults()
-
-			for _, blunderbuss := range c.TiCommunityBlunderbuss {
-				if blunderbuss.GracePeriodDuration != tc.expectGracePeriodDuration {
-					t.Errorf("unexpected grace_period_duration: %v, expected: %v",
-						blunderbuss.GracePeriodDuration, tc.expectGracePeriodDuration)
-				}
 			}
 		})
 	}
