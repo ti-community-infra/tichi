@@ -25,7 +25,7 @@ const (
 )
 
 const (
-	DefaultCherryPickLabelPrefix = "needs-cherry-pick-"
+	DefaultCherryPickLabelPrefix = "cherrypick/"
 )
 
 // Configuration is the top-level serialization target for external plugin Configuration.

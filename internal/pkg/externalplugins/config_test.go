@@ -1418,12 +1418,12 @@ func TestSetCherrypickerDefaults(t *testing.T) {
 		{
 			name:              "default",
 			labelPrefix:       "",
-			expectLabelPrefix: "needs-cherry-pick-",
+			expectLabelPrefix: "cherrypick/",
 		},
 		{
 			name:              "overwrite",
-			labelPrefix:       "cherrypick/",
-			expectLabelPrefix: "cherrypick/",
+			labelPrefix:       "needs-cherry-pick-",
+			expectLabelPrefix: "needs-cherry-pick-",
 		},
 	}
 
