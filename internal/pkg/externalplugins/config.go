@@ -222,8 +222,6 @@ type TiCommunityCherrypicker struct {
 	AllowAll        bool     `json:"allow_all,omitempty"`
 	IssueOnConflict bool     `json:"create_issue_on_conflict,omitempty"`
 	LabelPrefix     string   `json:"label_prefix,omitempty"`
-	Milestones      []string `json:"milestones,omitempty"`
-	Labels          []string `json:"labels,omitempty"`
 	ExcludeLabels   []string `json:"excludeLabels,omitempty"`
 }
 
