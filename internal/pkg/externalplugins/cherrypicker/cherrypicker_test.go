@@ -24,6 +24,7 @@ package cherrypicker
 import (
 	"errors"
 	"fmt"
+	"k8s.io/test-infra/prow/plugins"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -1060,19 +1061,157 @@ func (tuf *threadUnsafeFGHC) EnsureFork(login, org, repo string) (string, error)
 	return "", errors.New("that is enough")
 }
 
-func TestServeHTTP(t *testing.T) {
-	s := &Server{}
-	reader := strings.NewReader("reader")
-	req, err := http.NewRequest("POST", "/events", reader)
-	if err != nil {
-		t.Fatal(err)
+func TestServeHTTPErrors(t *testing.T) {
+	pa := &plugins.ConfigAgent{}
+	pa.Set(&plugins.Configuration{})
+
+	getSecret := func() []byte {
+		var repoLevelSecret = `
+'*':
+  - value: abc
+    created_at: 2019-10-02T15:00:00Z
+  - value: key2
+    created_at: 2020-10-02T15:00:00Z
+foo/bar:
+  - value: 123abc
+    created_at: 2019-10-02T15:00:00Z
+  - value: key6
+    created_at: 2020-10-02T15:00:00Z
+`
+		return []byte(repoLevelSecret)
 	}
 
-	rr := httptest.NewRecorder()
-	s.ServeHTTP(rr, req)
+	// This is the SHA1 signature for payload "{}" and signature "abc"
+	// echo -n '{}' | openssl dgst -sha1 -hmac abc
+	const hmac string = "sha1=db5c76f4264d0ad96cf21baec394964b4b8ce580"
+	const body string = "{}"
+	var testcases = []struct {
+		name string
 
-	if rr.Code != http.StatusBadRequest {
-		t.Errorf("Expect 400 error request, but http code is: %d.", rr.Code)
+		Method string
+		Header map[string]string
+		Body   string
+		Code   int
+	}{
+		{
+			name: "Delete",
+
+			Method: http.MethodDelete,
+			Header: map[string]string{
+				"X-GitHub-Event":    "ping",
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   hmac,
+				"content-type":      "application/json",
+			},
+			Body: body,
+			Code: http.StatusMethodNotAllowed,
+		},
+		{
+			name: "No event",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   hmac,
+				"content-type":      "application/json",
+			},
+			Body: body,
+			Code: http.StatusBadRequest,
+		},
+		{
+			name: "No content type",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":    "ping",
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   hmac,
+			},
+			Body: body,
+			Code: http.StatusBadRequest,
+		},
+		{
+			name: "No event guid",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":  "ping",
+				"X-Hub-Signature": hmac,
+				"content-type":    "application/json",
+			},
+			Body: body,
+			Code: http.StatusBadRequest,
+		},
+		{
+			name: "No signature",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":    "ping",
+				"X-GitHub-Delivery": "I am unique",
+				"content-type":      "application/json",
+			},
+			Body: body,
+			Code: http.StatusForbidden,
+		},
+		{
+			name: "Bad signature",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":    "ping",
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   "this doesn't work",
+				"content-type":      "application/json",
+			},
+			Body: body,
+			Code: http.StatusForbidden,
+		},
+		{
+			name: "Good",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":    "ping",
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   hmac,
+				"content-type":      "application/json",
+			},
+			Body: body,
+			Code: http.StatusOK,
+		},
+		{
+			name: "Good, again",
+
+			Method: http.MethodGet,
+			Header: map[string]string{
+				"content-type": "application/json",
+			},
+			Body: body,
+			Code: http.StatusMethodNotAllowed,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Logf("Running scenario %q", tc.name)
+
+		w := httptest.NewRecorder()
+		r, err := http.NewRequest(tc.Method, "", strings.NewReader(tc.Body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for k, v := range tc.Header {
+			r.Header.Set(k, v)
+		}
+
+		s := Server{
+			TokenGenerator: getSecret,
+		}
+
+		s.ServeHTTP(w, r)
+		if w.Code != tc.Code {
+			t.Errorf("For test case: %+v\nExpected code %v, got code %v", tc, tc.Code, w.Code)
+		}
 	}
 }
 
