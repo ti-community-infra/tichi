@@ -1261,7 +1261,7 @@ foo/bar:
 
 			Method: http.MethodPost,
 			Header: map[string]string{
-				"X-GitHub-Event":    "ping",
+				"X-GitHub-Event":    "issue_comment",
 				"X-GitHub-Delivery": "I am unique",
 				"X-Hub-Signature":   "sha1=f3fee26b22d3748f393f7e37f71baa467495971a",
 				"content-type":      "application/json",
@@ -1274,7 +1274,7 @@ foo/bar:
 
 			Method: http.MethodPost,
 			Header: map[string]string{
-				"X-GitHub-Event":    "ping",
+				"X-GitHub-Event":    "pull_request",
 				"X-GitHub-Delivery": "I am unique",
 				"X-Hub-Signature":   "sha1=9a62c443a5ab561e023e64610dc467523188defc",
 				"content-type":      "application/json",
@@ -1296,8 +1296,18 @@ foo/bar:
 			r.Header.Set(k, v)
 		}
 
+		cfg := &externalplugins.Configuration{}
+		cfg.TiCommunityCherrypicker = []externalplugins.TiCommunityCherrypicker{
+			{
+				Repos: []string{"foo/bar"},
+			},
+		}
+		ca := &externalplugins.ConfigAgent{}
+		ca.Set(cfg)
+
 		s := Server{
 			TokenGenerator: getSecret,
+			ConfigAgent:    ca,
 		}
 
 		s.ServeHTTP(w, r)
