@@ -70,6 +70,15 @@ func (f *fghc) AssignIssue(org, repo string, number int, logins []string) error 
 func (f *fghc) RequestReview(org, repo string, number int, logins []string) error {
 	f.Lock()
 	defer f.Unlock()
+	var users []github.User
+	for _, login := range logins {
+		users = append(users, github.User{Login: login})
+	}
+	for i := range f.prs {
+		if number == f.prs[i].Number {
+			f.prs[i].RequestedReviewers = users
+		}
+	}
 	return nil
 }
 
@@ -120,14 +129,19 @@ func (f *fghc) EnsureFork(forkingUser, org, repo string) (string, error) {
 	return repo, nil
 }
 
-var expectedFmt = `title=%q body=%q head=%s base=%s labels=%v`
+var expectedFmt = `title=%q body=%q head=%s base=%s labels=%v reviewers=%v`
 
 func prToString(pr github.PullRequest) string {
 	var labels []string
 	for _, label := range pr.Labels {
 		labels = append(labels, label.Name)
 	}
-	return fmt.Sprintf(expectedFmt, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels)
+
+	var reviewers []string
+	for _, reviewer := range pr.RequestedReviewers {
+		reviewers = append(reviewers, reviewer.Login)
+	}
+	return fmt.Sprintf(expectedFmt, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, reviewers)
 }
 
 func (f *fghc) CreateIssue(org, repo, title, body string, milestone int, labels, assignees []string) (int, error) {
@@ -275,6 +289,11 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 			Merged: true,
 			Title:  "This is a fix for X",
 			Body:   body,
+			RequestedReviewers: []github.User{
+				{
+					Login: "user1",
+				},
+			},
 		},
 		isMember: true,
 		patch:    patch,
@@ -308,7 +327,9 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 	expectedBase := "stage"
 	expectedHead := fmt.Sprintf(botUser.Login+":"+cherryPickBranchFmt, 2, expectedBase)
 	var expectedLabels []string
-	expected := fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead, expectedBase, expectedLabels)
+	expectedReviewers := []string{"user1"}
+	expected := fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead,
+		expectedBase, expectedLabels, expectedReviewers)
 
 	getSecret := func() []byte {
 		return []byte("sha=abcdefg")
@@ -445,6 +466,11 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 						Name: "test",
 					},
 				},
+				RequestedReviewers: []github.User{
+					{
+						Login: "user1",
+					},
+				},
 			},
 		},
 		isMember: true,
@@ -469,6 +495,11 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 			Labels: []github.Label{
 				{
 					Name: "test",
+				},
+			},
+			RequestedReviewers: []github.User{
+				{
+					Login: "user1",
 				},
 			},
 		},
@@ -513,7 +544,11 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 		for _, label := range pr.PullRequest.Labels {
 			expectedLabels = append(expectedLabels, label.Name)
 		}
-		return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead, branch, expectedLabels)
+		var reviewers []string
+		for _, reviewer := range pr.PullRequest.RequestedReviewers {
+			reviewers = append(reviewers, reviewer.Login)
+		}
+		return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead, branch, expectedLabels, reviewers)
 	}
 
 	if len(ghc.prs) != 2 {
@@ -596,6 +631,11 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 				Merged:   true,
 				MergeSHA: new(string),
 				Title:    "This is a fix for Y",
+				RequestedReviewers: []github.User{
+					{
+						Login: "user1",
+					},
+				},
 			},
 		}
 	}
@@ -720,7 +760,11 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 						for _, label := range pr(evt).PullRequest.Labels {
 							expectedLabels = append(expectedLabels, label.Name)
 						}
-						return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead, branch, expectedLabels)
+						var reviewers []string
+						for _, reviewer := range pr(evt).PullRequest.RequestedReviewers {
+							reviewers = append(reviewers, reviewer.Login)
+						}
+						return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead, branch, expectedLabels, reviewers)
 					}
 
 					expectedPRs := 2
