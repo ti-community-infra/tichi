@@ -325,10 +325,10 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 		return fmt.Errorf("failed to list comments: %w", err)
 	}
 
-	// requestor -> target branch -> issue comment
+	// requestor -> target branch -> issue comment.
 	requestorToComments := make(map[string]map[string]*github.IssueComment)
 
-	// first look for our special comments
+	// First look for our special comments.
 	for i := range comments {
 		c := comments[i]
 		cherryPickMatches := cherryPickRe.FindAllStringSubmatch(c.Body, -1)
@@ -345,12 +345,13 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 
 	foundCherryPickComments := len(requestorToComments) != 0
 
-	// now look for our special labels
+	// Now look for our special labels.
 	labels, err := s.GitHubClient.GetIssueLabels(org, repo, num)
 	if err != nil {
 		return fmt.Errorf("failed to get issue labels: %w", err)
 	}
 
+	// NOTICE: This will set the requestor to the author of the PR.
 	if requestorToComments[pr.User.Login] == nil {
 		requestorToComments[pr.User.Login] = make(map[string]*github.IssueComment)
 	}
@@ -364,6 +365,7 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 		}
 	}
 
+	// No need to cherry pick.
 	if !foundCherryPickComments && !foundCherryPickLabels {
 		return nil
 	}
@@ -478,6 +480,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		return fmt.Errorf("failed to get patch: %w", err)
 	}
 
+	// Setup git name and email.
 	if err := r.Config("user.name", s.BotUser.Login); err != nil {
 		return fmt.Errorf("failed to configure git user: %w", err)
 	}
@@ -539,6 +542,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	if s.Push != nil {
 		push = s.Push
 	}
+
 	// Push the new branch in the bot's fork.
 	if err := push(forkName, newBranch, true); err != nil {
 		logger.WithError(err).Warn("failed to Push chery-picked changes to GitHub")
@@ -561,6 +565,8 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	if err := s.createComment(logger, org, repo, num, comment, resp); err != nil {
 		return fmt.Errorf("failed to create comment: %w", err)
 	}
+
+	// Copying original pull request labels.
 	excludeLabelsSet := sets.NewString(opts.ExcludeLabels...)
 	for _, label := range pr.Labels {
 		if !excludeLabelsSet.Has(label.Name) {
@@ -570,11 +576,11 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		}
 	}
 
+	// Copying original pull request reviewers.
 	var reviewers []string
 	for _, reviewer := range pr.RequestedReviewers {
 		reviewers = append(reviewers, reviewer.Login)
 	}
-
 	if err := s.GitHubClient.RequestReview(org, repo, createdNum, reviewers); err != nil {
 		logger.WithError(err).Warn("failed to request review to new PR")
 		// Ignore returning errors on failure to request review as this is likely
@@ -583,6 +589,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		return nil
 	}
 
+	// Assign pull request to requestor.
 	if err := s.GitHubClient.AssignIssue(org, repo, createdNum, []string{requestor}); err != nil {
 		logger.WithError(err).Warn("failed to assign to new PR")
 		// Ignore returning errors on failure to assign as this is most likely
