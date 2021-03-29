@@ -88,6 +88,15 @@ builds:
     main: ./cmd/ticommunitycontribution/main.go
     env:
       - CGO_ENABLED=0
+  - id: "ti-community-cherrypicker"
+    binary: ticommunitycherrypicker
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/ticommunitycherrypicker/main.go
+    env:
+      - CGO_ENABLED=0
   - id: "check-external-plugin-config"
     binary: check-external-plugin-config
     goos:
@@ -203,6 +212,15 @@ dockers:
       - "ticommunityinfra/tichi-contribution-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-contribution-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/contribution/Dockerfile
+  - binaries:
+      - ticommunitycherrypicker
+    builds:
+      - ti-community-cherrypicker
+    image_templates:
+      - "ticommunityinfra/tichi-cherrypicker-plugin:latest"
+      - "ticommunityinfra/tichi-cherrypicker-plugin:{{ .Tag }}"
+      - "ticommunityinfra/tichi-cherrypicker-plugin:{{ .Major }}"
+    dockerfile: ./deployments/plugins/cherrypicker/Dockerfile
   -
     image_templates:
       - "ticommunityinfra/tichi-web:latest"
