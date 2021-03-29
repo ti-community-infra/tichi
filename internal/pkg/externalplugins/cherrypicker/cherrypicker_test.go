@@ -64,6 +64,15 @@ func (f *fghc) AddLabel(org, repo string, number int, label string) error {
 func (f *fghc) AssignIssue(org, repo string, number int, logins []string) error {
 	f.Lock()
 	defer f.Unlock()
+	var users []github.User
+	for _, login := range logins {
+		users = append(users, github.User{Login: login})
+	}
+	for i := range f.prs {
+		if number == f.prs[i].Number {
+			f.prs[i].Assignees = users
+		}
+	}
 	return nil
 }
 
@@ -129,7 +138,7 @@ func (f *fghc) EnsureFork(forkingUser, org, repo string) (string, error) {
 	return repo, nil
 }
 
-var expectedFmt = `title=%q body=%q head=%s base=%s labels=%v reviewers=%v`
+var expectedFmt = `title=%q body=%q head=%s base=%s labels=%v reviewers=%v assignees=%v`
 
 func prToString(pr github.PullRequest) string {
 	var labels []string
@@ -141,7 +150,12 @@ func prToString(pr github.PullRequest) string {
 	for _, reviewer := range pr.RequestedReviewers {
 		reviewers = append(reviewers, reviewer.Login)
 	}
-	return fmt.Sprintf(expectedFmt, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, reviewers)
+
+	var assignees []string
+	for _, assignee := range pr.Assignees {
+		assignees = append(assignees, assignee.Login)
+	}
+	return fmt.Sprintf(expectedFmt, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, reviewers, assignees)
 }
 
 func (f *fghc) CreateIssue(org, repo, title, body string, milestone int, labels, assignees []string) (int, error) {
@@ -294,6 +308,11 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 					Login: "user1",
 				},
 			},
+			Assignees: []github.User{
+				{
+					Login: "user2",
+				},
+			},
 		},
 		isMember: true,
 		patch:    patch,
@@ -328,8 +347,9 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 	expectedHead := fmt.Sprintf(botUser.Login+":"+cherryPickBranchFmt, 2, expectedBase)
 	var expectedLabels []string
 	expectedReviewers := []string{"user1"}
+	expectedAssignees := []string{"wiseguy"}
 	expected := fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead,
-		expectedBase, expectedLabels, expectedReviewers)
+		expectedBase, expectedLabels, expectedReviewers, expectedAssignees)
 
 	getSecret := func() []byte {
 		return []byte("sha=abcdefg")
@@ -471,6 +491,11 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 						Login: "user1",
 					},
 				},
+				Assignees: []github.User{
+					{
+						Login: "approver",
+					},
+				},
 			},
 		},
 		isMember: true,
@@ -500,6 +525,11 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 			RequestedReviewers: []github.User{
 				{
 					Login: "user1",
+				},
+			},
+			Assignees: []github.User{
+				{
+					Login: "approver",
 				},
 			},
 		},
@@ -548,7 +578,9 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 		for _, reviewer := range pr.PullRequest.RequestedReviewers {
 			reviewers = append(reviewers, reviewer.Login)
 		}
-		return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead, branch, expectedLabels, reviewers)
+		expectedAssignees := []string{"approver"}
+		return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead,
+			branch, expectedLabels, reviewers, expectedAssignees)
 	}
 
 	if len(ghc.prs) != 2 {
@@ -717,7 +749,7 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 							},
 							{
 								User: github.User{
-									Login: "approver",
+									Login: "developer",
 								},
 								Body: "/cherrypick release-1.5\r",
 							},
@@ -764,7 +796,9 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 						for _, reviewer := range pr(evt).PullRequest.RequestedReviewers {
 							reviewers = append(reviewers, reviewer.Login)
 						}
-						return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead, branch, expectedLabels, reviewers)
+						expectedAssignees := []string{"developer"}
+						return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead,
+							branch, expectedLabels, reviewers, expectedAssignees)
 					}
 
 					expectedPRs := 2
