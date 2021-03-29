@@ -24,6 +24,8 @@ package cherrypicker
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strings"
 	"sync"
@@ -1056,6 +1058,22 @@ type threadUnsafeFGHC struct {
 func (tuf *threadUnsafeFGHC) EnsureFork(login, org, repo string) (string, error) {
 	tuf.orgRepoCountCalled++
 	return "", errors.New("that is enough")
+}
+
+func TestServeHTTP(t *testing.T) {
+	s := &Server{}
+	reader := strings.NewReader("reader")
+	req, err := http.NewRequest("POST", "/events", reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	s.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Errorf("Expect 400 error request, but http code is: %d.", rr.Code)
+	}
 }
 
 func TestHelpProvider(t *testing.T) {
