@@ -261,7 +261,7 @@ index 1ea52dc..5bd70a9 100644
  }
 `)
 
-var body = "This PR updates the magic number.\n\n```release-note\nUpdate the magic number from 42 to 49\n```"
+var body = "This PR updates the magic number.\n\n"
 
 func TestCherryPickIC(t *testing.T) {
 	t.Parallel()
@@ -319,6 +319,7 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 		isMember: true,
 		patch:    patch,
 	}
+
 	ic := github.IssueCommentEvent{
 		Action: github.IssueCommentActionCreated,
 		Repo: github.Repo{
@@ -343,8 +344,7 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 
 	botUser := &github.UserData{Login: "ci-robot", Email: "ci-robot@users.noreply.github.com"}
 	expectedTitle := "This is a fix for X (#2)[stage]"
-	expectedBody := "This is an automated cherry-pick of #2\n\nThis PR updates the magic number.\n\n```release-note\n" +
-		"Update the magic number from 42 to 49\n```"
+	expectedBody := "This is an automated cherry-pick of #2\n\nThis PR updates the magic number.\n\n"
 	expectedBase := "stage"
 	expectedHead := fmt.Sprintf(botUser.Login+":"+cherryPickBranchFmt, 2, expectedBase)
 	var expectedLabels []string
@@ -503,6 +503,7 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 		isMember: true,
 		patch:    patch,
 	}
+
 	pr := github.PullRequestEvent{
 		Action: github.PullRequestActionClosed,
 		PullRequest: github.PullRequest{
@@ -1029,6 +1030,7 @@ func TestEnsureForkExists(t *testing.T) {
 			errors:   true,
 		},
 	}
+
 	for _, test := range testCases {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
