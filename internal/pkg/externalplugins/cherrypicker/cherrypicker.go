@@ -79,22 +79,29 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 
 		for _, repo := range enabledRepos {
 			opts := cfg.CherrypickerFor(repo.Org, repo.Repo)
-			var isConfigured bool
 			var configInfoStrings []string
 
 			configInfoStrings = append(configInfoStrings, "The plugin has these configurations:<ul>")
 
 			if len(opts.LabelPrefix) != 0 {
-				isConfigured = true
+				configInfoStrings = append(configInfoStrings, "<li>The current label prefix for cherry pick is: "+
+					opts.LabelPrefix+"</li>")
 			}
 
-			configInfoStrings = append(configInfoStrings, "<li>The current label prefix for cherry pick is: "+
-				opts.LabelPrefix+"</li>")
+			if opts.AllowAll {
+				configInfoStrings = append(configInfoStrings, "<li>For this repository, cherry picking is available to all.</li>")
+			} else {
+				configInfoStrings = append(configInfoStrings, "<li>For this repository, "+
+					"only Org members are allowed to do cherry picking.</li>")
+			}
+
+			if opts.IssueOnConflict {
+				configInfoStrings = append(configInfoStrings, "<li>When a cherry picking PR conflicts, "+
+					"an issue will be created to track it.</li>")
+			}
 
 			configInfoStrings = append(configInfoStrings, "</ul>")
-			if isConfigured {
-				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
-			}
+			configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
 		}
 
 		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{

@@ -1070,24 +1070,37 @@ func TestHelpProvider(t *testing.T) {
 		configInfoExcludes []string
 	}{
 		{
-			name:               "Empty config",
-			config:             &externalplugins.Configuration{},
+			name: "Empty config",
+			config: &externalplugins.Configuration{
+				TiCommunityCherrypicker: []externalplugins.TiCommunityCherrypicker{
+					{
+						Repos: []string{"org2/repo"},
+					},
+				},
+			},
 			enabledRepos:       enabledRepos,
-			configInfoExcludes: []string{"The current label prefix for cherry pick is: "},
+			configInfoIncludes: []string{"For this repository, only Org members are allowed to do cherry picking."},
+			configInfoExcludes: []string{"The current label prefix for cherry pick is: ",
+				"For this repository, cherry picking is available to all.",
+				"When a cherry picking PR conflicts, an issue will be created to track it."},
 		},
 		{
 			name: "All configs enabled",
 			config: &externalplugins.Configuration{
 				TiCommunityCherrypicker: []externalplugins.TiCommunityCherrypicker{
 					{
-						Repos:       []string{"org2/repo"},
-						LabelPrefix: "needs-cherry-pick-",
-						AllowAll:    true,
+						Repos:           []string{"org2/repo"},
+						LabelPrefix:     "needs-cherry-pick-",
+						AllowAll:        true,
+						IssueOnConflict: true,
 					},
 				},
 			},
-			enabledRepos:       enabledRepos,
-			configInfoIncludes: []string{"The current label prefix for cherry pick is: "},
+			enabledRepos: enabledRepos,
+			configInfoIncludes: []string{"The current label prefix for cherry pick is: ",
+				"For this repository, cherry picking is available to all.",
+				"When a cherry picking PR conflicts, an issue will be created to track it."},
+			configInfoExcludes: []string{"For this repository, only Org members are allowed to do cherry picking."},
 		},
 	}
 	for _, testcase := range cases {
