@@ -24,7 +24,7 @@ package cherrypicker
 import (
 	"errors"
 	"fmt"
-	"k8s.io/test-infra/prow/plugins"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -37,6 +37,7 @@ import (
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/git/localgit"
 	"k8s.io/test-infra/prow/github"
+	"k8s.io/test-infra/prow/plugins"
 )
 
 var commentFormat = "%s/%s#%d %s"
@@ -1066,7 +1067,7 @@ func TestServeHTTPErrors(t *testing.T) {
 	pa.Set(&plugins.Configuration{})
 
 	getSecret := func() []byte {
-		var repoLevelSecret = `
+		var repoLevelSec = `
 '*':
   - value: abc
     created_at: 2019-10-02T15:00:00Z
@@ -1078,7 +1079,7 @@ foo/bar:
   - value: key6
     created_at: 2020-10-02T15:00:00Z
 `
-		return []byte(repoLevelSecret)
+		return []byte(repoLevelSec)
 	}
 
 	// This is the SHA1 signature for payload "{}" and signature "abc"
@@ -1189,6 +1190,97 @@ foo/bar:
 			},
 			Body: body,
 			Code: http.StatusMethodNotAllowed,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Logf("Running scenario %q", tc.name)
+
+		w := httptest.NewRecorder()
+		r, err := http.NewRequest(tc.Method, "", strings.NewReader(tc.Body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for k, v := range tc.Header {
+			r.Header.Set(k, v)
+		}
+
+		s := Server{
+			TokenGenerator: getSecret,
+		}
+
+		s.ServeHTTP(w, r)
+		if w.Code != tc.Code {
+			t.Errorf("For test case: %+v\nExpected code %v, got code %v", tc, tc.Code, w.Code)
+		}
+	}
+}
+
+func TestServeHTTP(t *testing.T) {
+	pa := &plugins.ConfigAgent{}
+	pa.Set(&plugins.Configuration{})
+
+	getSecret := func() []byte {
+		var repoLevelSec = `
+'*':
+  - value: abc
+    created_at: 2019-10-02T15:00:00Z
+  - value: key2
+    created_at: 2020-10-02T15:00:00Z
+foo/bar:
+  - value: 123abc
+    created_at: 2019-10-02T15:00:00Z
+  - value: key6
+    created_at: 2020-10-02T15:00:00Z
+`
+		return []byte(repoLevelSec)
+	}
+
+	lgtmComment, err := ioutil.ReadFile("../../../../test/testdata/lgtm_comment.json")
+	if err != nil {
+		t.Fatalf("read lgtm comment file failed: %v", err)
+	}
+
+	openedPR, err := ioutil.ReadFile("../../../../test/testdata/opened_pr.json")
+	if err != nil {
+		t.Fatalf("read opened PR file failed: %v", err)
+	}
+
+	// This is the SHA1 signature for payload "{}" and signature "abc"
+	// echo -n '{}' | openssl dgst -sha1 -hmac abc
+	var testcases = []struct {
+		name string
+
+		Method string
+		Header map[string]string
+		Body   string
+		Code   int
+	}{
+		{
+			name: "Issue comment event",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":    "ping",
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   "sha1=f3fee26b22d3748f393f7e37f71baa467495971a",
+				"content-type":      "application/json",
+			},
+			Body: string(lgtmComment),
+			Code: http.StatusOK,
+		},
+		{
+			name: "Pull request event",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":    "ping",
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   "sha1=9a62c443a5ab561e023e64610dc467523188defc",
+				"content-type":      "application/json",
+			},
+			Body: string(openedPR),
+			Code: http.StatusOK,
 		},
 	}
 
