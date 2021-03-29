@@ -25,6 +25,7 @@ const (
 )
 
 const (
+	// DefaultCherryPickLabelPrefix defines the default label prefix for cherrypicker plugin.
 	DefaultCherryPickLabelPrefix = "cherrypick/"
 )
 
@@ -222,11 +223,15 @@ type TiCommunityContribution struct {
 // TiCommunityCherrypicker is the config for the cherrypicker plugin.
 type TiCommunityCherrypicker struct {
 	// Repos is either of the form org/repo or just org.
-	Repos           []string `json:"repos,omitempty"`
-	AllowAll        bool     `json:"allow_all,omitempty"`
-	IssueOnConflict bool     `json:"create_issue_on_conflict,omitempty"`
-	LabelPrefix     string   `json:"label_prefix,omitempty"`
-	ExcludeLabels   []string `json:"excludeLabels,omitempty"`
+	Repos []string `json:"repos,omitempty"`
+	// AllowAll specifies whether everyone is allowed to cherry pick.
+	AllowAll bool `json:"allow_all,omitempty"`
+	// IssueOnConflict specifies whether to create an Issue when there is a PR conflict.
+	IssueOnConflict bool `json:"create_issue_on_conflict,omitempty"`
+	// LabelPrefix specifies the label prefix for cherrypicker.
+	LabelPrefix string `json:"label_prefix,omitempty"`
+	// ExcludeLabels specifies the labels that need to be excluded when copying the labels of the original PR.
+	ExcludeLabels []string `json:"excludeLabels,omitempty"`
 }
 
 // setDefaults will set the default value for the config of blunderbuss plugin.
