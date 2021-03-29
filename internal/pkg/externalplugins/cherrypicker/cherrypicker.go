@@ -41,6 +41,7 @@ import (
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
+	"k8s.io/test-infra/prow/plugins"
 )
 
 const PluginName = "ti-community-cherrypicker"
@@ -71,14 +72,51 @@ type githubClient interface {
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(_ *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
+func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
-		// TODO: refine help.
+		configInfo := map[string]string{}
+		cfg := epa.Config()
+
+		for _, repo := range enabledRepos {
+			opts := cfg.CherrypickerFor(repo.Org, repo.Repo)
+			var isConfigured bool
+			var configInfoStrings []string
+
+			configInfoStrings = append(configInfoStrings, "The plugin has these configurations:<ul>")
+
+			if len(opts.LabelPrefix) != 0 {
+				isConfigured = true
+			}
+
+			configInfoStrings = append(configInfoStrings, "<li>The current label prefix for cherry pick is: "+
+				opts.LabelPrefix+"</li>")
+
+			configInfoStrings = append(configInfoStrings, "</ul>")
+			if isConfigured {
+				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
+			}
+		}
+
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
+			TiCommunityCherrypicker: []tiexternalplugins.TiCommunityCherrypicker{
+				{
+					Repos:       []string{"ti-community-infra/test-dev"},
+					LabelPrefix: "needs-cherry-pick-",
+				},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
+		}
+
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: "The cherrypick plugin is used for cherrypicking PRs across branches. " +
 				"For every successful cherrypick invocation a new PR is opened " +
 				"against the target branch and assigned to the requestor. " +
 				"If the parent PR contains a release note, it is copied to the cherrypick PR.",
+			Config:  configInfo,
+			Snippet: yamlSnippet,
+			Events:  []string{tiexternalplugins.PullRequestEvent, tiexternalplugins.IssueCommentEvent},
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
