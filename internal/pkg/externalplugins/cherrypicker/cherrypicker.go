@@ -495,7 +495,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	if email == "" {
 		email = s.BotUser.Email
 	}
-	if err := r.Config("user.Email", email); err != nil {
+	if err := r.Config("user.email", email); err != nil {
 		return fmt.Errorf("failed to configure git Email: %w", err)
 	}
 
