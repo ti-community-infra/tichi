@@ -576,6 +576,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	}
 
 	// Copying original pull request labels.
+	// TODO: better to use addLabels API.
 	excludeLabelsSet := sets.NewString(opts.ExcludeLabels...)
 	for _, label := range pr.Labels {
 		if !excludeLabelsSet.Has(label.Name) && !strings.Contains(label.Name, opts.LabelPrefix) {
