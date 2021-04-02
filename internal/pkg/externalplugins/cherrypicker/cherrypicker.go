@@ -580,7 +580,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	for _, label := range pr.Labels {
 		if !excludeLabelsSet.Has(label.Name) && !strings.Contains(label.Name, opts.LabelPrefix) {
 			if err := s.GitHubClient.AddLabel(org, repo, createdNum, label.Name); err != nil {
-				return fmt.Errorf("failed to add label %s: %w", label, err)
+				logger.WithError(err).Warnf("failed to add label %s", label)
 			}
 		}
 	}
