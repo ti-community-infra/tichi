@@ -579,7 +579,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	// TODO: better to use addLabels API.
 	excludeLabelsSet := sets.NewString(opts.ExcludeLabels...)
 	for _, label := range pr.Labels {
-		if !excludeLabelsSet.Has(label.Name) && !strings.Contains(label.Name, opts.LabelPrefix) {
+		if !excludeLabelsSet.Has(label.Name) && !strings.HasPrefix(label.Name, opts.LabelPrefix) {
 			if err := s.GitHubClient.AddLabel(org, repo, createdNum, label.Name); err != nil {
 				logger.WithError(err).Warnf("failed to add label %s", label)
 			}
