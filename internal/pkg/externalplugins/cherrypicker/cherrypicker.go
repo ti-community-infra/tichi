@@ -434,6 +434,8 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 	return nil
 }
 
+//nolint:gocyclo
+// TODO: refactoring to reduce complexity.
 func (s *Server) handle(logger *logrus.Entry, requestor string,
 	comment *github.IssueComment, org, repo, targetBranch string, pr *github.PullRequest) error {
 	num := pr.Number
@@ -576,7 +578,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	// Copying original pull request labels.
 	excludeLabelsSet := sets.NewString(opts.ExcludeLabels...)
 	for _, label := range pr.Labels {
-		if !excludeLabelsSet.Has(label.Name) {
+		if !excludeLabelsSet.Has(label.Name) && !strings.Contains(label.Name, opts.LabelPrefix) {
 			if err := s.GitHubClient.AddLabel(org, repo, createdNum, label.Name); err != nil {
 				return fmt.Errorf("failed to add label %s: %w", label, err)
 			}
