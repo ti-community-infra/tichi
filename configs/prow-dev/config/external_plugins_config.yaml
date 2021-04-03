@@ -97,3 +97,14 @@ ti-community-contribution:
   - repos:
       - ti-community-infra/test-dev
     message: "Thanks for your contribution, but this is just a code repository for testing."
+
+ti-community-cherrypicker:
+  - repos:
+      - ti-community-infra/test-dev
+    allow_all: true
+    create_issue_on_conflict: true
+    excludeLabels:
+      - status/can-merge
+      - status/LGT1
+      - status/LGT2
+      - status/LGT3
