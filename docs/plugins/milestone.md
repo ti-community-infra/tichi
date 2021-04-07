@@ -2,33 +2,32 @@
 
 ## 设计背景
 
-在大型仓库上 PR 或 Issue 通常会在不同的时期开发或合并，一般通过 milestone 属性管理。并且通常只有 milestone 维护团队才有权限改变 PR 或 Issue 的 milestone 属性。
+在大型仓库上我们会使用 milestone 来追踪 PR 和 Issue 的进度，但是 GitHub 限制只有写权限的协作者才能为 Issue/PR 添加 milestone。
 
-milestone 可以提供命令让机器人帮助维护团队管理 Issue 或 PR 的相关属性。
+[milestone](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/milestone) 可以提供命令让机器人添加对应的 milestone。
+
+## 权限设计
+
+该插件主要负责添加 milestone，所以只能让 milestone 的管理团队来使用该命令。
 
 ## 设计思路
 
-通过在评论中`/milestone xxx`的命令来给 Issue 配置 milestone 。使用`/milestone clear`来清除配置。
+该插件由 Kubernetes 社区设计开发，提供了两个命令：
 
-***只有 milestone 维护团队才可以使用该命令。***
+- `/milestone v1.3.2 v1.4` 添加 milestone v1.3.2 和 v1.4。
+- `/milestone clear` 清除 Issue/PR 上所有的 milestones。
+
+注意：只有 milestone 管理团队才可以使用该命令。
 
 ## 参数配置
 
-配置中`repo_milestone`下，字典的key为对应的 repo 、 value 为对应的维护人员信息。当 key 为空时为默认维护人员。
+| 参数名                    | 类型   | 说明           |
+| ------------------------- | ------ | -------------- |
+| maintainers_id            | int    | GitHub 团队 ID |
+| maintainers_team          | string | GitHub 团队名  |
+| maintainers_friendly_name | string | 团队昵称       |
 
-| 参数名                     | 类型    | 说明        |
-| ------------------------- | ------ | ---------- |
-| maintainers_id            | string | 维护团队ID   |
-| maintainers_team          | string | 维护团队     |
-| maintainers_friendly_name | string | 维护团队昵称  |
-
-可以使用以下接口获取您的 milestone 维护团队的 GithubID ，您可能需要手动指定`page`参数
-
-```shell
-curl -H "Authorization: token <token>" "https://api.github.com/orgs/<org-name>/teams?page=N"
-```
-
-相关配置示例：
+例如：
 
 ```yaml
 repo_milestone:
@@ -45,4 +44,10 @@ repo_milestone:
 
 ## Q&A
 
-> 暂无
+### 我如何才能获取我 GitHub 团队的 ID？
+
+```sh
+curl -H "Authorization: token <token>" "https://api.github.com/orgs/<org-name>/teams?page=N"
+```
+
+通过以上 API 可以获取该组织下所有的 GitHub 团队详细信息。
