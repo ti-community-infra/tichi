@@ -26,7 +26,7 @@
 | ti-community-label              | 外部插件 | 通过命令为 PR 或 Issue 添加标签。                                                             |
 | ti-community-label-blocker      | 外部插件 | 主要负责阻止用户对某些敏感标签的进行非法操作。                                                |
 | ti-community-label-contribution | 外部插件 | 主要负责为外部贡献者的 PR 添加 `contribution` 或 `first-time-contributor` 标签。              |
-| need-rebase                     | 外部插件 | 当 PR 需要进行 rebase 时，通过添加标签或添加评论提醒 PR 作者进行 rebase。                     |
+| needs-rebase                    | 外部插件 | 当 PR 需要进行 rebase 时，通过添加标签或添加评论提醒 PR 作者进行 rebase。                     |
 | require-matching-label          | 内置插件 | 当 PR 或 Issue 缺失相关标签时，通过添加标签或评论提醒贡献者进行补充。                         |
 | hold                            | 内置插件 | 通过 `/[un]hold` 命令，添加或取消 PR 的不可合并状态。                                         |
 | assign                          | 内置插件 | 通过 `/[un]assign` 命令，添加或取消 PR 或 Issue 的 assignee。                                 |
