@@ -10,7 +10,18 @@ Github不会在提交commit时提醒代码冲突，该插件主要用于通过`n
 
 ## 参数配置
 
-无参数
+需要在`external_plugins`配置中增加对应repo的needs-rebase插件，示例如下：
+
+```yaml
+external_plugins:
+  ...
+  ti-community-infra/test-dev:
+    - name: needs-rebase
+      events:
+        - issue_comment
+        - pull_request
+  ...
+```
 
 ## 参考文档
 

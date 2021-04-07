@@ -12,7 +12,29 @@
 
 ## 参数配置
 
-无参数
+配置中`repo_milestone`下，字典的key为对应的repo、value为对应的维护人员信息。当key为空时为默认维护人员。
+
+|参数名                    |类型       |说明 |
+|-------------------------|----------|----|
+|maintainers_id           |维护人员ID  |    |
+|maintainers_team         |维护团队    |    |
+|maintainers_friendly_name|维护团队昵称 |    |
+ 
+可以使用以下接口获取您的milestone维护团队的GithubID，您可能需要手动指定`page`参数
+
+```shell
+curl -H "Authorization: token <token>" "https://api.github.com/orgs/<org-name>/teams?page=N"
+```
+
+相关配置示例：
+
+```yaml
+repo_milestone:
+  ti-community-infra/test-dev:
+    maintainers_id: 4300209
+    maintainers_team: bots-maintainers
+    maintainers_friendly_name: Robots Maintainers
+```
 
 ## 参考文档
 
