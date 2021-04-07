@@ -9,10 +9,29 @@ assign 可以提供命令让机器人帮助我们分配协作者和请求 review
 ## 设计思路
 
 该插件提供了两个命令，只需要在 Issue 或 PR 添加评论即可触发：
-- (un)assign: 指派 Assignee 为指定用户
-- (un)cc: 请求指定用户 Review
+- (un)assign: 指派指定用户为 Issue/PR Assignee
+- (un)cc: 指派指定用户为 PR Reviewer
 
-可以通过不指定用户来快速指定自己为对应角色；通过`un`前缀也可以取消该操作。
+示例：
+
+```
+/assign hi-rustin
+/cc hi-rustin
+```
+
+当不指定某一用户时，默认将该角色指定为自己。如：
+
+```
+/assign
+/cc
+```
+
+通过增加前缀`un`来取消指定，如：
+
+```
+/unassign hi-rustin
+/uncc
+```
 
 ## 参数配置
 
