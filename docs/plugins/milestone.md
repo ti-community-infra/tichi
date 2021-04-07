@@ -2,13 +2,15 @@
 
 ## 设计背景
 
-通过命令让机器人来处理指派 milestone 的事务，同时可以添加一些说明来明确指派原因。
+在大型仓库上 PR 或 Issue 通常会在不同的时期开发或合并，一般通过 milestone 属性管理。并且通常只有 milestone 维护团队才有权限改变 PR 或 Issue 的 milestone 属性。
+
+milestone 可以提供命令让机器人帮助维护团队管理 Issue 或 PR 的相关属性。
 
 ## 设计思路
 
 通过在评论中`/milestone xxx`的命令来给 Issue 配置 milestone 。使用`/milestone clear`来清除配置。
 
-***只有 milestone 维护人员才可以使用该命令。***
+***只有 milestone 维护团队才可以使用该命令。***
 
 ## 参数配置
 
@@ -16,7 +18,7 @@
 
 | 参数名                     | 类型    | 说明        |
 | ------------------------- | ------ | ---------- |
-| maintainers_id            | string | 维护人员ID   |
+| maintainers_id            | string | 维护团队ID   |
 | maintainers_team          | string | 维护团队     |
 | maintainers_friendly_name | string | 维护团队昵称  |
 
