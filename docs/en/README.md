@@ -29,7 +29,7 @@ The following shows some commonly used components or plugins in the TiDB communi
 | ti-community-label-blocker | external plugin | Mainly responsible for preventing users from illegal operations on certain sensitive labels.                                              |
 | ti-community-contribution  | external plugin | Mainly responsible for adding `contribution` or `first-time-contributor` labels to the PRs of external contributors.                      |
 | needs-rebase               | external plugin | When the PR needs to rebase, add labels or add comments to remind the PR author to rebase.                                                |
-| require-matching-label     | external plugin | When a PR or Issue lacks a relevant label, add a label or comment to remind contributors to supplement.                                   |
+| require-matching-label     | internal plugin | When a PR or Issue lacks a relevant label, add a label or comment to remind contributors to supplement.                                   |
 | hold                       | internal plugin | Add or cancel the non-combinable status of PR through the `/[un]hold` command.                                                            |
 | assign                     | internal plugin | Add or cancel the assignee of PR or Issue through the `/[un]assign` command.                                                              |
 | size                       | internal plugin | Evaluate the size of the PR based on the number of lines of code modification, and label the PR with `size/*`.                            |

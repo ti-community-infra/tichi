@@ -10,9 +10,9 @@
     - [ti-community-label](en/plugins/label.md)
     - [ti-community-label-blocker](en/plugins/label-blocker.md)
     - [ti-community-contribution](en/plugins/contribution.md)
-    - [require-matching-label](en/plugins/require-matching-label.md)
     - [needs-rebase](en/plugins/needs-rebase.md)
   - Internal
+    - [require-matching-label](en/plugins/require-matching-label.md)
     - [hold](en/plugins/hold.md)
     - [wip](en/plugins/wip.md)
     - [size](en/plugins/size.md)
