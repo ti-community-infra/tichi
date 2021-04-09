@@ -4,11 +4,11 @@
 
 In the GitHub PR list, we don't directly know the size of the PR code changes (the number of lines added or removed). However, we sometimes schedule our reviews based on the size of the changes.
 
-[size](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/size) adds a size tag to the PR based on the number of lines added or deleted to the PR code.
+[size](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/size) adds a size label to the PR based on the number of lines added or deleted to the PR code.
 
 ## Design
 
-This plugin was designed and developed by the Kubernetes community, and it's implementation is very simple. size adds `size/*` tags to a PR by detecting the number of lines added or deleted by the PR, and each size tag has a range of lines corresponding to.
+This plugin was designed and developed by the Kubernetes community, and it's implementation is very simple. size adds `size/*` labels to a PR by detecting the number of lines added or deleted by the PR, and each size label has a range of lines corresponding to.
 
 - `size/XS`: 0-9
 - `size/S`: 10-29
@@ -45,6 +45,6 @@ size:
 
 ## Q&A
 
-### Will it automatically add and remove `size/*` tags when I change my PR?
+### Will it automatically add and remove `size/*` labels when I change my PR?
 
-Yes, it will dynamically add and remove tags based on code changes.
+Yes, it will dynamically add and remove labels based on code changes.
