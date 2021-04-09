@@ -28,14 +28,14 @@ The following shows some commonly used components or plugins in the TiDB communi
 | ti-community-label         | external plugin | Add labels to PR or Issue via commands.                                                                                                   |
 | ti-community-label-blocker | external plugin | Mainly responsible for preventing users from illegal operations on certain sensitive labels.                                              |
 | ti-community-contribution  | external plugin | Mainly responsible for adding `contribution` or `first-time-contributor` labels to the PRs of external contributors.                      |
-| need-rebase                | external plugin | When the PR needs to rebase, add labels or add comments to remind the PR author to rebase.                                                |
-| require-matching-label     | external plugin | When a PR or Issue lacks a relevant label, add a label or comment to remind contributors to supplement.                                   |
-| hold                       | external plugin | Add or cancel the non-combinable status of PR through the `/[un]hold` command.                                                            |
-| assign                     | external plugin | Add or cancel the assignee of PR or Issue through the `/[un]assign` command.                                                              |
-| size                       | external plugin | Evaluate the size of the PR based on the number of lines of code modification, and label the PR with `size/*`.                            |
-| lifecycle                  | external plugin | Use labels to mark the life cycle of Issue or PR.                                                                                         |
-| wip                        | external plugin | Add the `do-not-merge/work-in-progress` label to the PR under development to prevent the automatic assignment of reviewer and PR merge.   |
-| welcome                    | external plugin | Send a welcome message to contributors who have contributed for the first time through a robot.                                           |
+| needs-rebase               | external plugin | When the PR needs to rebase, add labels or add comments to remind the PR author to rebase.                                                |
+| require-matching-label     | internal plugin | When a PR or Issue lacks a relevant label, add a label or comment to remind contributors to supplement.                                   |
+| hold                       | internal plugin | Add or cancel the non-combinable status of PR through the `/[un]hold` command.                                                            |
+| assign                     | internal plugin | Add or cancel the assignee of PR or Issue through the `/[un]assign` command.                                                              |
+| size                       | internal plugin | Evaluate the size of the PR based on the number of lines of code modification, and label the PR with `size/*`.                            |
+| lifecycle                  | internal plugin | Use labels to mark the life cycle of Issue or PR.                                                                                         |
+| wip                        | internal plugin | Add the `do-not-merge/work-in-progress` label to the PR under development to prevent the automatic assignment of reviewer and PR merge.   |
+| welcome                    | internal plugin | Send a welcome message to contributors who have contributed for the first time through a robot.                                           |
 | label_sync                 | tool            | Able to synchronize the labels configured in the yaml file to one or more repositories.                                                   |
 | autobump                   | tool            | Update the version of upstream Prow and its related components and plugins by automatically submitting Pull Requests.                     |
 
