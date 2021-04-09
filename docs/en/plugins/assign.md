@@ -17,7 +17,7 @@ Note: If you do not specify a GitHub account after the command, it defaults to y
 
 ## Parameter Configuration
 
-No parameters
+No configuration
 
 ## Reference documentations
 
