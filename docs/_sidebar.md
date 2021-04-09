@@ -15,7 +15,7 @@
   - [size](plugins/size.md)
   - [assign](plugins/assign.md)
   - [milestone](plugins/milestone.md)
-  - [needs-rebase](plugins/needs-rebase.md)  
+  - [needs-rebase](plugins/needs-rebase.md)
 - [工具](tools.md)
   - [label_sync](tools/label_sync.md)
   - [autobump](tools/autobump.md)
