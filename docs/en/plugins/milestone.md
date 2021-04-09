@@ -14,7 +14,7 @@ This plugin is primarily responsible for adding milestones, so only the mileston
 
 The plugin was designed and developed by the Kubernetes community and provides two commands.
 
-- ` /milestone v1.3.2 v1.4` adds milestone v1.3.2 and v1.4.
+- `/milestone v1.3.2 v1.4` adds milestone v1.3.2 and v1.4.
 - `/milestone clear` clears all milestones on Issue/PR.
 
 Note: Only the milestone management team can use this command.
