@@ -13,6 +13,7 @@ branch-protection:
               protect: true
               required_status_checks:
                 contexts:
+                  - "tide"
                   - "Semantic Pull Request"
                 strict: true
 
