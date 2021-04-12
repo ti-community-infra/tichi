@@ -118,32 +118,6 @@ presubmits:
         - name: github-token
           secret:
             secretName: github-token
-  - name: pull-tichi-documenting-labels-yaml
-    decorate: true
-    run_if_changed: 'configs/prow-dev/config/labels.yaml'
-    branches:
-      - ^master$
-    spec:
-      containers:
-        - image: gcr.io/k8s-prow/label_sync:v20210323-4a95c1446c
-          command:
-            - /app/label_sync/app.binary
-          args:
-            - --config=configs/prow-dev/config/labels.yaml
-            - --confirm=false
-            - --only=ti-community-infra/test-dev
-            - --token=/etc/github/token
-            - --action=docs
-            - --docs-output=test/testdata/labels.md.tmpl
-            - --docs-output=test/testdata/labels.md
-          volumeMounts:
-            - name: github-token
-              mountPath: /etc/github
-              readOnly: true
-      volumes:
-        - name: github-token
-          secret:
-            secretName: github-token
 postsubmits:
   - name: post-tichi-deploy-prow
     run_if_changed: 'configs/prow-dev/cluster/'
