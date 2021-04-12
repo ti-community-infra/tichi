@@ -134,8 +134,8 @@ presubmits:
             - --only=ti-community-infra/test-dev
             - --token=/etc/github/token
             - --action=docs
-            - --docs-output=./test/testdata/labels.md.tmpl
-            - --docs-output=./test/testdata/labels.md
+            - --docs-output=test/testdata/labels.md.tmpl
+            - --docs-output=test/testdata/labels.md
           volumeMounts:
             - name: github-token
               mountPath: /etc/github
