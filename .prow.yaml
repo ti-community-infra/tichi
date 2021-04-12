@@ -109,6 +109,7 @@ presubmits:
             - --confirm=false
             - --only=ti-community-infra/test-dev
             - --token=/etc/github/token
+            - --action=sync
           volumeMounts:
             - name: github-token
               mountPath: /etc/github
