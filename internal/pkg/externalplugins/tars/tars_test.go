@@ -613,7 +613,7 @@ func TestHandlePushEvent(t *testing.T) {
 			// For now we only add one pr.
 			var prs []pullRequest
 			if tc.pr != nil {
-				prs = generatePullRequests("org1", "repo1", tc.pr, tc.prCommits, tc.labels, tc.outOfDate)
+				prs = generatePullRequests("org1", "repo1", tc.pr, tc.prCommits, tc.labels)
 			}
 			fc := newFakeGithubClient(prs, tc.pr, tc.baseCommit, tc.prCommits, tc.outOfDate)
 			externalConfig := &externalplugins.Configuration{}
@@ -771,7 +771,7 @@ func TestHandleAll(t *testing.T) {
 			// For now we only add one pr.
 			var prs []pullRequest
 			if tc.pr != nil {
-				prs = generatePullRequests("org", "repo", tc.pr, tc.prCommits, tc.labels, tc.outOfDate)
+				prs = generatePullRequests("org", "repo", tc.pr, tc.prCommits, tc.labels)
 			}
 			fc := newFakeGithubClient(prs, tc.pr, tc.baseCommit, tc.prCommits, tc.outOfDate)
 			cfg := &plugins.Configuration{
@@ -794,7 +794,7 @@ func TestHandleAll(t *testing.T) {
 }
 
 func generatePullRequests(org string, repo string, pr *github.PullRequest,
-	prCommits []github.RepositoryCommit, labels []github.Label, outOfDate bool) []pullRequest {
+	prCommits []github.RepositoryCommit, labels []github.Label) []pullRequest {
 	var prs []pullRequest
 
 	graphPr := pullRequest{}
@@ -840,12 +840,6 @@ func generatePullRequests(org string, repo string, pr *github.PullRequest,
 	}
 
 	graphPr.Commits.Nodes = append(graphPr.Commits.Nodes, graphCommit)
-	// Set the merge state status.
-	if outOfDate {
-		graphPr.MergeStateStatus = behind
-	} else {
-		graphPr.MergeStateStatus = "UNKNOWN"
-	}
 	prs = append(prs, graphPr)
 
 	return prs
