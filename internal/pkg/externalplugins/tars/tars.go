@@ -77,7 +77,7 @@ type pullRequest struct {
 			Name githubql.String
 		}
 	} `graphql:"labels(first:100)"`
-	MergeStateStatus githubql.String
+	MergeStateStatus githubql.String `graphql:"mergeStateStatus"`
 }
 
 type searchQuery struct {
