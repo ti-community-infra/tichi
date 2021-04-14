@@ -24,9 +24,6 @@ const (
 	// branchRefsPrefix specifies the prefix of branch refs.
 	// See also: https://docs.github.com/en/rest/reference/git#references.
 	branchRefsPrefix = "refs/heads/"
-	// behind means the head ref is out of date.
-	// See also: https://docs.github.com/en/graphql/reference/enums#mergestatestatus.
-	behind = "BEHIND"
 )
 
 const configInfoAutoUpdatedMessagePrefix = "Auto updated message: "
@@ -77,7 +74,6 @@ type pullRequest struct {
 			Name githubql.String
 		}
 	} `graphql:"labels(first:100)"`
-	MergeStateStatus githubql.String
 }
 
 type searchQuery struct {
@@ -215,9 +211,6 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 		return nil
 	}
 
-	// Before checking state wait a minute to give github a chance to calculate it.
-	sleep(time.Minute)
-
 	org := pe.Repo.Owner.Login
 	repo := pe.Repo.Name
 	branch := getRefBranch(pe.Ref)
@@ -308,6 +301,7 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *tiexterna
 	org := string(pr.Repository.Owner.Login)
 	repo := string(pr.Repository.Name)
 	number := int(pr.Number)
+	updated := false
 	tars := cfg.TarsFor(org, repo)
 
 	// If the OnlyWhenLabel configuration is set, the pr will only be updated if it has this label.
@@ -329,7 +323,18 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *tiexterna
 		return false, nil
 	}
 
-	if pr.MergeStateStatus != behind {
+	// Check if we update the base into PR.
+	currentBaseCommit, err := ghc.GetSingleCommit(org, repo, string(pr.BaseRef.Name))
+	if err != nil {
+		return false, err
+	}
+	for _, prCommitParent := range pr.Commits.Nodes[0].Commit.Parents.Nodes {
+		if string(prCommitParent.OID) == currentBaseCommit.SHA {
+			updated = true
+		}
+	}
+
+	if updated {
 		return false, nil
 	}
 
