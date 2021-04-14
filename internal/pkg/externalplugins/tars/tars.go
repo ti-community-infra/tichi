@@ -25,7 +25,7 @@ const (
 	// See also: https://docs.github.com/en/rest/reference/git#references.
 	branchRefsPrefix = "refs/heads/"
 	// behind means the head ref is out of date.
-	// See also: https://docs.github.com/en/graphql/reference/enums#mergestatestatus
+	// See also: https://docs.github.com/en/graphql/reference/enums#mergestatestatus.
 	behind = "BEHIND"
 )
 
