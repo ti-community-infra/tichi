@@ -215,6 +215,9 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 		return nil
 	}
 
+	// Before checking state wait a few seconds to give github a chance to calculate it.
+	sleep(time.Minute)
+
 	org := pe.Repo.Owner.Login
 	repo := pe.Repo.Name
 	branch := getRefBranch(pe.Ref)
