@@ -840,7 +840,7 @@ func generatePullRequests(org string, repo string, pr *github.PullRequest,
 	}
 
 	graphPr.Commits.Nodes = append(graphPr.Commits.Nodes, graphCommit)
-	// Set the merge stats state.
+	// Set the merge state status.
 	if outOfDate {
 		graphPr.MergeStateStatus = behind
 	} else {
