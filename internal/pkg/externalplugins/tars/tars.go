@@ -326,7 +326,7 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *tiexterna
 		return false, nil
 	}
 
-	if !(pr.MergeStateStatus == behind) {
+	if pr.MergeStateStatus != behind {
 		return false, nil
 	}
 
