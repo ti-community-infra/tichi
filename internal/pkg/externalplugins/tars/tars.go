@@ -320,7 +320,7 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *tiexterna
 	updated := false
 	tars := cfg.TarsFor(org, repo)
 
-	// TODO: We don't need this check anymore because it is already a query condition.
+	// NOTICE: This is still valid for pull requests that query the org directly.
 	hasTriggerLabel := false
 	for _, labelName := range pr.Labels.Nodes {
 		if string(labelName.Name) == tars.OnlyWhenLabel {
