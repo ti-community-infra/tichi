@@ -9,6 +9,7 @@ import (
 
 	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
+	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
@@ -27,6 +28,7 @@ const (
 )
 
 const configInfoAutoUpdatedMessagePrefix = "Auto updated message: "
+const searchQueryPrefix = "archived:false is:pr is:open sort:created-asc"
 
 var sleep = time.Sleep
 
@@ -203,7 +205,7 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 	log.Infof("Checking %s/%s/%s PRs.", org, repo, branch)
 
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, "archived:false is:pr is:open sort:created-asc label:%s", tars.OnlyWhenLabel)
+	fmt.Fprintf(&buf, searchQueryPrefix+" label:\"%s\"", tars.OnlyWhenLabel)
 	fmt.Fprintf(&buf, " repo:\"%s/%s\"", org, repo)
 	fmt.Fprintf(&buf, " base:\"%s\"", branch)
 	prs, err := search(context.Background(), log, ghc, buf.String())
@@ -252,18 +254,46 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		log.Warnf("No repos have been configured for the %s plugin", PluginName)
 		return nil
 	}
-	var buf bytes.Buffer
-	fmt.Fprint(&buf, "archived:false is:pr is:open sort:created-asc")
+
+	var queries []string
 	for _, org := range orgs {
-		fmt.Fprintf(&buf, " org:\"%s\"", org)
+		queries = append(queries, searchQueryPrefix+` org:"`+org+`"`)
 	}
-	for _, repo := range repos {
-		fmt.Fprintf(&buf, " repo:\"%s\"", repo)
+
+	if len(repos) > 0 {
+		var reposQuery bytes.Buffer
+		fmt.Fprint(&reposQuery, searchQueryPrefix)
+		for _, repo := range repos {
+			slashSplit := strings.Split(repo, "/")
+			if n := len(slashSplit); n != 2 {
+				log.WithField("repo", repo).Warn("Found repo that was not in org/repo format, ignoring...")
+				continue
+			}
+			org := slashSplit[0]
+			repoName := slashSplit[1]
+			tars := externalConfig.TarsFor(org, repoName)
+			fmt.Fprintf(&reposQuery, " label:\"%s\" repo:\"%s\"", tars.OnlyWhenLabel, repo)
+		}
+		queries = append(queries, reposQuery.String())
 	}
-	prs, err := search(context.Background(), log, ghc, buf.String())
-	if err != nil {
-		return err
+
+	var prs []pullRequest
+	var errs []error
+	// Do _not_ parallelize this. It will trigger GitHubs abuse detection and we don't really care anyways except
+	// when developing.
+	for _, query := range queries {
+		found, err := search(context.Background(), log, ghc, query)
+		prs = append(prs, found...)
+		errs = append(errs, err)
 	}
+	if err := utilerrors.NewAggregate(errs); err != nil {
+		if len(prs) == 0 {
+			return err
+		}
+		log.WithError(err).Error("Encountered errors when querying GitHub but will process received results anyways")
+	}
+	log.WithField("prs_found_count", len(prs)).Debug("Processing all found PRs")
+
 	log.Infof("Considering %d PRs.", len(prs))
 	for i := range prs {
 		pr := prs[i]
@@ -275,7 +305,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 			"repo": repo,
 			"pr":   num,
 		})
-		_, err = handle(l, ghc, &pr, externalConfig)
+		_, err := handle(l, ghc, &pr, externalConfig)
 		if err != nil {
 			l.WithError(err).Error("Error handling PR.")
 		}
