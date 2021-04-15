@@ -190,6 +190,13 @@ type TiCommunityTars struct {
 	OnlyWhenLabel string `json:"only_when_label,omitempty"`
 }
 
+// setDefaults will set the default label for the config of tars plugin.
+func (c *TiCommunityTars) setDefaults() {
+	if len(c.OnlyWhenLabel) == 0 {
+		c.OnlyWhenLabel = CanMergeLabel
+	}
+}
+
 // TiCommunityLabelBlocker is the config for the label blocker plugin.
 type TiCommunityLabelBlocker struct {
 	// Repos is either of the form org/repos or just org.
@@ -459,6 +466,10 @@ func (c *Configuration) setDefaults() {
 
 	for i := range c.TiCommunityCherrypicker {
 		c.TiCommunityCherrypicker[i].setDefaults()
+	}
+
+	for i := range c.TiCommunityTars {
+		c.TiCommunityTars[i].setDefaults()
 	}
 
 	if len(c.LogLevel) == 0 {

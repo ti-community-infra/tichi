@@ -125,18 +125,6 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 	}
 }
 
-// HandlePullRequestEvent handles a GitHub pull request event and update the PR
-// if the issue is a PR based on whether the PR out-of-date.
-func HandlePullRequestEvent(log *logrus.Entry, ghc githubClient, pre *github.PullRequestEvent,
-	cfg *tiexternalplugins.Configuration) error {
-	if pre.Action != github.PullRequestActionOpened &&
-		pre.Action != github.PullRequestActionSynchronize && pre.Action != github.PullRequestActionReopened {
-		return nil
-	}
-
-	return handlePullRequest(log, ghc, &pre.PullRequest, cfg)
-}
-
 // HandleIssueCommentEvent handles a GitHub issue comment event and update the PR
 // if the issue is a PR based on whether the PR out-of-date.
 func HandleIssueCommentEvent(log *logrus.Entry, ghc githubClient, ice *github.IssueCommentEvent,
@@ -160,18 +148,15 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 	updated := false
 	tars := cfg.TarsFor(org, repo)
 
-	// If the OnlyWhenLabel configuration is set, the pr will only be updated if it has this label.
-	if len(tars.OnlyWhenLabel) != 0 {
-		hasTriggerLabel := false
-		for _, label := range pr.Labels {
-			if label.Name == tars.OnlyWhenLabel {
-				hasTriggerLabel = true
-			}
+	hasTriggerLabel := false
+	for _, label := range pr.Labels {
+		if label.Name == tars.OnlyWhenLabel {
+			hasTriggerLabel = true
 		}
-		if !hasTriggerLabel {
-			log.Infof("Ignore PR %s/%s#%d without trigger label %s.", org, repo, number, tars.OnlyWhenLabel)
-			return nil
-		}
+	}
+	if !hasTriggerLabel {
+		log.Infof("Ignore PR %s/%s#%d without trigger label %s.", org, repo, number, tars.OnlyWhenLabel)
+		return nil
 	}
 
 	prCommits, err := ghc.ListPRCommits(org, repo, pr.Number)
@@ -214,10 +199,11 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 	org := pe.Repo.Owner.Login
 	repo := pe.Repo.Name
 	branch := getRefBranch(pe.Ref)
+	tars := cfg.TarsFor(org, repo)
 	log.Infof("Checking %s/%s/%s PRs.", org, repo, branch)
 
 	var buf bytes.Buffer
-	fmt.Fprint(&buf, "archived:false is:pr is:open sort:created-asc")
+	fmt.Fprintf(&buf, "archived:false is:pr is:open sort:created-asc label:%s", tars.OnlyWhenLabel)
 	fmt.Fprintf(&buf, " repo:\"%s/%s\"", org, repo)
 	fmt.Fprintf(&buf, " base:\"%s\"", branch)
 	prs, err := search(context.Background(), log, ghc, buf.String())
@@ -304,18 +290,15 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *tiexterna
 	updated := false
 	tars := cfg.TarsFor(org, repo)
 
-	// If the OnlyWhenLabel configuration is set, the pr will only be updated if it has this label.
-	if len(tars.OnlyWhenLabel) != 0 {
-		hasTriggerLabel := false
-		for _, labelName := range pr.Labels.Nodes {
-			if string(labelName.Name) == tars.OnlyWhenLabel {
-				hasTriggerLabel = true
-			}
+	hasTriggerLabel := false
+	for _, labelName := range pr.Labels.Nodes {
+		if string(labelName.Name) == tars.OnlyWhenLabel {
+			hasTriggerLabel = true
 		}
-		if !hasTriggerLabel {
-			log.Infof("Ignore PR %s/%s#%d without trigger label %s.", org, repo, number, tars.OnlyWhenLabel)
-			return false, nil
-		}
+	}
+	if !hasTriggerLabel {
+		log.Infof("Ignore PR %s/%s#%d without trigger label %s.", org, repo, number, tars.OnlyWhenLabel)
+		return false, nil
 	}
 
 	// Must have last commit.
