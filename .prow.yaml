@@ -23,7 +23,7 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: ticommunityinfra/tichi-check-external-plugin-config:v1.5.1
+        - image: ticommunityinfra/tichi-check-external-plugin-config:v1.5.2
           command:
             - check-external-plugin-config
           args:
