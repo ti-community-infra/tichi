@@ -1449,3 +1449,44 @@ func TestSetCherrypickerDefaults(t *testing.T) {
 		})
 	}
 }
+
+func TestSetTarsDefaults(t *testing.T) {
+	testcases := []struct {
+		name                string
+		onlyWhenLabel       string
+		expectOnlyWhenLabel string
+	}{
+		{
+			name:                "default",
+			onlyWhenLabel:       "",
+			expectOnlyWhenLabel: "status/can-merge",
+		},
+		{
+			name:                "overwrite",
+			onlyWhenLabel:       "lgtm",
+			expectOnlyWhenLabel: "lgtm",
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			c := &Configuration{
+				TiCommunityTars: []TiCommunityTars{
+					{
+						OnlyWhenLabel: tc.onlyWhenLabel,
+					},
+				},
+			}
+
+			c.setDefaults()
+
+			for _, tars := range c.TiCommunityTars {
+				if tars.OnlyWhenLabel != tc.expectOnlyWhenLabel {
+					t.Errorf("unexpected onlyWhenLabel: %v, expected: %v",
+						tars.OnlyWhenLabel, tc.expectOnlyWhenLabel)
+				}
+			}
+		})
+	}
+}
