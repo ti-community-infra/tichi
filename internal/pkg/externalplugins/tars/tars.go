@@ -279,7 +279,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 
 	var prs []pullRequest
 	var errs []error
-	// Do _not_ parallelize this. It will trigger GitHubs abuse detection and we don't really care anyways except
+	// Do _not_ parallelize this. It will trigger GitHub's abuse detection and we don't really care anyways except
 	// when developing.
 	for _, query := range queries {
 		found, err := search(context.Background(), log, ghc, query)
