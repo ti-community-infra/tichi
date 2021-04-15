@@ -157,16 +157,6 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 	config := s.configAgent.Config()
 
 	switch eventType {
-	case tiexternalplugins.PullRequestEvent:
-		var pre github.PullRequestEvent
-		if err := json.Unmarshal(payload, &pre); err != nil {
-			return err
-		}
-		go func() {
-			if err := tars.HandlePullRequestEvent(l, s.ghc, &pre, config); err != nil {
-				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
-			}
-		}()
 	case tiexternalplugins.IssueCommentEvent:
 		var ice github.IssueCommentEvent
 		if err := json.Unmarshal(payload, &ice); err != nil {
