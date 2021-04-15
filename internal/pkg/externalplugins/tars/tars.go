@@ -261,9 +261,9 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 	}
 
 	if len(repos) > 0 {
-		var reposQuery bytes.Buffer
-		fmt.Fprint(&reposQuery, searchQueryPrefix)
 		for _, repo := range repos {
+			var reposQuery bytes.Buffer
+			fmt.Fprint(&reposQuery, searchQueryPrefix)
 			slashSplit := strings.Split(repo, "/")
 			if n := len(slashSplit); n != 2 {
 				log.WithField("repo", repo).Warn("Found repo that was not in org/repo format, ignoring...")
@@ -273,8 +273,8 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 			repoName := slashSplit[1]
 			tars := externalConfig.TarsFor(org, repoName)
 			fmt.Fprintf(&reposQuery, " label:\"%s\" repo:\"%s\"", tars.OnlyWhenLabel, repo)
+			queries = append(queries, reposQuery.String())
 		}
-		queries = append(queries, reposQuery.String())
 	}
 
 	var prs []pullRequest
