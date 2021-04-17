@@ -1,4 +1,4 @@
-ocs- [Components](en/components.md)
+- [Components](en/components.md)
   - [Tide](en/components/tide.md)
 - [Plugins](en/plugins.md)
   - External
