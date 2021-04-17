@@ -17,16 +17,20 @@ noneRe        = regexp.MustCompile(`(?i)^\W*NONE\W*$`)
 
 我们推荐填写这种格式的发布说明：
 
-```release-note
-Some release note.
+```
+    ```release-note
+    Some release note.
+    ```
 ```
 
 使用 markdown 的代码块来组织发布说明，这样做的好处是格式简单并且在 markdown 渲染之后易读。**当我们按照这样的格式填写发布说明之后， release-note 插件就会为该 PR 添加 `release-note` 标签来标记该 PR 已经正确的添加了发布说明。**
 
 除此之外，还考虑到一些代码的重构或者非代码相关的改动可能不需要填写发布说明，我们也可以用 None 来表示为无发布说明：
 
-```release-note
-None
+```
+    ```release-note
+    None
+    ```
 ```
 
 跟上面的格式一样，但是在代码块中填写 None 表示无需发布说明。**当我们将发布说明内容填写为 None 时，release-note 插件就会为该 PR 添加 `release-note-none` 标签来标记该 PR 无需添加发布说明。**

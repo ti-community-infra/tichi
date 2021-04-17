@@ -17,16 +17,20 @@ noneRe        = regexp.MustCompile(`(?i)^\W*NONE\W*$`)
 
 We recommend completing the release note in this format:
 
-```release-note
-Some release note.
+```
+    ```release-note
+    Some release note.
+    ```
 ```
 
 The advantage of using markdown code block to organize the release note is that the format is simple and easy to read after markdown rendering. **When we fill in the release note in this format, the release-note plugin adds a `release-note` label to the PR to mark that the release note have been properly added.**
 
 In addition, considering that some code refactorings or non-code-related changes may not require a release note, we can also use None to indicate that there is no release note:
 
-```release-note
-None
+```
+    ```release-note
+    None
+    ```
 ```
 
 Same format as above, but with None in the block to indicate that no release notes are needed. **When we put None in the release note, release-note plugin adds `release-note-none` label to the PR to mark the PR as not requiring a release note.**
