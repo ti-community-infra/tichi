@@ -1,4 +1,4 @@
-- [Components](en/components.md)
+ocs- [Components](en/components.md)
   - [Tide](en/components/tide.md)
 - [Plugins](en/plugins.md)
   - External
@@ -18,6 +18,7 @@
     - [size](en/plugins/size.md)
     - [assign](en/plugins/assign.md)
     - [milestone](en/plugins/milestone.md)
+    - [release-note](en/plugins/release-note.md)
 - [tools](tools.md)
   - [label_sync](en/tools/label_sync.md)
   - [autobump](en/tools/autobump.md)
