@@ -12,6 +12,7 @@ This plugin was designed and developed by the Kubernetes community to detect if 
 
 ```go
 noteMatcherRE = regexp.MustCompile(`(?s)(?:Release note\*\*:\s*(?:<!--[^<>]*-->\s*)?` + "```(?:release-note)?|```release-note)(.+?)```")
+noneRe        = regexp.MustCompile(`(?i)^\W*NONE\W*$`)
 ```
 
 We recommend completing the release note in this format:

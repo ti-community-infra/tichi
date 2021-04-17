@@ -12,6 +12,7 @@
 
 ```go
 noteMatcherRE = regexp.MustCompile(`(?s)(?:Release note\*\*:\s*(?:<!--[^<>]*-->\s*)?` + "```(?:release-note)?|```release-note)(.+?)```")
+noneRe        = regexp.MustCompile(`(?i)^\W*NONE\W*$`)
 ```
 
 我们推荐填写这种格式的发布说明：
