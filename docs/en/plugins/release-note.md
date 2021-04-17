@@ -43,7 +43,7 @@ Finally, if the release-note plugin does not detect any release-note code blocks
 
 No configuration
 
-## 参考文档
+## Reference Documents
 
 - [command help](https://prow.tidb.io/command-help#release_note_none)
 - [code](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/releasenote)
