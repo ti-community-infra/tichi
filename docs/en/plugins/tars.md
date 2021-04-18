@@ -11,7 +11,7 @@ In this case, both PRs will be tested with the current master as the base branch
 
 To solve this problem GitHub provides a branch protection option called `Require branches to be up to date before merging`. When this option is turned on, PR will only merge when the latest Base branch is in use. **This solves the problem, but it requires you to manually click the GitHub button to merge the latest Base branch into the PR, which is a mechanical and repetitive task**.
 
-ti-community-tars is designed to solve this problem by helping us to automatically merge the latest Base branches into PRs when PRs are replied to, updated, or when new commits are made to Base branches. In addition, it also supports periodic scanning of all PRs for all repositories where the plugin is configured to update all PRs.
+ti-community-tars is designed to solve this problem by helping us automatically merge the latest Base branch into the PR when the PR is commented to, updated, or when a new commit is made to the Base branch. In addition to this, it also supports periodic scanning of all PRs for all repositories where the plugin is configured and updating them **one by one**.
 
 ## Design
 
@@ -22,9 +22,9 @@ The following scenarios need to be considered to implement the plugin:
   - As soon as a new commit is made to the Base branch, we should look for other PRs that can be merged and update the latest Base to the PR
   - We can't update all PRs at once because we can only merge at most one PR at a time, so we should choose the PRs that were created the earliest and can be merged
 - Regular scans and updates
-  - Since the option mentioned above is turned on to ensure that the PR passes the test even after merging the latest Base, we also need to merge the latest Base to these PRs regularly to test and solve possible problems as soon as possible
+  - Since the option mentioned above is turned on to ensure that the PRs pass the test even after merging the latest Base, we also need to periodically merge the latest Base into these PRs to test and resolve possible problems as soon as possible. This periodically updates these PRs one by one, and also prevents the merge queue from being blocked due to the failure of the previous PR tests
 
-In addition, most PRs that do not meet the merge criteria may not want to be automatically updated. Because after the automatic update, we need to pull the latest update when we have a new commit push locally. So we specify which PRs need to be updated via the label configuration item.
+In addition, most PRs that do not meet the merge criteria do not want to be automatically updated. Because after the automatic update, we need to pull the latest update when we have a new commit push locally. So we specify which PRs need to be updated via the label configuration item(default is `status/can-merge`).
 
 ## Parameter Configuration 
 
@@ -52,4 +52,4 @@ ti-community-tars:
 
 ### How often will regular scans be performed?
 
-It is currently one hour, and will be adjusted later according to the number of repositories used.
+This is currently 20 minutes, updating the earliest created PR for each repository's different branches each time.
