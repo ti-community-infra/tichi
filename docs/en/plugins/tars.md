@@ -24,15 +24,15 @@ The following scenarios need to be considered to implement the plugin:
 - Regular scans and updates
   - Since the option mentioned above is turned on to ensure that the PRs pass the test even after merging the latest Base, we also need to periodically merge the latest Base into these PRs to test and resolve possible problems as soon as possible. This periodically updates these PRs one by one, and also prevents the merge queue from being blocked due to the failure of the previous PR tests
 
-In addition, most PRs that do not meet the merge criteria do not want to be automatically updated. Because after the automatic update, we need to pull the latest update when we have a new commit push locally. So we specify which PRs need to be updated via the label configuration item(default is `status/can-merge`).
+In addition, most PRs that do not meet the merge criteria do not want to be automatically updated. Because after the automatic update, we need to pull the latest update when we have a new commit push locally. So we specify which PRs need to be updated via the label configuration item.
 
 ## Parameter Configuration 
 
-| Parameter Name  | Type     | Description                                    |
-| --------------- | -------- | ---------------------------------------------- |
-| repos           | []string | Repositories                                   |
-| message         | string   | Messages replied to after the automatic update |
-| only_when_label | string   | Only help update when PR adds the label        |
+| Parameter Name  | Type     | Description                                                             |
+| --------------- | -------- | ----------------------------------------------------------------------- |
+| repos           | []string | Repositories                                                            |
+| message         | string   | Messages replied to after the automatic update                          |
+| only_when_label | string   | Only help update when PR adds this label, default is `status/can-merge` |
 
 For example:
 
