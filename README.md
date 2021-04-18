@@ -34,6 +34,7 @@
 | lifecycle                       | 内置插件 | 通过标签标记 Issue 或 PR 的生命周期。                                                         |
 | wip                             | 内置插件 | 为正在开发的 PR 添加 `do-not-merge/work-in-progress` 标签，阻止自动分配 reviewer 和 PR 合并。 |
 | welcome                         | 内置插件 | 通过机器人向首次贡献的贡献者发送欢迎语。                                                      |
+| release-note                    | 内置插件 | 主要负责检测 PR 是否添加了发布说明。                                                          |
 | label_sync                      | 工具     | 能够将 yaml 文件当中配置的标签同步到一个或多个仓库。                                          |
 | autobump                        | 工具     | 通过自动提交 Pull Request 的方式更新上游 Prow 及其相关组件和插件的版本。                      |
 

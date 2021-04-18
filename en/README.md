@@ -36,6 +36,7 @@ The following shows some commonly used components or plugins in the TiDB communi
 | lifecycle                  | internal plugin | Use labels to mark the life cycle of Issue or PR.                                                                                         |
 | wip                        | internal plugin | Add the `do-not-merge/work-in-progress` label to the PR under development to prevent the automatic assignment of reviewer and PR merge.   |
 | welcome                    | internal plugin | Send a welcome message to contributors who have contributed for the first time through a robot.                                           |
+| release-note               | internal plugin | It is mainly responsible for detecting whether a PR has added a release note.                                                             |
 | label_sync                 | tool            | Able to synchronize the labels configured in the yaml file to one or more repositories.                                                   |
 | autobump                   | tool            | Update the version of upstream Prow and its related components and plugins by automatically submitting Pull Requests.                     |
 
