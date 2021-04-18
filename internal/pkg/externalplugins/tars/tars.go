@@ -9,7 +9,6 @@ import (
 
 	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
@@ -249,19 +248,17 @@ func getRefBranch(ref string) string {
 func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuration,
 	externalConfig *tiexternalplugins.Configuration) error {
 	log.Info("Checking all PRs.")
-	orgs, repos := config.EnabledReposForExternalPlugin(PluginName)
-	if len(orgs) == 0 && len(repos) == 0 {
+	_, repos := config.EnabledReposForExternalPlugin(PluginName)
+	if len(repos) == 0 {
 		log.Warnf("No repos have been configured for the %s plugin", PluginName)
 		return nil
 	}
 
-	var queries []string
-	for _, org := range orgs {
-		queries = append(queries, searchQueryPrefix+` org:"`+org+`"`)
-	}
-
 	if len(repos) > 0 {
+		// Do _not_ parallelize this. It will trigger GitHub's abuse detection and we don't really care anyways except
+		// when developing.
 		for _, repo := range repos {
+			// Construct the query.
 			var reposQuery bytes.Buffer
 			fmt.Fprint(&reposQuery, searchQueryPrefix)
 			slashSplit := strings.Split(repo, "/")
@@ -273,43 +270,41 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 			repoName := slashSplit[1]
 			tars := externalConfig.TarsFor(org, repoName)
 			fmt.Fprintf(&reposQuery, " label:\"%s\" repo:\"%s\"", tars.OnlyWhenLabel, repo)
-			queries = append(queries, reposQuery.String())
+			query := reposQuery.String()
+
+			prs, err := search(context.Background(), log, ghc, query)
+			if err != nil {
+				log.WithError(err).Error("Error was encountered when querying GitHub, " +
+					"but the remaining repositories will be processed anyway.")
+				continue
+			}
+			log.Infof("Considering %d PRs of %s.", len(prs), repo)
+			for i := range prs {
+				pr := prs[i]
+				org := string(pr.Repository.Owner.Login)
+				repo := string(pr.Repository.Name)
+				num := int(pr.Number)
+				l := log.WithFields(logrus.Fields{
+					"org":  org,
+					"repo": repo,
+					"pr":   num,
+				})
+				// Try to update.
+				takenAction, err := handle(l, ghc, &pr, externalConfig)
+				if err != nil {
+					l.WithError(err).Error("The PR update failed, but the remaining PRs will be processed anyway.")
+					continue
+				}
+				// Process only one PR at a time, because even if other PRs are updated,
+				// they cannot be merged and will generate DOS attacks on the CI system.
+				if takenAction {
+					l.Info("Successfully updated and completed this push event response process.")
+					break
+				}
+			}
 		}
 	}
 
-	var prs []pullRequest
-	var errs []error
-	// Do _not_ parallelize this. It will trigger GitHub's abuse detection and we don't really care anyways except
-	// when developing.
-	for _, query := range queries {
-		found, err := search(context.Background(), log, ghc, query)
-		prs = append(prs, found...)
-		errs = append(errs, err)
-	}
-	if err := utilerrors.NewAggregate(errs); err != nil {
-		if len(prs) == 0 {
-			return err
-		}
-		log.WithError(err).Error("Encountered errors when querying GitHub but will process received results anyways")
-	}
-	log.WithField("prs_found_count", len(prs)).Debug("Processing all found PRs")
-
-	log.Infof("Considering %d PRs.", len(prs))
-	for i := range prs {
-		pr := prs[i]
-		org := string(pr.Repository.Owner.Login)
-		repo := string(pr.Repository.Name)
-		num := int(pr.Number)
-		l := log.WithFields(logrus.Fields{
-			"org":  org,
-			"repo": repo,
-			"pr":   num,
-		})
-		_, err := handle(l, ghc, &pr, externalConfig)
-		if err != nil {
-			l.WithError(err).Error("Error handling PR.")
-		}
-	}
 	return nil
 }
 
