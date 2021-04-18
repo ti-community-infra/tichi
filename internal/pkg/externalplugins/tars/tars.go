@@ -278,28 +278,41 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 					"but the remaining repositories will be processed anyway.")
 				continue
 			}
+
 			log.Infof("Considering %d PRs of %s.", len(prs), repo)
+			branches := make(map[string]bool)
 			for i := range prs {
 				pr := prs[i]
 				org := string(pr.Repository.Owner.Login)
 				repo := string(pr.Repository.Name)
 				num := int(pr.Number)
+				base := string(pr.BaseRef.Name)
 				l := log.WithFields(logrus.Fields{
 					"org":  org,
 					"repo": repo,
 					"pr":   num,
 				})
+				// Process only one PR for per branch at a time, because even if other PRs are updated,
+				// they cannot be merged and will generate DOS attacks on the CI system.
+				updated, ok := branches[base]
+				if ok {
+					if updated {
+						continue
+					}
+				} else {
+					branches[base] = false
+				}
+
 				// Try to update.
 				takenAction, err := handle(l, ghc, &pr, externalConfig)
 				if err != nil {
 					l.WithError(err).Error("The PR update failed, but the remaining PRs will be processed anyway.")
 					continue
 				}
-				// Process only one PR at a time, because even if other PRs are updated,
-				// they cannot be merged and will generate DOS attacks on the CI system.
 				if takenAction {
+					// Mark this base branch as already having an updated PR.
+					branches[base] = takenAction
 					l.Info("Successfully updated and completed this push event response process.")
-					break
 				}
 			}
 		}
