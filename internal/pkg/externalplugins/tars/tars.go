@@ -291,6 +291,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 					"org":  org,
 					"repo": repo,
 					"pr":   num,
+					"base": base,
 				})
 				// Process only one PR for per branch at a time, because even if other PRs are updated,
 				// they cannot be merged and will generate DOS attacks on the CI system.
@@ -312,7 +313,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 				if takenAction {
 					// Mark this base branch as already having an updated PR.
 					branches[base] = takenAction
-					l.Info("Successfully updated and completed this push event response process.")
+					l.Info("Successfully updated.")
 				}
 			}
 		}
