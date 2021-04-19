@@ -254,67 +254,69 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		return nil
 	}
 
-	if len(repos) > 0 {
-		// Do _not_ parallelize this. It will trigger GitHub's abuse detection and we don't really care anyways except
-		// when developing.
-		for _, repo := range repos {
-			// Construct the query.
-			var reposQuery bytes.Buffer
-			fmt.Fprint(&reposQuery, searchQueryPrefix)
-			slashSplit := strings.Split(repo, "/")
-			if n := len(slashSplit); n != 2 {
-				log.WithField("repo", repo).Warn("Found repo that was not in org/repo format, ignoring...")
-				continue
-			}
-			org := slashSplit[0]
-			repoName := slashSplit[1]
-			tars := externalConfig.TarsFor(org, repoName)
-			fmt.Fprintf(&reposQuery, " label:\"%s\" repo:\"%s\"", tars.OnlyWhenLabel, repo)
-			query := reposQuery.String()
+	if len(repos) == 0 {
+		return nil
+	}
 
-			prs, err := search(context.Background(), log, ghc, query)
-			if err != nil {
-				log.WithError(err).Error("Error was encountered when querying GitHub, " +
-					"but the remaining repositories will be processed anyway.")
-				continue
-			}
+	// Do _not_ parallelize this. It will trigger GitHub's abuse detection and we don't really care anyways except
+	// when developing.
+	for _, repo := range repos {
+		// Construct the query.
+		var reposQuery bytes.Buffer
+		fmt.Fprint(&reposQuery, searchQueryPrefix)
+		slashSplit := strings.Split(repo, "/")
+		if n := len(slashSplit); n != 2 {
+			log.WithField("repo", repo).Warn("Found repo that was not in org/repo format, ignoring...")
+			continue
+		}
+		org := slashSplit[0]
+		repoName := slashSplit[1]
+		tars := externalConfig.TarsFor(org, repoName)
+		fmt.Fprintf(&reposQuery, " label:\"%s\" repo:\"%s\"", tars.OnlyWhenLabel, repo)
+		query := reposQuery.String()
 
-			log.Infof("Considering %d PRs of %s.", len(prs), repo)
-			branches := make(map[string]bool)
-			for i := range prs {
-				pr := prs[i]
-				org := string(pr.Repository.Owner.Login)
-				repo := string(pr.Repository.Name)
-				num := int(pr.Number)
-				base := string(pr.BaseRef.Name)
-				l := log.WithFields(logrus.Fields{
-					"org":  org,
-					"repo": repo,
-					"pr":   num,
-					"base": base,
-				})
-				// Process only one PR for per branch at a time, because even if other PRs are updated,
-				// they cannot be merged and will generate DOS attacks on the CI system.
-				updated, ok := branches[base]
-				if ok {
-					if updated {
-						continue
-					}
-				} else {
-					branches[base] = false
-				}
+		prs, err := search(context.Background(), log, ghc, query)
+		if err != nil {
+			log.WithError(err).Error("Error was encountered when querying GitHub, " +
+				"but the remaining repositories will be processed anyway.")
+			continue
+		}
 
-				// Try to update.
-				takenAction, err := handle(l, ghc, &pr, externalConfig)
-				if err != nil {
-					l.WithError(err).Error("The PR update failed, but the remaining PRs will be processed anyway.")
+		log.Infof("Considering %d PRs of %s.", len(prs), repo)
+		branches := make(map[string]bool)
+		for i := range prs {
+			pr := prs[i]
+			org := string(pr.Repository.Owner.Login)
+			repo := string(pr.Repository.Name)
+			num := int(pr.Number)
+			base := string(pr.BaseRef.Name)
+			l := log.WithFields(logrus.Fields{
+				"org":  org,
+				"repo": repo,
+				"pr":   num,
+				"base": base,
+			})
+			// Process only one PR for per branch at a time, because even if other PRs are updated,
+			// they cannot be merged and will generate DOS attacks on the CI system.
+			updated, ok := branches[base]
+			if ok {
+				if updated {
 					continue
 				}
-				if takenAction {
-					// Mark this base branch as already having an updated PR.
-					branches[base] = takenAction
-					l.Info("Successfully updated.")
-				}
+			} else {
+				branches[base] = false
+			}
+
+			// Try to update.
+			takenAction, err := handle(l, ghc, &pr, externalConfig)
+			if err != nil {
+				l.WithError(err).Error("The PR update failed, but the remaining PRs will be processed anyway.")
+				continue
+			}
+			if takenAction {
+				// Mark this base branch as already having an updated PR.
+				branches[base] = takenAction
+				l.Info("Successfully updated.")
 			}
 		}
 	}
