@@ -2,13 +2,13 @@
 
 ## 设计背景
 
-在 TiDB 社区中，会有大量的外部贡献者参与到社区当中贡献。我们需要区分内部贡献者和外部贡献者的 PR，优先帮助审阅外部贡献者的 PR，尤其是首次提交 PR 的贡献者，这样才能让外部贡献者有良好的贡献体验。
+我们希望为 TiDB 社区中暂不属于当前仓库所在 org 的贡献者提出的 PR 赋予额外的能见度，以支持筛选并处理这部分贡献。
 
-ti-community-contribution 会帮助我们区分内部贡献者和外部贡献者的 PR，为外部贡献者的 PR 添加 `contribution` 或者 `first-time-contributor` 的标签。
+ti-community-contribution 会帮助我们判断当前 PR 是否由仓库所在 org 的成员提出，如果不是，为该 PR 添加 `contribution` 或者 `first-time-contributor` 的标签。
 
 ## 设计思路
 
-该插件会根据 PR 作者是否为仓库所在 Org 的成员来添加 `contribution` 标签，另外如果该作者是第一次向该仓库提交 PR 或第一次在 GitHub 上提交  PR，还会为该 PR 添加 `first-time-contributor` 标签。
+该插件会根据 PR 作者是否为仓库所在 org 的成员来添加 `contribution` 标签，另外如果该作者是第一次向该仓库提交 PR 或第一次在 GitHub 上提交  PR，还会为该 PR 添加 `first-time-contributor` 标签。
 
 ## 参数配置 
 
@@ -34,9 +34,4 @@ ti-community-merge:
 
 - [RFC](https://github.com/ti-community-infra/rfcs/blob/main/active-rfcs/0001-contribution.md)
 - [code](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/contribution)
-
-## Q&A
-
-### 为什么是根据是否为 Org 成员来区分是否为外部贡献？
-
-因为如果是 Org 成员说明他至少是 reviewer 以上的身份（**只有 reviewer 以上的身份才会被邀请到 Org**），已经很熟悉PR 流程不太需要帮助。
+- 
