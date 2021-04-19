@@ -21,6 +21,7 @@ func TestValidateConfig(t *testing.T) {
 		labelBlocker    *TiCommunityLabelBlocker
 		autoresponders  *TiCommunityAutoresponder
 		blunderbuss     *TiCommunityBlunderbuss
+		tars            *TiCommunityTars
 
 		expected error
 	}{
@@ -68,6 +69,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: nil,
 		},
 		{
@@ -113,6 +117,9 @@ func TestValidateConfig(t *testing.T) {
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
 				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
 			},
 			expected: nil,
 		},
@@ -160,6 +167,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -205,6 +215,9 @@ func TestValidateConfig(t *testing.T) {
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
 				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
 			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
@@ -252,6 +265,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -297,6 +313,9 @@ func TestValidateConfig(t *testing.T) {
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
 				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
 			},
 			expected: fmt.Errorf("error parsing regexp: missing argument to repetition operator: `?`"),
 		},
@@ -344,6 +363,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -389,6 +411,9 @@ func TestValidateConfig(t *testing.T) {
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
 				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
 			},
 			expected: fmt.Errorf("max reviewer count must more than 0"),
 		},
@@ -437,6 +462,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("grace period duration must not less than 0"),
 		},
 		{
@@ -482,6 +510,9 @@ func TestValidateConfig(t *testing.T) {
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
 				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
 			},
 			expected: fmt.Errorf("parse \"https//tichiWebURL\": invalid URI for request"),
 		},
@@ -529,6 +560,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("parse \"https//prProcessLink\": invalid URI for request"),
 		},
 		{
@@ -575,6 +609,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("parse \"https//commandHelpLink\": invalid URI for request"),
 		},
 		{
@@ -618,6 +655,9 @@ func TestValidateConfig(t *testing.T) {
 						Actions: []string{"labeled", "unlabeled"},
 					},
 				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
 			},
 			expected: fmt.Errorf("error parsing regexp: missing argument to repetition operator: `?`"),
 		},
@@ -663,6 +703,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("there must be at least one action"),
 		},
 		{
@@ -706,6 +749,9 @@ func TestValidateConfig(t *testing.T) {
 						Actions: []string{"nop"},
 					},
 				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
 			},
 			expected: fmt.Errorf("actions contain illegal value nop"),
 		},
@@ -754,7 +800,59 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("not a valid logrus Level: \"nop\""),
+		},
+		{
+			name:            "invalid tar repo settings",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			labelBlocker: &TiCommunityLabelBlocker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				BlockLabels: []BlockLabel{
+					{
+						Regex:        `^status/can-merge$`,
+						Actions:      []string{"labeled", "unlabeled"},
+						TrustedTeams: []string{"release-team"},
+						TrustedUsers: []string{"ti-chi-bot"},
+					},
+				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra"},
+			},
+			expected: fmt.Errorf("found repo ti-community-infra that was not in org/repo format"),
 		},
 	}
 
@@ -783,6 +881,9 @@ func TestValidateConfig(t *testing.T) {
 				},
 				TiCommunityLabelBlocker: []TiCommunityLabelBlocker{
 					*tc.labelBlocker,
+				},
+				TiCommunityTars: []TiCommunityTars{
+					*tc.tars,
 				},
 			}
 			actual := config.Validate()

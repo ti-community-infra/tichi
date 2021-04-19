@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -525,6 +526,10 @@ func (c *Configuration) Validate() error {
 		return err
 	}
 
+	if err := validateTars(c.TiCommunityTars); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -638,6 +643,22 @@ func validateLabelBlockerAction(actions []string) error {
 			continue
 		} else {
 			return fmt.Errorf("actions contain illegal value %s", action)
+		}
+	}
+
+	return nil
+}
+
+// validateTars will return an error if tars is set for org.
+// If set directly to org will query the query to a large number of pull requests,
+// which will create a dos attack to the CI system.
+func validateTars(tars []TiCommunityTars) error {
+	for _, tar := range tars {
+		for _, repo := range tar.Repos {
+			slashSplit := strings.Split(repo, "/")
+			if n := len(slashSplit); n != 2 {
+				return fmt.Errorf("found repo %s that was not in org/repo format", repo)
+			}
 		}
 	}
 
