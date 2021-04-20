@@ -168,7 +168,7 @@ func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
 	} else if reviewState == github.ReviewStateChangesRequested {
 		wantLGTM = false
 	} else if reviewState == github.ReviewStateCommented {
-		// If we create an "/lgtm" comment, add lgtm if necessary.
+		// If we create a "/lgtm" comment, add lgtm if necessary.
 		// If we create a "/lgtm cancel" comment, remove lgtm if necessary.
 		if lgtmRe.MatchString(rc.body) {
 			wantLGTM = true
