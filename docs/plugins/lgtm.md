@@ -34,7 +34,7 @@ ti-community-lgtm 是会根据命令和权限自动的为 PR 添加 LGTM 对应 
 
 以下情况下会触发该功能(**命令不区分大小写**)：
 
-- 在 Comment 中使用 `/lgtm [cancel]`
+- 在 Comment 中使用 `/lgtm [cancel]`（如果打开了 review_acts_as_lgtm 选项，Review 功能的 comment 也生效）
 - 使用 GitHub 本身 Approve/Request Changes 功能（如果打开了 review_acts_as_lgtm 选项）
 
 **需要特别注意的是**：

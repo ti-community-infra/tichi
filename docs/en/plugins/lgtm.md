@@ -30,11 +30,11 @@ The plugin is responsible for the collaborative process of code review with the 
 
 ## Design
 
-The implementation of this plugin was not only about its support for the `/lgtm` comment command, but also about how it would integrate with GitHub's own review functionality as a collaborative code review tool.
+The implementation of this plugin was not only about its support for the `/lgtm` comment command, but also about how it would integrate with GitHub's own review feature as a collaborative code review tool.
 
 This feature is triggered in the following cases(**Commands are not case sensitive**):
 
-- Use `/lgtm [cancel]` in comment
+- Use `/lgtm [cancel]` in comment(If the review_acts_as_lgtm option is turned on, the comment of the Review feature also takes effect)
 - Use GitHub's own Approve/Request Changes feature(if the review_acts_as_lgtm option is turned on)
 
 **Special attention**:
