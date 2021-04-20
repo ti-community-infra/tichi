@@ -30,26 +30,16 @@ ti-community-lgtm 是会根据命令和权限自动的为 PR 添加 LGTM 对应 
 
 ## 设计思路
 
-实现该插件不仅要考虑到它支持 `/lgtm` 这样的评论命令，而且要考虑它作为 code review 的协作工具怎么和 GitHub 本身的 review 功能结合起来。**因为我们是在 GitHub 的基础上进行协作功能的拓展和增强，所以 GitHub 本身的设计逻辑和操作规范我们需要严格适配和遵循**。
+实现该插件不仅要考虑到它支持 `/lgtm` 这样的评论命令，而且要考虑它作为 code review 的协作工具怎么和 GitHub 本身的 review 功能结合起来。
 
-在实现插件之前我们需要定义清楚如下三个事件：
-- Issue Comment
-![issue-comment.png](https://user-images.githubusercontent.com/29879298/100052235-75020b00-2e58-11eb-918b-4994d3263878.png)
-- Single Review Comment
-![single-review-comment.png](https://user-images.githubusercontent.com/29879298/100052023-0624b200-2e58-11eb-8b77-9ebd5754121d.png)
-- GitHub review 功能（包括：**Comment/Approve/Request changes 三个功能**）
-![github-approve.png](https://user-images.githubusercontent.com/29879298/100052399-d3c78480-2e58-11eb-874d-0e7a7bed149b.png)
+以下情况下会触发该功能(**命令不区分大小写**)：
 
-在考虑到 TiDB 社区原来在使用该功能的混乱状况之后，我们对 lgtm 事件的响应做了更加严格的限制，只有在以下情况下才会触发该功能(**命令不区分大小写**)：
-
-- 在 Issue Comment 中使用 `/lgtm [cancel]`
-- 在 Single Review Comment 中使用 `/lgtm [cancel]`
-- 使用 GitHub 本身 Approve/Request Changes 功能(**⚠️注意：为了遵循 GitHub review 功能的语义，我们忽略了其中的 Comment，因为 GitHub 对它的语义定义就是没有显式的 Approve**)
+- 在 Comment 中使用 `/lgtm [cancel]`
+- 使用 GitHub 本身 Approve/Request Changes 功能（如果打开了 review_acts_as_lgtm 选项）
 
 **需要特别注意的是**：
 
 - 该命令必须以 `/` 开始（**这是所有命令的基本规范**）
-- Review 功能中的 Comment 不会生效（使用 Review 功能请直接选择 Approve/Request Changes）
 
 ## 参数配置
 
@@ -79,10 +69,6 @@ ti-community-lgtm:
 - [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/lgtm)
 
 ## Q&A
-
-### 为什么我在使用 GitHub 的 Review 功能中的 Comment 时填写 `/lgtm` 无效？
-
-因为我们要兼容 GitHub 对该功能本身的语义定义：`Submit general feedback without explicit approval.`，所以使用该功能不会打上 LGTM 相应标签。
 
 ### 我是否可以 `/lgtm` 自己的 PR?
 

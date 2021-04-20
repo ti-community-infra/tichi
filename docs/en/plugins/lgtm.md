@@ -30,26 +30,16 @@ The plugin is responsible for the collaborative process of code review with the 
 
 ## Design
 
-The implementation of this plugin was not only about its support for the `/lgtm` comment command, but also about how it would integrate with GitHub's own review functionality as a collaborative code review tool. **Because we're building on GitHub's collaborative features, we need to strictly adapt and follow GitHub's own design logic and practices**.
+The implementation of this plugin was not only about its support for the `/lgtm` comment command, but also about how it would integrate with GitHub's own review functionality as a collaborative code review tool.
 
-Before implementing the plugin we need to define clearly the following three events:
-- Issue Comment
-![issue-comment.png](https://user-images.githubusercontent.com/29879298/100052235-75020b00-2e58-11eb-918b-4994d3263878.png)
-- Single Review Comment
-![single-review-comment.png](https://user-images.githubusercontent.com/29879298/100052023-0624b200-2e58-11eb-8b77-9ebd5754121d.png)
-- GitHub review Feature（Include：**Comment/Approve/Request changes Three Features**）
-![github-approve.png](https://user-images.githubusercontent.com/29879298/100052399-d3c78480-2e58-11eb-874d-0e7a7bed149b.png)
+This feature is triggered in the following cases(**Commands are not case sensitive**):
 
-After taking into account the original confusion of the TiDB community in using this feature, we have made the response to the lgtm event more restrictive, so that it will only be triggered if (**Commands are not case sensitive**):
-
-- Use `/lgtm [cancel]` in Issue Comment
-- Use `/lgtm [cancel]` in Single Review Comment
-- Use GitHub's own Approve/Request Changes feature (**⚠️ Note: In order to follow the semantics of the GitHub review feature, we've ignored the Comment in it because GitHub's semantic definition of it is that there is no explicit Approve**)
+- Use `/lgtm [cancel]` in comment
+- Use GitHub's own Approve/Request Changes feature(if the review_acts_as_lgtm option is turned on)
 
 **Special attention**:
 
 - The command must start with `/` (**this is the basic specification for all commands**)
-- Comments in the Review Feature will not take effect (please select Approve/Request Changes directly when using the Review function)
 
 ## Parameter Configuration 
 
@@ -79,10 +69,6 @@ ti-community-lgtm:
 - [code](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/lgtm)
 
 ## Q&A
-
-### Why does `/lgtm` not work when I use the Review feature of GitHub to fill in a Comment?
-
-Because we want to be compatible with GitHub's semantic definition of the feature itself: `Submit general feedback without explicit approval.`, using this feature will not be labeled with the LGTM label.
 
 ### Can I `/lgtm` my own PR?
 
