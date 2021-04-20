@@ -69,7 +69,6 @@ spec:
               port: 8081
             initialDelaySeconds: 10
             periodSeconds: 3
-            timeoutSeconds: 600
       volumes:
         - name: config
           configMap:
