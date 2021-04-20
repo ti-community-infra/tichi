@@ -476,6 +476,16 @@ func TestLGTMFromApproveReview(t *testing.T) {
 			shouldToggle: true,
 		},
 		{
+			name:         "Comment body has /lgtm cancel on Comment Review",
+			state:        github.ReviewStateCommented,
+			action:       github.ReviewActionSubmitted,
+			reviewer:     "collab1",
+			body:         "/lgtm cancel",
+			currentLabel: lgtmOne,
+			isCancel:     true,
+			shouldToggle: true,
+		},
+		{
 			name:         "Comment body has /lgtm cancel on Approve Review",
 			state:        github.ReviewStateApproved,
 			action:       github.ReviewActionSubmitted,
