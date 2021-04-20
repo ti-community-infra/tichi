@@ -459,7 +459,7 @@ func TestLGTMFromApproveReview(t *testing.T) {
 			shouldToggle: false,
 		},
 		{
-			name:         "Comment review by issue author, no lgtm on pr",
+			name:         "Comment Review by issue author, no lgtm on pr",
 			state:        github.ReviewStateCommented,
 			action:       github.ReviewActionSubmitted,
 			reviewer:     "author",
@@ -467,7 +467,7 @@ func TestLGTMFromApproveReview(t *testing.T) {
 			shouldToggle: false,
 		},
 		{
-			name:         "Comment body has /lgtm on Comment Review",
+			name:         "Comment Review with /lgtm comment",
 			state:        github.ReviewStateCommented,
 			action:       github.ReviewActionSubmitted,
 			reviewer:     "collab1",
@@ -476,7 +476,7 @@ func TestLGTMFromApproveReview(t *testing.T) {
 			shouldToggle: true,
 		},
 		{
-			name:         "Comment body has /lgtm cancel on Comment Review",
+			name:         "Comment Review with /lgtm cancel comment",
 			state:        github.ReviewStateCommented,
 			action:       github.ReviewActionSubmitted,
 			reviewer:     "collab1",
@@ -484,6 +484,15 @@ func TestLGTMFromApproveReview(t *testing.T) {
 			currentLabel: lgtmOne,
 			isCancel:     true,
 			shouldToggle: true,
+		},
+		{
+			name:         "Comment Review with random comment",
+			state:        github.ReviewStateCommented,
+			action:       github.ReviewActionSubmitted,
+			reviewer:     "collab1",
+			body:         "/random content",
+			currentLabel: lgtmOne,
+			shouldToggle: false,
 		},
 		{
 			name:         "Comment body has /lgtm cancel on Approve Review",
