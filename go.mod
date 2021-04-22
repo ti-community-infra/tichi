@@ -12,5 +12,6 @@ require (
 	gotest.tools v2.2.0+incompatible
 	k8s.io/apimachinery v0.20.2
 	k8s.io/test-infra v0.0.0-20210316085234-e190b4cecc47
+	k8s.io/utils v0.0.0-20210111153108-fddb29f9d009
 	sigs.k8s.io/yaml v1.2.0
 )

@@ -42,6 +42,7 @@ import (
 	"k8s.io/test-infra/prow/pluginhelp"
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
 	"k8s.io/test-infra/prow/plugins"
+	"k8s.io/utils/exec"
 )
 
 const PluginName = "ti-community-cherrypicker"
@@ -527,20 +528,36 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 
 	// Title for GitHub issue/PR.
 	title = fmt.Sprintf("%s (#%d)[%s]", title, num, targetBranch)
+	ex := exec.New()
 
 	// Apply the patch.
 	if err := r.Am(localPath); err != nil {
 		errs := []error{fmt.Errorf("failed to `git am`: %w", err)}
 		logger.WithError(err).Warn("failed to apply PR on top of target branch")
-		resp := fmt.Sprintf("#%d failed to apply on top of branch %q:\n```\n%v\n```.", num, targetBranch, err)
-		if err := s.createComment(logger, org, repo, num, comment, resp); err != nil {
-			errs = append(errs, fmt.Errorf("failed to create comment: %w", err))
-		}
-
 		if opts.IssueOnConflict {
+			resp := fmt.Sprintf("#%d failed to apply on top of branch %q:\n```\n%v\n```.", num, targetBranch, err)
 			resp = fmt.Sprintf("Manual cherrypick required.\n\n%v", resp)
 			if err := s.createIssue(logger, org, repo, title, resp, num, comment, nil, []string{requestor}); err != nil {
 				errs = append(errs, fmt.Errorf("failed to create issue: %w", err))
+			}
+		} else {
+			dir := r.Directory()
+			// git add *.
+			add := ex.Command("git", "add", "*")
+			add.SetDir(dir)
+			out, err := add.CombinedOutput()
+			if err != nil {
+				logger.WithError(err).Warnf("failed to git add conflicting files and the output look like: %s", out)
+				errs = append(errs, fmt.Errorf("failed to git add conflicting files: %w", err))
+			}
+
+			// git am --resolved.
+			amResolve := ex.Command("git", "am", "--resolved")
+			amResolve.SetDir(dir)
+			out, err = amResolve.CombinedOutput()
+			if err != nil {
+				logger.WithError(err).Warnf("failed to mark git am resolved and the output look like: %s", out)
+				errs = append(errs, fmt.Errorf("failed to mark git am resolved: %w", err))
 			}
 		}
 
