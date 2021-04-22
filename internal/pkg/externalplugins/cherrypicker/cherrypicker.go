@@ -533,7 +533,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		errs := []error{fmt.Errorf("failed to `git am`: %w", err)}
 		logger.WithError(err).Warn("failed to apply PR on top of target branch")
 		if opts.IssueOnConflict {
-			resp := fmt.Sprintf("Manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```.",
+			resp := fmt.Sprintf("Manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```",
 				num, targetBranch, err)
 			if err := s.createIssue(logger, org, repo, title, resp, num, comment, nil, []string{requestor}); err != nil {
 				errs = append(errs, fmt.Errorf("failed to create issue: %w", err))
@@ -560,7 +560,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		}
 
 		if utilerrors.NewAggregate(errs) != nil {
-			resp := fmt.Sprintf("Failed to apply #%d on top of branch %q:\n```\n%v\n```.",
+			resp := fmt.Sprintf("Failed to apply #%d on top of branch %q:\n```\n%v\n```",
 				num, targetBranch, utilerrors.NewAggregate(errs).Error())
 			if err := s.createComment(logger, org, repo, num, comment, resp); err != nil {
 				errs = append(errs, fmt.Errorf("failed to create comment: %w", err))
