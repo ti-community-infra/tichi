@@ -549,13 +549,13 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 				errs = append(errs, fmt.Errorf("failed to git add conflicting files: %w", err))
 			}
 
-			//  Try git am --resolved.
-			amResolve := ex.Command("git", "am", "--resolved")
+			//  Try git am --continue.
+			amResolve := ex.Command("git", "am", "--continue")
 			amResolve.SetDir(dir)
 			out, err = amResolve.CombinedOutput()
 			if err != nil {
-				logger.WithError(err).Warnf("failed to mark git am resolved and the output look like: %s", out)
-				errs = append(errs, fmt.Errorf("failed to mark git am resolved: %w", err))
+				logger.WithError(err).Warnf("failed to continue git am and the output look like: %s", out)
+				errs = append(errs, fmt.Errorf("failed to continue git am: %w", err))
 			}
 		}
 
