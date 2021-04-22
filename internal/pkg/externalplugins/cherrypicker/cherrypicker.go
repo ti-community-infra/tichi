@@ -533,7 +533,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		errs := []error{fmt.Errorf("failed to `git am`: %w", err)}
 		logger.WithError(err).Warn("failed to apply PR on top of target branch")
 		if opts.IssueOnConflict {
-			resp := fmt.Sprintf("Manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```.",
+			resp := fmt.Sprintf("Manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```",
 				num, targetBranch, err)
 			if err := s.createIssue(logger, org, repo, title, resp, num, comment, nil, []string{requestor}); err != nil {
 				errs = append(errs, fmt.Errorf("failed to create issue: %w", err))
@@ -549,18 +549,18 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 				errs = append(errs, fmt.Errorf("failed to git add conflicting files: %w", err))
 			}
 
-			//  Try git am --resolved.
-			amResolve := ex.Command("git", "am", "--resolved")
+			//  Try git am --continue.
+			amResolve := ex.Command("git", "am", "--continue")
 			amResolve.SetDir(dir)
 			out, err = amResolve.CombinedOutput()
 			if err != nil {
-				logger.WithError(err).Warnf("failed to mark git am resolved and the output look like: %s", out)
-				errs = append(errs, fmt.Errorf("failed to mark git am resolved: %w", err))
+				logger.WithError(err).Warnf("failed to continue git am and the output look like: %s", out)
+				errs = append(errs, fmt.Errorf("failed to continue git am: %w", err))
 			}
 		}
 
 		if utilerrors.NewAggregate(errs) != nil {
-			resp := fmt.Sprintf("Failed to apply #%d on top of branch %q:\n```\n%v\n```.",
+			resp := fmt.Sprintf("Failed to apply #%d on top of branch %q:\n```\n%v\n```",
 				num, targetBranch, utilerrors.NewAggregate(errs).Error())
 			if err := s.createComment(logger, org, repo, num, comment, resp); err != nil {
 				errs = append(errs, fmt.Errorf("failed to create comment: %w", err))
