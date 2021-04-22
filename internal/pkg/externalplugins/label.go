@@ -22,6 +22,11 @@ const (
 	FirstTimeContributorLabel = "first-time-contributor"
 )
 
+const (
+	// DefaultCherryPickLabelPrefix defines the default label prefix for cherrypicker plugin.
+	DefaultCherryPickLabelPrefix = "cherrypick/"
+)
+
 // FormatTestLabels will prefix the label with org/repo#number.
 func FormatTestLabels(org, repo string, number int, labels ...string) []string {
 	var r []string

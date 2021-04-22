@@ -56,12 +56,14 @@ type fghc struct {
 	issues     []github.Issue
 }
 
-func (f *fghc) AddLabel(org, repo string, number int, label string) error {
+func (f *fghc) AddLabels(org, repo string, number int, labels ...string) error {
 	f.Lock()
 	defer f.Unlock()
 	for i := range f.prs {
 		if number == f.prs[i].Number {
-			f.prs[i].Labels = append(f.prs[i].Labels, github.Label{Name: label})
+			for _, label := range labels {
+				f.prs[i].Labels = append(f.prs[i].Labels, github.Label{Name: label})
+			}
 		}
 	}
 	return nil
@@ -347,11 +349,11 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 	}
 
 	botUser := &github.UserData{Login: "ci-robot", Email: "ci-robot@users.noreply.github.com"}
-	expectedTitle := "This is a fix for X (#2)[stage]"
+	expectedTitle := "This is a fix for X (#2)"
 	expectedBody := "This is an automated cherry-pick of #2\n\nThis PR updates the magic number.\n\n"
 	expectedBase := "stage"
 	expectedHead := fmt.Sprintf(botUser.Login+":"+cherryPickBranchFmt, 2, expectedBase)
-	var expectedLabels []string
+	expectedLabels := []string{"type/cherrypick-for-stage"}
 	expectedReviewers := []string{"user1"}
 	expectedAssignees := []string{"wiseguy"}
 	expected := fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead,
@@ -364,8 +366,9 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 	cfg := &externalplugins.Configuration{}
 	cfg.TiCommunityCherrypicker = []externalplugins.TiCommunityCherrypicker{
 		{
-			Repos:       []string{"foo/bar"},
-			LabelPrefix: "cherrypick/",
+			Repos:             []string{"foo/bar"},
+			LabelPrefix:       "cherrypick/",
+			PickedLabelPrefix: "type/cherrypick-for-",
 		},
 	}
 	ca := &externalplugins.ConfigAgent{}
@@ -479,7 +482,7 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 		},
 		prs: []github.PullRequest{
 			{
-				Title: "This is a fix for Y (#2)[release-1.5]",
+				Title: "This is a fix for Y (#2)",
 				Body:  "This is an automated cherry-pick of #2",
 				Base: github.PullRequestBranch{
 					Ref: "release-1.5",
@@ -574,7 +577,7 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 	}
 
 	var expectedFn = func(branch string) string {
-		expectedTitle := fmt.Sprintf("This is a fix for Y (#2)[%s]", branch)
+		expectedTitle := "This is a fix for Y (#2)"
 		expectedBody := "This is an automated cherry-pick of #2"
 		expectedHead := fmt.Sprintf(botUser.Login+":"+cherryPickBranchFmt, 2, branch)
 		var expectedLabels []string
@@ -768,8 +771,9 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 					cfg := &externalplugins.Configuration{}
 					cfg.TiCommunityCherrypicker = []externalplugins.TiCommunityCherrypicker{
 						{
-							Repos:       []string{"foo/bar"},
-							LabelPrefix: tc.labelPrefix,
+							Repos:             []string{"foo/bar"},
+							LabelPrefix:       tc.labelPrefix,
+							PickedLabelPrefix: "type/cherrypick-for-",
 						},
 					}
 					ca := &externalplugins.ConfigAgent{}
@@ -791,13 +795,14 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 					}
 
 					expectedFn := func(branch string) string {
-						expectedTitle := fmt.Sprintf("This is a fix for Y (#2)[%s]", branch)
+						expectedTitle := "This is a fix for Y (#2)"
 						expectedBody := "This is an automated cherry-pick of #2"
 						expectedHead := fmt.Sprintf(botUser.Login+":"+cherryPickBranchFmt, 2, branch)
 						var expectedLabels []string
 						for _, label := range pr(evt).PullRequest.Labels {
 							expectedLabels = append(expectedLabels, label.Name)
 						}
+						expectedLabels = append(expectedLabels, "type/cherrypick-for-"+branch)
 						var reviewers []string
 						for _, reviewer := range pr(evt).PullRequest.RequestedReviewers {
 							reviewers = append(reviewers, reviewer.Login)

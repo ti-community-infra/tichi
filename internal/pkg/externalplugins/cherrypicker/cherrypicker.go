@@ -53,7 +53,7 @@ var (
 )
 
 type githubClient interface {
-	AddLabel(org, repo string, number int, label string) error
+	AddLabels(org, repo string, number int, labels ...string) error
 	AssignIssue(org, repo string, number int, logins []string) error
 	RequestReview(org, repo string, number int, logins []string) error
 	CreateComment(org, repo string, number int, comment string) error
@@ -525,7 +525,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	}
 
 	// Title for GitHub issue/PR.
-	title = fmt.Sprintf("%s (#%d)[%s]", title, num, targetBranch)
+	title = fmt.Sprintf("%s (#%d)", title, num)
 	ex := exec.New()
 
 	// Apply the patch.
@@ -600,14 +600,22 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	}
 
 	// Copying original pull request labels.
-	// TODO: better to use addLabels API.
 	excludeLabelsSet := sets.NewString(opts.ExcludeLabels...)
+	labels := sets.NewString()
 	for _, label := range pr.Labels {
 		if !excludeLabelsSet.Has(label.Name) && !strings.HasPrefix(label.Name, opts.LabelPrefix) {
-			if err := s.GitHubClient.AddLabel(org, repo, createdNum, label.Name); err != nil {
-				logger.WithError(err).Warnf("failed to add label %s", label)
-			}
+			labels.Insert(label.Name)
 		}
+	}
+
+	// Add picked label.
+	if len(opts.PickedLabelPrefix) > 0 {
+		pickedLabel := opts.PickedLabelPrefix + targetBranch
+		labels.Insert(pickedLabel)
+	}
+
+	if err := s.GitHubClient.AddLabels(org, repo, createdNum, labels.List()...); err != nil {
+		logger.WithError(err).Warnf("Failed to add labels %v", labels.List())
 	}
 
 	// Copying original pull request reviewers.

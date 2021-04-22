@@ -25,11 +25,6 @@ const (
 	UnlabeledAction = "unlabeled"
 )
 
-const (
-	// DefaultCherryPickLabelPrefix defines the default label prefix for cherrypicker plugin.
-	DefaultCherryPickLabelPrefix = "cherrypick/"
-)
-
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
 	TichiWebURL     string `json:"tichi_web_url,omitempty"`
@@ -238,6 +233,8 @@ type TiCommunityCherrypicker struct {
 	IssueOnConflict bool `json:"create_issue_on_conflict,omitempty"`
 	// LabelPrefix specifies the label prefix for cherrypicker.
 	LabelPrefix string `json:"label_prefix,omitempty"`
+	// PickedLabelPrefix specifies the label prefix after picked.
+	PickedLabelPrefix string `json:"picked_label_prefix,omitempty"`
 	// ExcludeLabels specifies the labels that need to be excluded when copying the labels of the original PR.
 	ExcludeLabels []string `json:"excludeLabels,omitempty"`
 }
