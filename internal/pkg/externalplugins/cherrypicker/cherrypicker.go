@@ -562,7 +562,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		}
 
 		if utilerrors.NewAggregate(errs) != nil {
-			resp := fmt.Sprintf("#%d failed to apply on top of branch %q:\n```\n%v\n```.",
+			resp := fmt.Sprintf("Failed to apply #%d on top of branch %q:\n```\n%v\n```.",
 				num, targetBranch, utilerrors.NewAggregate(errs).Error())
 			if err := s.createComment(logger, org, repo, num, comment, resp); err != nil {
 				errs = append(errs, fmt.Errorf("failed to create comment: %w", err))
