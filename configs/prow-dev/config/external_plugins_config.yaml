@@ -102,7 +102,7 @@ ti-community-cherrypicker:
   - repos:
       - ti-community-infra/test-dev
     allow_all: true
-    create_issue_on_conflict: true
+    create_issue_on_conflict: false
     excludeLabels:
       - status/can-merge
       - status/LGT1
