@@ -535,7 +535,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		errs := []error{fmt.Errorf("failed to `git am`: %w", err)}
 		logger.WithError(err).Warn("failed to apply PR on top of target branch")
 		if opts.IssueOnConflict {
-			resp := fmt.Sprintf("Manual cherrypick required.\n\nFailed to apply #%d on branch %q:\n```\n%v\n```.",
+			resp := fmt.Sprintf("Manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```.",
 				num, targetBranch, err)
 			if err := s.createIssue(logger, org, repo, title, resp, num, comment, nil, []string{requestor}); err != nil {
 				errs = append(errs, fmt.Errorf("failed to create issue: %w", err))
