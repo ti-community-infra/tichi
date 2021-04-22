@@ -85,8 +85,13 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			configInfoStrings = append(configInfoStrings, "The plugin has these configurations:<ul>")
 
 			if len(opts.LabelPrefix) != 0 {
-				configInfoStrings = append(configInfoStrings, "<li>The current label prefix for cherry pick is: "+
+				configInfoStrings = append(configInfoStrings, "<li>The current label prefix for cherrypicker is: "+
 					opts.LabelPrefix+"</li>")
+			}
+
+			if len(opts.PickedLabelPrefix) != 0 {
+				configInfoStrings = append(configInfoStrings, "<li>The current picked label prefix for cherrypicker is: "+
+					opts.PickedLabelPrefix+"</li>")
 			}
 
 			if opts.AllowAll {
@@ -108,8 +113,9 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
 			TiCommunityCherrypicker: []tiexternalplugins.TiCommunityCherrypicker{
 				{
-					Repos:       []string{"ti-community-infra/test-dev"},
-					LabelPrefix: "needs-cherry-pick-",
+					Repos:             []string{"ti-community-infra/test-dev"},
+					LabelPrefix:       "cherrypick/",
+					PickedLabelPrefix: "type/cherrypick-for-",
 				},
 			},
 		})
@@ -118,10 +124,9 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		}
 
 		pluginHelp := &pluginhelp.PluginHelp{
-			Description: "The cherrypick plugin is used for cherrypicking PRs across branches. " +
+			Description: "The cherrypicker plugin is used for cherrypicking PRs across branches. " +
 				"For every successful cherrypick invocation a new PR is opened " +
-				"against the target branch and assigned to the requestor. " +
-				"If the parent PR contains a release note, it is copied to the cherrypick PR.",
+				"against the target branch and assigned to the requestor. ",
 			Config:  configInfo,
 			Snippet: yamlSnippet,
 			Events:  []string{tiexternalplugins.PullRequestEvent, tiexternalplugins.IssueCommentEvent},
@@ -132,9 +137,8 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			Description: "Cherrypick a PR to a different branch. " +
 				"This command works both in merged PRs (the cherrypick PR is opened immediately) " +
 				"and open PRs (the cherrypick PR opens as soon as the original PR merges).",
-			Featured: true,
-			// depends on how the cherrypick server runs; needs auth by default (--allow-all=false)
-			WhoCanUse: "Members of the trusted organization for the repo.",
+			Featured:  true,
+			WhoCanUse: "Members of the trusted organization for the repo or anyone(depends on the AllowAll configuration).",
 			Examples:  []string{"/cherrypick release-3.9", "/cherry-pick release-1.15"},
 		})
 
