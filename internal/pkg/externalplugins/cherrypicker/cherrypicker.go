@@ -546,6 +546,9 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 				num, targetBranch, err)
 			if err := s.createIssue(logger, org, repo, title, resp, num, comment, nil, []string{requestor}); err != nil {
 				errs = append(errs, fmt.Errorf("failed to create issue: %w", err))
+			} else {
+				// Return after issue created.
+				return nil
 			}
 		} else {
 			// Try git add *.
