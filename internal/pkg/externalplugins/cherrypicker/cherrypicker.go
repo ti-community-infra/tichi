@@ -53,7 +53,7 @@ var (
 )
 
 type githubClient interface {
-	AddLabel(org, repo string, number int, label string) error
+	AddLabels(org, repo string, number int, labels ...string) error
 	AssignIssue(org, repo string, number int, logins []string) error
 	RequestReview(org, repo string, number int, logins []string) error
 	CreateComment(org, repo string, number int, comment string) error
@@ -85,8 +85,13 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			configInfoStrings = append(configInfoStrings, "The plugin has these configurations:<ul>")
 
 			if len(opts.LabelPrefix) != 0 {
-				configInfoStrings = append(configInfoStrings, "<li>The current label prefix for cherry pick is: "+
+				configInfoStrings = append(configInfoStrings, "<li>The current label prefix for cherrypicker is: "+
 					opts.LabelPrefix+"</li>")
+			}
+
+			if len(opts.PickedLabelPrefix) != 0 {
+				configInfoStrings = append(configInfoStrings, "<li>The current picked label prefix for cherrypicker is: "+
+					opts.PickedLabelPrefix+"</li>")
 			}
 
 			if opts.AllowAll {
@@ -108,8 +113,9 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
 			TiCommunityCherrypicker: []tiexternalplugins.TiCommunityCherrypicker{
 				{
-					Repos:       []string{"ti-community-infra/test-dev"},
-					LabelPrefix: "needs-cherry-pick-",
+					Repos:             []string{"ti-community-infra/test-dev"},
+					LabelPrefix:       "cherrypick/",
+					PickedLabelPrefix: "type/cherrypick-for-",
 				},
 			},
 		})
@@ -118,10 +124,9 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		}
 
 		pluginHelp := &pluginhelp.PluginHelp{
-			Description: "The cherrypick plugin is used for cherrypicking PRs across branches. " +
+			Description: "The cherrypicker plugin is used for cherrypicking PRs across branches. " +
 				"For every successful cherrypick invocation a new PR is opened " +
-				"against the target branch and assigned to the requestor. " +
-				"If the parent PR contains a release note, it is copied to the cherrypick PR.",
+				"against the target branch and assigned to the requestor. ",
 			Config:  configInfo,
 			Snippet: yamlSnippet,
 			Events:  []string{tiexternalplugins.PullRequestEvent, tiexternalplugins.IssueCommentEvent},
@@ -132,9 +137,8 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			Description: "Cherrypick a PR to a different branch. " +
 				"This command works both in merged PRs (the cherrypick PR is opened immediately) " +
 				"and open PRs (the cherrypick PR opens as soon as the original PR merges).",
-			Featured: true,
-			// depends on how the cherrypick server runs; needs auth by default (--allow-all=false)
-			WhoCanUse: "Members of the trusted organization for the repo.",
+			Featured:  true,
+			WhoCanUse: "Members of the trusted organization for the repo or anyone(depends on the AllowAll configuration).",
 			Examples:  []string{"/cherrypick release-3.9", "/cherry-pick release-1.15"},
 		})
 
@@ -525,7 +529,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	}
 
 	// Title for GitHub issue/PR.
-	title = fmt.Sprintf("%s (#%d)[%s]", title, num, targetBranch)
+	title = fmt.Sprintf("%s (#%d)", title, num)
 	ex := exec.New()
 
 	// Apply the patch.
@@ -600,14 +604,22 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	}
 
 	// Copying original pull request labels.
-	// TODO: better to use addLabels API.
 	excludeLabelsSet := sets.NewString(opts.ExcludeLabels...)
+	labels := sets.NewString()
 	for _, label := range pr.Labels {
 		if !excludeLabelsSet.Has(label.Name) && !strings.HasPrefix(label.Name, opts.LabelPrefix) {
-			if err := s.GitHubClient.AddLabel(org, repo, createdNum, label.Name); err != nil {
-				logger.WithError(err).Warnf("failed to add label %s", label)
-			}
+			labels.Insert(label.Name)
 		}
+	}
+
+	// Add picked label.
+	if len(opts.PickedLabelPrefix) > 0 {
+		pickedLabel := opts.PickedLabelPrefix + targetBranch
+		labels.Insert(pickedLabel)
+	}
+
+	if err := s.GitHubClient.AddLabels(org, repo, createdNum, labels.List()...); err != nil {
+		logger.WithError(err).Warnf("Failed to add labels %v", labels.List())
 	}
 
 	// Copying original pull request reviewers.
