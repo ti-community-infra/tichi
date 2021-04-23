@@ -539,7 +539,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 
 	// Try git am --3way localPath.
 	if out, err := am.CombinedOutput(); err != nil {
-		errs := []error{fmt.Errorf("failed to `git am`: %w", err)}
+		var errs []error
 		logger.WithError(err).Warnf("failed to apply PR on top of target branch and the output look like: %s", out)
 		if opts.IssueOnConflict {
 			resp := fmt.Sprintf("Manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```",
@@ -558,9 +558,9 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 			}
 
 			//  Try git am --continue.
-			amResolve := ex.Command("git", "am", "--continue")
-			amResolve.SetDir(dir)
-			out, err = amResolve.CombinedOutput()
+			amContinue := ex.Command("git", "am", "--continue")
+			amContinue.SetDir(dir)
+			out, err = amContinue.CombinedOutput()
 			if err != nil {
 				logger.WithError(err).Warnf("failed to continue git am and the output look like: %s", out)
 				errs = append(errs, fmt.Errorf("failed to continue git am: %w", err))
@@ -575,8 +575,6 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 			}
 			return utilerrors.NewAggregate(errs)
 		}
-
-		return nil
 	}
 
 	push := r.PushToNamedFork
