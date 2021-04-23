@@ -530,12 +530,17 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 
 	// Title for GitHub issue/PR.
 	title = fmt.Sprintf("%s (#%d)", title, num)
-	ex := exec.New()
 
 	// Apply the patch.
-	if err := r.Am(localPath); err != nil {
+	ex := exec.New()
+	dir := r.Directory()
+	am := ex.Command("git", "am", "--3way", localPath)
+	am.SetDir(dir)
+
+	// Try git am --3way localPath.
+	if out, err := am.CombinedOutput(); err != nil {
 		errs := []error{fmt.Errorf("failed to `git am`: %w", err)}
-		logger.WithError(err).Warn("failed to apply PR on top of target branch")
+		logger.WithError(err).Warnf("failed to apply PR on top of target branch and the output look like: %s", out)
 		if opts.IssueOnConflict {
 			resp := fmt.Sprintf("Manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```",
 				num, targetBranch, err)
@@ -543,7 +548,6 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 				errs = append(errs, fmt.Errorf("failed to create issue: %w", err))
 			}
 		} else {
-			dir := r.Directory()
 			// Try git add *.
 			add := ex.Command("git", "add", "*")
 			add.SetDir(dir)
