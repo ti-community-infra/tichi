@@ -534,6 +534,22 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	// Apply the patch.
 	ex := exec.New()
 	dir := r.Directory()
+	// Add the origin PR head as a remote.
+	addRemote := ex.Command("git", "remote", "add", "pick", fmt.Sprintf("https://github.com/%s", pr.Head.Repo.FullName))
+	addRemote.SetDir(dir)
+	out, err := addRemote.CombinedOutput()
+	if err != nil {
+		logger.WithError(err).Warnf("failed to git remte add and the output look like: %s", out)
+		return err
+	}
+
+	fetchRemote := ex.Command("git", "fetch", "pick")
+	fetchRemote.SetDir(dir)
+	out, err = fetchRemote.CombinedOutput()
+	if err != nil {
+		logger.WithError(err).Warnf("failed to fetch remte add and the output look like: %s", out)
+		return err
+	}
 	am := ex.Command("git", "am", "--3way", localPath)
 	am.SetDir(dir)
 
@@ -551,22 +567,25 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 				return nil
 			}
 		} else {
-			// Try git add *.
-			add := ex.Command("git", "add", "*")
-			add.SetDir(dir)
-			out, err := add.CombinedOutput()
-			if err != nil {
-				logger.WithError(err).Warnf("failed to git add conflicting files and the output look like: %s", out)
-				errs = append(errs, fmt.Errorf("failed to git add conflicting files: %w", err))
-			}
+			i := 0
+			for (err != nil && strings.Contains(string(out), "Failed to merge in the changes.")) && i < 50 {
+				// Try git add *.
+				add := ex.Command("git", "add", "*")
+				add.SetDir(dir)
+				out, err = add.CombinedOutput()
+				if err != nil {
+					logger.WithError(err).Warnf("failed to git add conflicting files and the output look like: %s", out)
+				}
 
-			//  Try git am --continue.
-			amContinue := ex.Command("git", "am", "--continue")
-			amContinue.SetDir(dir)
-			out, err = amContinue.CombinedOutput()
-			if err != nil {
-				logger.WithError(err).Warnf("failed to continue git am and the output look like: %s", out)
-				errs = append(errs, fmt.Errorf("failed to continue git am: %w", err))
+				//  Try git am --continue.
+				amContinue := ex.Command("git", "am", "--continue")
+				amContinue.SetDir(dir)
+				out, err = amContinue.CombinedOutput()
+				if err != nil {
+					logger.WithError(err).Warnf("failed to continue git am and the output look like: %s", out)
+				}
+
+				i++
 			}
 		}
 
