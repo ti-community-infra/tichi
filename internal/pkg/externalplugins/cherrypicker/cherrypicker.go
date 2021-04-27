@@ -621,7 +621,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	// Push the new branch in the bot's fork.
 	if err := push(forkName, newBranch, true); err != nil {
 		logger.WithError(err).Warn("failed to Push chery-picked changes to GitHub")
-		resp := fmt.Sprintf("failed to Push cherry-picked changes in GitHub: %v.", err)
+		resp := fmt.Sprintf("failed to Push cherry-picked changes in GitHub: %v", err)
 		return utilerrors.NewAggregate([]error{err, s.createComment(logger, org, repo, num, comment, resp)})
 	}
 
@@ -631,7 +631,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	createdNum, err := s.GitHubClient.CreatePullRequest(org, repo, title, cherryPickBody, head, targetBranch, true)
 	if err != nil {
 		logger.WithError(err).Warn("failed to create new pull request")
-		resp := fmt.Sprintf("new pull request could not be created: %v.", err)
+		resp := fmt.Sprintf("new pull request could not be created: %v", err)
 		return utilerrors.NewAggregate([]error{err, s.createComment(logger, org, repo, num, comment, resp)})
 	}
 	*logger = *logger.WithField("new_pull_request_number", createdNum)
