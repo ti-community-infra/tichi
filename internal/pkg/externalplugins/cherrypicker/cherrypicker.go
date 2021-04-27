@@ -490,7 +490,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	}()
 	if err := r.Checkout(targetBranch); err != nil {
 		logger.WithError(err).Warn("Failed to checkout target branch.")
-		resp := fmt.Sprintf("cannot checkout `%s`: %v.", targetBranch, err)
+		resp := fmt.Sprintf("cannot checkout `%s`: %v", targetBranch, err)
 		return s.createComment(logger, org, repo, num, comment, resp)
 	}
 	logger.WithField("duration", time.Since(startClone)).Info("Cloned and checked out target branch.")
