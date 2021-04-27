@@ -98,15 +98,18 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			}
 
 			if opts.AllowAll {
-				configInfoStrings = append(configInfoStrings, "<li>For this repository, cherry picking is available to all.</li>")
+				configInfoStrings = append(configInfoStrings, "<li>For this repository, cherry-pick is available to all.</li>")
 			} else {
 				configInfoStrings = append(configInfoStrings, "<li>For this repository, "+
-					"only Org members are allowed to do cherry picking.</li>")
+					"only organization members are allowed to do cherry-pick.</li>")
 			}
 
 			if opts.IssueOnConflict {
-				configInfoStrings = append(configInfoStrings, "<li>When a cherry picking PR conflicts, "+
+				configInfoStrings = append(configInfoStrings, "<li>When a cherry-pick PR conflicts, "+
 					"an issue will be created to track it.</li>")
+			} else {
+				configInfoStrings = append(configInfoStrings, "<li>When a cherry-pick PR conflicts, "+
+					"cherrypicker will create the PR with conflicts.</li>")
 			}
 
 			configInfoStrings = append(configInfoStrings, "</ul>")
@@ -117,8 +120,10 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			TiCommunityCherrypicker: []tiexternalplugins.TiCommunityCherrypicker{
 				{
 					Repos:             []string{"ti-community-infra/test-dev"},
-					LabelPrefix:       "cherrypick/",
-					PickedLabelPrefix: "type/cherrypick-for-",
+					LabelPrefix:       "needs-cherry-pick-",
+					PickedLabelPrefix: "type/cherry-pick-for-",
+					AllowAll:          true,
+					ExcludeLabels:     []string{"status/can-merge"},
 				},
 			},
 		})
@@ -127,8 +132,8 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		}
 
 		pluginHelp := &pluginhelp.PluginHelp{
-			Description: "The cherrypicker plugin is used for cherrypicking PRs across branches. " +
-				"For every successful cherrypick invocation a new PR is opened " +
+			Description: "The cherrypicker plugin is used for cherry-pick PRs across branches. " +
+				"For every successful cherry-pick invocation a new PR is opened " +
 				"against the target branch and assigned to the requestor. ",
 			Config:  configInfo,
 			Snippet: yamlSnippet,
@@ -136,10 +141,10 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
-			Usage: "/cherrypick [branch]",
+			Usage: "/cherry-pick [branch]",
 			Description: "Cherrypick a PR to a different branch. " +
-				"This command works both in merged PRs (the cherrypick PR is opened immediately) " +
-				"and open PRs (the cherrypick PR opens as soon as the original PR merges).",
+				"This command works both in merged PRs (the cherry-pick PR is opened immediately) " +
+				"and open PRs (the cherry-pick PR opens as soon as the original PR merges).",
 			Featured:  true,
 			WhoCanUse: "Members of the trusted organization for the repo or anyone(depends on the AllowAll configuration).",
 			Examples:  []string{"/cherrypick release-3.9", "/cherry-pick release-1.15"},
@@ -221,7 +226,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			}
 		}()
 	default:
-		logrus.Debugf("skipping event of type %q", eventType)
+		logrus.Debugf("Skipping event of type %q.", eventType)
 	}
 	return nil
 }
@@ -467,7 +472,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 
 	forkName, err := s.ensureForkExists(org, repo)
 	if err != nil {
-		logger.WithError(err).Warn("failed to ensure fork exists")
+		logger.WithError(err).Warn("Failed to ensure fork exists.")
 		resp := fmt.Sprintf("cannot fork %s/%s: %v.", org, repo, err)
 		return s.createComment(logger, org, repo, num, comment, resp)
 	}
@@ -484,7 +489,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		}
 	}()
 	if err := r.Checkout(targetBranch); err != nil {
-		logger.WithError(err).Warn("failed to checkout target branch")
+		logger.WithError(err).Warn("Failed to checkout target branch.")
 		resp := fmt.Sprintf("cannot checkout `%s`: %v.", targetBranch, err)
 		return s.createComment(logger, org, repo, num, comment, resp)
 	}
@@ -519,9 +524,9 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 			return fmt.Errorf("failed to get pullrequests for %s/%s: %w", org, repo, err)
 		}
 		for _, pr := range prs {
-			if pr.Head.Ref == fmt.Sprintf("%s:%s", s.BotUser.Login, newBranch) && pr.State == "open" {
-				logger.WithField("preexisting_cherrypick", pr.HTMLURL).Info("PR already has cherrypick")
-				resp := fmt.Sprintf("Looks like #%d has already been cherry picked in %s.", num, pr.HTMLURL)
+			if pr.Head.Ref == fmt.Sprintf("%s:%s", s.BotUser.Login, newBranch) {
+				logger.WithField("preexisting_cherrypick", pr.HTMLURL).Info("PR already has cherrypick.")
+				resp := fmt.Sprintf("looks like #%d has already been cherry picked in %s.", num, pr.HTMLURL)
 				return s.createComment(logger, org, repo, num, comment, resp)
 			}
 		}
@@ -540,7 +545,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		var errs []error
 		logger.WithError(err).Warnf("Failed to apply #%d on top of target branch %q.", num, targetBranch)
 		if opts.IssueOnConflict {
-			resp := fmt.Sprintf("Manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```",
+			resp := fmt.Sprintf("manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```",
 				num, targetBranch, err)
 			if err := s.createIssue(logger, org, repo, title, resp, num, comment, nil, []string{requestor}); err != nil {
 				errs = append(errs, fmt.Errorf("failed to create issue: %w", err))
@@ -560,7 +565,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 			out, err := addUpstreamRemote.CombinedOutput()
 			if err != nil {
 				logger.WithError(err).Warnf("Failed to git remote add %s and the output look like: %s.", upstreamURL, out)
-				return err
+				errs = append(errs, fmt.Errorf("failed to git remote add: %w", err))
 			}
 
 			// Fetch the upstream remote.
@@ -569,7 +574,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 			out, err = fetchUpstreamRemote.CombinedOutput()
 			if err != nil {
 				logger.WithError(err).Warnf("Failed to fetch %s remote and the output look like: %s.", upstreamRemoteName, out)
-				return err
+				errs = append(errs, fmt.Errorf("failed to git fetch upstream: %w", err))
 			}
 
 			//  Try git cherry-pick.
@@ -599,7 +604,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		}
 
 		if utilerrors.NewAggregate(errs) != nil {
-			resp := fmt.Sprintf("Failed to apply #%d on top of branch %q:\n```\n%v\n```",
+			resp := fmt.Sprintf("failed to apply #%d on top of branch %q:\n```\n%v\n```",
 				num, targetBranch, utilerrors.NewAggregate(errs).Error())
 			if err := s.createComment(logger, org, repo, num, comment, resp); err != nil {
 				errs = append(errs, fmt.Errorf("failed to create comment: %w", err))
