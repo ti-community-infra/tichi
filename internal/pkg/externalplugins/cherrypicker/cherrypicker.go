@@ -50,7 +50,10 @@ const PluginName = "ti-community-cherrypicker"
 var (
 	cherryPickRe        = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)\s+(.+)$`)
 	cherryPickBranchFmt = "cherry-pick-%d-to-%s"
+	cherryPickTipFmt    = "This is an automated cherry-pick of #%d"
 )
+
+const upstreamRemoteName = "upstream"
 
 type githubClient interface {
 	AddLabels(org, repo string, number int, labels ...string) error
@@ -160,8 +163,9 @@ type Server struct {
 	Log          *logrus.Entry
 	ConfigAgent  *tiexternalplugins.ConfigAgent
 
-	Bare     *http.Client
-	PatchURL string
+	Bare      *http.Client
+	PatchURL  string
+	GitHubURL string
 
 	repoLock sync.Mutex
 	Repos    []github.Repo
@@ -515,7 +519,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 			return fmt.Errorf("failed to get pullrequests for %s/%s: %w", org, repo, err)
 		}
 		for _, pr := range prs {
-			if pr.Head.Ref == fmt.Sprintf("%s:%s", s.BotUser.Login, newBranch) {
+			if pr.Head.Ref == fmt.Sprintf("%s:%s", s.BotUser.Login, newBranch) && pr.State == "open" {
 				logger.WithField("preexisting_cherrypick", pr.HTMLURL).Info("PR already has cherrypick")
 				resp := fmt.Sprintf("Looks like #%d has already been cherry picked in %s.", num, pr.HTMLURL)
 				return s.createComment(logger, org, repo, num, comment, resp)
@@ -531,32 +535,10 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	// Title for GitHub issue/PR.
 	title = fmt.Sprintf("%s (#%d)", title, num)
 
-	// Apply the patch.
-	ex := exec.New()
-	dir := r.Directory()
-	// Add the origin PR head as a remote.
-	addRemote := ex.Command("git", "remote", "add", "pick", fmt.Sprintf("https://github.com/%s", pr.Head.Repo.FullName))
-	addRemote.SetDir(dir)
-	out, err := addRemote.CombinedOutput()
-	if err != nil {
-		logger.WithError(err).Warnf("failed to git remte add and the output look like: %s", out)
-		return err
-	}
-
-	fetchRemote := ex.Command("git", "fetch", "pick")
-	fetchRemote.SetDir(dir)
-	out, err = fetchRemote.CombinedOutput()
-	if err != nil {
-		logger.WithError(err).Warnf("failed to fetch remte add and the output look like: %s", out)
-		return err
-	}
-	am := ex.Command("git", "am", "--3way", localPath)
-	am.SetDir(dir)
-
 	// Try git am --3way localPath.
-	if out, err := am.CombinedOutput(); err != nil {
+	if err := r.Am(localPath); err != nil {
 		var errs []error
-		logger.WithError(err).Warnf("failed to apply PR on top of target branch and the output look like: %s", out)
+		logger.WithError(err).Warnf("Failed to apply #%d on top of target branch %q.", num, targetBranch)
 		if opts.IssueOnConflict {
 			resp := fmt.Sprintf("Manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```",
 				num, targetBranch, err)
@@ -567,25 +549,52 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 				return nil
 			}
 		} else {
-			i := 0
-			for (err != nil && strings.Contains(string(out), "Failed to merge in the changes.")) && i < 50 {
+			// Try to fetch upstream.
+			ex := exec.New()
+			dir := r.Directory()
+
+			// Add the upstream remote.
+			upstreamURL := fmt.Sprintf("%s/%s", s.GitHubURL, pr.Base.Repo.FullName)
+			addUpstreamRemote := ex.Command("git", "remote", "add", upstreamRemoteName, upstreamURL)
+			addUpstreamRemote.SetDir(dir)
+			out, err := addUpstreamRemote.CombinedOutput()
+			if err != nil {
+				logger.WithError(err).Warnf("Failed to git remote add %s and the output look like: %s.", upstreamURL, out)
+				return err
+			}
+
+			// Fetch the upstream remote.
+			fetchUpstreamRemote := ex.Command("git", "fetch", upstreamRemoteName)
+			fetchUpstreamRemote.SetDir(dir)
+			out, err = fetchUpstreamRemote.CombinedOutput()
+			if err != nil {
+				logger.WithError(err).Warnf("Failed to fetch %s remote and the output look like: %s.", upstreamRemoteName, out)
+				return err
+			}
+
+			//  Try git cherry-pick.
+			cherrypick := ex.Command("git", "cherry-pick", "-m", "1", *pr.MergeSHA)
+			cherrypick.SetDir(dir)
+			out, err = cherrypick.CombinedOutput()
+			if err != nil {
+				logger.WithError(err).Warnf("Failed to cherrypick and the output look like: %s.", out)
 				// Try git add *.
 				add := ex.Command("git", "add", "*")
 				add.SetDir(dir)
 				out, err = add.CombinedOutput()
 				if err != nil {
-					logger.WithError(err).Warnf("failed to git add conflicting files and the output look like: %s", out)
+					logger.WithError(err).Warnf("Failed to git add conflicting files and the output look like: %s.", out)
+					errs = append(errs, fmt.Errorf("failed to git add conflicting files: %w", err))
 				}
 
-				//  Try git am --continue.
-				amContinue := ex.Command("git", "am", "--continue")
-				amContinue.SetDir(dir)
-				out, err = amContinue.CombinedOutput()
+				// Try commit with sign off.
+				commit := ex.Command("git", "commit", "-s", "-m", fmt.Sprintf(cherryPickTipFmt, num))
+				commit.SetDir(dir)
+				out, err = commit.CombinedOutput()
 				if err != nil {
-					logger.WithError(err).Warnf("failed to continue git am and the output look like: %s", out)
+					logger.WithError(err).Warnf("Failed to git commit and the output look like: %s", out)
+					errs = append(errs, fmt.Errorf("failed to git commit: %w", err))
 				}
-
-				i++
 			}
 		}
 
@@ -740,7 +749,7 @@ func normalize(input string) string {
 
 // CreateCherrypickBody creates the body of a cherrypick PR
 func createCherrypickBody(num int, note string) string {
-	cherryPickBody := fmt.Sprintf("This is an automated cherry-pick of #%d", num)
+	cherryPickBody := fmt.Sprintf(cherryPickTipFmt, num)
 	if len(note) != 0 {
 		cherryPickBody = fmt.Sprintf("%s\n\n%s", cherryPickBody, note)
 	}
