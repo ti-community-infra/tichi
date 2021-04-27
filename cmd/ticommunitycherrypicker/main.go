@@ -118,8 +118,9 @@ func main() {
 		GitHubClient: githubClient,
 		Log:          log,
 
-		Bare:     &http.Client{},
-		PatchURL: "https://patch-diff.githubusercontent.com",
+		Bare:      &http.Client{},
+		PatchURL:  "https://patch-diff.githubusercontent.com",
+		GitHubURL: "https://github.com",
 
 		Repos: repos,
 	}
