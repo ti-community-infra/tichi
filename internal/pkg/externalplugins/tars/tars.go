@@ -353,18 +353,6 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *tiexterna
 	updated := false
 	tars := cfg.TarsFor(org, repo)
 
-	// NOTICE: This is still valid for pull requests that query the org directly.
-	hasTriggerLabel := false
-	for _, labelName := range pr.Labels.Nodes {
-		if string(labelName.Name) == tars.OnlyWhenLabel {
-			hasTriggerLabel = true
-		}
-	}
-	if !hasTriggerLabel {
-		log.Infof("Ignore PR %s/%s#%d without trigger label %s.", org, repo, number, tars.OnlyWhenLabel)
-		return false, nil
-	}
-
 	// Must have last commit.
 	if len(pr.Commits.Nodes) == 0 || len(pr.Commits.Nodes) != 1 {
 		return false, nil

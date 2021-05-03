@@ -1,4 +1,3 @@
-// nolint:dupl
 package tars
 
 import (
@@ -409,25 +408,6 @@ func TestHandlePushEvent(t *testing.T) {
 			expectUpdate:   true,
 		},
 		{
-			name: "out of date with message and non trigger label",
-			pe: &github.PushEvent{
-				Ref: "refs/heads/main",
-			},
-			pr: getPullRequest("org1", "repo1", 6),
-			labels: []github.Label{
-				{
-					Name: "random",
-				},
-			},
-			baseCommit:     baseCommit,
-			prCommits:      outOfDatePrCommits(),
-			outOfDate:      true,
-			message:        "updated",
-			expectDeletion: false,
-			expectComment:  false,
-			expectUpdate:   false,
-		},
-		{
 			name: "out of date with message and trigger label",
 			pe: &github.PushEvent{
 				Ref: "refs/heads/main",
@@ -571,22 +551,6 @@ func TestHandleAll(t *testing.T) {
 			expectDeletion: false,
 			expectComment:  false,
 			expectUpdate:   true,
-		},
-		{
-			name: "out of date with message and non trigger label",
-			pr:   getPullRequest("org", "repo", 5),
-			labels: []github.Label{
-				{
-					Name: "random",
-				},
-			},
-			baseCommit:     baseCommit,
-			prCommits:      outOfDatePrCommits(),
-			outOfDate:      true,
-			message:        "updated",
-			expectDeletion: false,
-			expectComment:  false,
-			expectUpdate:   false,
 		},
 		{
 			name: "out of date with message and trigger label",
