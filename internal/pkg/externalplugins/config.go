@@ -9,6 +9,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/test-infra/prow/labels"
 )
 
 const (
@@ -184,12 +185,23 @@ type TiCommunityTars struct {
 	Message string `json:"message,omitempty"`
 	// OnlyWhenLabel specifies that the automatic update is triggered only when the PR has this label.
 	OnlyWhenLabel string `json:"only_when_label,omitempty"`
+	// ExcludeLabels specifies that the automatic update are not triggered when the PR has these labels.
+	ExcludeLabels []string `json:"exclude_labels,omitempty"`
 }
 
 // setDefaults will set the default label for the config of tars plugin.
 func (c *TiCommunityTars) setDefaults() {
 	if len(c.OnlyWhenLabel) == 0 {
 		c.OnlyWhenLabel = CanMergeLabel
+	}
+
+	if len(c.ExcludeLabels) == 0 {
+		// Label: needs-rebase.
+		c.ExcludeLabels = append(c.ExcludeLabels, labels.NeedsRebase)
+		// Label: do-not-merge/hold.
+		c.ExcludeLabels = append(c.ExcludeLabels, labels.Hold)
+		// Label: do-not-merge/work-in-progress.
+		c.ExcludeLabels = append(c.ExcludeLabels, labels.WorkInProgress)
 	}
 }
 

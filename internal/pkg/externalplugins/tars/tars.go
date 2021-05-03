@@ -155,8 +155,24 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 			hasTriggerLabel = true
 		}
 	}
+
 	if !hasTriggerLabel {
 		log.Infof("Ignore PR %s/%s#%d without trigger label %s.", org, repo, number, tars.OnlyWhenLabel)
+		return nil
+	}
+
+	hasNonTriggeringLabel := false
+
+	for _, label := range pr.Labels {
+		for _, excludeLabel := range tars.ExcludeLabels {
+			if label.Name == excludeLabel {
+				hasNonTriggeringLabel = true
+			}
+		}
+	}
+
+	if hasNonTriggeringLabel {
+		log.Infof("Ignore PR %s/%s#%d with non-triggering label.", org, repo, number)
 		return nil
 	}
 
@@ -204,9 +220,12 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 	log.Infof("Checking %s/%s/%s PRs.", org, repo, branch)
 
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, searchQueryPrefix+" label:\"%s\"", tars.OnlyWhenLabel)
 	fmt.Fprintf(&buf, " repo:\"%s/%s\"", org, repo)
 	fmt.Fprintf(&buf, " base:\"%s\"", branch)
+	fmt.Fprintf(&buf, searchQueryPrefix+" label:\"%s\"", tars.OnlyWhenLabel)
+	for _, label := range tars.ExcludeLabels {
+		fmt.Fprintf(&buf, " -label:\"%s\"", label)
+	}
 	prs, err := search(context.Background(), log, ghc, buf.String())
 	if err != nil {
 		return err
@@ -273,6 +292,9 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		repoName := slashSplit[1]
 		tars := externalConfig.TarsFor(org, repoName)
 		fmt.Fprintf(&reposQuery, " label:\"%s\" repo:\"%s\"", tars.OnlyWhenLabel, repo)
+		for _, label := range tars.ExcludeLabels {
+			fmt.Fprintf(&reposQuery, " -label:\"%s\"", label)
+		}
 		query := reposQuery.String()
 
 		prs, err := search(context.Background(), log, ghc, query)
