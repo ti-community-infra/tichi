@@ -155,24 +155,18 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 			hasTriggerLabel = true
 		}
 	}
-
 	if !hasTriggerLabel {
 		log.Infof("Ignore PR %s/%s#%d without trigger label %s.", org, repo, number, tars.OnlyWhenLabel)
 		return nil
 	}
 
-	hasNonTriggeringLabel := false
 	for _, label := range pr.Labels {
 		for _, excludeLabel := range tars.ExcludeLabels {
 			if label.Name == excludeLabel {
-				hasNonTriggeringLabel = true
+				log.Infof("Ignore PR %s/%s#%d with exclude label %s.", org, repo, number, label.Name)
+				return nil
 			}
 		}
-	}
-
-	if hasNonTriggeringLabel {
-		log.Infof("Ignore PR %s/%s#%d with non-triggering label.", org, repo, number)
-		return nil
 	}
 
 	prCommits, err := ghc.ListPRCommits(org, repo, pr.Number)

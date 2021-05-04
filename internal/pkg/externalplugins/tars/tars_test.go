@@ -256,7 +256,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectUpdate:   false,
 		},
 		{
-			name: "out of date with message and with non-triggering label",
+			name: "out of date with message and with exclude label",
 			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
