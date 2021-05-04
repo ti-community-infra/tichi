@@ -348,7 +348,7 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 			User: github.User{
 				Login: "wiseguy",
 			},
-			Body: "/cherrypick stage \r\n/cherrypick release-1.5",
+			Body: "/cherrypick stage\r\n/cherrypick release-1.5\r\n/cherrypick master",
 		},
 	}
 
