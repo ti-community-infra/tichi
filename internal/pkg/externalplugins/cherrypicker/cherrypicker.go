@@ -311,6 +311,7 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 	for _, targetBranch := range targetBranches {
 		if baseBranch == targetBranch {
 			l.Warnf("Base branch (%s) needs to differ from target branch (%s).", baseBranch, targetBranch)
+			continue
 		}
 
 		*l = *l.WithFields(logrus.Fields{
