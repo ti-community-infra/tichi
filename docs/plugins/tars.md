@@ -28,11 +28,12 @@ ti-community-tars 就是为了解决该问题而设计，它会在 PR 回复、�
 
 ## 参数配置
 
-| 参数名          | 类型     | 说明                                                               |
-| --------------- | -------- | ------------------------------------------------------------------ |
-| repos           | []string | 配置生效仓库                                                       |
-| message         | string   | 自动更新之后回复的消息                                             |
-| only_when_label | string   | 只有在 PR 添加该 label 的时候才帮忙更新，默认为 `status/can-merge` |
+| 参数名          | 类型     | 说明                                                                                                            |
+| --------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
+| repos           | []string | 配置生效仓库                                                                                                    |
+| message         | string   | 自动更新之后回复的消息                                                                                          |
+| only_when_label | string   | 只有在 PR 添加该 label 的时候才帮忙更新，默认为 `status/can-merge`                                              |
+| exclude_labels  | []string | 当 PR 有这些 labels 的时候不进行更新，默认为 `needs-rebase`/`do-not-merge/hold`/`do-not-merge/work-in-progress` |
 
 例如：
 
@@ -41,6 +42,10 @@ ti-community-tars:
   - repos:
       - ti-community-infra/test-dev
     only_when_label: "status/can-merge"
+    exclude_labels:
+      - needs-rebase
+      - do-not-merge/hold
+      - do-not-merge/work-in-progress
     message: "Your PR was out of date, I have automatically updated it for you."
 ```
 
