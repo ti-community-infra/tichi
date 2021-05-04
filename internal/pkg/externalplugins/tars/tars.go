@@ -162,7 +162,6 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 	}
 
 	hasNonTriggeringLabel := false
-
 	for _, label := range pr.Labels {
 		for _, excludeLabel := range tars.ExcludeLabels {
 			if label.Name == excludeLabel {
