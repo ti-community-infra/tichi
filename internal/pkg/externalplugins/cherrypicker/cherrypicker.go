@@ -310,7 +310,12 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 
 	for _, targetBranch := range targetBranches {
 		if baseBranch == targetBranch {
-			l.Warnf("Base branch (%s) needs to differ from target branch (%s).", baseBranch, targetBranch)
+			resp := fmt.Sprintf("base branch (%s) needs to differ from target branch (%s).", baseBranch, targetBranch)
+			l.Info(resp)
+			if err := s.GitHubClient.CreateComment(org, repo, num,
+				tiexternalplugins.FormatICResponse(ic.Comment, resp)); err != nil {
+				l.WithError(err).WithField("response", resp).Error("Failed to create comment.")
+			}
 			continue
 		}
 
