@@ -1,4 +1,3 @@
-// nolint:dupl
 package tars
 
 import (
@@ -145,6 +144,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 	currentBaseSHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	outOfDateSHA := "0bd3ed50c88cd53a0931609dsa9d-0a9d0-as9d0"
 	triggerLabel := "trigger-update"
+	excludeLabel := "exclude"
 
 	baseCommit := github.RepositoryCommit{
 		SHA: currentBaseSHA,
@@ -240,11 +240,30 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectUpdate:   true,
 		},
 		{
-			name: "out of date with message and non trigger label",
+			name: "out of date with message and without trigger label",
 			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
 					Name: "random",
+				},
+			},
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "updated",
+			expectDeletion: false,
+			expectComment:  false,
+			expectUpdate:   false,
+		},
+		{
+			name: "out of date with message and with exclude label",
+			pr:   getPullRequest("org", "repo", 5),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+				{
+					Name: excludeLabel,
 				},
 			},
 			baseCommit:     baseCommit,
@@ -290,6 +309,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 					Repos:         []string{"org/repo"},
 					Message:       tc.message,
 					OnlyWhenLabel: triggerLabel,
+					ExcludeLabels: []string{excludeLabel},
 				},
 			}
 			if err := HandleIssueCommentEvent(logrus.WithField("plugin", PluginName), fc, ice, cfg); err != nil {
@@ -407,25 +427,6 @@ func TestHandlePushEvent(t *testing.T) {
 			expectDeletion: false,
 			expectComment:  false,
 			expectUpdate:   true,
-		},
-		{
-			name: "out of date with message and non trigger label",
-			pe: &github.PushEvent{
-				Ref: "refs/heads/main",
-			},
-			pr: getPullRequest("org1", "repo1", 6),
-			labels: []github.Label{
-				{
-					Name: "random",
-				},
-			},
-			baseCommit:     baseCommit,
-			prCommits:      outOfDatePrCommits(),
-			outOfDate:      true,
-			message:        "updated",
-			expectDeletion: false,
-			expectComment:  false,
-			expectUpdate:   false,
 		},
 		{
 			name: "out of date with message and trigger label",
@@ -571,22 +572,6 @@ func TestHandleAll(t *testing.T) {
 			expectDeletion: false,
 			expectComment:  false,
 			expectUpdate:   true,
-		},
-		{
-			name: "out of date with message and non trigger label",
-			pr:   getPullRequest("org", "repo", 5),
-			labels: []github.Label{
-				{
-					Name: "random",
-				},
-			},
-			baseCommit:     baseCommit,
-			prCommits:      outOfDatePrCommits(),
-			outOfDate:      true,
-			message:        "updated",
-			expectDeletion: false,
-			expectComment:  false,
-			expectUpdate:   false,
 		},
 		{
 			name: "out of date with message and trigger label",

@@ -160,6 +160,15 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 		return nil
 	}
 
+	for _, label := range pr.Labels {
+		for _, excludeLabel := range tars.ExcludeLabels {
+			if label.Name == excludeLabel {
+				log.Infof("Ignore PR %s/%s#%d with exclude label %s.", org, repo, number, label.Name)
+				return nil
+			}
+		}
+	}
+
 	prCommits, err := ghc.ListPRCommits(org, repo, pr.Number)
 	if err != nil {
 		return err
@@ -204,9 +213,12 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 	log.Infof("Checking %s/%s/%s PRs.", org, repo, branch)
 
 	var buf bytes.Buffer
-	fmt.Fprintf(&buf, searchQueryPrefix+" label:\"%s\"", tars.OnlyWhenLabel)
 	fmt.Fprintf(&buf, " repo:\"%s/%s\"", org, repo)
 	fmt.Fprintf(&buf, " base:\"%s\"", branch)
+	fmt.Fprintf(&buf, searchQueryPrefix+" label:\"%s\"", tars.OnlyWhenLabel)
+	for _, label := range tars.ExcludeLabels {
+		fmt.Fprintf(&buf, " -label:\"%s\"", label)
+	}
 	prs, err := search(context.Background(), log, ghc, buf.String())
 	if err != nil {
 		return err
@@ -273,6 +285,9 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		repoName := slashSplit[1]
 		tars := externalConfig.TarsFor(org, repoName)
 		fmt.Fprintf(&reposQuery, " label:\"%s\" repo:\"%s\"", tars.OnlyWhenLabel, repo)
+		for _, label := range tars.ExcludeLabels {
+			fmt.Fprintf(&reposQuery, " -label:\"%s\"", label)
+		}
 		query := reposQuery.String()
 
 		prs, err := search(context.Background(), log, ghc, query)
@@ -330,18 +345,6 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *tiexterna
 	number := int(pr.Number)
 	updated := false
 	tars := cfg.TarsFor(org, repo)
-
-	// NOTICE: This is still valid for pull requests that query the org directly.
-	hasTriggerLabel := false
-	for _, labelName := range pr.Labels.Nodes {
-		if string(labelName.Name) == tars.OnlyWhenLabel {
-			hasTriggerLabel = true
-		}
-	}
-	if !hasTriggerLabel {
-		log.Infof("Ignore PR %s/%s#%d without trigger label %s.", org, repo, number, tars.OnlyWhenLabel)
-		return false, nil
-	}
 
 	// Must have last commit.
 	if len(pr.Commits.Nodes) == 0 || len(pr.Commits.Nodes) != 1 {

@@ -28,11 +28,13 @@ In addition, most PRs that do not meet the merge criteria do not want to be auto
 
 ## Parameter Configuration 
 
-| Parameter Name  | Type     | Description                                                             |
-| --------------- | -------- | ----------------------------------------------------------------------- |
-| repos           | []string | Repositories                                                            |
-| message         | string   | Messages replied to after the automatic update                          |
-| only_when_label | string   | Only help update when PR adds this label, default is `status/can-merge` |
+| Parameter Name  | Type     | Description                                                                                                          |
+| --------------- | -------- | -------------------------------------------------------------------------------------------------------------------- |
+| repos           | []string | Repositories                                                                                                         |
+| message         | string   | Messages replied to after the automatic update                                                                       |
+| only_when_label | string   | Only help update when PR adds this label, default is `status/can-merge`                                              |
+| exclude_labels  | []string | Not updated when PR has these labels, defaults to `needs-rebase`/`do-not-merge/hold`/`do-not-merge/work-in-progress` |
+
 
 For example:
 
@@ -41,6 +43,10 @@ ti-community-tars:
   - repos:
       - ti-community-infra/test-dev
     only_when_label: "status/can-merge"
+    exclude_labels:
+      - needs-rebase
+      - do-not-merge/hold
+      - do-not-merge/work-in-progress
     message: "Your PR was out of date, I have automatically updated it for you."
 ```
 

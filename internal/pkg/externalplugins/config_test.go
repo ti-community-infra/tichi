@@ -3,6 +3,7 @@ package externalplugins
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"gotest.tools/assert"
@@ -1555,17 +1556,27 @@ func TestSetTarsDefaults(t *testing.T) {
 	testcases := []struct {
 		name                string
 		onlyWhenLabel       string
+		excludeLabels       []string
 		expectOnlyWhenLabel string
+		expectExcludeLabels []string
 	}{
 		{
 			name:                "default",
 			onlyWhenLabel:       "",
 			expectOnlyWhenLabel: "status/can-merge",
+			expectExcludeLabels: []string{"needs-rebase", "do-not-merge/hold", "do-not-merge/work-in-progress"},
 		},
 		{
-			name:                "overwrite",
+			name:                "overwrite onlyWhenLabel",
 			onlyWhenLabel:       "lgtm",
 			expectOnlyWhenLabel: "lgtm",
+			expectExcludeLabels: []string{"needs-rebase", "do-not-merge/hold", "do-not-merge/work-in-progress"},
+		},
+		{
+			name:                "overwrite excludeLabels",
+			excludeLabels:       []string{"label1", "label2", "label3"},
+			expectOnlyWhenLabel: "status/can-merge",
+			expectExcludeLabels: []string{"label1", "label2", "label3"},
 		},
 	}
 
@@ -1576,6 +1587,7 @@ func TestSetTarsDefaults(t *testing.T) {
 				TiCommunityTars: []TiCommunityTars{
 					{
 						OnlyWhenLabel: tc.onlyWhenLabel,
+						ExcludeLabels: tc.excludeLabels,
 					},
 				},
 			}
@@ -1586,6 +1598,11 @@ func TestSetTarsDefaults(t *testing.T) {
 				if tars.OnlyWhenLabel != tc.expectOnlyWhenLabel {
 					t.Errorf("unexpected onlyWhenLabel: %v, expected: %v",
 						tars.OnlyWhenLabel, tc.expectOnlyWhenLabel)
+				}
+
+				if !reflect.DeepEqual(tars.ExcludeLabels, tc.expectExcludeLabels) {
+					t.Errorf("unexpected excludeLabels: %v, expected: %v",
+						tars.ExcludeLabels, tc.expectExcludeLabels)
 				}
 			}
 		})
