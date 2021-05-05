@@ -146,7 +146,7 @@ func (f *fghc) EnsureFork(forkingUser, org, repo string) (string, error) {
 	return repo, nil
 }
 
-var expectedFmt = `title=%q body=%q head=%s base=%s labels=%v reviewers=%v assignees=%v`
+var prFmt = `title=%q body=%q head=%s base=%s labels=%v reviewers=%v assignees=%v`
 
 func prToString(pr github.PullRequest) string {
 	var labels []string
@@ -163,7 +163,7 @@ func prToString(pr github.PullRequest) string {
 	for _, assignee := range pr.Assignees {
 		assignees = append(assignees, assignee.Login)
 	}
-	return fmt.Sprintf(expectedFmt, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, reviewers, assignees)
+	return fmt.Sprintf(prFmt, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, reviewers, assignees)
 }
 
 func (f *fghc) CreateIssue(org, repo, title, body string, milestone int, labels, assignees []string) (int, error) {
@@ -364,12 +364,12 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 			expectedLabels = append(expectedLabels, label.Name)
 		}
 		expectedLabels = append(expectedLabels, "type/cherrypick-for-"+branch)
-		var reviewers []string
+		var expectedReviewers []string
 		for _, reviewer := range ghc.pr.RequestedReviewers {
-			reviewers = append(reviewers, reviewer.Login)
+			expectedReviewers = append(expectedReviewers, reviewer.Login)
 		}
-		return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead,
-			branch, expectedLabels, reviewers, expectedAssignees)
+		return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
+			branch, expectedLabels, expectedReviewers, expectedAssignees)
 	}
 
 	getSecret := func() []byte {
@@ -401,16 +401,28 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 	if err := s.handleIssueComment(logrus.NewEntry(logrus.StandardLogger()), ic); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	if len(ghc.prs) != len(expectedBranches) {
 		t.Fatalf("Expected %d PRs, got %d", len(expectedBranches), len(ghc.prs))
 	}
 
-	for i, expectedBranch := range expectedBranches {
-		got := prToString(ghc.prs[i])
-		expected := expectedFn(expectedBranch)
-		if got != expected {
-			t.Errorf("Expected (%d):\n%s\nGot (%d):\n%+v\n", len(expected), expected, len(got), got)
+	expectedPrs := make(map[string]string)
+	for _, branch := range expectedBranches {
+		expectedPrs[expectedFn(branch)] = branch
+	}
+
+	seenBranches := make(map[string]struct{})
+	for _, p := range ghc.prs {
+		pr := prToString(p)
+		branch, present := expectedPrs[pr]
+		if !present {
+			t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v\n",
+				pr, expectedBranches)
 		}
+		seenBranches[branch] = struct{}{}
+	}
+	if len(seenBranches) != len(expectedBranches) {
+		t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", len(expectedBranches), len(seenBranches), seenBranches)
 	}
 }
 
@@ -604,13 +616,13 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 		for _, label := range pr.PullRequest.Labels {
 			expectedLabels = append(expectedLabels, label.Name)
 		}
-		var reviewers []string
+		var expectedReviewers []string
 		for _, reviewer := range pr.PullRequest.RequestedReviewers {
-			reviewers = append(reviewers, reviewer.Login)
+			expectedReviewers = append(expectedReviewers, reviewer.Login)
 		}
 		expectedAssignees := []string{"approver"}
-		return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead,
-			branch, expectedLabels, reviewers, expectedAssignees)
+		return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
+			branch, expectedLabels, expectedReviewers, expectedAssignees)
 	}
 
 	if len(ghc.prs) != len(expectedBranches) {
@@ -823,13 +835,13 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 							expectedLabels = append(expectedLabels, label.Name)
 						}
 						expectedLabels = append(expectedLabels, "type/cherrypick-for-"+branch)
-						var reviewers []string
+						var expectedReviewers []string
 						for _, reviewer := range pr(evt).PullRequest.RequestedReviewers {
-							reviewers = append(reviewers, reviewer.Login)
+							expectedReviewers = append(expectedReviewers, reviewer.Login)
 						}
 						expectedAssignees := []string{"developer"}
-						return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead,
-							branch, expectedLabels, reviewers, expectedAssignees)
+						return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
+							branch, expectedLabels, expectedReviewers, expectedAssignees)
 					}
 
 					expectedPRs := 2

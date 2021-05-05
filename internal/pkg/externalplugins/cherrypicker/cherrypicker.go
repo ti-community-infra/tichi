@@ -255,10 +255,10 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 		return nil
 	}
 
-	var targetBranches []string
+	targetBranchesSet := sets.NewString()
 	for _, match := range cherryPickMatches {
 		targetBranch := strings.TrimSpace(match[1])
-		targetBranches = append(targetBranches, targetBranch)
+		targetBranchesSet.Insert(targetBranch)
 	}
 
 	if ic.Issue.State != "closed" {
@@ -276,7 +276,8 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 			}
 		}
 		resp := fmt.Sprintf("once the present PR merges, "+
-			"I will cherry-pick it on top of %s in a new PR and assign it to you.", strings.Join(targetBranches, ","))
+			"I will cherry-pick it on top of %s in the new PR and assign it to you.",
+			strings.Join(targetBranchesSet.List(), "/"))
 		l.Info(resp)
 		return s.GitHubClient.CreateComment(org, repo, num, tiexternalplugins.FormatICResponse(ic.Comment, resp))
 	}
@@ -308,7 +309,7 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 		}
 	}
 
-	for _, targetBranch := range targetBranches {
+	for _, targetBranch := range targetBranchesSet.List() {
 		if baseBranch == targetBranch {
 			resp := fmt.Sprintf("base branch (%s) needs to differ from target branch (%s).", baseBranch, targetBranch)
 			l.Info(resp)
