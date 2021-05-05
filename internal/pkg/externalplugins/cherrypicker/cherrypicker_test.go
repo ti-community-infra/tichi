@@ -146,7 +146,7 @@ func (f *fghc) EnsureFork(forkingUser, org, repo string) (string, error) {
 	return repo, nil
 }
 
-var expectedFmt = `title=%q body=%q head=%s base=%s labels=%v reviewers=%v assignees=%v`
+var prFmt = `title=%q body=%q head=%s base=%s labels=%v reviewers=%v assignees=%v`
 
 func prToString(pr github.PullRequest) string {
 	var labels []string
@@ -163,7 +163,7 @@ func prToString(pr github.PullRequest) string {
 	for _, assignee := range pr.Assignees {
 		assignees = append(assignees, assignee.Login)
 	}
-	return fmt.Sprintf(expectedFmt, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, reviewers, assignees)
+	return fmt.Sprintf(prFmt, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, reviewers, assignees)
 }
 
 func (f *fghc) CreateIssue(org, repo, title, body string, milestone int, labels, assignees []string) (int, error) {
@@ -298,8 +298,12 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 	if err := lg.AddCommit("foo", "bar", initialFiles); err != nil {
 		t.Fatalf("Adding initial commit: %v", err)
 	}
-	if err := lg.CheckoutNewBranch("foo", "bar", "stage"); err != nil {
-		t.Fatalf("Checking out pull branch: %v", err)
+
+	expectedBranches := []string{"stage", "release-1.5"}
+	for _, branch := range expectedBranches {
+		if err := lg.CheckoutNewBranch("foo", "bar", branch); err != nil {
+			t.Fatalf("Checking out pull branch: %v", err)
+		}
 	}
 
 	ghc := &fghc{
@@ -344,20 +348,29 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 			User: github.User{
 				Login: "wiseguy",
 			},
-			Body: "/cherrypick stage",
+			Body: "/cherrypick stage\r\n/cherrypick release-1.5\r\n/cherrypick master",
 		},
 	}
 
 	botUser := &github.UserData{Login: "ci-robot", Email: "ci-robot@users.noreply.github.com"}
-	expectedTitle := "This is a fix for X (#2)"
-	expectedBody := "This is an automated cherry-pick of #2\n\nThis PR updates the magic number.\n\n"
-	expectedBase := "stage"
-	expectedHead := fmt.Sprintf(botUser.Login+":"+cherryPickBranchFmt, 2, expectedBase)
-	expectedLabels := []string{"type/cherrypick-for-stage"}
-	expectedReviewers := []string{"user1"}
-	expectedAssignees := []string{"wiseguy"}
-	expected := fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead,
-		expectedBase, expectedLabels, expectedReviewers, expectedAssignees)
+	var expectedFn = func(branch string) string {
+		expectedTitle := "This is a fix for X (#2)"
+		expectedBody := "This is an automated cherry-pick of #2\n\nThis PR updates the magic number.\n\n"
+		expectedHead := fmt.Sprintf(botUser.Login+":"+cherryPickBranchFmt, 2, branch)
+		expectedAssignees := []string{"wiseguy"}
+
+		var expectedLabels []string
+		for _, label := range ghc.pr.Labels {
+			expectedLabels = append(expectedLabels, label.Name)
+		}
+		expectedLabels = append(expectedLabels, "type/cherrypick-for-"+branch)
+		var expectedReviewers []string
+		for _, reviewer := range ghc.pr.RequestedReviewers {
+			expectedReviewers = append(expectedReviewers, reviewer.Login)
+		}
+		return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
+			branch, expectedLabels, expectedReviewers, expectedAssignees)
+	}
 
 	getSecret := func() []byte {
 		return []byte("sha=abcdefg")
@@ -388,9 +401,29 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 	if err := s.handleIssueComment(logrus.NewEntry(logrus.StandardLogger()), ic); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	got := prToString(ghc.prs[0])
-	if got != expected {
-		t.Errorf("Expected (%d):\n%s\nGot (%d):\n%+v\n", len(expected), expected, len(got), got)
+
+	if len(ghc.prs) != len(expectedBranches) {
+		t.Fatalf("Expected %d PRs, got %d", len(expectedBranches), len(ghc.prs))
+	}
+
+	expectedPrs := make(map[string]string)
+	for _, branch := range expectedBranches {
+		expectedPrs[expectedFn(branch)] = branch
+	}
+
+	seenBranches := make(map[string]bool)
+	for _, p := range ghc.prs {
+		pr := prToString(p)
+		branch, present := expectedPrs[pr]
+		if !present {
+			t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v\n",
+				pr, expectedBranches)
+		} else {
+			seenBranches[branch] = present
+		}
+	}
+	if len(seenBranches) != len(expectedBranches) {
+		t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", len(expectedBranches), len(seenBranches), seenBranches)
 	}
 }
 
@@ -584,13 +617,13 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 		for _, label := range pr.PullRequest.Labels {
 			expectedLabels = append(expectedLabels, label.Name)
 		}
-		var reviewers []string
+		var expectedReviewers []string
 		for _, reviewer := range pr.PullRequest.RequestedReviewers {
-			reviewers = append(reviewers, reviewer.Login)
+			expectedReviewers = append(expectedReviewers, reviewer.Login)
 		}
 		expectedAssignees := []string{"approver"}
-		return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead,
-			branch, expectedLabels, reviewers, expectedAssignees)
+		return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
+			branch, expectedLabels, expectedReviewers, expectedAssignees)
 	}
 
 	if len(ghc.prs) != len(expectedBranches) {
@@ -601,15 +634,16 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 	for _, branch := range expectedBranches {
 		expectedPrs[expectedFn(branch)] = branch
 	}
-	seenBranches := make(map[string]struct{})
+	seenBranches := make(map[string]bool)
 	for _, p := range ghc.prs {
 		pr := prToString(p)
 		branch, present := expectedPrs[pr]
 		if !present {
 			t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v\n",
 				pr, expectedBranches)
+		} else {
+			seenBranches[branch] = present
 		}
-		seenBranches[branch] = struct{}{}
 	}
 	if len(seenBranches) != len(expectedBranches) {
 		t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", len(expectedBranches), len(seenBranches), seenBranches)
@@ -803,13 +837,13 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 							expectedLabels = append(expectedLabels, label.Name)
 						}
 						expectedLabels = append(expectedLabels, "type/cherrypick-for-"+branch)
-						var reviewers []string
+						var expectedReviewers []string
 						for _, reviewer := range pr(evt).PullRequest.RequestedReviewers {
-							reviewers = append(reviewers, reviewer.Login)
+							expectedReviewers = append(expectedReviewers, reviewer.Login)
 						}
 						expectedAssignees := []string{"developer"}
-						return fmt.Sprintf(expectedFmt, expectedTitle, expectedBody, expectedHead,
-							branch, expectedLabels, reviewers, expectedAssignees)
+						return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
+							branch, expectedLabels, expectedReviewers, expectedAssignees)
 					}
 
 					expectedPRs := 2
@@ -825,17 +859,17 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 					}
 
 					expectedBranches := []string{"release-1.5", "release-1.6"}
-					seenBranches := make(map[string]struct{})
+					seenBranches := make(map[string]bool)
 					for _, p := range ghc.prs {
 						pr := prToString(p)
 						if pr != expectedFn("release-1.5") && pr != expectedFn("release-1.6") {
 							t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v", pr, expectedBranches)
 						}
 						if pr == expectedFn("release-1.5") {
-							seenBranches["release-1.5"] = struct{}{}
+							seenBranches["release-1.5"] = true
 						}
 						if pr == expectedFn("release-1.6") {
-							seenBranches["release-1.6"] = struct{}{}
+							seenBranches["release-1.6"] = true
 						}
 					}
 					if len(seenBranches) != expectedPRs {

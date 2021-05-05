@@ -254,7 +254,12 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 	if len(cherryPickMatches) == 0 || len(cherryPickMatches[0]) != 2 {
 		return nil
 	}
-	targetBranch := strings.TrimSpace(cherryPickMatches[0][1])
+
+	targetBranchesSet := sets.NewString()
+	for _, match := range cherryPickMatches {
+		targetBranch := strings.TrimSpace(match[1])
+		targetBranchesSet.Insert(targetBranch)
+	}
 
 	if ic.Issue.State != "closed" {
 		if !opts.AllowAll {
@@ -271,7 +276,8 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 			}
 		}
 		resp := fmt.Sprintf("once the present PR merges, "+
-			"I will cherry-pick it on top of %s in a new PR and assign it to you.", targetBranch)
+			"I will cherry-pick it on top of %s in the new PR and assign it to you.",
+			strings.Join(targetBranchesSet.List(), "/"))
 		l.Info(resp)
 		return s.GitHubClient.CreateComment(org, repo, num, tiexternalplugins.FormatICResponse(ic.Comment, resp))
 	}
@@ -285,12 +291,6 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 	// Cherry-pick only merged PRs.
 	if !pr.Merged {
 		resp := "cannot cherry-pick an unmerged PR."
-		l.Info(resp)
-		return s.GitHubClient.CreateComment(org, repo, num, tiexternalplugins.FormatICResponse(ic.Comment, resp))
-	}
-
-	if baseBranch == targetBranch {
-		resp := fmt.Sprintf("base branch (%s) needs to differ from target branch (%s).", baseBranch, targetBranch)
 		l.Info(resp)
 		return s.GitHubClient.CreateComment(org, repo, num, tiexternalplugins.FormatICResponse(ic.Comment, resp))
 	}
@@ -309,12 +309,29 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 		}
 	}
 
-	*l = *l.WithFields(logrus.Fields{
-		"requestor":     ic.Comment.User.Login,
-		"target_branch": targetBranch,
-	})
-	l.Debug("Cherrypick request.")
-	return s.handle(l, ic.Comment.User.Login, &ic.Comment, org, repo, targetBranch, pr)
+	for _, targetBranch := range targetBranchesSet.List() {
+		if baseBranch == targetBranch {
+			resp := fmt.Sprintf("base branch (%s) needs to differ from target branch (%s).", baseBranch, targetBranch)
+			l.Info(resp)
+			if err := s.GitHubClient.CreateComment(org, repo, num,
+				tiexternalplugins.FormatICResponse(ic.Comment, resp)); err != nil {
+				l.WithError(err).WithField("response", resp).Error("Failed to create comment.")
+			}
+			continue
+		}
+
+		*l = *l.WithFields(logrus.Fields{
+			"requestor":     ic.Comment.User.Login,
+			"target_branch": targetBranch,
+		})
+		l.Debug("Cherrypick request.")
+		err := s.handle(l, ic.Comment.User.Login, &ic.Comment, org, repo, targetBranch, pr)
+		if err != nil {
+			l.WithError(err).Error("Cherrypick failed.")
+		}
+	}
+
+	return nil
 }
 
 func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent) error {
