@@ -411,15 +411,16 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 		expectedPrs[expectedFn(branch)] = branch
 	}
 
-	seenBranches := make(map[string]struct{})
+	seenBranches := make(map[string]bool)
 	for _, p := range ghc.prs {
 		pr := prToString(p)
 		branch, present := expectedPrs[pr]
 		if !present {
 			t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v\n",
 				pr, expectedBranches)
+		} else {
+			seenBranches[branch] = present
 		}
-		seenBranches[branch] = struct{}{}
 	}
 	if len(seenBranches) != len(expectedBranches) {
 		t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", len(expectedBranches), len(seenBranches), seenBranches)
@@ -633,15 +634,16 @@ func testCherryPickPR(clients localgit.Clients, t *testing.T) {
 	for _, branch := range expectedBranches {
 		expectedPrs[expectedFn(branch)] = branch
 	}
-	seenBranches := make(map[string]struct{})
+	seenBranches := make(map[string]bool)
 	for _, p := range ghc.prs {
 		pr := prToString(p)
 		branch, present := expectedPrs[pr]
 		if !present {
 			t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v\n",
 				pr, expectedBranches)
+		} else {
+			seenBranches[branch] = present
 		}
-		seenBranches[branch] = struct{}{}
 	}
 	if len(seenBranches) != len(expectedBranches) {
 		t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", len(expectedBranches), len(seenBranches), seenBranches)
@@ -857,17 +859,17 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 					}
 
 					expectedBranches := []string{"release-1.5", "release-1.6"}
-					seenBranches := make(map[string]struct{})
+					seenBranches := make(map[string]bool)
 					for _, p := range ghc.prs {
 						pr := prToString(p)
 						if pr != expectedFn("release-1.5") && pr != expectedFn("release-1.6") {
 							t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v", pr, expectedBranches)
 						}
 						if pr == expectedFn("release-1.5") {
-							seenBranches["release-1.5"] = struct{}{}
+							seenBranches["release-1.5"] = true
 						}
 						if pr == expectedFn("release-1.6") {
-							seenBranches["release-1.6"] = struct{}{}
+							seenBranches["release-1.6"] = true
 						}
 					}
 					if len(seenBranches) != expectedPRs {
