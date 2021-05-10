@@ -2,9 +2,9 @@
 
 ## 设计背景
 
-在 TiDB 社区中，几个大型仓库都有多个分支在维护。当我们对 master 的代码进行修改并提交 PR 之后，这些改动可能也需要应用到其他的分支。依靠人工手动的去 cherry-pick 会产生巨大的工作量并且容易出错。
+在 TiDB 社区中，几个大型仓库都有多个分支在维护。当我们对 master 的代码进行修改并创建 PR 之后，这些改动可能也需要应用到其他的分支。依靠人工手动的去 cherry-pick 会产生巨大的工作量并且容易出错。
 
-ti-community-cherrypicker 将帮助我们自动的 cherry-pick PR 的改动到另外一个分支并自动创建 PR。**另外它还支持在 PR 与 Base 分支代码冲突时采用 3-way 合并的方式将代码强制 cherry-pick 到 Base 分支。**
+ti-community-cherrypicker 将帮助我们自动的 cherry-pick PR 的改动到另外一个分支并自动创建 PR。**另外它还支持代当码冲突时采用 3-way 合并的方式将代码强制 cherry-pick 到 Base 分支。**
 
 ## 权限设计
 
@@ -16,6 +16,7 @@ ti-community-cherrypicker 将帮助我们自动的 cherry-pick PR 的改动到�
 ## 设计思路
 
 实现该插件主要考虑 PR 的以下两种情况：
+
 - PR 无冲突
   - 我们可以直接下载 [GitHub 提供的 patch 文件](https://stackoverflow.com/questions/6188591/download-github-pull-request-as-unified-diff) 进行 3-way 模式的 [git am](https://git-scm.com/docs/git-am) 操作。
 - PR 有冲突
@@ -25,6 +26,7 @@ ti-community-cherrypicker 将帮助我们自动的 cherry-pick PR 的改动到�
 注意：**以上的`解决冲突`是指该工具将冲突代码直接 `git add` 然后提交到新的 PR 中，而不是真的修改代码解决冲突问题**。
 
 除了实现 cherry-pick 的核心功能之外，它还支持了一些其他功能：
+
 - 使用 labels 来标记需要 cherry-pick 到哪些分支
 - 复制当前 PR 的 reviewers 到 cherry-pick 的 PR 
 - 将 cherry-pick 的 PR 分配给作者或者请求人（请求 cherry-pick 的人）
@@ -35,7 +37,7 @@ ti-community-cherrypicker 将帮助我们自动的 cherry-pick PR 的改动到�
 | 参数名                   | 类型     | 说明                                                                            |
 | ------------------------ | -------- | ------------------------------------------------------------------------------- |
 | repos                    | []string | 配置生效仓库                                                                    |
-| allow_all                | bool     | 是否允许 Org 成员以外的 GitHub 用户触发 cherry-pick                             |
+| allow_all                | bool     | 是否允许非 Org 成员触发 cherry-pick                                             |
 | create_issue_on_conflict | bool     | 当代码冲突时，是否创建 Issue 来跟踪，如果为 false 则会默认提交冲突代码到新的 PR |
 | label_prefix             | string   | 触发 cherry-pick 的 label 的前缀，默认为 `cherrypick/`                          |
 | picked_label_prefix      | string   | cherry-pick 创建的 PR 的 label 前缀（例如：`type/cherry-pick-for-release-5.0`） |
@@ -68,11 +70,11 @@ ti-community-cherrypicker:
 
 **如果你对该仓库有写权限，则可以直接修改该 PR。** 
 
-GitHub 支持[维护者直接修改 fork 仓库的代码](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork)。机器人在创建 PR 时会默认打开该选项，以供维护者进行修改。
+GitHub 支持[维护者直接修改 fork 仓库的代码](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork)。机器人在创建 PR 时会默认打开该选项，以供维护者对 PR 进行修改。
 
 ### 我如何 checkout 机器人的 PR 进行修改？
 
-GitHub 已经在 PR 页面中推荐你使用 GitHub 官方的 [cli](https://github.com/cli/cli) 进行 checkout 和修改。**详情请见 PR 页面右上角的 Open with 下拉框。**
+GitHub 已经在 PR 页面中推荐你使用 GitHub 官方的 [cli](https://github.com/cli/cli) 进行 checkout 和修改。**详情请见 PR 页面右上角的 `Open with` 下拉框。**
 
 ### 为什么机器人会丢掉我的一些 commits？
 
