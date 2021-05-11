@@ -10,6 +10,7 @@
     - [ti-community-label](en/plugins/label.md)
     - [ti-community-label-blocker](en/plugins/label-blocker.md)
     - [ti-community-contribution](en/plugins/contribution.md)
+    - [ti-community-cherrypicker](en/plugins/cherrypicker.md)
     - [needs-rebase](en/plugins/needs-rebase.md)
   - Internal
     - [require-matching-label](en/plugins/require-matching-label.md)
