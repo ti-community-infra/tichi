@@ -4,7 +4,7 @@
 
 在 TiDB 社区中，几个大型仓库都有多个分支在维护。当我们对 master 的代码进行修改并创建 PR 之后，这些改动可能也需要应用到其他的分支。依靠人工手动的去 cherry-pick 会产生巨大的工作量并且容易出错。
 
-ti-community-cherrypicker 将帮助我们自动的 cherry-pick PR 的改动到另外一个分支并自动创建 PR。**另外它还支持代当码冲突时采用 3-way 合并的方式将代码强制 cherry-pick 到 Base 分支。**
+ti-community-cherrypicker 将帮助我们自动的 cherry-pick PR 的改动到另外一个分支并自动创建 PR。**另外它还支持当代码冲突时采用 3-way 合并的方式将代码强制 cherry-pick 到 Base 分支。**
 
 ## 权限设计
 
@@ -84,6 +84,6 @@ GitHub 已经在 PR 页面中推荐你使用 GitHub 官方的 [cli](https://gith
 > 
 > 在该 [PR](https://github.com/pingcap/dm/pull/1638) 中有 8 个 commits，但是它的 [patch](https://patch-diff.githubusercontent.com/raw/pingcap/dm/pull/1638.patch) 中只有 5 个提交。**因为 GitHub 自动删除了 merge master 的提交。**
 > 
-> 可以看到 cherry-pick 的 [PR](https://github.com/pingcap/dm/pull/1650) 也只有 5 个提交，而且因为原 PR 中的这个[提交](https://github.com/pingcap/dm/pull/1638/commits/8c08720653a6904a029e76bd66d499ef73c385fc)不仅 merge 了 master 而且还对代码进行了修改，最终导致该提交被丢失。
+> 可以看到 cherry-pick 的 [PR](https://github.com/pingcap/dm/pull/1650) 也只有 5 个提交，而且因为原 PR 中的这个[提交](https://github.com/pingcap/dm/pull/1638/commits/8c08720653a6904a029e76bd66d499ef73c385fc)不仅 merge 了 master 而且还对代码进行了修改，最终导致该提交丢失。
 
 **所以建议大家不要在 merge Base 的提交中修改代码，这样会导致代码丢失。**
