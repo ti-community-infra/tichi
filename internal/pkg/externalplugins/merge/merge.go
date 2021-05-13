@@ -266,7 +266,9 @@ func handle(wantMerge bool, config *tiexternalplugins.Configuration, rc reviewCt
 
 	// Not committers but want merge.
 	if !committers.Has(author) && wantMerge {
-		resp := "`/merge` is only allowed for the committers in [list](" + tichiURL + ")."
+		resp := "`/merge` is only allowed for the committers, "
+		resp += "you can assign this pull request to the committer in [list](" + tichiURL + ") "
+		resp += "by filling `/assign @committer` in the comment to help merge this pull request."
 		log.Infof("Reply /merge request in comment: \"%s\"", resp)
 		return gc.CreateComment(org, repoName, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
