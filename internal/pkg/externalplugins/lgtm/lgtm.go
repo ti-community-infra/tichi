@@ -280,7 +280,7 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 	// Not reviewers but want to add LGTM.
 	if !reviewers.Has(author) && wantLGTM {
 		resp := "Thanks for your review. "
-		resp += fmt.Sprintf("The bot only counts `/lgtm` from reviewers and higher roles in [list](%s), ", tichiURL)
+		resp += "The bot only counts `/lgtm` from reviewers and higher roles in [list](" + tichiURL + "), "
 		resp += "but you're still welcome to leave your comments."
 		log.Infof("Reply /lgtm request in comment: \"%s\"", resp)
 		return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
