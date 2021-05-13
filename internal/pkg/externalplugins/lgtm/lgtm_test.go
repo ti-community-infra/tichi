@@ -122,7 +122,7 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 			commenter:     "not-in-the-org",
 			shouldToggle:  false,
 			shouldComment: true,
-			expectComment: "org/repo#5:@not-in-the-org: `/lgtm` is only allowed for the reviewers in [list](https://tichiWebLink/repos/org/repo/pulls/5/owners).\n\n<details>\n\nIn response to [this](<url>):\n\n>/lgtm\n\n\nInstructions for interacting with me using PR comments are available [here](https://prow.tidb.io/command-help).  If you have questions or suggestions related to my behavior, please file an issue against the [ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) repository.\n</details>",
+			expectComment: "org/repo#5:@not-in-the-org: Thanks for your review. The bot only counts `/lgtm` from reviewers and higher roles in [list](https://tichiWebLink/repos/org/repo/pulls/5/owners), but you're still welcome to leave your comments.\n\n<details>\n\nIn response to [this](<url>):\n\n>/lgtm\n\n\nInstructions for interacting with me using PR comments are available [here](https://prow.tidb.io/command-help).  If you have questions or suggestions related to my behavior, please file an issue against the [ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) repository.\n</details>",
 		},
 		{
 			name:                "lgtm cancel by reviewer collab2",
@@ -194,7 +194,7 @@ func TestLGTMIssueAndReviewComment(t *testing.T) {
 			currentLabel:  lgtmTwo,
 			shouldToggle:  false,
 			shouldComment: true,
-			expectComment: "org/repo#5:@not-in-the-org: `/lgtm` is only allowed for the reviewers in [list](https://tichiWebLink/repos/org/repo/pulls/5/owners).\n\n<details>\n\nIn response to [this](<url>):\n\n>/lgtm \n\n\nInstructions for interacting with me using PR comments are available [here](https://prow.tidb.io/command-help).  If you have questions or suggestions related to my behavior, please file an issue against the [ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) repository.\n</details>",
+			expectComment: "org/repo#5:@not-in-the-org: Thanks for your review. The bot only counts `/lgtm` from reviewers and higher roles in [list](https://tichiWebLink/repos/org/repo/pulls/5/owners), but you're still welcome to leave your comments.\n\n<details>\n\nIn response to [this](<url>):\n\n>/lgtm \n\n\nInstructions for interacting with me using PR comments are available [here](https://prow.tidb.io/command-help).  If you have questions or suggestions related to my behavior, please file an issue against the [ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) repository.\n</details>",
 		},
 		{
 			name:          "lgtm comment by reviewer collab1, lgtm twice",
