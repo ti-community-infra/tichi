@@ -159,6 +159,8 @@ type TiCommunityBlunderbuss struct {
 	// MaxReviewerCount is the maximum number of reviewers to request
 	// reviews from. Defaults to 0 meaning no limit.
 	MaxReviewerCount int `json:"max_request_count,omitempty"`
+	// IncludeReviewers specifies which reviewers are the only ones involved in the code review.
+	IncludeReviewers []string `json:"include_reviewers,omitempty"`
 	// ExcludeReviewers specifies which reviewers do not participate in code review.
 	ExcludeReviewers []string `json:"exclude_reviewers,omitempty"`
 	// PullOwnersEndpoint specifies the URL of the reviewer of pull request.
@@ -614,6 +616,9 @@ func validateBlunderbuss(blunderbusses []TiCommunityBlunderbuss) error {
 		}
 		if blunderbuss.GracePeriodDuration < 0 {
 			return errors.New("grace period duration must not less than 0")
+		}
+		if len(blunderbuss.IncludeReviewers) != 0 && len(blunderbuss.ExcludeReviewers) != 0 {
+			return errors.New("cannot set both include_reviewers and exclude_reviewers configurations")
 		}
 	}
 

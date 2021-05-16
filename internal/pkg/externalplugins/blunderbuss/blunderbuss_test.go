@@ -520,6 +520,7 @@ func TestGetReviewers(t *testing.T) {
 		name               string
 		author             string
 		reviewers          []string
+		includeReviewers   []string
 		excludeReviewers   []string
 		requestedReviewers []github.User
 
@@ -549,6 +550,32 @@ func TestGetReviewers(t *testing.T) {
 			},
 		},
 		{
+			name:   "include reviewers",
+			author: "author",
+			reviewers: []string{
+				"author", "reviewers1", "reviewers2", "reviewers3",
+			},
+			includeReviewers: []string{
+				"reviewers2",
+			},
+			expectReviewers: []string{
+				"reviewers2",
+			},
+		},
+		{
+			name:   "include reviewers with no permissions reviewers",
+			author: "author",
+			reviewers: []string{
+				"author", "reviewers1", "reviewers2", "reviewers3",
+			},
+			includeReviewers: []string{
+				"reviewers2", "reviewers3", "reviewers4", "reviewers5",
+			},
+			expectReviewers: []string{
+				"reviewers2", "reviewers3",
+			},
+		},
+		{
 			name:   "requested reviewers",
 			author: "author",
 			reviewers: []string{
@@ -566,7 +593,7 @@ func TestGetReviewers(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		reviewers := listAvailableReviewers(tc.author, tc.reviewers, tc.excludeReviewers,
+		reviewers := listAvailableReviewers(tc.author, tc.reviewers, tc.includeReviewers, tc.excludeReviewers,
 			tc.requestedReviewers).List()
 		sort.Strings(reviewers)
 		sort.Strings(tc.expectReviewers)
