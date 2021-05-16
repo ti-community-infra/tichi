@@ -70,6 +70,7 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 				{
 					Repos:              []string{"ti-community-infra/test-dev"},
 					MaxReviewerCount:   2,
+					IncludeReviewers:   []string{},
 					ExcludeReviewers:   []string{},
 					PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 				},
