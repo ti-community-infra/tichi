@@ -105,7 +105,7 @@ func configString(maxReviewerCount int) string {
 		maxReviewerCount, pluralSuffix)
 }
 
-// HandleIssueCommentEvent handles a GitHub pull request event and requests review.
+// HandlePullRequestEvent handles a GitHub pull request event and requests review.
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	cfg *tiexternalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	pr := &pe.PullRequest
