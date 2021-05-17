@@ -19,7 +19,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
         - name: ti-community-autoresponder
-          image: ticommunityinfra/tichi-autoresponder-plugin:v1.5.12-beta.1
+          image: ticommunityinfra/tichi-autoresponder-plugin:v1.5.12
           imagePullPolicy: Always
           args:
             - --dry-run=false
