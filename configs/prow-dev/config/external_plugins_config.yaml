@@ -60,13 +60,10 @@ ti-community-blunderbuss:
       - ti-community-infra/test-dev
     pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
     max_request_count: 2
-    require_sig_label: true
-    exclude_reviewers:
-      # Bots
+    require_sig_label: false
+    include_reviewers:
       - ti-chi-bot
       - rustin-bot
-      # Inactive reviewers
-      - sykp241095
 
 ti-community-tars:
   - repos:
