@@ -29,14 +29,15 @@ If a repository requires a PR with a sig label for auto-assignment, then creatin
 
 ## Parameter Configuration 
 
-| Parameter Name        | Type     | Description                                                                                         |
-| --------------------- | -------- | --------------------------------------------------------------------------------------------------- |
-| repos                 | []string | Repositories                                                                                        |
-| pull_owners_endpoint  | string   | PR owners RESTFUL API address                                                                       |
-| max_request_count     | int      | Maximum number of assignees (not configured to assign all reviewers)                                |
-| exclude_reviewers     | []string | Reviewers who do not participate in auto-assignment (for some reviewers who may be inactive)        |
-| grace_period_duration | int      | Configure the waiting time in seconds for other plugins to add sig labels, the default is 5 seconds |
-| require_sig_label     | bool     | Whether the PR must have a SIG label to allow automatic assignment of reviewers                     |
+| Parameter Name        | Type     | Description                                                                                                           |
+| --------------------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| repos                 | []string | Repositories                                                                                                          |
+| pull_owners_endpoint  | string   | PR owners RESTFUL API address                                                                                         |
+| max_request_count     | int      | Maximum number of assignees (not configured to assign all reviewers)                                                  |
+| include_reviewers     | []string | Only these reviewers participate in auto-assignment (for some repositories with a large number of inactive reviewers) |
+| exclude_reviewers     | []string | Reviewers who do not participate in auto-assignment (for some reviewers who may be inactive)                          |
+| grace_period_duration | int      | Configure the waiting time in seconds for other plugins to add sig labels, the default is 5 seconds                   |
+| require_sig_label     | bool     | Whether the PR must have a SIG label to allow automatic assignment of reviewers                                       |
 
 For example:
 

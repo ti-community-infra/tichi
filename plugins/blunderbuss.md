@@ -29,14 +29,15 @@ ti-community-blunderbuss 负责在 PR 创建时，根据 ti-community-owners 划
 
 ## 参数配置
 
-| 参数名                | 类型     | 说明                                                           |
-| --------------------- | -------- | -------------------------------------------------------------- |
-| repos                 | []string | 配置生效仓库                                                   |
-| pull_owners_endpoint  | string   | PR owners RESTFUL 接口地址                                     |
-| max_request_count     | int      | 最多的分配人数（不配置将分配所有 reviewers）                   |
-| exclude_reviewers     | []string | 不参与自动分配的 reviewers（针对一些可能不活跃的 reviewers ）  |
-| grace_period_duration | int      | 配置等待其它插件添加 sig 标签的等待时间，单位为秒，默认为 5 秒 |
-| require_sig_label     | bool     | PR 是否必须带有 SIG 标签才允许自动分配 reviewers               |
+| 参数名                | 类型     | 说明                                                                       |
+| --------------------- | -------- | -------------------------------------------------------------------------- |
+| repos                 | []string | 配置生效仓库                                                               |
+| pull_owners_endpoint  | string   | PR owners RESTFUL 接口地址                                                 |
+| max_request_count     | int      | 最多的分配人数（不配置将分配所有 reviewers）                               |
+| include_reviewers     | []string | 只有这些 reviewers 参与自动分配（针对一些存在大量不活跃 reviewers 的仓库） |
+| exclude_reviewers     | []string | 不参与自动分配的 reviewers（针对一些可能不活跃的 reviewers ）              |
+| grace_period_duration | int      | 配置等待其它插件添加 sig 标签的等待时间，单位为秒，默认为 5 秒             |
+| require_sig_label     | bool     | PR 是否必须带有 SIG 标签才允许自动分配 reviewers                           |
 
 例如：
 
