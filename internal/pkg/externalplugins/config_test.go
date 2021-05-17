@@ -469,6 +469,56 @@ func TestValidateConfig(t *testing.T) {
 			expected: fmt.Errorf("grace period duration must not less than 0"),
 		},
 		{
+			name:            "invalid blunderbuss include_reviewers and exclude_reviewers",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				ReviewActsAsLgtm:   true,
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{"reviewer1"},
+				IncludeReviewers:   []string{"reviewer2"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			labelBlocker: &TiCommunityLabelBlocker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				BlockLabels: []BlockLabel{
+					{
+						Regex:        `^status/can-merge$`,
+						Actions:      []string{"labeled", "unlabeled"},
+						TrustedTeams: []string{"release-team"},
+						TrustedUsers: []string{"ti-chi-bot"},
+					},
+				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
+			expected: fmt.Errorf("cannot set both include_reviewers and exclude_reviewers configurations"),
+		},
+		{
 			name:            "invalid tichiWebURL",
 			tichiWebURL:     "https//tichiWebURL",
 			commandHelpLink: "https://commandHelpLink",

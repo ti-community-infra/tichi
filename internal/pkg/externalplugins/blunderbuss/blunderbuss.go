@@ -70,6 +70,7 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 				{
 					Repos:              []string{"ti-community-infra/test-dev"},
 					MaxReviewerCount:   2,
+					IncludeReviewers:   []string{},
 					ExcludeReviewers:   []string{},
 					PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 				},
@@ -83,6 +84,7 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 				"when a sig label is labeled.",
 			Config:  configInfo,
 			Snippet: yamlSnippet,
+			Events:  []string{tiexternalplugins.PullRequestEvent, tiexternalplugins.IssueCommentEvent},
 		}
 		pluginHelp.AddCommand(pluginhelp.Command{
 			Usage:       "/auto-cc",
@@ -104,7 +106,7 @@ func configString(maxReviewerCount int) string {
 		maxReviewerCount, pluralSuffix)
 }
 
-// HandleIssueCommentEvent handles a GitHub pull request event and requests review.
+// HandlePullRequestEvent handles a GitHub pull request event and requests review.
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	cfg *tiexternalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	pr := &pe.PullRequest
@@ -212,7 +214,7 @@ func handle(gc githubClient, opts *tiexternalplugins.TiCommunityBlunderbuss, rep
 	}
 
 	// List all available reviewers.
-	availableReviewers := listAvailableReviewers(pr.User.Login, owners.Reviewers,
+	availableReviewers := listAvailableReviewers(pr.User.Login, owners.Reviewers, opts.IncludeReviewers,
 		opts.ExcludeReviewers, pr.RequestedReviewers)
 
 	maxReviewerCount := opts.MaxReviewerCount
@@ -269,16 +271,24 @@ func handle(gc githubClient, opts *tiexternalplugins.TiCommunityBlunderbuss, rep
 	return gc.RequestReview(repo.Owner.Login, repo.Name, pr.Number, reviewers.List())
 }
 
-func listAvailableReviewers(author string, reviewers []string, excludeReviewers []string,
+func listAvailableReviewers(author string, reviewers []string, includeReviewers []string, excludeReviewers []string,
 	requestedReviewers []github.User) sets.String {
 	authorSet := sets.NewString(github.NormLogin(author))
+	includeReviewersSet := sets.NewString(includeReviewers...)
 	excludeReviewersSet := sets.NewString(excludeReviewers...)
 	requestedReviewersSet := sets.NewString()
 	for _, reviewer := range requestedReviewers {
 		requestedReviewersSet.Insert(reviewer.Login)
 	}
+
 	reviewersSet := sets.NewString()
 	reviewersSet.Insert(reviewers...)
+
+	if len(includeReviewers) != 0 {
+		nonReviewers := includeReviewersSet.Difference(reviewersSet)
+		includeReviewersSet = includeReviewersSet.Difference(nonReviewers)
+		return includeReviewersSet.Difference(authorSet).Difference(requestedReviewersSet)
+	}
 
 	return reviewersSet.Difference(authorSet).Difference(excludeReviewersSet).Difference(requestedReviewersSet)
 }
