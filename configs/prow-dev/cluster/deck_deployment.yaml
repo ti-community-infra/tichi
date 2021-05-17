@@ -36,7 +36,7 @@ spec:
             - --github-graphql-endpoint=http://ghproxy/graphql
             - --plugin-config=/etc/plugins/plugins.yaml
             - --spyglass=true
-            - --dry-run=true
+            - --dry-run=false
             - --job-config-path=/etc/job-config
           ports:
             - name: http
