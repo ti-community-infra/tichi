@@ -15,7 +15,7 @@ spec:
         spec:
           containers:
             - name: branchprotector
-              image: gcr.io/k8s-prow/branchprotector:v20210514-64850e516d
+              image: gcr.io/k8s-prow/branchprotector:v20210521-0713522bd8
               args:
                 - --config-path=/etc/config/config.yaml
                 - --github-token-path=/etc/github/token
