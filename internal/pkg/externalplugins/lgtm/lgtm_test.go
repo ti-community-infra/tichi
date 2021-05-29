@@ -394,9 +394,9 @@ func TestHelpProvider(t *testing.T) {
 		configInfoExcludes []string
 	}{
 		{
-			name:               "Empty config",
-			config:             &externalplugins.Configuration{},
-			enabledRepos:       enabledRepos,
+			name:         "Empty config",
+			config:       &externalplugins.Configuration{},
+			enabledRepos: enabledRepos,
 		},
 		{
 			name: "All configs enabled",
@@ -408,7 +408,7 @@ func TestHelpProvider(t *testing.T) {
 					},
 				},
 			},
-			enabledRepos:       enabledRepos,
+			enabledRepos: enabledRepos,
 		},
 	}
 	for _, testcase := range cases {
