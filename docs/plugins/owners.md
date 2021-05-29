@@ -15,7 +15,7 @@
   - techLeaders
   - coLeaders
   - committers
-- reviewers (**可以点赞 PR**)
+- reviewers (**可以赞同 PR**)
   - maintainers
   - techLeaders
   - coLeaders

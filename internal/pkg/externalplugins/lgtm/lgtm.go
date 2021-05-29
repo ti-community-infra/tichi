@@ -46,7 +46,7 @@ func HelpProvider(_ *tiexternalplugins.ConfigAgent) externalplugins.ExternalPlug
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
-			Usage:       "Triggered by GitHub review action.",
+			Usage:       "Triggered by GitHub review action: 'Approve' or 'Request Changes'",
 			Description: "Add or remove the 'status/LGT{number}' label.",
 			Featured:    true,
 			WhoCanUse:   "Reviewers of this pull request.",
@@ -138,7 +138,6 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 	}()
 
 	author := rc.author
-	issueAuthor := rc.issueAuthor
 	number := rc.number
 	body := rc.body
 	htmlURL := rc.htmlURL
@@ -146,15 +145,6 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 	repo := rc.repo.Name
 	fetchErr := func(context string, err error) error {
 		return fmt.Errorf("failed to get %s for %s/%s#%d: %v", context, org, repo, number, err)
-	}
-
-	// Author cannot LGTM own PR, comment and abort.
-	isAuthor := author == issueAuthor
-	if isAuthor && wantLGTM {
-		resp := "you cannot lgtm your own PR."
-		log.Infof("Commenting \"%s\".", resp)
-		return gc.CreateComment(rc.repo.Owner.Login, rc.repo.Name, rc.number,
-			tiexternalplugins.FormatResponseRaw(rc.body, rc.htmlURL, rc.author, resp))
 	}
 
 	// Get ti-community-lgtm config.
@@ -179,9 +169,9 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 		return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
-	// Not author or reviewers but want to remove LGTM.
-	if !reviewers.Has(author) && !isAuthor && !wantLGTM {
-		resp := "Request changes is only allowed for the PR author or the reviewers in [list](" + tichiURL + ")."
+	// Not reviewers but want to remove LGTM.
+	if !reviewers.Has(author) && !wantLGTM {
+		resp := "Request changes is only allowed for the reviewers in [list](" + tichiURL + ")."
 		log.Infof("Reply request changes pull request in comment: \"%s\"", resp)
 		return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
