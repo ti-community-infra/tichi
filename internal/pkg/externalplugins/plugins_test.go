@@ -97,7 +97,7 @@ func TestStartLoadConfig(t *testing.T) {
 	}
 
 	// Wait a moment.
-	time.Sleep(pullDuration + 1)
+	time.Sleep(pullDuration * 2)
 	if pa.Config().TiCommunityLgtm[expectLen-1].PullOwnersEndpoint != "https://test-updated" {
 		t.Errorf("Different PullOwnersEndpoint: Got \"%v\" expected \"%v\"",
 			pa.Config().TiCommunityLgtm[expectLen-1].PullOwnersEndpoint, "https://test-updated")
