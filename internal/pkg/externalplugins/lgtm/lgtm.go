@@ -76,7 +76,6 @@ type reviewCtx struct {
 
 func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
 	cfg *tiexternalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
-
 	rc := reviewCtx{
 		author:      pullReviewEvent.Review.User.Login,
 		issueAuthor: pullReviewEvent.PullRequest.User.Login,
