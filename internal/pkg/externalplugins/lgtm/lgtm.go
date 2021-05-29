@@ -46,7 +46,7 @@ func HelpProvider(_ *tiexternalplugins.ConfigAgent) externalplugins.ExternalPlug
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
-			Usage:       "Triggered by GitHub review action: 'Approve' or 'Request Changes'",
+			Usage:       "Triggered by GitHub review action: 'Approve' or 'Request Changes'.",
 			Description: "Add or remove the 'status/LGT{number}' label.",
 			Featured:    true,
 			WhoCanUse:   "Reviewers of this pull request.",
