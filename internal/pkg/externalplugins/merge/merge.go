@@ -334,7 +334,7 @@ func handle(wantMerge bool, config *tiexternalplugins.Configuration, rc reviewCt
 				return strings.Contains(comment.Body, removeCanMergeLabelNoti)
 			})
 		} else {
-			resp := fmt.Sprintf("`/merge` in this pull request requires %d `/lgtm`.", owners.NeedsLgtm)
+			resp := fmt.Sprintf("`/merge` in this pull request requires %d lgtm.", owners.NeedsLgtm)
 			log.Infof("Reply /merge request with comment: \"%s\"", resp)
 			return gc.CreateComment(org, repoName, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 		}

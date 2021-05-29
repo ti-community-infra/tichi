@@ -59,9 +59,6 @@ type Configuration struct {
 type TiCommunityLgtm struct {
 	// Repos is either of the form org/repos or just org.
 	Repos []string `json:"repos,omitempty"`
-	// ReviewActsAsLgtm indicates that a GitHub review of "merge" or "request changes"
-	// acts as adding or removing the lgtm label.
-	ReviewActsAsLgtm bool `json:"review_acts_as_lgtm,omitempty"`
 	// PullOwnersEndpoint specifies the URL of the reviewer of pull request.
 	PullOwnersEndpoint string `json:"pull_owners_endpoint,omitempty"`
 }

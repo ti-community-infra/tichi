@@ -5,7 +5,6 @@ command_help_link: https://prow-dev.tidb.io/command-help
 ti-community-lgtm:
   - repos:
       - ti-community-infra/test-dev
-    review_acts_as_lgtm: true
     pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
 
 ti-community-merge:

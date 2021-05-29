@@ -150,26 +150,6 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 	// Get external plugins config.
 	config := s.configAgent.Config()
 	switch eventType {
-	case tiexternalplugins.IssueCommentEvent:
-		var ice github.IssueCommentEvent
-		if err := json.Unmarshal(payload, &ice); err != nil {
-			return err
-		}
-		go func() {
-			if err := lgtm.HandleIssueCommentEvent(s.gc, &ice, config, s.ol, l); err != nil {
-				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
-			}
-		}()
-	case tiexternalplugins.PullRequestReviewCommentEvent:
-		var pullReviewCommentEvent github.ReviewCommentEvent
-		if err := json.Unmarshal(payload, &pullReviewCommentEvent); err != nil {
-			return err
-		}
-		go func() {
-			if err := lgtm.HandlePullReviewCommentEvent(s.gc, &pullReviewCommentEvent, config, s.ol, l); err != nil {
-				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
-			}
-		}()
 	case tiexternalplugins.PullRequestReviewEvent:
 		var prre github.ReviewEvent
 		if err := json.Unmarshal(payload, &prre); err != nil {

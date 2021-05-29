@@ -10,12 +10,12 @@ So we decided to develop a permission control service that fits the current coll
 
 Based on the current design of TiDB's SIG, the permissions are divided as follows:
 
-- committers（**Can use the /merge command**）
+- committers（**Can merge a pull request**）
   - maintainers
   - techLeaders
   - coLeaders
   - committers
-- reviewers (**Can use the /lgtm command**)
+- reviewers (**Can approve a pull request**)
   - maintainers
   - techLeaders
   - coLeaders
