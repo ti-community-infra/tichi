@@ -59,11 +59,15 @@ func TestStartLoadConfig(t *testing.T) {
 	}
 
 	// Assert first time.
-	config := pa.Config()
 	expectLen := 1
-	if len(config.TiCommunityLgtm) != expectLen {
+	if len(pa.Config().TiCommunityLgtm) != expectLen {
 		t.Errorf("Different TiCommunityLgtm len: Got \"%d\" expected \"%d\"",
-			len(config.TiCommunityLgtm), expectLen)
+			len(pa.Config().TiCommunityLgtm), expectLen)
+	}
+
+	if pa.Config().TiCommunityLgtm[expectLen-1].PullOwnersEndpoint != "https://test" {
+		t.Errorf("Different PullOwnersEndpoint: Got \"%v\" expected \"%v\"",
+			pa.Config().TiCommunityLgtm[expectLen-1].PullOwnersEndpoint, "https://test")
 	}
 
 	// Move test config into tmp.
@@ -94,6 +98,10 @@ func TestStartLoadConfig(t *testing.T) {
 
 	// Wait a moment.
 	time.Sleep(pullDuration + 1)
+	if pa.Config().TiCommunityLgtm[expectLen-1].PullOwnersEndpoint != "https://test-updated" {
+		t.Errorf("Different PullOwnersEndpoint: Got \"%v\" expected \"%v\"",
+			pa.Config().TiCommunityLgtm[expectLen-1].PullOwnersEndpoint, "https://test-updated")
+	}
 
 	{
 		// Move tmp config back to test config file.
