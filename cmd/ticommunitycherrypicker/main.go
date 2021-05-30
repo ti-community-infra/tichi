@@ -81,7 +81,9 @@ func main() {
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting GitHub client.")
 	}
-	githubClient.Throttle(360, 360)
+	// NOTICE: This error is only possible when using the GitHub APP,
+	// but if we use the APP auth later we will have to handle the err.
+	_ = githubClient.Throttle(360, 360)
 
 	gitClient, err := o.github.GitClient(secretAgent, o.dryRun)
 	if err != nil {
