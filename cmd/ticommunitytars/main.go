@@ -74,7 +74,7 @@ func main() {
 	log := logrus.StandardLogger().WithField("plugin", tars.PluginName)
 
 	pa := &plugins.ConfigAgent{}
-	if err := pa.Start(o.pluginConfig, false); err != nil {
+	if err := pa.Start(o.pluginConfig, nil, "", false); err != nil {
 		log.WithError(err).Fatalf("Error loading plugin config from %q.", o.pluginConfig)
 	}
 
@@ -92,7 +92,7 @@ func main() {
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting GitHub client.")
 	}
-	githubClient.Throttle(360, 360)
+	_ = githubClient.Throttle(360, 360)
 
 	server := &Server{
 		tokenGenerator: secretAgent.GetTokenGenerator(o.webhookSecretFile),

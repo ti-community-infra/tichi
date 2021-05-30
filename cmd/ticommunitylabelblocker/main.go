@@ -85,7 +85,7 @@ func main() {
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting GitHub client.")
 	}
-	githubClient.Throttle(360, 360)
+	_ = githubClient.Throttle(360, 360)
 
 	server := &server{
 		tokenGenerator: secretAgent.GetTokenGenerator(o.webhookSecretFile),
