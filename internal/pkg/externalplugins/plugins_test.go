@@ -15,7 +15,6 @@ func TestGetConfig(t *testing.T) {
 		{
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			expectedPullOwnersURL: "https://bots.tidb.io/ti-community-bot",
@@ -23,7 +22,6 @@ func TestGetConfig(t *testing.T) {
 		{
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-live"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			expectedPullOwnersURL: "https://bots.tidb.io/ti-community-bot",
@@ -61,15 +59,15 @@ func TestStartLoadConfig(t *testing.T) {
 	}
 
 	// Assert first time.
-	config := pa.Config()
 	expectLen := 1
-	if len(config.TiCommunityLgtm) != expectLen {
+	if len(pa.Config().TiCommunityLgtm) != expectLen {
 		t.Errorf("Different TiCommunityLgtm len: Got \"%d\" expected \"%d\"",
-			len(config.TiCommunityLgtm), expectLen)
+			len(pa.Config().TiCommunityLgtm), expectLen)
 	}
-	if config.TiCommunityLgtm[expectLen-1].ReviewActsAsLgtm != true {
-		t.Errorf("Different ReviewActsAsLgtm: Got \"%v\" expected \"%v\"",
-			config.TiCommunityLgtm[expectLen-1].ReviewActsAsLgtm, true)
+
+	if pa.Config().TiCommunityLgtm[expectLen-1].PullOwnersEndpoint != "https://test" {
+		t.Errorf("Different PullOwnersEndpoint: Got \"%v\" expected \"%v\"",
+			pa.Config().TiCommunityLgtm[expectLen-1].PullOwnersEndpoint, "https://test")
 	}
 
 	// Move test config into tmp.
@@ -99,10 +97,10 @@ func TestStartLoadConfig(t *testing.T) {
 	}
 
 	// Wait a moment.
-	time.Sleep(pullDuration + 1)
-	if config.TiCommunityLgtm[expectLen-1].ReviewActsAsLgtm == false {
-		t.Errorf("Different ReviewActsAsLgtm: Got \"%v\" expected \"%v\"",
-			config.TiCommunityLgtm[expectLen-1].ReviewActsAsLgtm, false)
+	time.Sleep(pullDuration * 2)
+	if pa.Config().TiCommunityLgtm[expectLen-1].PullOwnersEndpoint != "https://test-updated" {
+		t.Errorf("Different PullOwnersEndpoint: Got \"%v\" expected \"%v\"",
+			pa.Config().TiCommunityLgtm[expectLen-1].PullOwnersEndpoint, "https://test-updated")
 	}
 
 	{

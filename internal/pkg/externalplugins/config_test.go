@@ -33,7 +33,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -82,7 +81,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -131,7 +129,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "http/bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -180,7 +177,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -229,7 +225,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -278,7 +273,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -327,7 +321,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -376,7 +369,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -425,7 +417,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -475,7 +466,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -525,7 +515,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -574,7 +563,6 @@ func TestValidateConfig(t *testing.T) {
 			commandHelpLink: "https://commandHelpLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -623,7 +611,6 @@ func TestValidateConfig(t *testing.T) {
 			commandHelpLink: "https//commandHelpLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -672,7 +659,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -719,7 +705,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -766,7 +751,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -814,7 +798,6 @@ func TestValidateConfig(t *testing.T) {
 			logLevel:        "nop",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -863,7 +846,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -964,7 +946,6 @@ func TestLgtmFor(t *testing.T) {
 			name: "Full name",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			org:  "ti-community-infra",
@@ -974,7 +955,6 @@ func TestLgtmFor(t *testing.T) {
 			name: "Only org",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			org:  "ti-community-infra",

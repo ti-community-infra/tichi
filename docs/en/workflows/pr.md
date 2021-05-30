@@ -16,7 +16,7 @@ When the PR labels are satisfied and all tests pass, the PR will be merged autom
   - Randomly select multiple reviewers based on ti-community-blunderbuss configuration
 - **Phase II：** reviewers review code ([ti-community-lgtm](en/plugins/lgtm.md) provide support)
   - reviewer will look at the quality of the code, correctness, engineering considerations, etc.
-  - If the reviewer finds no problems with the code, the reviewer will use `/lgtm` to agree to the changes; if the reviewer later finds that there are still problems with the code, they can cancel the changes by using `/lgtm cancel`
+  - If the reviewer finds no problems with the code, the reviewer will approve the changes by GitHub Approve; if the reviewer later finds that there are still problems with the code, they can cancel the changes by GitHub Request Changes
   - Once the reviewer uses the above command, the bot ti-chi-bot will automatically add or remove the lgtm-related labels 
 - **Phase III：** committers review code ([ti-community-merge](en/plugins/merge.md) provide support)
   - committer to review the PR again, looking at dependencies with other features, forward/backward compatibility, etc.

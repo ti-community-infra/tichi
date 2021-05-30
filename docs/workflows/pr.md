@@ -14,7 +14,7 @@
   - 根据 ti-community-blunderbuss 配置随机选取多个 reviewers
 - **第二阶段：** reviewers review 代码 ([ti-community-lgtm](plugins/lgtm.md) 提供支持)
   - reviewer 会查看代码的质量，正确性，工程考量等
-  - 如果 reviewer 认为代码没有问题，reviewer 会使用 `/lgtm` 同意这些改动；如果 reviewer 后续觉得代码还是有问题，可以通过 `/lgtm cancel` 来取消同意代码改动
+  - 如果 reviewer 认为代码没有问题，reviewer 会提交 Approve 意见同意这些改动；如果 reviewer 后续觉得代码还是有问题，可以提交 Request Changes 意见来取消同意代码改动
   - 一旦 reviewer 使用上述命令，机器人 ti-chi-bot 就会自动打上或移除 lgtm 相关标签 
 - **第三阶段：** committers 审核代码 ([ti-community-merge](plugins/merge.md) 提供支持)
   - committer 对 PR 进行再审核，考察与其他功能的依赖关系，向前/向后的兼容性等
