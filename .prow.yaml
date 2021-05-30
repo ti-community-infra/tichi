@@ -174,7 +174,7 @@ postsubmits:
       - ^master$
     spec:
       containers:
-        - image: golang:1.15
+        - image: golang:1.16
           command:
             - /bin/bash
             - -c
