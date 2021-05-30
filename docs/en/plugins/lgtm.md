@@ -61,6 +61,14 @@ ti-community-lgtm:
 
 ## Q&A
 
+### Why does `/lgtm [cancel]` take no effect anymore?
+
+GitHub supports submitting review by Approve or Request Changes, which we always count as lgtm or reset lgtm status.
+
+We don't want to support duplicate features that GitHub already provides, and regard the robot as an assistant, not a majordomo.
+
+For original discussion, see also [#561](https://github.com/ti-community-infra/tichi/issues/561).
+
 ### Can I Approve my own PR?
 
 No, you can't approve your own PR on GitHub.

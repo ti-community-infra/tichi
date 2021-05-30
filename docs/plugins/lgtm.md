@@ -61,7 +61,15 @@ ti-community-lgtm:
 
 ## Q&A
 
-### 我是否可以 Approve 自己的 PR?
+### 为什么 `/lgtm [cancel]` 命令不再生效了？
+
+GitHub 自身提供了 Approve 和 Request Changes 的 review 选项，我们一直支持通过这种方式来触发 lgtm 计数和重置。
+
+我们希望避免重复支持同一个功能，将机器人作为协作流程的小助手而不是总览一切的大管家。
+
+详细讨论参考 [#561](https://github.com/ti-community-infra/tichi/issues/561)。
+
+### 我是否可以 Approve 自己的 PR？
 
 不可以，在 GitHub 上你无法 approve 自己的 PR。
 
