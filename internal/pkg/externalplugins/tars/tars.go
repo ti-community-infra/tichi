@@ -200,8 +200,7 @@ func handlePullRequest(log *logrus.Entry, ghc githubClient,
 		return nil
 	}
 
-	lastCommitIndex := len(prCommits) - 1
-	return takeAction(log, ghc, org, repo, number, &prCommits[lastCommitIndex].SHA, pr.User.Login, tars.Message)
+	return takeAction(log, ghc, org, repo, number, pr.User.Login, tars.Message)
 }
 
 // HandlePushEvent handles a GitHub push event and update the PR.
@@ -372,9 +371,7 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *tiexterna
 		return false, nil
 	}
 
-	lastCommitIndex := 0
-	lastCommitSHA := string(pr.Commits.Nodes[lastCommitIndex].Commit.OID)
-	return true, takeAction(log, ghc, org, repo, number, &lastCommitSHA, string(pr.Author.Login), tars.Message)
+	return true, takeAction(log, ghc, org, repo, number, string(pr.Author.Login), tars.Message)
 }
 
 func search(ctx context.Context, log *logrus.Entry, ghc githubClient, q string) ([]pullRequest, error) {
@@ -405,7 +402,7 @@ func search(ctx context.Context, log *logrus.Entry, ghc githubClient, q string) 
 }
 
 // takeAction updates the PR and comment ont it.
-func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, expectedHeadSha *string,
+func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int,
 	author string, message string) error {
 	botUserChecker, err := ghc.BotUserChecker()
 	if err != nil {
@@ -421,7 +418,7 @@ func takeAction(log *logrus.Entry, ghc githubClient, org, repo string, num int, 
 	}
 
 	log.Infof("Update PR %s/%s#%d.", org, repo, num)
-	err = ghc.UpdatePullRequestBranch(org, repo, num, expectedHeadSha)
+	err = ghc.UpdatePullRequestBranch(org, repo, num, nil)
 	if err != nil {
 		return err
 	}
