@@ -10,12 +10,12 @@
 
 基于目前 TiDB 的 SIG 的设计，将权限划分如下：
 
-- committers（**可以使用 /merge 命令**）
+- committers（**可以合并 PR**）
   - maintainers
   - techLeaders
   - coLeaders
   - committers
-- reviewers (**可以使用 /lgtm 命令**)
+- reviewers (**可以赞同 PR**)
   - maintainers
   - techLeaders
   - coLeaders

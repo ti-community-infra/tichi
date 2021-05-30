@@ -20,7 +20,7 @@ The following shows some commonly used components or plugins in the TiDB communi
 | ------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | tide                            | basic component | Manage the GitHub PR pool through some given conditions and automatically merge PR that meets the conditions.                             |
 | ti-community-owners             | external plugin | Determine the reviewer and committer of the PR based on information such as SIG or Github permissions.                                    |
-| ti-community-lgtm               | external plugin | Add command to add or cancel the `status/LGT*` label.                                                                                     |
+| ti-community-lgtm               | external plugin | Add, update or delete the `status/LGT*` label by submitting Approve or Request Changes review.                                                                                     |
 | ti-community-merge              | external plugin | Add or delete the `status/can-merge` label for PR by command.                                                                             |
 | ti-community-blunderbuss        | external plugin | Mainly responsible for automatically assigning reviewers based on SIG or Github permissions.                                              |
 | ti-community-autoresponder      | external plugin | Automatically reply based on the content of the comment.                                                                                  |
