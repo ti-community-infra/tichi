@@ -1,6 +1,6 @@
 archives:
   -
-    allow_different_binary_count: true
+    format: binary
 before:
   hooks:
     - go mod download
