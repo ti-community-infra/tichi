@@ -335,11 +335,7 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 }
 
 func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent) error {
-	// Only consider newly merged PRs.
-	if pre.Action != github.PullRequestActionClosed && pre.Action != github.PullRequestActionLabeled {
-		return nil
-	}
-
+	// Only consider merged PRs.
 	pr := pre.PullRequest
 	if !pr.Merged || pr.MergeSHA == nil {
 		return nil
@@ -350,63 +346,74 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 	baseBranch := pr.Base.Ref
 	num := pr.Number
 	opts := s.ConfigAgent.Config().CherrypickerFor(org, repo)
-
 	// Do not create a new logger, its fields are re-used by the caller in case of errors.
 	*l = *l.WithFields(logrus.Fields{
 		github.OrgLogField:  org,
 		github.RepoLogField: repo,
 		github.PrLogField:   num,
 	})
-
-	comments, err := s.GitHubClient.ListIssueComments(org, repo, num)
-	if err != nil {
-		return fmt.Errorf("failed to list comments: %w", err)
-	}
-
 	// requestor -> target branch -> issue comment.
 	requestorToComments := make(map[string]map[string]*github.IssueComment)
-
-	// First look for our special comments.
-	for i := range comments {
-		c := comments[i]
-		cherryPickMatches := cherryPickRe.FindAllStringSubmatch(c.Body, -1)
-		for _, match := range cherryPickMatches {
-			targetBranch := strings.TrimSpace(match[1])
-			if requestorToComments[c.User.Login] == nil {
-				requestorToComments[c.User.Login] = make(map[string]*github.IssueComment)
-			}
-			requestorToComments[c.User.Login][targetBranch] = &c
-		}
-	}
-
-	foundCherryPickComments := len(requestorToComments) != 0
-
-	// Now look for our special labels.
-	labels, err := s.GitHubClient.GetIssueLabels(org, repo, num)
-	if err != nil {
-		return fmt.Errorf("failed to get issue labels: %w", err)
-	}
-
 	// NOTICE: This will set the requestor to the author of the PR.
 	if requestorToComments[pr.User.Login] == nil {
 		requestorToComments[pr.User.Login] = make(map[string]*github.IssueComment)
 	}
 
-	foundCherryPickLabels := false
-	for _, label := range labels {
-		if strings.HasPrefix(label.Name, opts.LabelPrefix) {
-			// leave this nil which indicates a label-initiated cherry-pick.
-			requestorToComments[pr.User.Login][label.Name[len(opts.LabelPrefix):]] = nil
-			foundCherryPickLabels = true
+	switch pre.Action {
+	case github.PullRequestActionClosed:
+		{
+			comments, err := s.GitHubClient.ListIssueComments(org, repo, num)
+			if err != nil {
+				return fmt.Errorf("failed to list comments: %w", err)
+			}
+
+			// First look for our special comments.
+			for i := range comments {
+				c := comments[i]
+				cherryPickMatches := cherryPickRe.FindAllStringSubmatch(c.Body, -1)
+				for _, match := range cherryPickMatches {
+					targetBranch := strings.TrimSpace(match[1])
+					if requestorToComments[c.User.Login] == nil {
+						requestorToComments[c.User.Login] = make(map[string]*github.IssueComment)
+					}
+					requestorToComments[c.User.Login][targetBranch] = &c
+				}
+			}
+
+			foundCherryPickComments := len(requestorToComments) != 0
+
+			// Now look for our special labels.
+			labels, err := s.GitHubClient.GetIssueLabels(org, repo, num)
+			if err != nil {
+				return fmt.Errorf("failed to get issue labels: %w", err)
+			}
+			foundCherryPickLabels := false
+			for _, label := range labels {
+				if strings.HasPrefix(label.Name, opts.LabelPrefix) {
+					// leave this nil which indicates a label-initiated cherry-pick.
+					requestorToComments[pr.User.Login][label.Name[len(opts.LabelPrefix):]] = nil
+					foundCherryPickLabels = true
+				}
+			}
+			// No need to cherry pick.
+			if !foundCherryPickComments && !foundCherryPickLabels {
+				return nil
+			}
 		}
-	}
+	case github.PullRequestActionLabeled:
+		{
+			foundCherryPickLabels := false
+			if strings.HasPrefix(pre.Label.Name, opts.LabelPrefix) {
+				// leave this nil which indicates a label-initiated cherry-pick.
+				requestorToComments[pr.User.Login][pre.Label.Name[len(opts.LabelPrefix):]] = nil
+				foundCherryPickLabels = true
+			}
 
-	// No need to cherry pick.
-	if !foundCherryPickComments && !foundCherryPickLabels {
-		return nil
-	}
-
-	if !foundCherryPickLabels && pre.Action == github.PullRequestActionLabeled {
+			if !foundCherryPickLabels {
+				return nil
+			}
+		}
+	default:
 		return nil
 	}
 

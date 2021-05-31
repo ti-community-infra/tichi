@@ -685,10 +685,13 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 	if err := lg.CheckoutNewBranch("foo", "bar", "release-1.6"); err != nil {
 		t.Fatalf("Checking out pull branch: %v", err)
 	}
+	if err := lg.CheckoutNewBranch("foo", "bar", "release-1.7"); err != nil {
+		t.Fatalf("Checking out pull branch: %v", err)
+	}
 
-	pr := func(evt github.PullRequestEventAction) github.PullRequestEvent {
+	pr := func(label github.Label) github.PullRequestEvent {
 		return github.PullRequestEvent{
-			Action: evt,
+			Action: github.PullRequestActionLabeled,
 			PullRequest: github.PullRequest{
 				User: github.User{
 					Login: "developer",
@@ -712,10 +715,9 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 					},
 				},
 			},
+			Label: label,
 		}
 	}
-
-	events := []github.PullRequestEventAction{github.PullRequestActionClosed, github.PullRequestActionLabeled}
 
 	botUser := &github.UserData{Login: "ci-robot", Email: "ci-robot@users.noreply.github.com"}
 
@@ -759,18 +761,14 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 				},
 			},
 		},
-		{
-			name:        "No labels, label gets ignored",
-			labelPrefix: "needs-cherry-pick-",
-		},
 	}
 
 	for _, test := range testCases {
 		tc := test
 		t.Run(tc.name, func(t *testing.T) {
-			for _, event := range events {
-				evt := event
-				t.Run(string(evt), func(t *testing.T) {
+			for _, prLabel := range tc.prLabels {
+				lb := prLabel
+				t.Run(lb.Name, func(t *testing.T) {
 					ghc := &fghc{
 						orgMembers: []github.TeamMember{
 							{
@@ -824,7 +822,7 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 						Repos:          []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
 					}
 
-					if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), pr(evt)); err != nil {
+					if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), pr(lb)); err != nil {
 						t.Fatalf("unexpected error: %v", err)
 					}
 
@@ -833,12 +831,12 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 						expectedBody := "This is an automated cherry-pick of #2"
 						expectedHead := fmt.Sprintf(botUser.Login+":"+cherryPickBranchFmt, 2, branch)
 						var expectedLabels []string
-						for _, label := range pr(evt).PullRequest.Labels {
+						for _, label := range pr(lb).PullRequest.Labels {
 							expectedLabels = append(expectedLabels, label.Name)
 						}
 						expectedLabels = append(expectedLabels, "type/cherrypick-for-"+branch)
 						var expectedReviewers []string
-						for _, reviewer := range pr(evt).PullRequest.RequestedReviewers {
+						for _, reviewer := range pr(lb).PullRequest.RequestedReviewers {
 							expectedReviewers = append(expectedReviewers, reviewer.Login)
 						}
 						expectedAssignees := []string{"developer"}
@@ -846,29 +844,25 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 							branch, expectedLabels, expectedReviewers, expectedAssignees)
 					}
 
-					expectedPRs := 2
-					if len(tc.prLabels) == 0 {
-						if evt == github.PullRequestActionLabeled {
-							expectedPRs = 0
-						} else {
-							expectedPRs = 1
-						}
-					}
+					expectedPRs := 1
 					if len(ghc.prs) != expectedPRs {
 						t.Errorf("Expected %d PRs, got %d", expectedPRs, len(ghc.prs))
 					}
 
-					expectedBranches := []string{"release-1.5", "release-1.6"}
+					expectedBranches := []string{"release-1.5", "release-1.6", "release-1.7"}
 					seenBranches := make(map[string]bool)
 					for _, p := range ghc.prs {
 						pr := prToString(p)
-						if pr != expectedFn("release-1.5") && pr != expectedFn("release-1.6") {
+						if pr != expectedFn("release-1.5") && pr != expectedFn("release-1.6") && pr != expectedFn("release-1.7") {
 							t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v", pr, expectedBranches)
 						}
 						if pr == expectedFn("release-1.5") {
 							seenBranches["release-1.5"] = true
 						}
 						if pr == expectedFn("release-1.6") {
+							seenBranches["release-1.6"] = true
+						}
+						if pr == expectedFn("release-1.7") {
 							seenBranches["release-1.6"] = true
 						}
 					}
