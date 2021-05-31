@@ -1,4 +1,5 @@
-allow_different_binary_count: true
+archives:
+  allow_different_binary_count: true
 before:
   hooks:
     - go mod download
