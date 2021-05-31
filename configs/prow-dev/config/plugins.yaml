@@ -64,8 +64,6 @@ external_plugins:
   ti-community-infra/test-dev:
     - name: ti-community-lgtm
       events:
-        - issue_comment
-        - pull_request_review_comment
         - pull_request_review
         - pull_request
     - name: ti-community-merge
