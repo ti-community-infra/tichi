@@ -334,7 +334,7 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 	return nil
 }
 
-func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent) error {
+func (s *Server) handlePullRequest(log *logrus.Entry, pre github.PullRequestEvent) error {
 	// Only consider merged PRs.
 	pr := pre.PullRequest
 	if !pr.Merged || pr.MergeSHA == nil {
@@ -346,12 +346,6 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 	baseBranch := pr.Base.Ref
 	num := pr.Number
 	opts := s.ConfigAgent.Config().CherrypickerFor(org, repo)
-	// Do not create a new logger, its fields are re-used by the caller in case of errors.
-	*l = *l.WithFields(logrus.Fields{
-		github.OrgLogField:  org,
-		github.RepoLogField: repo,
-		github.PrLogField:   num,
-	})
 	// requestor -> target branch -> issue comment.
 	requestorToComments := make(map[string]map[string]*github.IssueComment)
 	// NOTICE: This will set the requestor to the author of the PR.
@@ -360,6 +354,7 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 	}
 
 	switch pre.Action {
+	// Considering close event.
 	case github.PullRequestActionClosed:
 		{
 			comments, err := s.GitHubClient.ListIssueComments(org, repo, num)
@@ -400,16 +395,13 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 				return nil
 			}
 		}
+	// Considering labeled event(Processes only the label that was added).
 	case github.PullRequestActionLabeled:
 		{
-			foundCherryPickLabels := false
 			if strings.HasPrefix(pre.Label.Name, opts.LabelPrefix) {
 				// leave this nil which indicates a label-initiated cherry-pick.
 				requestorToComments[pr.User.Login][pre.Label.Name[len(opts.LabelPrefix):]] = nil
-				foundCherryPickLabels = true
-			}
-
-			if !foundCherryPickLabels {
+			} else {
 				return nil
 			}
 		}
@@ -437,6 +429,12 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 		}
 	}
 
+	// Do not create a new logger, its fields are re-used by the caller in case of errors.
+	*log = *log.WithFields(logrus.Fields{
+		github.OrgLogField:  org,
+		github.RepoLogField: repo,
+		github.PrLogField:   num,
+	})
 	// Handle multiple comments serially. Make sure to filter out
 	// comments targeting the same branch.
 	handledBranches := make(map[string]bool)
@@ -449,14 +447,14 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 			}
 			if targetBranch == baseBranch {
 				resp := fmt.Sprintf("base branch (%s) needs to differ from target branch (%s).", baseBranch, targetBranch)
-				l.Info(resp)
-				if err := s.createComment(l, org, repo, num, ic, resp); err != nil {
-					l.WithError(err).WithField("response", resp).Error("Failed to create comment.")
+				log.Info(resp)
+				if err := s.createComment(log, org, repo, num, ic, resp); err != nil {
+					log.WithError(err).WithField("response", resp).Error("Failed to create comment.")
 				}
 				continue
 			}
 			handledBranches[targetBranch] = true
-			l := l.WithFields(logrus.Fields{
+			l := log.WithFields(logrus.Fields{
 				"requestor":     requestor,
 				"target_branch": targetBranch,
 			})

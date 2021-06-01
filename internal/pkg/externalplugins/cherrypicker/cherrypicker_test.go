@@ -679,14 +679,12 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 	if err := lg.AddCommit("foo", "bar", initialFiles); err != nil {
 		t.Fatalf("Adding initial commit: %v", err)
 	}
-	if err := lg.CheckoutNewBranch("foo", "bar", "release-1.5"); err != nil {
-		t.Fatalf("Checking out pull branch: %v", err)
-	}
-	if err := lg.CheckoutNewBranch("foo", "bar", "release-1.6"); err != nil {
-		t.Fatalf("Checking out pull branch: %v", err)
-	}
-	if err := lg.CheckoutNewBranch("foo", "bar", "release-1.7"); err != nil {
-		t.Fatalf("Checking out pull branch: %v", err)
+
+	expectedBranches := []string{"release-1.5", "release-1.6", "release-1.7"}
+	for _, branch := range expectedBranches {
+		if err := lg.CheckoutNewBranch("foo", "bar", branch); err != nil {
+			t.Fatalf("Checking out pull branch: %v", err)
+		}
 	}
 
 	pr := func(label github.Label) github.PullRequestEvent {
@@ -849,23 +847,23 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 						t.Errorf("Expected %d PRs, got %d", expectedPRs, len(ghc.prs))
 					}
 
-					expectedBranches := []string{"release-1.5", "release-1.6", "release-1.7"}
+					expectedPrs := make(map[string]string)
+					for _, branch := range expectedBranches {
+						expectedPrs[expectedFn(branch)] = branch
+					}
+
 					seenBranches := make(map[string]bool)
 					for _, p := range ghc.prs {
 						pr := prToString(p)
-						if pr != expectedFn("release-1.5") && pr != expectedFn("release-1.6") && pr != expectedFn("release-1.7") {
-							t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v", pr, expectedBranches)
-						}
-						if pr == expectedFn("release-1.5") {
-							seenBranches["release-1.5"] = true
-						}
-						if pr == expectedFn("release-1.6") {
-							seenBranches["release-1.6"] = true
-						}
-						if pr == expectedFn("release-1.7") {
-							seenBranches["release-1.6"] = true
+						branch, present := expectedPrs[pr]
+						if !present {
+							t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v\n",
+								pr, expectedBranches)
+						} else {
+							seenBranches[branch] = present
 						}
 					}
+
 					if len(seenBranches) != expectedPRs {
 						t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", expectedPRs, len(seenBranches), seenBranches)
 					}
