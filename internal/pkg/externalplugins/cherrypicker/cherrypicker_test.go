@@ -844,17 +844,17 @@ func testCherryPickPRWithComment(clients localgit.Clients, t *testing.T) {
 	}
 }
 
-func TestCherryPickPRWithLabeled(t *testing.T) {
+func TestCherryPickPRLabeled(t *testing.T) {
 	t.Parallel()
-	testCherryPickPRWithLabeled(localgit.New, t)
+	testCherryPickPRLabeled(localgit.New, t)
 }
 
-func TestCherryPickPRWithLabeledV2(t *testing.T) {
+func TestCherryPickPRLabeledV2(t *testing.T) {
 	t.Parallel()
-	testCherryPickPRWithLabeled(localgit.NewV2, t)
+	testCherryPickPRLabeled(localgit.NewV2, t)
 }
 
-func testCherryPickPRWithLabeled(clients localgit.Clients, t *testing.T) {
+func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 	lg, c, err := clients()
 	if err != nil {
 		t.Fatalf("Making localgit: %v", err)
