@@ -724,10 +724,11 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 	}
 
 	testCases := []struct {
-		name        string
-		labelPrefix string
-		prLabels    []github.Label
-		prComments  []github.IssueComment
+		name         string
+		labelPrefix  string
+		prLabels     []github.Label
+		prComments   []github.IssueComment
+		shouldToggle bool
 	}{
 		{
 			name:        "Default label prefix",
@@ -743,6 +744,7 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 					Name: "cherrypick/release-1.7",
 				},
 			},
+			shouldToggle: true,
 		},
 		{
 			name:        "Custom label prefix",
@@ -758,6 +760,20 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 					Name: "needs-cherry-pick-release-1.7",
 				},
 			},
+			shouldToggle: true,
+		},
+		{
+			name:        "Random labels",
+			labelPrefix: "needs-cherry-pick-",
+			prLabels: []github.Label{
+				{
+					Name: "cherrypick/release-1.5",
+				},
+				{
+					Name: "random-label",
+				},
+			},
+			shouldToggle: false,
 		},
 	}
 
@@ -842,30 +858,34 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 							branch, expectedLabels, expectedReviewers, expectedAssignees)
 					}
 
-					expectedPRs := 1
-					if len(ghc.prs) != expectedPRs {
-						t.Errorf("Expected %d PRs, got %d", expectedPRs, len(ghc.prs))
-					}
-
-					expectedPrs := make(map[string]string)
-					for _, branch := range expectedBranches {
-						expectedPrs[expectedFn(branch)] = branch
-					}
-
-					seenBranches := make(map[string]bool)
-					for _, p := range ghc.prs {
-						pr := prToString(p)
-						branch, present := expectedPrs[pr]
-						if !present {
-							t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v\n",
-								pr, expectedBranches)
-						} else {
-							seenBranches[branch] = present
+					if tc.shouldToggle {
+						expectedPRs := 1
+						if len(ghc.prs) != expectedPRs {
+							t.Errorf("Expected %d PRs, got %d", expectedPRs, len(ghc.prs))
 						}
-					}
 
-					if len(seenBranches) != expectedPRs {
-						t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", expectedPRs, len(seenBranches), seenBranches)
+						expectedPrs := make(map[string]string)
+						for _, branch := range expectedBranches {
+							expectedPrs[expectedFn(branch)] = branch
+						}
+
+						seenBranches := make(map[string]bool)
+						for _, p := range ghc.prs {
+							pr := prToString(p)
+							branch, present := expectedPrs[pr]
+							if !present {
+								t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v\n",
+									pr, expectedBranches)
+							} else {
+								seenBranches[branch] = present
+							}
+						}
+
+						if len(seenBranches) != expectedPRs {
+							t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", expectedPRs, len(seenBranches), seenBranches)
+						}
+					} else if len(ghc.prs) > 0 {
+						t.Error("PRs should not be created.")
 					}
 				})
 			}
