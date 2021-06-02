@@ -57,10 +57,6 @@ tools/bin/golangci-lint:
 	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ./tools/bin v1.31.0
 
 label-dumpling-checks:
-	rustup component add rustfmt && \
-	rustup component add clippy && \
-	cd ./tools/label-dumpling && \
-	cargo fmt --all -- --check && \
-	cargo check --all --all-targets && \
-	cargo clippy --all --all-targets -- -D warnings
+	@echo "label-dumpling checks"
+	./scripts/label-dumpling-checks.sh
 
