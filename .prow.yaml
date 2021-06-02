@@ -197,6 +197,18 @@ postsubmits:
                 secretKeyRef:
                   name: codecov-tokens
                   key: ti-community-infra-tichi-codecov-token
+  - name: post-tichi-label-dumpling-checks
+    decorate: true
+    always_run: true
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: rust:1.52
+          command:
+            - /bin/bash
+            - -c
+            - "make label-dumpling-checks"
   - name: pull-tichi-web-node14-lint
     decorate: true
     branches:
