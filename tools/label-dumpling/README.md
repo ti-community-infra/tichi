@@ -10,8 +10,4 @@ To use it, you need to set a valid personal access token in the GITHUB_TOKEN env
 label-dumpling <org> <repo> --output <output>
 ```
 
-The output is the path to the output file. The default is `labels.yaml`. 
-
-
-
-
+The output is the path to the output file. The default is `labels.yaml`.
