@@ -1,4 +1,3 @@
-use chrono::{DateTime, Utc};
 use clap::Clap;
 use octocrab::models;
 use serde::{Deserialize, Serialize};
@@ -6,14 +5,14 @@ use std::fs::OpenOptions;
 
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate dotenv_codegen;
 
 #[derive(Clap)]
 #[clap(version = "0.1.0", author = "hi-rustin <rustin.liu@gmail.com>")]
 struct Opts {
     org: String,
     repo: String,
-    #[clap(short, long)]
-    token: String,
     #[clap(short, long, default_value = "label.yaml")]
     output: String,
 }
@@ -32,7 +31,7 @@ struct Label {
     added_by: Option<String>,
     previously: Option<String>,
     #[serde(rename = "deleteAfter")]
-    delete_after: Option<DateTime<Utc>>,
+    delete_after: Option<String>,
 }
 
 #[tokio::main]
@@ -41,37 +40,37 @@ pub async fn main() {
 
     let opts: Opts = Opts::parse();
     let octocrab = octocrab::OctocrabBuilder::new()
-        .personal_token(opts.token)
+        .personal_token(dotenv!("GITHUB_TOKEN").to_string())
         .build()
-        .expect("Failed to build octocrab.");
+        .expect("Failed to init octocrab.");
 
     info!("Open the file {}.", opts.output);
     let file = OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
-        .open(opts.output.clone())
-        .expect("Failed to open file.");
-    let mut lables: Vec<models::Label> = vec![];
+        .open(&opts.output)
+        .unwrap_or_else(|_| panic!("Failed to open file {}.", opts.output));
+    let mut labels: Vec<models::Label> = vec![];
 
-    info!("Start fetching labels.");
+    info!("Start list labels...");
     let page = octocrab
-        .issues(opts.org.clone(), opts.repo.clone())
+        .issues(&opts.org, &opts.repo)
         .list_labels_for_repo()
         .per_page(50)
         .send()
         .await
-        .expect("Failed to get labels.");
-    lables.extend_from_slice(&page.items);
+        .expect("Failed to list labels.");
+    labels.extend_from_slice(&page.items);
     let mut next_page = page.next;
     while let Some(page) =
-        (octocrab.get_page::<models::Label>(&next_page).await).expect("Failed to get labels.")
+        (octocrab.get_page::<models::Label>(&next_page).await).expect("Failed to list labels.")
     {
         next_page = page.next;
-        lables.extend_from_slice(&page.items);
+        labels.extend_from_slice(&page.items);
     }
 
-    let lables: Vec<Label> = lables
+    let labels: Vec<Label> = labels
         .iter()
         .map(|l| Label {
             name: l.name.clone(),
@@ -86,6 +85,7 @@ pub async fn main() {
         })
         .collect();
     info!("Write to file {}.", opts.output);
-    serde_yaml::to_writer(file, &lables).expect("Failed to write file.");
+    serde_yaml::to_writer(file, &labels)
+        .unwrap_or_else(|_| panic!("Failed to write file {}.", opts.output));
     info!("Dumping completed.");
 }
