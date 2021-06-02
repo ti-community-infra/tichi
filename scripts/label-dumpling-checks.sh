@@ -1,14 +1,16 @@
 #!/bin/bash
 
-# workdir
+# cd into label dumpling dir.
 cd ./tools/label-dumpling/ || exit
 
-# add components
+# Add fmt and clippy components.
 rustup component add rustfmt
 rustup component add clippy
 
-# In the CI environment we need to copy the .env file for use by dotenv
-if [ $CI ]; then
+# In the CI environment we need to copy the .env file for use by dotenv.
+if [[ -z "${CI}" ]]; then
+  echo "Not a CI environment, do not copy .env.example to .env"
+else
   cp ./tools/label-dumpling/.env.example ./tools/label-dumpling/.env
 fi
 
