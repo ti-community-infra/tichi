@@ -18,6 +18,7 @@ The original file of the code is at:
 https://github.com/kubernetes/test-infra/blob/master/prow/external-plugins/cherrypicker/server.go,
 which we modified to add support for copying the labels and reviewers.
 */
+
 package cherrypicker
 
 import (
@@ -334,12 +335,8 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 	return nil
 }
 
-func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent) error {
-	// Only consider newly merged PRs.
-	if pre.Action != github.PullRequestActionClosed && pre.Action != github.PullRequestActionLabeled {
-		return nil
-	}
-
+func (s *Server) handlePullRequest(log *logrus.Entry, pre github.PullRequestEvent) error {
+	// Only consider merged PRs.
 	pr := pre.PullRequest
 	if !pr.Merged || pr.MergeSHA == nil {
 		return nil
@@ -350,63 +347,66 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 	baseBranch := pr.Base.Ref
 	num := pr.Number
 	opts := s.ConfigAgent.Config().CherrypickerFor(org, repo)
-
-	// Do not create a new logger, its fields are re-used by the caller in case of errors.
-	*l = *l.WithFields(logrus.Fields{
-		github.OrgLogField:  org,
-		github.RepoLogField: repo,
-		github.PrLogField:   num,
-	})
-
-	comments, err := s.GitHubClient.ListIssueComments(org, repo, num)
-	if err != nil {
-		return fmt.Errorf("failed to list comments: %w", err)
-	}
-
 	// requestor -> target branch -> issue comment.
 	requestorToComments := make(map[string]map[string]*github.IssueComment)
-
-	// First look for our special comments.
-	for i := range comments {
-		c := comments[i]
-		cherryPickMatches := cherryPickRe.FindAllStringSubmatch(c.Body, -1)
-		for _, match := range cherryPickMatches {
-			targetBranch := strings.TrimSpace(match[1])
-			if requestorToComments[c.User.Login] == nil {
-				requestorToComments[c.User.Login] = make(map[string]*github.IssueComment)
-			}
-			requestorToComments[c.User.Login][targetBranch] = &c
-		}
-	}
-
-	foundCherryPickComments := len(requestorToComments) != 0
-
-	// Now look for our special labels.
-	labels, err := s.GitHubClient.GetIssueLabels(org, repo, num)
-	if err != nil {
-		return fmt.Errorf("failed to get issue labels: %w", err)
-	}
-
 	// NOTICE: This will set the requestor to the author of the PR.
 	if requestorToComments[pr.User.Login] == nil {
 		requestorToComments[pr.User.Login] = make(map[string]*github.IssueComment)
 	}
 
-	foundCherryPickLabels := false
-	for _, label := range labels {
-		if strings.HasPrefix(label.Name, opts.LabelPrefix) {
-			// leave this nil which indicates a label-initiated cherry-pick.
-			requestorToComments[pr.User.Login][label.Name[len(opts.LabelPrefix):]] = nil
-			foundCherryPickLabels = true
+	switch pre.Action {
+	// Considering close event.
+	case github.PullRequestActionClosed:
+		{
+			comments, err := s.GitHubClient.ListIssueComments(org, repo, num)
+			if err != nil {
+				return fmt.Errorf("failed to list comments: %w", err)
+			}
+
+			// First look for our special comments.
+			for i := range comments {
+				c := comments[i]
+				cherryPickMatches := cherryPickRe.FindAllStringSubmatch(c.Body, -1)
+				for _, match := range cherryPickMatches {
+					targetBranch := strings.TrimSpace(match[1])
+					if requestorToComments[c.User.Login] == nil {
+						requestorToComments[c.User.Login] = make(map[string]*github.IssueComment)
+					}
+					requestorToComments[c.User.Login][targetBranch] = &c
+				}
+			}
+
+			foundCherryPickComments := len(requestorToComments) != 0
+
+			// Now look for our special labels.
+			labels, err := s.GitHubClient.GetIssueLabels(org, repo, num)
+			if err != nil {
+				return fmt.Errorf("failed to get issue labels: %w", err)
+			}
+			foundCherryPickLabels := false
+			for _, label := range labels {
+				if strings.HasPrefix(label.Name, opts.LabelPrefix) {
+					// leave this nil which indicates a label-initiated cherry-pick.
+					requestorToComments[pr.User.Login][label.Name[len(opts.LabelPrefix):]] = nil
+					foundCherryPickLabels = true
+				}
+			}
+			// No need to cherry pick.
+			if !foundCherryPickComments && !foundCherryPickLabels {
+				return nil
+			}
 		}
-	}
-
-	// No need to cherry pick.
-	if !foundCherryPickComments && !foundCherryPickLabels {
-		return nil
-	}
-
-	if !foundCherryPickLabels && pre.Action == github.PullRequestActionLabeled {
+	// Considering labeled event(Processes only the label that was added).
+	case github.PullRequestActionLabeled:
+		{
+			if strings.HasPrefix(pre.Label.Name, opts.LabelPrefix) {
+				// leave this nil which indicates a label-initiated cherry-pick.
+				requestorToComments[pr.User.Login][pre.Label.Name[len(opts.LabelPrefix):]] = nil
+			} else {
+				return nil
+			}
+		}
+	default:
 		return nil
 	}
 
@@ -430,6 +430,12 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 		}
 	}
 
+	// Do not create a new logger, its fields are re-used by the caller in case of errors.
+	*log = *log.WithFields(logrus.Fields{
+		github.OrgLogField:  org,
+		github.RepoLogField: repo,
+		github.PrLogField:   num,
+	})
 	// Handle multiple comments serially. Make sure to filter out
 	// comments targeting the same branch.
 	handledBranches := make(map[string]bool)
@@ -442,14 +448,14 @@ func (s *Server) handlePullRequest(l *logrus.Entry, pre github.PullRequestEvent)
 			}
 			if targetBranch == baseBranch {
 				resp := fmt.Sprintf("base branch (%s) needs to differ from target branch (%s).", baseBranch, targetBranch)
-				l.Info(resp)
-				if err := s.createComment(l, org, repo, num, ic, resp); err != nil {
-					l.WithError(err).WithField("response", resp).Error("Failed to create comment.")
+				log.Info(resp)
+				if err := s.createComment(log, org, repo, num, ic, resp); err != nil {
+					log.WithError(err).WithField("response", resp).Error("Failed to create comment.")
 				}
 				continue
 			}
 			handledBranches[targetBranch] = true
-			l := l.WithFields(logrus.Fields{
+			l := log.WithFields(logrus.Fields{
 				"requestor":     requestor,
 				"target_branch": targetBranch,
 			})
