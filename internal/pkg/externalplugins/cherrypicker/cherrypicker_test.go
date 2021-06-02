@@ -406,15 +406,15 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 		t.Fatalf("Expected %d PRs, got %d", len(expectedBranches), len(ghc.prs))
 	}
 
-	expectedPrs := make(map[string]string)
+	expectedPRs := make(map[string]string)
 	for _, branch := range expectedBranches {
-		expectedPrs[expectedFn(branch)] = branch
+		expectedPRs[expectedFn(branch)] = branch
 	}
 
 	seenBranches := make(map[string]bool)
 	for _, p := range ghc.prs {
 		pr := prToString(p)
-		branch, present := expectedPrs[pr]
+		branch, present := expectedPRs[pr]
 		if !present {
 			t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v\n",
 				pr, expectedBranches)
@@ -604,10 +604,10 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 					branch, expectedLabels, expectedReviewers, expectedAssignees)
 			}
 
-			expectedPRs := 2
+			expectedPRsNum := 2
 
-			if len(ghc.prs) != expectedPRs {
-				t.Errorf("Expected %d PRs, got %d", expectedPRs, len(ghc.prs))
+			if len(ghc.prs) != expectedPRsNum {
+				t.Errorf("Expected %d PRs, got %d", expectedPRsNum, len(ghc.prs))
 			}
 
 			expectedBranches := []string{"release-1.5", "release-1.6"}
@@ -624,8 +624,8 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 					seenBranches["release-1.6"] = true
 				}
 			}
-			if len(seenBranches) != expectedPRs {
-				t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", expectedPRs, len(seenBranches), seenBranches)
+			if len(seenBranches) != expectedPRsNum {
+				t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", expectedPRsNum, len(seenBranches), seenBranches)
 			}
 		})
 	}
@@ -824,14 +824,14 @@ func testCherryPickPRWithComment(clients localgit.Clients, t *testing.T) {
 		t.Fatalf("Expected %d PRs, got %d", len(expectedBranches), len(ghc.prs))
 	}
 
-	expectedPrs := make(map[string]string)
+	expectedPRs := make(map[string]string)
 	for _, branch := range expectedBranches {
-		expectedPrs[expectedFn(branch)] = branch
+		expectedPRs[expectedFn(branch)] = branch
 	}
 	seenBranches := make(map[string]bool)
 	for _, p := range ghc.prs {
 		pr := prToString(p)
-		branch, present := expectedPrs[pr]
+		branch, present := expectedPRs[pr]
 		if !present {
 			t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v\n",
 				pr, expectedBranches)
@@ -1053,20 +1053,20 @@ func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 					}
 
 					if tc.shouldToggle {
-						expectedPRs := 1
-						if len(ghc.prs) != expectedPRs {
-							t.Errorf("Expected %d PRs, got %d", expectedPRs, len(ghc.prs))
+						expectedPRsNum := 1
+						if len(ghc.prs) != expectedPRsNum {
+							t.Errorf("Expected %d PRs, got %d", expectedPRsNum, len(ghc.prs))
 						}
 
-						expectedPrs := make(map[string]string)
+						expectedPRs := make(map[string]string)
 						for _, branch := range expectedBranches {
-							expectedPrs[expectedFn(branch)] = branch
+							expectedPRs[expectedFn(branch)] = branch
 						}
 
 						seenBranches := make(map[string]bool)
 						for _, p := range ghc.prs {
 							pr := prToString(p)
-							branch, present := expectedPrs[pr]
+							branch, present := expectedPRs[pr]
 							if !present {
 								t.Errorf("Unexpected PR:\n%s\nExpected to target one of the following branches: %v\n",
 									pr, expectedBranches)
@@ -1075,8 +1075,8 @@ func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 							}
 						}
 
-						if len(seenBranches) != expectedPRs {
-							t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", expectedPRs, len(seenBranches), seenBranches)
+						if len(seenBranches) != expectedPRsNum {
+							t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", expectedPRsNum, len(seenBranches), seenBranches)
 						}
 					} else if len(ghc.prs) > 0 {
 						t.Error("PRs should not be created.")
