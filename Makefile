@@ -21,10 +21,10 @@ PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/ti-community-infra/$(
 FILES     := $$(find $$($(PACKAGE_DIRECTORIES)) -name "*.go")
 
 
-.PHONY: clean test cover fmt tidy staticcheck dev check
+.PHONY: clean test cover fmt tidy staticcheck dev check label-dumpling-checks
 
 
-dev: check staticcheck test
+dev: check staticcheck test label-dumpling-checks
 
 check: fmt tidy
 
@@ -55,4 +55,10 @@ staticcheck: tools/bin/golangci-lint
 
 tools/bin/golangci-lint:
 	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ./tools/bin v1.31.0
+
+label-dumpling-checks:
+	cd ./tools/label-dumpling && \
+	cargo fmt --all -- --check && \
+	cargo check --all --all-targets && \
+	cargo clippy --all --all-targets
 
