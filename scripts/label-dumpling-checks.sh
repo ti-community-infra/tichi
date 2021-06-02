@@ -12,7 +12,7 @@ if [[ -z "${CI}" ]]; then
   echo "Not a CI environment, do not copy .env.example to .env"
 else
   echo "In a CI environment, copy the .env.example to .env"
-  cp ./tools/label-dumpling/.env.example ./tools/label-dumpling/.env || exit
+  cp .env.example .env || exit
 fi
 
 # checks
