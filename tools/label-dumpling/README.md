@@ -7,7 +7,7 @@
 To use it, you need to set a valid personal access token in the GITHUB_TOKEN environment variable and try the command:
 
 ```shell
-label-dumpling <org> <repo> --output <output>
+label-dumpling <org> <repo> --file-path <file-path>
 ```
 
-The output is the path to the output file. The default is `labels.yaml`.
+The `file-path` is the path to the output file. The default is `labels.yaml`.

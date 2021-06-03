@@ -14,7 +14,7 @@ struct Opts {
     org: String,
     repo: String,
     #[clap(short, long, default_value = "label.yaml")]
-    output: String,
+    file_path: String,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
@@ -44,13 +44,13 @@ pub async fn main() {
         .build()
         .expect("Failed to init octocrab.");
 
-    info!("Open the file {}.", opts.output);
+    info!("Open the file {}.", opts.file_path);
     let file = OpenOptions::new()
         .read(true)
         .write(true)
         .create(true)
-        .open(&opts.output)
-        .unwrap_or_else(|_| panic!("Failed to open file {}.", opts.output));
+        .open(&opts.file_path)
+        .unwrap_or_else(|_| panic!("Failed to open file {}.", opts.file_path));
     let mut labels: Vec<models::Label> = vec![];
 
     info!("Start list labels...");
@@ -84,8 +84,8 @@ pub async fn main() {
             delete_after: None,
         })
         .collect();
-    info!("Write to file {}.", opts.output);
+    info!("Write to file {}.", opts.file_path);
     serde_yaml::to_writer(file, &labels)
-        .unwrap_or_else(|_| panic!("Failed to write file {}.", opts.output));
+        .unwrap_or_else(|_| panic!("Failed to write file {}.", opts.file_path));
     info!("Dumping completed.");
 }
