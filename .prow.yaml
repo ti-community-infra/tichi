@@ -48,7 +48,7 @@ presubmits:
                   key: ti-community-infra-tichi-codecov-token
   - name: pull-tichi-label-dumpling-checks
     decorate: true
-    always_run: true
+    run_if_changed: 'tools/label-dumpling/'
     branches:
       - ^master$
     spec:
@@ -199,7 +199,7 @@ postsubmits:
                   key: ti-community-infra-tichi-codecov-token
   - name: post-tichi-label-dumpling-checks
     decorate: true
-    always_run: true
+    run_if_changed: 'tools/label-dumpling/'
     branches:
       - ^master$
     spec:
