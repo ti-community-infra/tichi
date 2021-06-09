@@ -11,6 +11,7 @@ import (
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
+	"k8s.io/test-infra/prow/plugins"
 
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
@@ -77,9 +78,30 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
 			}
 		}
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
+			TiCommunityLabelBlocker: []tiexternalplugins.TiCommunityLabelBlocker{
+				{
+					Repos: []string{"ti-community-infra/test-dev"},
+					BlockLabels: []tiexternalplugins.BlockLabel{
+						{
+							Regex:        "^status/LGT[\\d]+$",
+							Actions:      []string{"labeled"},
+							TrustedTeams: []string{"release-team"},
+							TrustedUsers: []string{"hi-rustin"},
+							Message:      "You can't add the status/can-merge label.",
+						},
+					},
+				},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
+		}
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: "The ti-community-label-blocker will prevent untrusted users from adding or removing labels.",
 			Config:      configInfo,
+			Snippet:     yamlSnippet,
+			Events:      []string{tiexternalplugins.PullRequestEvent, tiexternalplugins.IssuesEvent},
 		}
 
 		return pluginHelp, nil

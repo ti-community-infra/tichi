@@ -9,6 +9,7 @@ import (
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
+	"k8s.io/test-infra/prow/plugins"
 
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
@@ -53,9 +54,34 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
 			}
 		}
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
+			TiCommunityAutoresponder: []tiexternalplugins.TiCommunityAutoresponder{
+				{
+					Repos: []string{"ti-community-infra/test-dev"},
+					AutoResponds: []tiexternalplugins.AutoRespond{
+						{
+							Regex:   "(?mi)^/ping\\s*$",
+							Message: "pong",
+						},
+					},
+				},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
+		}
+
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: "The ti-community-autoresponder will trigger an automatic reply when the comment matches a regex.",
 			Config:      configInfo,
+			Snippet:     yamlSnippet,
+			Events: []string{
+				tiexternalplugins.PullRequestEvent,
+				tiexternalplugins.PullRequestReviewEvent,
+				tiexternalplugins.PullRequestReviewCommentEvent,
+				tiexternalplugins.IssuesEvent,
+				tiexternalplugins.IssueCommentEvent,
+			},
 		}
 
 		return pluginHelp, nil

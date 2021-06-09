@@ -14,6 +14,7 @@ import (
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
+	"k8s.io/test-infra/prow/plugins"
 
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
@@ -56,10 +57,28 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
 			}
 		}
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
+			TiCommunityMerge: []tiexternalplugins.TiCommunityMerge{
+				{
+					Repos:              []string{"ti-community-infra/test-dev"},
+					StoreTreeHash:      true,
+					PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+				},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
+		}
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: "The ti-community-merge plugin controls the merge process by adding or removing the '" +
 				tiexternalplugins.CanMergeLabel + "' label.",
-			Config: configInfo,
+			Config:  configInfo,
+			Snippet: yamlSnippet,
+			Events: []string{
+				tiexternalplugins.IssueCommentEvent,
+				tiexternalplugins.PullRequestReviewCommentEvent,
+				tiexternalplugins.PullRequestEvent,
+			},
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{

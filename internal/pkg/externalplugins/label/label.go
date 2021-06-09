@@ -11,6 +11,7 @@ import (
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
+	"k8s.io/test-infra/prow/plugins"
 
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
@@ -60,11 +61,27 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			labelConfig[repo.String()] = prefixConfigMsg + additionalLabelsConfigMsg + excludeLabelsConfigMsg
 		}
 
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
+			TiCommunityLabel: []tiexternalplugins.TiCommunityLabel{
+				{
+					Repos:            []string{"ti-community-infra/test-dev"},
+					AdditionalLabels: []string{"needs-cherry-pick-1.1", "needs-cherry-pick-1.0"},
+					Prefixes:         []string{"type", "status"},
+					ExcludeLabels:    []string{"stats/can-merge"},
+				},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
+		}
+
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: "The label plugin provides commands that add or remove certain types of labels. " +
 				"For example, the labels like 'status/*', 'sig/*' and bare labels can be " +
 				"managed by using `/status`, `/sig` and `/label`.",
-			Config: labelConfig,
+			Config:  labelConfig,
+			Snippet: yamlSnippet,
+			Events:  []string{tiexternalplugins.IssueCommentEvent},
 		}
 		pluginHelp.AddCommand(pluginhelp.Command{
 			Usage:       "/[remove-](status|sig|type|label|component) <target>",
