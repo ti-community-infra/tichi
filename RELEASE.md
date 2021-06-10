@@ -23,8 +23,8 @@ task compiles and packages the binary images.
 ## Deployment Steps
 
 We use [scripts](https://github.com/ti-community-infra/tichi/blob/master/scripts/deploy.sh) to automate deployment and
-upgrades. When a pull request for bump version is merged, we use
-a [prow job](https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md)
+upgrades. When a [pull request](https://github.com/ti-community-infra/configs/pull/344) for bump version is merged, we
+use a [prow job](https://github.com/kubernetes/test-infra/blob/master/prow/jobs.md)
 to run the script to complete the automatic deployment.
 
 These tasks are defined in the following prow jobs:
