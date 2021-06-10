@@ -4,7 +4,7 @@
 
 TiChi uses [goreleaser](https://github.com/goreleaser/goreleaser) to release
 in [GitHub Actions](https://github.com/ti-community-infra/tichi/blob/master/.github/workflows/release.yml), where the
-task compiles and packages the binary image.
+task compiles and packages the binary images.
 
 ## Release Steps
 
