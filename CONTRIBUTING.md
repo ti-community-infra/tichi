@@ -47,7 +47,7 @@ TiChi uses Prow as the basic framework, so understanding Prow means understandin
 
 1. [Prow](https://github.com/kubernetes/test-infra/tree/master/prow)
 2. [How Prow works](https://www.youtube.com/watch?v=qQvoImxHydk)
-3. [How to build a prow plugin](https://github.com/ti-community-infra/tichi/pull/425)
+3. [How to build a Prow plugin](https://github.com/ti-community-infra/tichi/pull/425)
 
 ### Project Setup
 
