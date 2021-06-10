@@ -41,7 +41,7 @@ in prow jobs:
 
 ### Note
 
-**When we bump test-infra components we need to
+**When we bump [test-infra](https://github.com/kubernetes/test-infra) components we need to
 check [ANNOUNCEMENTS.md](https://github.com/kubernetes/test-infra/blob/master/prow/ANNOUNCEMENTS.md) to see if the
 update has Breaking Changes, and we need to test the development environment and see how the cluster is running before
 upgrading the prod environment.**
