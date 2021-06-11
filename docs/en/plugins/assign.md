@@ -33,7 +33,7 @@ No configuration
 When starting with `@`, GitHub automatically sends an email to the corresponding user. Another notification email will send by the bot when the user has been assigned, or requested to review.
 To reduce the number of unnecessary emails, `assign` allows usernames that do not start with `@`.
 
-### Why does the bot tell me that I can't `/assign` an issue or PR to someone? Even if the user is a member of the organization, they can't be `/assigned`?
+### Why does the bot tell me that I can't `/assign` an issue or PR to someone? Even if the user is a member of the organization, they can't be `/assign`?
 
 GitHub has some restrictions on assigning:
 
