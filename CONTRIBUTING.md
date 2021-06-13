@@ -64,7 +64,7 @@ TiChi uses Prow as the basic framework, so understanding Prow means understandin
 ## Testing
 
 1. Go to the `tichi` root directory
-2. Run all tests `make test`
+2. Run all tests through the `make test` command
 3. If all tests pass the terminal should display
 
 ## Pull Request
