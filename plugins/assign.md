@@ -32,3 +32,16 @@
 
 当以`@`开头时，GitHub 会自动发送邮件给对应用户，同时在机器人分配或者请求 review 后也会发送一个通知邮件。
 为了减少不必要的邮件数量， assign 允许非`@`开头的用户名。
+
+### 为什么机器人提示我无法将一个 Issue 或者 PR `/assign`  给某个人？就算该用户是组织成员也无法被 `/assign`？
+
+GitHub 对分配有一些限制：
+
+- 每个 Issue 或者 PR 最多只能分配给 10 个用户。
+- 以下四种用户可以被分配：
+    - Issue 或者 PR 作者
+    - 在 Issue 或者 PR 上有评论的用户
+    - 对该仓库具有写权限的用户
+    - 对该仓库有读权限的组织成员（**注意：公开仓库的可见性与协作者的读权限不同，此处是指在仓库权限设置中显式的被添加为有读权限的协作者**）
+    
+另外也可以参考 GitHub 对分配的[说明文档](https://docs.github.com/cn/issues/tracking-your-work-with-issues/managing-issues/assigning-issues-and-pull-requests-to-other-github-users)。
