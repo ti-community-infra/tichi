@@ -17,6 +17,7 @@ import (
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
+	"k8s.io/test-infra/prow/plugins"
 
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
@@ -41,8 +42,21 @@ var (
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
 func HelpProvider(_ *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
+			TiCommunityLgtm: []tiexternalplugins.TiCommunityLgtm{
+				{
+					Repos:              []string{"ti-community-infra/test-dev"},
+					PullOwnersEndpoint: "https://prow-dev.tidb.io/ti-community-owners",
+				},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
+		}
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: "The ti-community-lgtm plugin manages the 'status/LGT{number}' (Looks Good To Me) label.",
+			Snippet:     yamlSnippet,
+			Events:      []string{tiexternalplugins.PullRequestReviewEvent, tiexternalplugins.PullRequestEvent},
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{

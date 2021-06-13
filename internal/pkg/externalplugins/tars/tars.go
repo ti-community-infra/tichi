@@ -117,9 +117,24 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
 			}
 		}
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
+			TiCommunityTars: []tiexternalplugins.TiCommunityTars{
+				{
+					Repos:         []string{"ti-community-infra/test-dev"},
+					Message:       "Your PR was out of date, I have automatically updated it for you.",
+					OnlyWhenLabel: "status/can-merge",
+					ExcludeLabels: []string{"do-not-merge/hold"},
+				},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
+		}
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: `The tars plugin help you update your out-of-date PR.`,
 			Config:      configInfo,
+			Snippet:     yamlSnippet,
+			Events:      []string{tiexternalplugins.IssueCommentEvent, tiexternalplugins.PushEvent},
 		}
 
 		return pluginHelp, nil
