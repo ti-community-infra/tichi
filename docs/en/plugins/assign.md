@@ -39,7 +39,7 @@ GitHub has some restrictions on assigning:
 
 - Each Issue or PR can only be assigned to a maximum of 10 users.
 - The following four types of users can be assigned:
-    - Issue or PR Author
+    - Issue or PR author
     - Users who have comments on the Issue or PR
     - Users with write access to this repository
     - Organization members who have read access to the repository (**Note: public repository visibility is not the same
