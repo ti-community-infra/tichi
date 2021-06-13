@@ -52,7 +52,7 @@ TiChi uses Prow as the basic framework, so understanding Prow means understandin
 ### Project Setup
 
 1. Fork the [TiChi](https://github.com/ti-community-infra/tichi) repository
-2. `git clone https://your-fork`
+2. `git clone https://github.com/<YOUR_GITHUB_LOGIN>/tichi`
 3. `cd tichi`
 4. `make dev` to get dependencies and run tests
 
