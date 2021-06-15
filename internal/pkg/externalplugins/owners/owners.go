@@ -200,14 +200,19 @@ func (s *Server) listOwnersByGitHubPermission(org string, repo string,
 		return nil, err
 	}
 
-	var collaboratorsLogin []string
+	var reviewersLogin []string
+	var committersLogin []string
 	for _, collaborator := range collaborators {
-		// Only write and admin permission can lgtm and merge PR.
-		if collaborator.Permissions.Push || collaborator.Permissions.Admin {
-			collaboratorsLogin = append(collaboratorsLogin, collaborator.Login)
+		if collaborator.Permissions.Triage {
+			reviewersLogin = append(reviewersLogin, collaborator.Login)
+		}
+
+		if collaborator.Permissions.Push || collaborator.Permissions.Maintain || collaborator.Permissions.Admin {
+			committersLogin = append(committersLogin, collaborator.Login)
 		}
 	}
-	committers := sets.NewString(collaboratorsLogin...).Insert(trustTeamMembers...).List()
+	reviewers := sets.NewString(reviewersLogin...).Insert(trustTeamMembers...).List()
+	committers := sets.NewString(committersLogin...).Insert(trustTeamMembers...).List()
 
 	if requireLgtm == 0 {
 		requireLgtm = defaultRequireLgtmNum
@@ -216,7 +221,7 @@ func (s *Server) listOwnersByGitHubPermission(org string, repo string,
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
 			Committers: committers,
-			Reviewers:  committers,
+			Reviewers:  reviewers,
 			NeedsLgtm:  requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
@@ -291,15 +296,12 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	} else {
 		useGitHubPermission = opts.UseGitHubPermission
 	}
+	if useGitHubPermission {
+		return s.listOwnersByGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
+	}
 
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
 	if len(sigNames) == 0 {
-		// If we specify to use GitHub permissions,
-		// the people who have write and admin permissions will be reviewers and committers.
-		if useGitHubPermission {
-			return s.listOwnersByGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
-		}
-
 		return s.listOwnersByAllSigs(opts, trustTeamMembers.List(), requireLgtm)
 	}
 

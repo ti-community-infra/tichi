@@ -208,27 +208,63 @@ func TestListOwners(t *testing.T) {
 
 	collaborators := []github.User{
 		{
+			Login: "passerby",
+			Permissions: github.RepoPermissions{
+				Pull:     false,
+				Triage:   false,
+				Push:     false,
+				Maintain: false,
+				Admin:    false,
+			},
+		},
+		{
 			Login: "collab1",
 			Permissions: github.RepoPermissions{
-				Pull:  true,
-				Push:  false,
-				Admin: false,
+				Pull:     true,
+				Triage:   false,
+				Push:     false,
+				Maintain: false,
+				Admin:    false,
 			},
 		},
 		{
 			Login: "collab2",
 			Permissions: github.RepoPermissions{
-				Pull:  true,
-				Push:  true,
-				Admin: false,
+				Pull:     true,
+				Triage:   true,
+				Push:     false,
+				Maintain: false,
+				Admin:    false,
 			},
 		},
 		{
 			Login: "collab3",
 			Permissions: github.RepoPermissions{
-				Pull:  true,
-				Push:  true,
-				Admin: true,
+				Pull:     true,
+				Triage:   true,
+				Push:     true,
+				Maintain: false,
+				Admin:    false,
+			},
+		},
+		{
+			Login: "collab4",
+			Permissions: github.RepoPermissions{
+				Pull:     true,
+				Triage:   true,
+				Push:     true,
+				Maintain: true,
+				Admin:    false,
+			},
+		},
+		{
+			Login: "collab5",
+			Permissions: github.RepoPermissions{
+				Pull:     true,
+				Triage:   true,
+				Push:     true,
+				Maintain: true,
+				Admin:    true,
 			},
 		},
 	}
@@ -511,10 +547,10 @@ func TestListOwners(t *testing.T) {
 			labels:              []github.Label{},
 			useGitHubPermission: true,
 			expectCommitters: []string{
-				"collab2", "collab3",
+				"collab3", "collab4", "collab5",
 			},
 			expectReviewers: []string{
-				"collab2", "collab3",
+				"collab2", "collab3", "collab4", "collab5",
 			},
 			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
@@ -529,10 +565,10 @@ func TestListOwners(t *testing.T) {
 			requireLgtmLabelPrefix: "require-LGT",
 			useGitHubPermission:    true,
 			expectCommitters: []string{
-				"collab2", "collab3",
+				"collab3", "collab4", "collab5",
 			},
 			expectReviewers: []string{
-				"collab2", "collab3",
+				"collab2", "collab3", "collab4", "collab5",
 			},
 			expectNeedsLgtm: 1,
 		},
@@ -544,12 +580,12 @@ func TestListOwners(t *testing.T) {
 			requireLgtmLabelPrefix: "require-LGT",
 			useGitHubPermission:    true,
 			expectCommitters: []string{
-				"collab2", "collab3",
+				"collab3", "collab4", "collab5",
 				// Team members.
 				"sig-leader1", "sig-leader2",
 			},
 			expectReviewers: []string{
-				"collab2", "collab3",
+				"collab2", "collab3", "collab4", "collab5",
 				// Team members.
 				"sig-leader1", "sig-leader2",
 			},
@@ -573,12 +609,12 @@ func TestListOwners(t *testing.T) {
 				},
 			},
 			expectCommitters: []string{
-				"collab2", "collab3",
+				"collab3", "collab4", "collab5",
 				// Team members.
 				"admin1", "admin2",
 			},
 			expectReviewers: []string{
-				"collab2", "collab3",
+				"collab2", "collab3", "collab4", "collab5",
 				// Team members.
 				"admin1", "admin2",
 			},
@@ -594,12 +630,10 @@ func TestListOwners(t *testing.T) {
 			},
 			useGitHubPermission: true,
 			expectCommitters: []string{
-				"leader1", "leader2", "coLeader1", "coLeader2",
-				"committer1", "committer2",
+				"collab3", "collab4", "collab5",
 			},
 			expectReviewers: []string{
-				"leader1", "leader2", "coLeader1", "coLeader2",
-				"committer1", "committer2", "reviewer1", "reviewer2",
+				"collab2", "collab3", "collab4", "collab5",
 			},
 			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
