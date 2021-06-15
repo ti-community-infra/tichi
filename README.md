@@ -6,7 +6,7 @@
 ![version](https://img.shields.io/github/release/ti-community-infra/tichi/all.svg)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://slack.tidb.io/invite?team=tidb-community&channel=sig-community-infra)
 
-TiChi ☯️ contains the tidb community collaboration automation basic framework and tool set.
+TiChi ☯️ contains the [TiDB](https://github.com/pingcap/tidb) community collaboration automation basic framework and tool set.
 
 ## High level architecture
 
