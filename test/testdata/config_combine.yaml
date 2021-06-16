@@ -52,7 +52,7 @@ ti-community-blunderbuss:
     exclude_reviewers:
       # Bots
       - ti-chi-bot
-      - rustin-bot
+      - mini-bot
       # Inactive reviewers
       - sykp241095
 
@@ -72,11 +72,11 @@ ti-community-label-blocker:
         trusted_teams:
           - bots-test
         trusted_users:
-          - rustin-bot
+          - mini-bot
       - regex: "^status/can-merge$"
         actions:
           - labeled
           - unlabeled
         trusted_users:
-          - rustin-bot
+          - mini-bot
         message: You can't add the status/can-merge label.

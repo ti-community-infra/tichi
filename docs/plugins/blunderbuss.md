@@ -50,7 +50,7 @@ ti-community-blunderbuss:
     exclude_reviewers:
       # 机器人
       - ti-chi-bot
-      - rustin-bot
+      - mini-bot
       # 不活跃的 reviewers
       - sykp241095
       - AndreMouche
