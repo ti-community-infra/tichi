@@ -219,23 +219,23 @@ func TestListOwners(t *testing.T) {
 			Node:       struct{ Login githubql.String }{Login: "passerby"},
 		},
 		{
-			Permission: "READ",
+			Permission: readPermission,
 			Node:       struct{ Login githubql.String }{Login: "collab1"},
 		},
 		{
-			Permission: "TRIAGE",
+			Permission: triagePermission,
 			Node:       struct{ Login githubql.String }{Login: "collab2"},
 		},
 		{
-			Permission: "WRITE",
+			Permission: writePermission,
 			Node:       struct{ Login githubql.String }{Login: "collab3"},
 		},
 		{
-			Permission: "MAINTAIN",
+			Permission: maintainPermission,
 			Node:       struct{ Login githubql.String }{Login: "collab4"},
 		},
 		{
-			Permission: "ADMIN",
+			Permission: adminPermission,
 			Node:       struct{ Login githubql.String }{Login: "collab5"},
 		},
 	}

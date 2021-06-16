@@ -39,6 +39,16 @@ const (
 	leaderLevel            = "leader"
 )
 
+// The access level to a repository.
+// See also: https://docs.github.com/en/graphql/reference/enums#repositorypermission.
+const (
+	readPermission     = "READ"
+	triagePermission   = "TRIAGE"
+	writePermission    = "WRITE"
+	maintainPermission = "MAINTAIN"
+	adminPermission    = "ADMIN"
+)
+
 const (
 	// listOwnersSuccessMessage returns on success.
 	listOwnersSuccessMessage = "List all owners success."
@@ -264,11 +274,11 @@ func (s *Server) listOwnersByGitHubPermission(org string, repo string,
 	var reviewersLogin []string
 	var committersLogin []string
 	for login, permission := range collaborators {
-		if permission == "TRIAGE" {
+		if permission == triagePermission {
 			reviewersLogin = append(reviewersLogin, login)
 		}
 
-		if permission == "WRITE" || permission == "MAINTAIN" || permission == "ADMIN" {
+		if permission == writePermission || permission == maintainPermission || permission == adminPermission {
 			reviewersLogin = append(reviewersLogin, login)
 			committersLogin = append(committersLogin, login)
 		}
@@ -342,6 +352,18 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		trustTeamMembers.Insert(members...)
 	}
 
+	useGitHubPermission := false
+	// The branch configuration will override the total configuration.
+	if hasBranchConfig {
+		useGitHubPermission = branchConfig.UseGitHubPermission
+	} else {
+		useGitHubPermission = opts.UseGitHubPermission
+	}
+	// If you use GitHub permissions, you can handle it directly.
+	if useGitHubPermission {
+		return s.listOwnersByGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
+	}
+
 	// Find sig names by labels.
 	sigNames := getSigNamesByLabels(pull.Labels)
 
@@ -349,19 +371,6 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	if len(sigNames) == 0 && len(opts.DefaultSigName) != 0 {
 		sigNames = append(sigNames, opts.DefaultSigName)
 	}
-
-	useGitHubPermission := false
-
-	// The branch configuration will override the total configuration.
-	if hasBranchConfig {
-		useGitHubPermission = branchConfig.UseGitHubPermission
-	} else {
-		useGitHubPermission = opts.UseGitHubPermission
-	}
-	if useGitHubPermission {
-		return s.listOwnersByGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
-	}
-
 	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
 	if len(sigNames) == 0 {
 		return s.listOwnersByAllSigs(opts, trustTeamMembers.List(), requireLgtm)
