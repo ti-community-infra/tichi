@@ -1,6 +1,7 @@
 package owners
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
@@ -41,9 +43,62 @@ const (
 
 type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
-	ListCollaborators(org, repo string) ([]github.User, error)
 	ListTeams(org string) ([]github.Team, error)
 	ListTeamMembers(org string, id int, role string) ([]github.TeamMember, error)
+	Query(context.Context, interface{}, map[string]interface{}) error
+}
+
+type RepositoryCollaboratorConnection struct {
+	Permission githubql.String
+	Node       struct {
+		Login githubql.String
+	}
+}
+
+type collaboratorsQuery struct {
+	RateLimit struct {
+		Cost      githubql.Int
+		Remaining githubql.Int
+	}
+	Repository struct {
+		Collaborators struct {
+			PageInfo struct {
+				HasNextPage githubql.Boolean
+				EndCursor   githubql.String
+			}
+			edges []RepositoryCollaboratorConnection `graphql:"... on edges"`
+		} `graphql:"collaborators(first: 100, after: $collaboratorsCursor)"`
+	} `graphql:"repository(owner: $owner, name: $name)"`
+}
+
+func listCollaborators(ctx context.Context, log *logrus.Entry, ghc githubClient,
+	owner string, name string) (map[string]string, error) {
+	collaborators := make(map[string]string)
+	vars := map[string]interface{}{
+		"owner":               githubql.String(owner),
+		"name":                githubql.String(name),
+		"collaboratorsCursor": (*githubql.String)(nil), // Null after argument to get first page.
+	}
+
+	var totalCost int
+	var remaining int
+	for {
+		cq := collaboratorsQuery{}
+		if err := ghc.Query(ctx, &cq, vars); err != nil {
+			return nil, err
+		}
+		totalCost += int(cq.RateLimit.Cost)
+		remaining = int(cq.RateLimit.Remaining)
+		for _, edge := range cq.Repository.Collaborators.edges {
+			collaborators[string(edge.Node.Login)] = string(edge.Permission)
+		}
+		if !cq.Repository.Collaborators.PageInfo.HasNextPage {
+			break
+		}
+		vars["collaboratorsCursor"] = githubql.NewString(cq.Repository.Collaborators.PageInfo.EndCursor)
+	}
+	log.Infof("List collaborators of repo \"%s/%s\" cost %d point(s). %d remaining.", owner, name, totalCost, remaining)
+	return collaborators, nil
 }
 
 type Server struct {
@@ -194,21 +249,22 @@ func (s *Server) listOwnersBySigs(sigNames []string,
 
 func (s *Server) listOwnersByGitHubPermission(org string, repo string,
 	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
-	collaborators, err := s.Gc.ListCollaborators(org, repo)
+	collaborators, err := listCollaborators(context.Background(), s.Log, s.Gc, org, repo)
 	if err != nil {
-		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed to get collaborators.")
+		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed to list collaborators.")
 		return nil, err
 	}
 
 	var reviewersLogin []string
 	var committersLogin []string
-	for _, collaborator := range collaborators {
-		if collaborator.Permissions.Triage {
-			reviewersLogin = append(reviewersLogin, collaborator.Login)
+	for login, permission := range collaborators {
+		if permission == "TRIAGE" {
+			reviewersLogin = append(reviewersLogin, login)
 		}
 
-		if collaborator.Permissions.Push || collaborator.Permissions.Maintain || collaborator.Permissions.Admin {
-			committersLogin = append(committersLogin, collaborator.Login)
+		if permission == "WRITE" || permission == "MAINTAIN" || permission == "ADMIN" {
+			reviewersLogin = append(reviewersLogin, login)
+			committersLogin = append(committersLogin, login)
 		}
 	}
 	reviewers := sets.NewString(reviewersLogin...).Insert(trustTeamMembers...).List()

@@ -2,7 +2,9 @@ package owners
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +12,7 @@ import (
 	"sort"
 	"testing"
 
+	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"gotest.tools/assert"
@@ -18,7 +21,7 @@ import (
 
 type fakegithub struct {
 	PullRequests  map[int]*github.PullRequest
-	Collaborators []github.User
+	Collaborators []RepositoryCollaboratorConnection
 }
 
 // GetPullRequest returns details about the PR.
@@ -30,9 +33,13 @@ func (f *fakegithub) GetPullRequest(owner, repo string, number int) (*github.Pul
 	return val, nil
 }
 
-// ListCollaborators lists the collaborators.
-func (f *fakegithub) ListCollaborators(org, repo string) ([]github.User, error) {
-	return f.Collaborators, nil
+func (f *fakegithub) Query(_ context.Context, q interface{}, _ map[string]interface{}) error {
+	query, ok := q.(*collaboratorsQuery)
+	if !ok {
+		return errors.New("invalid query format")
+	}
+	query.Repository.Collaborators.edges = f.Collaborators
+	return nil
 }
 
 // ListTeams return a list of fake teams that correspond to the fake team members returned by ListTeamMembers.
@@ -206,66 +213,30 @@ func TestListOwners(t *testing.T) {
 		Message: "Test members.",
 	}
 
-	collaborators := []github.User{
+	collaborators := []RepositoryCollaboratorConnection{
 		{
-			Login: "passerby",
-			Permissions: github.RepoPermissions{
-				Pull:     false,
-				Triage:   false,
-				Push:     false,
-				Maintain: false,
-				Admin:    false,
-			},
+			Permission: "",
+			Node:       struct{ Login githubql.String }{Login: "passerby"},
 		},
 		{
-			Login: "collab1",
-			Permissions: github.RepoPermissions{
-				Pull:     true,
-				Triage:   false,
-				Push:     false,
-				Maintain: false,
-				Admin:    false,
-			},
+			Permission: "READ",
+			Node:       struct{ Login githubql.String }{Login: "collab1"},
 		},
 		{
-			Login: "collab2",
-			Permissions: github.RepoPermissions{
-				Pull:     true,
-				Triage:   true,
-				Push:     false,
-				Maintain: false,
-				Admin:    false,
-			},
+			Permission: "TRIAGE",
+			Node:       struct{ Login githubql.String }{Login: "collab2"},
 		},
 		{
-			Login: "collab3",
-			Permissions: github.RepoPermissions{
-				Pull:     true,
-				Triage:   true,
-				Push:     true,
-				Maintain: false,
-				Admin:    false,
-			},
+			Permission: "WRITE",
+			Node:       struct{ Login githubql.String }{Login: "collab3"},
 		},
 		{
-			Login: "collab4",
-			Permissions: github.RepoPermissions{
-				Pull:     true,
-				Triage:   true,
-				Push:     true,
-				Maintain: true,
-				Admin:    false,
-			},
+			Permission: "MAINTAIN",
+			Node:       struct{ Login githubql.String }{Login: "collab4"},
 		},
 		{
-			Login: "collab5",
-			Permissions: github.RepoPermissions{
-				Pull:     true,
-				Triage:   true,
-				Push:     true,
-				Maintain: true,
-				Admin:    true,
-			},
+			Permission: "ADMIN",
+			Node:       struct{ Login githubql.String }{Login: "collab5"},
 		},
 	}
 
