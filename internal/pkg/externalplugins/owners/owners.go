@@ -19,6 +19,11 @@ import (
 )
 
 const (
+	// PluginName defines this plugin's registered name.
+	PluginName = "ti-community-owners"
+)
+
+const (
 	// SigEndpointFmt specifies a format for sigs URL.
 	SigEndpointFmt = "/sigs/%s"
 	// MembersEndpoint specifies a members endpoint.
@@ -48,6 +53,7 @@ type githubClient interface {
 	Query(context.Context, interface{}, map[string]interface{}) error
 }
 
+// RepositoryCollaboratorConnection specifies the connection between repository collaborators.
 type RepositoryCollaboratorConnection struct {
 	Permission githubql.String
 	Node       struct {
@@ -66,7 +72,7 @@ type collaboratorsQuery struct {
 				HasNextPage githubql.Boolean
 				EndCursor   githubql.String
 			}
-			edges []RepositoryCollaboratorConnection `graphql:"... on edges"`
+			Edges []RepositoryCollaboratorConnection
 		} `graphql:"collaborators(first: 100, after: $collaboratorsCursor)"`
 	} `graphql:"repository(owner: $owner, name: $name)"`
 }
@@ -89,7 +95,7 @@ func listCollaborators(ctx context.Context, log *logrus.Entry, ghc githubClient,
 		}
 		totalCost += int(cq.RateLimit.Cost)
 		remaining = int(cq.RateLimit.Remaining)
-		for _, edge := range cq.Repository.Collaborators.edges {
+		for _, edge := range cq.Repository.Collaborators.Edges {
 			collaborators[string(edge.Node.Login)] = string(edge.Permission)
 		}
 		if !cq.Repository.Collaborators.PageInfo.HasNextPage {

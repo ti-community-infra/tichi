@@ -38,7 +38,7 @@ func (f *fakegithub) Query(_ context.Context, q interface{}, _ map[string]interf
 	if !ok {
 		return errors.New("invalid query format")
 	}
-	query.Repository.Collaborators.edges = f.Collaborators
+	query.Repository.Collaborators.Edges = f.Collaborators
 	return nil
 }
 

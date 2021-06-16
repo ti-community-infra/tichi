@@ -18,7 +18,6 @@ import (
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
 	"k8s.io/test-infra/prow/interrupts"
 	"k8s.io/test-infra/prow/pjutil"
-	"k8s.io/test-infra/prow/plugins/lgtm"
 )
 
 type options struct {
@@ -66,7 +65,7 @@ func main() {
 		logrus.Fatalf("Invalid options: %v", err)
 	}
 
-	log := logrus.StandardLogger().WithField("plugin", lgtm.PluginName)
+	log := logrus.StandardLogger().WithField("plugin", owners.PluginName)
 
 	epa := &tiexternalplugins.ConfigAgent{}
 	if err := epa.Start(o.externalPluginsConfig, false); err != nil {
