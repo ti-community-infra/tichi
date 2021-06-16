@@ -35,7 +35,13 @@
 但是确实存在一些特殊情况找不到对应的 SIG：
 - 一些模块暂时未划分清楚 SIG 所属：使用 TiDB 社区所有 SIG 的 reviewers 和 committers
 - 一些小型仓库直接隶属于某个 SIG: 支持为该仓库配置默认的 SIG
-- 一些仓库的 PR 跟 SIG 无关：支持使用仓库的 GitHub 权限，将拥有 write 和 admin 权限的协作者作为 reviewer 和 committer（只在没有 SIG 标签时生效）
+- 一些仓库的 PR 跟 SIG 无关：支持使用仓库的 [GitHub 权限](https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/repository-permission-levels-for-an-organization)
+  - committers（**可以合并 PR**）
+    - Admin 权限
+    - Maintain 权限
+    - Write 权限
+  - reviewers (**可以赞同 PR**)
+    - Triage 权限
 
 注：因为 maintainers 没有隶属于任何一个 SIG，所以会通过一个配置项来直接从 GitHub team 获取。
 
@@ -49,16 +55,16 @@
 | default_require_lgtm      | int                     | 为该仓库设置默认需要的 lgtm 个数                                           |
 | require_lgtm_label_prefix | string                  | 插件支持通过标签指定当前 PR 需要的 lgtm 个数，该选项用于设置相关标签的前缀 |
 | trusted_teams             | []string                | 信任的 GitHub team 名称列表（一般为 maintainers team）                     |
-| use_github_permission     | bool                    | 使用 GitHub 权限，拥有 write 和 admin 的协作者作为 reviewer 和 committer   |
+| use_github_permission     | bool                    | 使用 GitHub 权限                                                           |
 | branches                  | map[string]BranchConfig | 分支粒度的参数配置, map结构的key是分支名称，对分支的配置会覆盖对仓库的配置 |
 
 ### BranchConfig
 
-| 参数名                | 类型     | 说明                                                                     |
-| --------------------- | -------- | ------------------------------------------------------------------------ |
-| default_require_lgtm  | int      | 为该分支设置默认需要的 lgtm 个数                                         |
-| trusted_teams         | []string | 为该分支设置信任的 GitHub team                                           |
-| use_github_permission | bool     | 使用 GitHub 权限，拥有 write 和 admin 的协作者作为 reviewer 和 committer |
+| 参数名                | 类型     | 说明                             |
+| --------------------- | -------- | -------------------------------- |
+| default_require_lgtm  | int      | 为该分支设置默认需要的 lgtm 个数 |
+| trusted_teams         | []string | 为该分支设置信任的 GitHub team   |
+| use_github_permission | bool     | 使用 GitHub 权限                 |
 
 例如：
 
