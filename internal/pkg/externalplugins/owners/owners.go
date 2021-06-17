@@ -371,7 +371,8 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	if len(sigNames) == 0 && len(opts.DefaultSigName) != 0 {
 		sigNames = append(sigNames, opts.DefaultSigName)
 	}
-	// When we cannot find a sig label for PR and there is no default sig name, the members of all sig will be reviewers and commiters.
+	// When we cannot find a sig label for PR and there is no default sig name,
+	// the members of all sig will be reviewers and committers.
 	if len(sigNames) == 0 {
 		return s.listOwnersByAllSigs(opts, trustTeamMembers.List(), requireLgtm)
 	}
