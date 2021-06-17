@@ -50,7 +50,7 @@ ti-community-blunderbuss:
     exclude_reviewers:
       # Bots
       - ti-chi-bot
-      - rustin-bot
+      - mini-bot
       # Inactive reviewers
       - sykp241095
       - AndreMouche
