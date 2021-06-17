@@ -2,7 +2,9 @@ package owners
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +12,7 @@ import (
 	"sort"
 	"testing"
 
+	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"gotest.tools/assert"
@@ -18,7 +21,7 @@ import (
 
 type fakegithub struct {
 	PullRequests  map[int]*github.PullRequest
-	Collaborators []github.User
+	Collaborators []RepositoryCollaboratorConnection
 }
 
 // GetPullRequest returns details about the PR.
@@ -30,9 +33,13 @@ func (f *fakegithub) GetPullRequest(owner, repo string, number int) (*github.Pul
 	return val, nil
 }
 
-// ListCollaborators lists the collaborators.
-func (f *fakegithub) ListCollaborators(org, repo string) ([]github.User, error) {
-	return f.Collaborators, nil
+func (f *fakegithub) Query(_ context.Context, q interface{}, _ map[string]interface{}) error {
+	query, ok := q.(*collaboratorsQuery)
+	if !ok {
+		return errors.New("invalid query format")
+	}
+	query.Repository.Collaborators.Edges = f.Collaborators
+	return nil
 }
 
 // ListTeams return a list of fake teams that correspond to the fake team members returned by ListTeamMembers.
@@ -206,30 +213,30 @@ func TestListOwners(t *testing.T) {
 		Message: "Test members.",
 	}
 
-	collaborators := []github.User{
+	collaborators := []RepositoryCollaboratorConnection{
 		{
-			Login: "collab1",
-			Permissions: github.RepoPermissions{
-				Pull:  true,
-				Push:  false,
-				Admin: false,
-			},
+			Permission: "",
+			Node:       struct{ Login githubql.String }{Login: "passerby"},
 		},
 		{
-			Login: "collab2",
-			Permissions: github.RepoPermissions{
-				Pull:  true,
-				Push:  true,
-				Admin: false,
-			},
+			Permission: readPermission,
+			Node:       struct{ Login githubql.String }{Login: "collab1"},
 		},
 		{
-			Login: "collab3",
-			Permissions: github.RepoPermissions{
-				Pull:  true,
-				Push:  true,
-				Admin: true,
-			},
+			Permission: triagePermission,
+			Node:       struct{ Login githubql.String }{Login: "collab2"},
+		},
+		{
+			Permission: writePermission,
+			Node:       struct{ Login githubql.String }{Login: "collab3"},
+		},
+		{
+			Permission: maintainPermission,
+			Node:       struct{ Login githubql.String }{Login: "collab4"},
+		},
+		{
+			Permission: adminPermission,
+			Node:       struct{ Login githubql.String }{Login: "collab5"},
 		},
 	}
 
@@ -511,10 +518,10 @@ func TestListOwners(t *testing.T) {
 			labels:              []github.Label{},
 			useGitHubPermission: true,
 			expectCommitters: []string{
-				"collab2", "collab3",
+				"collab3", "collab4", "collab5",
 			},
 			expectReviewers: []string{
-				"collab2", "collab3",
+				"collab2", "collab3", "collab4", "collab5",
 			},
 			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
@@ -529,10 +536,10 @@ func TestListOwners(t *testing.T) {
 			requireLgtmLabelPrefix: "require-LGT",
 			useGitHubPermission:    true,
 			expectCommitters: []string{
-				"collab2", "collab3",
+				"collab3", "collab4", "collab5",
 			},
 			expectReviewers: []string{
-				"collab2", "collab3",
+				"collab2", "collab3", "collab4", "collab5",
 			},
 			expectNeedsLgtm: 1,
 		},
@@ -544,12 +551,12 @@ func TestListOwners(t *testing.T) {
 			requireLgtmLabelPrefix: "require-LGT",
 			useGitHubPermission:    true,
 			expectCommitters: []string{
-				"collab2", "collab3",
+				"collab3", "collab4", "collab5",
 				// Team members.
 				"sig-leader1", "sig-leader2",
 			},
 			expectReviewers: []string{
-				"collab2", "collab3",
+				"collab2", "collab3", "collab4", "collab5",
 				// Team members.
 				"sig-leader1", "sig-leader2",
 			},
@@ -573,12 +580,12 @@ func TestListOwners(t *testing.T) {
 				},
 			},
 			expectCommitters: []string{
-				"collab2", "collab3",
+				"collab3", "collab4", "collab5",
 				// Team members.
 				"admin1", "admin2",
 			},
 			expectReviewers: []string{
-				"collab2", "collab3",
+				"collab2", "collab3", "collab4", "collab5",
 				// Team members.
 				"admin1", "admin2",
 			},
@@ -594,12 +601,10 @@ func TestListOwners(t *testing.T) {
 			},
 			useGitHubPermission: true,
 			expectCommitters: []string{
-				"leader1", "leader2", "coLeader1", "coLeader2",
-				"committer1", "committer2",
+				"collab3", "collab4", "collab5",
 			},
 			expectReviewers: []string{
-				"leader1", "leader2", "coLeader1", "coLeader2",
-				"committer1", "committer2", "reviewer1", "reviewer2",
+				"collab2", "collab3", "collab4", "collab5",
 			},
 			expectNeedsLgtm: defaultRequireLgtmNum,
 		},

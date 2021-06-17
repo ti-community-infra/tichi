@@ -1,6 +1,7 @@
 package owners
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,11 +10,17 @@ import (
 	"strconv"
 	"strings"
 
+	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/github"
+)
+
+const (
+	// PluginName defines this plugin's registered name.
+	PluginName = "ti-community-owners"
 )
 
 const (
@@ -32,6 +39,16 @@ const (
 	leaderLevel            = "leader"
 )
 
+// The access level to a repository.
+// See also: https://docs.github.com/en/graphql/reference/enums#repositorypermission.
+const (
+	readPermission     = "READ"
+	triagePermission   = "TRIAGE"
+	writePermission    = "WRITE"
+	maintainPermission = "MAINTAIN"
+	adminPermission    = "ADMIN"
+)
+
 const (
 	// listOwnersSuccessMessage returns on success.
 	listOwnersSuccessMessage = "List all owners success."
@@ -41,9 +58,63 @@ const (
 
 type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
-	ListCollaborators(org, repo string) ([]github.User, error)
 	ListTeams(org string) ([]github.Team, error)
 	ListTeamMembers(org string, id int, role string) ([]github.TeamMember, error)
+	Query(context.Context, interface{}, map[string]interface{}) error
+}
+
+// RepositoryCollaboratorConnection specifies the connection between repository collaborators.
+type RepositoryCollaboratorConnection struct {
+	Permission githubql.String
+	Node       struct {
+		Login githubql.String
+	}
+}
+
+type collaboratorsQuery struct {
+	RateLimit struct {
+		Cost      githubql.Int
+		Remaining githubql.Int
+	}
+	Repository struct {
+		Collaborators struct {
+			PageInfo struct {
+				HasNextPage githubql.Boolean
+				EndCursor   githubql.String
+			}
+			Edges []RepositoryCollaboratorConnection
+		} `graphql:"collaborators(first: 100, after: $collaboratorsCursor)"`
+	} `graphql:"repository(owner: $owner, name: $name)"`
+}
+
+func listCollaborators(ctx context.Context, log *logrus.Entry, ghc githubClient,
+	owner string, name string) (map[string]string, error) {
+	collaborators := make(map[string]string)
+	vars := map[string]interface{}{
+		"owner":               githubql.String(owner),
+		"name":                githubql.String(name),
+		"collaboratorsCursor": (*githubql.String)(nil), // Null after argument to get first page.
+	}
+
+	var totalCost int
+	var remaining int
+	for {
+		cq := collaboratorsQuery{}
+		if err := ghc.Query(ctx, &cq, vars); err != nil {
+			return nil, err
+		}
+		totalCost += int(cq.RateLimit.Cost)
+		remaining = int(cq.RateLimit.Remaining)
+		for _, edge := range cq.Repository.Collaborators.Edges {
+			collaborators[string(edge.Node.Login)] = string(edge.Permission)
+		}
+		if !cq.Repository.Collaborators.PageInfo.HasNextPage {
+			break
+		}
+		vars["collaboratorsCursor"] = githubql.NewString(cq.Repository.Collaborators.PageInfo.EndCursor)
+	}
+	log.Infof("List collaborators of repo \"%s/%s\" cost %d point(s). %d remaining.", owner, name, totalCost, remaining)
+	return collaborators, nil
 }
 
 type Server struct {
@@ -194,20 +265,26 @@ func (s *Server) listOwnersBySigs(sigNames []string,
 
 func (s *Server) listOwnersByGitHubPermission(org string, repo string,
 	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
-	collaborators, err := s.Gc.ListCollaborators(org, repo)
+	collaborators, err := listCollaborators(context.Background(), s.Log, s.Gc, org, repo)
 	if err != nil {
-		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed to get collaborators.")
+		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed to list collaborators.")
 		return nil, err
 	}
 
-	var collaboratorsLogin []string
-	for _, collaborator := range collaborators {
-		// Only write and admin permission can lgtm and merge PR.
-		if collaborator.Permissions.Push || collaborator.Permissions.Admin {
-			collaboratorsLogin = append(collaboratorsLogin, collaborator.Login)
+	var reviewersLogin []string
+	var committersLogin []string
+	for login, permission := range collaborators {
+		if permission == triagePermission {
+			reviewersLogin = append(reviewersLogin, login)
+		}
+
+		if permission == writePermission || permission == maintainPermission || permission == adminPermission {
+			reviewersLogin = append(reviewersLogin, login)
+			committersLogin = append(committersLogin, login)
 		}
 	}
-	committers := sets.NewString(collaboratorsLogin...).Insert(trustTeamMembers...).List()
+	reviewers := sets.NewString(reviewersLogin...).Insert(trustTeamMembers...).List()
+	committers := sets.NewString(committersLogin...).Insert(trustTeamMembers...).List()
 
 	if requireLgtm == 0 {
 		requireLgtm = defaultRequireLgtmNum
@@ -216,7 +293,7 @@ func (s *Server) listOwnersByGitHubPermission(org string, repo string,
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
 			Committers: committers,
-			Reviewers:  committers,
+			Reviewers:  reviewers,
 			NeedsLgtm:  requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
@@ -275,6 +352,18 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		trustTeamMembers.Insert(members...)
 	}
 
+	useGitHubPermission := false
+	// The branch configuration will override the total configuration.
+	if hasBranchConfig {
+		useGitHubPermission = branchConfig.UseGitHubPermission
+	} else {
+		useGitHubPermission = opts.UseGitHubPermission
+	}
+	// If you use GitHub permissions, you can handle it directly.
+	if useGitHubPermission {
+		return s.listOwnersByGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
+	}
+
 	// Find sig names by labels.
 	sigNames := getSigNamesByLabels(pull.Labels)
 
@@ -282,24 +371,9 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	if len(sigNames) == 0 && len(opts.DefaultSigName) != 0 {
 		sigNames = append(sigNames, opts.DefaultSigName)
 	}
-
-	useGitHubPermission := false
-
-	// The branch configuration will override the total configuration.
-	if hasBranchConfig {
-		useGitHubPermission = branchConfig.UseGitHubPermission
-	} else {
-		useGitHubPermission = opts.UseGitHubPermission
-	}
-
-	// When we cannot find a sig label for PR and there is no default sig name, we will use a collaborators.
+	// When we cannot find a sig label for PR and there is no default sig name,
+	// the members of all sig will be reviewers and committers.
 	if len(sigNames) == 0 {
-		// If we specify to use GitHub permissions,
-		// the people who have write and admin permissions will be reviewers and committers.
-		if useGitHubPermission {
-			return s.listOwnersByGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
-		}
-
 		return s.listOwnersByAllSigs(opts, trustTeamMembers.List(), requireLgtm)
 	}
 

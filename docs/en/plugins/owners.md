@@ -10,12 +10,12 @@ So we decided to develop a permission control service that fits the current coll
 
 Based on the current design of TiDB's SIG, the permissions are divided as follows:
 
-- committers（**Can merge a pull request**）
+- committers(**Can merge a pull request**)
   - maintainers
   - techLeaders
   - coLeaders
   - committers
-- reviewers (**Can approve a pull request**)
+- reviewers(**Can approve a pull request**)
   - maintainers
   - techLeaders
   - coLeaders
@@ -35,7 +35,13 @@ The owners will look for labels starting with `sig/` in the current PR and then 
 However, there are some special cases where the corresponding SIG cannot be found:
 - Some modules do not have clear SIG affiliations at the moment: reviewers and committers using all SIGs of the TiDB community
 - Some small repositories belong directly to a SIG: Support for configuring a default SIG for this repository
-- Some repositories whose PR is independent of SIG: support for using GitHub permissions for repositories to include collaborators with write and admin permissions as reviewers and committers (only works if there is no SIG label)
+- Some repositories whose PR is independent of SIG: support for using [GitHub permissions](https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/repository-permission-levels-for-an-organization)
+  - committers(**Can merge a pull request**)
+    - Admin Permission
+    - Maintain Permission
+    - Write Permission
+  - reviewers(**Can approve a pull request**)
+    - Triage Permission
 
 Note: Because maintainers are not attached to any SIG, they will be fetched directly from the GitHub team via a configuration item.
 
@@ -49,16 +55,16 @@ Note: Because maintainers are not attached to any SIG, they will be fetched dire
 | default_require_lgtm      | int                     | Set the default number of lgtm required for this repository                                                                                                          |
 | require_lgtm_label_prefix | string                  | The plugin supports specifying the number of lgtm required for the current PR by label, and this option is used to set the prefix of the relevant label              |
 | trusted_teams             | []string                | List of trusted GitHub team names (generally maintainers team)                                                                                                       |
-| use_github_permission     | bool                    | Use GitHub permissions and have write and admin collaborators as reviewers and committers                                                                            |
+| use_github_permission     | bool                    | Use GitHub permissions                                                                                                                                               |
 | branches                  | map[string]BranchConfig | Branch granularity parameters configuration, map structure key is the branch name, the configuration of the branch will override the configuration of the repository |
 
 ### BranchConfig
 
-| Parameter Name        | Type     | Description                                                                               |
-| --------------------- | -------- | ----------------------------------------------------------------------------------------- |
-| default_require_lgtm  | int      | Set the default number of lgtm required for the branch                                    |
-| trusted_teams         | []string | Set up a trusted GitHub team for the branch                                               |
-| use_github_permission | bool     | Use GitHub permissions and have write and admin collaborators as reviewers and committers |
+| Parameter Name        | Type     | Description                                            |
+| --------------------- | -------- | ------------------------------------------------------ |
+| default_require_lgtm  | int      | Set the default number of lgtm required for the branch |
+| trusted_teams         | []string | Set up a trusted GitHub team for the branch            |
+| use_github_permission | bool     | Use GitHub permissions                                 |
 
 For example:
 
