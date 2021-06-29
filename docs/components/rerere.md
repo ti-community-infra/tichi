@@ -19,7 +19,7 @@
 
 1. Prow Job 会利用 [clonerefs](https://github.com/kubernetes/test-infra/tree/master/prow/clonerefs) 工具将 PR 和最新的 Base 分支合并之后克隆到运行测试的 Pod，所以我们总是能够获取到已经合并了最新 Base 的代码库，rerere 可以将该代码 push 到重新测试分支进行合并之前的测试。
 2. Porw Job 可以设置 max_concurrency 来控制该 CI 任务最多的执行个数，这是一个天然的 FIFO 队列，我们可以利用该功能对重新测试任务排队。
-3. Tide 在代码合并之前，会检测所有的 Prow Job 都使用了最新的 Base 进行了测试。如果当前 CI Pod 使用的不是最新的 Base，Tide 会自动重新触发该测试，这样就确保了所有的 PR 在合并之前都会用最新的 Base 重新测试。
+3. Tide 在代码合并之前，会检测所有的 Prow Job 是否都使用了最新的 Base 进行了测试。如果当前 CI Pod 使用的不是最新的 Base，Tide 会自动重新触发该测试，这样就确保了所有的 PR 在合并之前都会用最新的 Base 重新测试。
 4. 在 rerere 中我们会将代码 push 到指定的测试分支，然后定期检查要求的 CI 是否都已经通过，当所有要求的 CI 都通过时，我们 rerere 的 Prow Job 就会通过测试。Tide 则会自动合并当前 PR。
 
 ## 参数配置
