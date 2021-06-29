@@ -34,7 +34,7 @@ const (
 	// checkRunStatusCompleted means the check run passed.
 	checkRunStatusCompleted = "completed"
 
-	// checkRunConclusionNeutral means the check run neutral.
+	// checkRunConclusionNeutral means the check run conclusion is neutral.
 	checkRunConclusionNeutral = "neutral"
 
 	// checkRunConclusionSuccess means the check run conclusion is success.
