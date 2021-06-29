@@ -37,7 +37,7 @@ const (
 	// checkRunConclusionNeutral means the check run neutral.
 	checkRunConclusionNeutral = "neutral"
 
-	// checkRunConclusionSuccess means the check run success.
+	// checkRunConclusionSuccess means the check run conclusion is success.
 	checkRunConclusionSuccess = "success"
 )
 
