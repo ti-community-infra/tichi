@@ -202,13 +202,13 @@ func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.St
 	if err != nil {
 		return false, fmt.Errorf("list %s check runs failed: %v", retestingBranch, err)
 	}
-	for _, runs := range checkRun.CheckRuns {
-		if runs.Status == checkRunStatusCompleted {
-			if runs.Conclusion == checkRunConclusionNeutral || runs.Conclusion == checkRunConclusionSuccess {
-				log.Infof("%s runs passed.", runs.Name)
-				passedContexts.Insert(runs.Name)
-			} else if requireContextSet.Has(runs.Name) {
-				return false, fmt.Errorf("require context %s failed", runs.Name)
+	for _, run := range checkRun.CheckRuns {
+		if run.Status == checkRunStatusCompleted {
+			if run.Conclusion == checkRunConclusionNeutral || run.Conclusion == checkRunConclusionSuccess {
+				log.Infof("%s runs passed.", run.Name)
+				passedContexts.Insert(run.Name)
+			} else if requireContextSet.Has(run.Name) {
+				return false, fmt.Errorf("require context %s failed", run.Name)
 			}
 		}
 	}
