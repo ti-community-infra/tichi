@@ -72,7 +72,7 @@ presubmits:
 ## 参考文档
 - [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/rerere)
 
-## Q&A
+## Q&A
 
 ### 我每次提交都会触发 rerere 吗？
 
