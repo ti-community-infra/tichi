@@ -13,7 +13,7 @@
 
 为了解决上述问题我们开发了 [tars](plugins/tars.md) 来自动的合并最新 的 Base 分支到 PR，这样能解决问题，但是对于大型仓库来说这不是一个高效的解决方案。**例如有 n 个同时可以 merge 的 PR，那就要跑 O(n^2) 次测试，大大浪费了 CI 资源。**
 
-为了高效的合并 PR，并且节省测试资源，我们提出了[多个解决方案](https://github.com/ti-community-infra/configs/discussions/41)。最终决定利用 Prow Job 结合 Tide 来解决该问题。
+为了高效的合并 PR，并且节省测试资源，我们提出了[多个解决方案](https://github.com/ti-community-infra/rfcs/discussions/13)。最终决定利用 Prow Job 结合 Tide 来解决该问题。
 
 ## 设计思路
 
