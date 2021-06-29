@@ -22,7 +22,7 @@ const (
 	repoOwnerEnv = "REPO_OWNER"
 	// repoOwnerEnv specifies the repo's name from the environment variable.
 	repoNameEnv = "REPO_NAME"
-	// repoOwnerEnv specifies the pull's number from the environment variable.
+	// pullNumberEnv specifies the pull's number from the environment variable.
 	pullNumberEnv = "PULL_NUMBER"
 	// pullBaseRefEnv specifies the pull's base hash from the environment variable.
 	pullBaseRefEnv = "PULL_BASE_REF"
