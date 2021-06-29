@@ -109,6 +109,15 @@ builds:
     main: ./cmd/check-external-plugin-config/main.go
     env:
       - CGO_ENABLED=0
+  - id: "rerere"
+    binary: rerere
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/rerere/main.go
+    env:
+      - CGO_ENABLED=0
 source:
   enabled: true
 checksum:
@@ -242,3 +251,13 @@ dockers:
       - "ticommunityinfra/tichi-check-external-plugin-config:{{ .Tag }}"
       - "ticommunityinfra/tichi-check-external-plugin-config:{{ .Major }}"
     dockerfile: ./deployments/utils/check-external-plugin-config/Dockerfile
+  -
+    binaries:
+      - rerere
+    builds:
+      - rerere
+    image_templates:
+      - "ticommunityinfra/rerere-component:latest"
+      - "ticommunityinfra/rerere-component:{{ .Tag }}"
+      - "ticommunityinfra/rerere-component:{{ .Major }}"
+    dockerfile: ./deployments/components/rerere/Dockerfile
