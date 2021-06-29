@@ -93,11 +93,6 @@ external_plugins:
       events:
         - pull_request
         - issue_comment
-    - name: ti-community-tars
-      events:
-        - pull_request
-        - issue_comment
-        - push
     - name: ti-community-label-blocker
       events:
         - pull_request
