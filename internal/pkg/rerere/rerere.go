@@ -126,6 +126,10 @@ func Retesting(log *logrus.Entry, ghc githubClient, client gitRepoClient,
 
 		contexts := options.Contexts.Strings()
 		log.Infof("Retesting %v.", contexts)
+		var prs string
+		for _, pull := range spec.Refs.Pulls {
+			prs += fmt.Sprintf("#%d ", pull.Number)
+		}
 		err = client.Commit(fmt.Sprintf("Retesting %v", contexts), string(rawLog))
 		if err != nil {
 			return err
