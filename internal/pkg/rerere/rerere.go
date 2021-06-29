@@ -29,7 +29,7 @@ const (
 // defaultCheckPeriod specifies the default period for test ticker.
 var defaultCheckPeriod = time.Minute * 5
 
-// Ref: https://developer.github.com/v3/checks/runs/#parameters.
+// Ref: https://docs.github.com/en/rest/reference/checks#create-a-check-run--parameters.
 const (
 	// checkRunStatusCompleted means the check run passed.
 	checkRunStatusCompleted = "completed"
