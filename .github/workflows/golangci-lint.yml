@@ -5,6 +5,7 @@ on:
       - v*
     branches:
       - master
+      - rerere
   pull_request:
     tags:
       - v*
