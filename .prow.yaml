@@ -149,7 +149,6 @@ presubmits:
             - --github-endpoint=https://api.github.com
             - --require-contexts=lint
             - --require-contexts=post-tichi-unit-test
-            - --require-contexts=post-tichi-label-dumpling-checks
             - --require-contexts=post-tichi-web-node14-lint
             - --labels=status/can-merge
             - --retesting-branch=rerere
