@@ -130,6 +130,38 @@ presubmits:
         - name: github-token
           secret:
             secretName: github-token
+  - name: pull-tichi-rerere
+    decorate: true
+    always_run: true
+    trigger: "(?mi)^/(merge|rerere)\\s*$"
+    rerun_command: "/rerere"
+    max_concurrency: 1
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: ticommunityinfra/rerere-component:v1.7.0-beta.1
+          command:
+            - rerere
+          args:
+            - --github-token-path=/etc/github/token
+            - --dry-run=false
+            - --github-endpoint=https://api.github.com
+            - --require-contexts=lint
+            - --require-contexts=post-tichi-unit-test
+            - --require-contexts=post-tichi-web-node14-lint
+            - --labels=status/can-merge
+            - --retesting-branch=rerere
+            - --git-user-from-github=true
+            - --git-token-path=/etc/github/token
+          volumeMounts:
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+      volumes:
+        - name: github-token
+          secret:
+            secretName: github-token
 postsubmits:
   - name: post-tichi-deploy-prow
     run_if_changed: 'configs/prow-dev/cluster/'
@@ -183,7 +215,7 @@ postsubmits:
   - name: post-tichi-unit-test
     decorate: true
     branches:
-      - ^master$
+      - ^(master|rerere)$
     spec:
       containers:
         - image: golang:1.16
@@ -201,7 +233,7 @@ postsubmits:
     decorate: true
     run_if_changed: 'tools/label-dumpling/'
     branches:
-      - ^master$
+      - ^(master|rerere)$
     spec:
       containers:
         - image: rust:1.52
@@ -209,10 +241,10 @@ postsubmits:
             - /bin/bash
             - -c
             - "make label-dumpling-checks"
-  - name: pull-tichi-web-node14-lint
+  - name: post-tichi-web-node14-lint
     decorate: true
     branches:
-      - ^master$
+      - ^(master|rerere)$
     spec:
       containers:
         - image: node:14
