@@ -68,13 +68,6 @@ ti-community-label-blocker:
   - repos:
       - ti-community-infra/test-dev
     block_labels:
-      - regex: "^status/LGT[\\d]+$"
-        actions:
-          - labeled
-        trusted_teams:
-          - bots-test
-        trusted_users:
-          - mini-bot
       - regex: "^status/can-merge$"
         actions:
           - labeled
