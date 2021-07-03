@@ -27,7 +27,7 @@ const (
 )
 
 // defaultCheckPeriod specifies the default period for test ticker.
-var defaultCheckPeriod = time.Minute * 5
+var defaultCheckPeriod = time.Minute * 1
 
 // Ref: https://docs.github.com/en/rest/reference/checks#create-a-check-run--parameters.
 const (
