@@ -125,6 +125,7 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 					PickedLabelPrefix: "type/cherry-pick-for-",
 					AllowAll:          true,
 					ExcludeLabels:     []string{"status/can-merge"},
+					AutoRequestReview: true,
 				},
 			},
 		})
