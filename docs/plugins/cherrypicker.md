@@ -42,7 +42,7 @@ ti-community-cherrypicker 将帮助我们自动的 cherry-pick PR 的改动到�
 | label_prefix             | string   | 触发 cherry-pick 的 label 的前缀，默认为 `cherrypick/`                          |
 | picked_label_prefix      | string   | cherry-pick 创建的 PR 的 label 前缀（例如：`type/cherry-pick-for-release-5.0`） |
 | exclude_labels           | []string | 一些不希望被该插件自动复制的 labels （例如：一些控制代码合并的 labels）         |
-| auto_request_review      | bool     | 是否在 cherry-pick 创建的 PR 上请求原 PR 的 reviewers 进行 review           |
+| auto_request_review      | bool     | 是否在 cherry-pick 创建的 PR 上请求原 PR 的 reviewers 进行 review, 默认不自动请求     |
 
 例如：
 

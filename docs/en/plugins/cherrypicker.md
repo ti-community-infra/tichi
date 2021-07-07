@@ -42,7 +42,7 @@ In addition to implementing the core functionality of cherry-pick, it also suppo
 | label_prefix             | string   | The prefix of the label that triggers cherry-pick, default is `cherrypick/`                                                                      |
 | picked_label_prefix      | string   | The label prefix of the PR created by cherry-pick (e.g. `type/cherry-pick-for-release-5.0`)                                                      |
 | exclude_labels           | []string | Some labels that you don't want to be automatically copied by the plugin (e.g. some labels that control code merging)                            |
-| auto_request_review      | bool     | Whether to request reviewers of the original PR on the PR created by cherry-picker for review                                                    |
+| auto_request_review      | bool     | Whether to request reviewers of the original PR on the PR created by cherry-picker for review, not automatically requested by default            |
 
 For example:
 
