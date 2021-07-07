@@ -248,6 +248,9 @@ type TiCommunityCherrypicker struct {
 	PickedLabelPrefix string `json:"picked_label_prefix,omitempty"`
 	// ExcludeLabels specifies the labels that need to be excluded when copying the labels of the original PR.
 	ExcludeLabels []string `json:"excludeLabels,omitempty"`
+	// AutoRequestReview specifies whether to request the reviewers of the original PR for review,
+	// not requested by default.
+	AutoRequestReview bool `json:"auto_request_review,omitempty"`
 }
 
 // setDefaults will set the default value for the config of blunderbuss plugin.

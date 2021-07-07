@@ -684,16 +684,18 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	}
 
 	// Copying original pull request reviewers.
-	var reviewers []string
-	for _, reviewer := range pr.RequestedReviewers {
-		reviewers = append(reviewers, reviewer.Login)
-	}
-	if err := s.GitHubClient.RequestReview(org, repo, createdNum, reviewers); err != nil {
-		logger.WithError(err).Warn("failed to request review to new PR")
-		// Ignore returning errors on failure to request review as this is likely
-		// due to users not being members of the org so that they can't be requested
-		// in PRs.
-		return nil
+	if opts.AutoRequestReview {
+		var reviewers []string
+		for _, reviewer := range pr.RequestedReviewers {
+			reviewers = append(reviewers, reviewer.Login)
+		}
+		if err := s.GitHubClient.RequestReview(org, repo, createdNum, reviewers); err != nil {
+			logger.WithError(err).Warn("failed to request review to new PR")
+			// Ignore returning errors on failure to request review as this is likely
+			// due to users not being members of the org so that they can't be requested
+			// in PRs.
+			return nil
+		}
 	}
 
 	// Assign pull request to requestor.

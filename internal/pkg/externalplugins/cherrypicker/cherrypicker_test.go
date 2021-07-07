@@ -382,6 +382,7 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 			Repos:             []string{"foo/bar"},
 			LabelPrefix:       "cherrypick/",
 			PickedLabelPrefix: "type/cherrypick-for-",
+			AutoRequestReview: true,
 		},
 	}
 	ca := &externalplugins.ConfigAgent{}
@@ -564,6 +565,7 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 					Repos:             []string{"foo/bar"},
 					LabelPrefix:       tc.labelPrefix,
 					PickedLabelPrefix: "type/cherrypick-for-",
+					AutoRequestReview: true,
 				},
 			}
 			ca := &externalplugins.ConfigAgent{}
@@ -781,8 +783,9 @@ func testCherryPickPRWithComment(clients localgit.Clients, t *testing.T) {
 	cfg := &externalplugins.Configuration{}
 	cfg.TiCommunityCherrypicker = []externalplugins.TiCommunityCherrypicker{
 		{
-			Repos:       []string{"foo/bar"},
-			LabelPrefix: "cherrypick/",
+			Repos:             []string{"foo/bar"},
+			LabelPrefix:       "cherrypick/",
+			AutoRequestReview: true,
 		},
 	}
 	ca := &externalplugins.ConfigAgent{}
@@ -1014,6 +1017,7 @@ func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 							Repos:             []string{"foo/bar"},
 							LabelPrefix:       tc.labelPrefix,
 							PickedLabelPrefix: "type/cherrypick-for-",
+							AutoRequestReview: true,
 						},
 					}
 					ca := &externalplugins.ConfigAgent{}
