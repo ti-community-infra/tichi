@@ -19,7 +19,7 @@
     "sass": "^1.35.1"
   },
   "devDependencies": {
-    "@types/node": "^15.14.0",
+    "@types/node": "^16.0.0",
     "@types/react": "^17.0.13",
     "husky": "^7.0.1",
     "prettier": "^2.3.2",
