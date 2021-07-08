@@ -113,23 +113,9 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: gcr.io/k8s-prow/label_sync:v20210701-3efe91b8cd
+        - image: golang:1.16
           command:
-            - /app/label_sync/app.binary
-          args:
-            - --config=configs/prow-dev/config/labels.yaml
-            - --confirm=false
-            - --only=ti-community-infra/test-dev
-            - --token=/etc/github/token
-            - --action=sync
-          volumeMounts:
-            - name: github-token
-              mountPath: /etc/github
-              readOnly: true
-      volumes:
-        - name: github-token
-          secret:
-            secretName: github-token
+            - scripts/verify-labels.sh
   - name: pull-tichi-rerere
     decorate: true
     always_run: true
