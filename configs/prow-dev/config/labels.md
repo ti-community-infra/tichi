@@ -29,7 +29,7 @@ larger set of contributors to apply/remove them.
 - Add automation that consumes/produces the label
 - Open a PR, _with a single commit_, that:
   - updates [labels.yaml](https://github.com/ti-community-infra/tichi/blob/master/configs/prow-dev/config/labels.yaml) with the new label(s)
-  - runs `hack/update-labels.sh` (to regenerate the label descriptions)
+  - runs `scripts/update-labels.sh` (to regenerate the label descriptions)
 - Involve [sig-community-infra](https://developer.tidb.io/sig/community-infra) in the change, eg: chat about it in slack, mention @ti-community-infra/sig-community-infra in the PR, etc.
 - After the PR is merged, a kubernetes CronJob is responsible for syncing labels daily
 
@@ -69,5 +69,4 @@ larger set of contributors to apply/remove them.
 | ---- | ----------- | -------- | --- |
 | <a id="type/bug" href="#type/bug">`type/bug`</a> | Categorizes issue or PR as related to a bug. <br><br> This was previously `bug`, | everyone |  [ti-community-label](https://book.prow.tidb.io/#/en/plugins) |
 | <a id="type/feature" href="#type/feature">`type/feature`</a> | Categorizes issue or PR as related to a new feature. <br><br> This was previously `enhancement`, `type/enhancement`, | everyone |  [ti-community-label](https://book.prow.tidb.io/#/en/plugins) |
-
 
