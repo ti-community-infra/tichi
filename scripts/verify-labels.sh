@@ -12,6 +12,7 @@ label_sync=$PWD/tools/bin/label_sync
 
 cd configs/prow-dev/config || exit
 
+# Generate expected labels.
 "$label_sync" \
   --config=labels.yaml \
   --action=docs \
