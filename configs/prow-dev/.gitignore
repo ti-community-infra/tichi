@@ -4,3 +4,4 @@ cluster/oauth-token.yaml
 cluster/oauth-cookie.yaml
 cluster/hmac-token.yaml
 cluster/gcs-secrets.yaml
+config/labels.md.expected
