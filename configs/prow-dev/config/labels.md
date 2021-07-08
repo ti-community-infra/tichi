@@ -43,31 +43,31 @@ larger set of contributors to apply/remove them.
 
 | Name | Description | Added By | Prow Plugin |
 | ---- | ----------- | -------- | --- |
-| <a id="good first issue" href="#good first issue">`good first issue`</a> | Denotes an issue ready for a new contributor, according to the "help wanted" guidelines. <br><br> This was previously `for-new-contributors`, | everyone |  [help](https://git.k8s.io/test-infra/prow/plugins/help) |
-| <a id="help wanted" href="#help wanted">`help wanted`</a> | Denotes an issue that needs help from a contributor. Must meet "help wanted" guidelines. <br><br> This was previously `status/help-wanted`, `help-wanted`, | everyone |  [help](https://git.k8s.io/test-infra/prow/plugins/help) |
+| <a id="good first issue" href="#good first issue">`good first issue`</a> | Denotes an issue ready for a new contributor, according to the "help wanted" guidelines. <br><br> This was previously `for-new-contributors`, | everyone |  [help](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="help wanted" href="#help wanted">`help wanted`</a> | Denotes an issue that needs help from a contributor. Must meet "help wanted" guidelines. <br><br> This was previously `status/help-wanted`, `help-wanted`, | everyone |  [help](https://book.prow.tidb.io/#/en/plugins) |
 
 ## Labels that apply to all repos, only for PRs
 
 | Name | Description | Added By | Prow Plugin |
 | ---- | ----------- | -------- | --- |
-| <a id="do-not-merge/hold" href="#do-not-merge/hold">`do-not-merge/hold`</a> | Indicates that a PR should not merge because someone has issued a /hold command.| prow |  [hold](https://git.k8s.io/test-infra/prow/plugins/hold) |
-| <a id="do-not-merge/work-in-progress" href="#do-not-merge/work-in-progress">`do-not-merge/work-in-progress`</a> | Indicates that a PR should not merge because it is a work in progress.| prow |  [wip](https://git.k8s.io/test-infra/prow/plugins/wip) |
-| <a id="needs-rebase" href="#needs-rebase">`needs-rebase`</a> | Indicates a PR cannot be merged because it has merge conflicts with HEAD.| prow |  [needs-rebase](https://git.k8s.io/test-infra/prow/external-plugins/needs-rebase) |
-| <a id="size/L" href="#size/L">`size/L`</a> | Denotes a PR that changes 100-499 lines, ignoring generated files.| prow |  [size](https://git.k8s.io/test-infra/prow/plugins/size) |
-| <a id="size/M" href="#size/M">`size/M`</a> | Denotes a PR that changes 30-99 lines, ignoring generated files.| prow |  [size](https://git.k8s.io/test-infra/prow/plugins/size) |
-| <a id="size/S" href="#size/S">`size/S`</a> | Denotes a PR that changes 10-29 lines, ignoring generated files.| prow |  [size](https://git.k8s.io/test-infra/prow/plugins/size) |
-| <a id="size/XL" href="#size/XL">`size/XL`</a> | Denotes a PR that changes 500-999 lines, ignoring generated files.| prow |  [size](https://git.k8s.io/test-infra/prow/plugins/size) |
-| <a id="size/XS" href="#size/XS">`size/XS`</a> | Denotes a PR that changes 0-9 lines, ignoring generated files.| prow |  [size](https://git.k8s.io/test-infra/prow/plugins/size) |
-| <a id="size/XXL" href="#size/XXL">`size/XXL`</a> | Denotes a PR that changes 1000+ lines, ignoring generated files.| prow |  [size](https://git.k8s.io/test-infra/prow/plugins/size) |
-| <a id="status/LGT1" href="#status/LGT1">`status/LGT1`</a> | Indicates that a PR has LGTM 1.| prow |  [ti-community-lgtm](https://git.k8s.io/test-infra/prow/external-plugins/ti-community-lgtm) |
-| <a id="status/LGT2" href="#status/LGT2">`status/LGT2`</a> | Indicates that a PR has LGTM 2.| prow |  [ti-community-lgtm](https://git.k8s.io/test-infra/prow/external-plugins/ti-community-lgtm) |
-| <a id="status/can-merge" href="#status/can-merge">`status/can-merge`</a> | Indicates a PR has been approved by a committer.| prow |  [ti-community-merge](https://git.k8s.io/test-infra/prow/external-plugins/ti-community-merge) |
+| <a id="do-not-merge/hold" href="#do-not-merge/hold">`do-not-merge/hold`</a> | Indicates that a PR should not merge because someone has issued a /hold command.| prow |  [hold](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="do-not-merge/work-in-progress" href="#do-not-merge/work-in-progress">`do-not-merge/work-in-progress`</a> | Indicates that a PR should not merge because it is a work in progress.| prow |  [wip](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="needs-rebase" href="#needs-rebase">`needs-rebase`</a> | Indicates a PR cannot be merged because it has merge conflicts with HEAD.| prow |  [needs-rebase](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="size/L" href="#size/L">`size/L`</a> | Denotes a PR that changes 100-499 lines, ignoring generated files.| prow |  [size](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="size/M" href="#size/M">`size/M`</a> | Denotes a PR that changes 30-99 lines, ignoring generated files.| prow |  [size](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="size/S" href="#size/S">`size/S`</a> | Denotes a PR that changes 10-29 lines, ignoring generated files.| prow |  [size](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="size/XL" href="#size/XL">`size/XL`</a> | Denotes a PR that changes 500-999 lines, ignoring generated files.| prow |  [size](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="size/XS" href="#size/XS">`size/XS`</a> | Denotes a PR that changes 0-9 lines, ignoring generated files.| prow |  [size](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="size/XXL" href="#size/XXL">`size/XXL`</a> | Denotes a PR that changes 1000+ lines, ignoring generated files.| prow |  [size](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="status/LGT1" href="#status/LGT1">`status/LGT1`</a> | Indicates that a PR has LGTM 1.| prow |  [ti-community-lgtm](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="status/LGT2" href="#status/LGT2">`status/LGT2`</a> | Indicates that a PR has LGTM 2.| prow |  [ti-community-lgtm](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="status/can-merge" href="#status/can-merge">`status/can-merge`</a> | Indicates a PR has been approved by a committer.| prow |  [ti-community-merge](https://book.prow.tidb.io/#/en/plugins) |
 
 ## Labels that apply to ti-community-infra/test-dev, for both issues and PRs
 
 | Name | Description | Added By | Prow Plugin |
 | ---- | ----------- | -------- | --- |
-| <a id="type/bug" href="#type/bug">`type/bug`</a> | Categorizes issue or PR as related to a bug. <br><br> This was previously `bug`, | everyone |  [ti-community-label](https://git.k8s.io/test-infra/prow/external-plugins/ti-community-label) |
-| <a id="type/feature" href="#type/feature">`type/feature`</a> | Categorizes issue or PR as related to a new feature. <br><br> This was previously `enhancement`, `type/enhancement`, | everyone |  [ti-community-label](https://git.k8s.io/test-infra/prow/external-plugins/ti-community-label) |
+| <a id="type/bug" href="#type/bug">`type/bug`</a> | Categorizes issue or PR as related to a bug. <br><br> This was previously `bug`, | everyone |  [ti-community-label](https://book.prow.tidb.io/#/en/plugins) |
+| <a id="type/feature" href="#type/feature">`type/feature`</a> | Categorizes issue or PR as related to a new feature. <br><br> This was previously `enhancement`, `type/enhancement`, | everyone |  [ti-community-label](https://book.prow.tidb.io/#/en/plugins) |
 
 
