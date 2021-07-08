@@ -70,3 +70,4 @@ larger set of contributors to apply/remove them.
 | <a id="type/bug" href="#type/bug">`type/bug`</a> | Categorizes issue or PR as related to a bug. <br><br> This was previously `bug`, | everyone |  [ti-community-label](https://book.prow.tidb.io/#/en/plugins) |
 | <a id="type/feature" href="#type/feature">`type/feature`</a> | Categorizes issue or PR as related to a new feature. <br><br> This was previously `enhancement`, `type/enhancement`, | everyone |  [ti-community-label](https://book.prow.tidb.io/#/en/plugins) |
 
+
