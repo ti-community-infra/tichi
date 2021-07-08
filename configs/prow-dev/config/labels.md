@@ -1,4 +1,4 @@
-# Labels
+# GitHub Labels
 
 ## Table of Contents
 
