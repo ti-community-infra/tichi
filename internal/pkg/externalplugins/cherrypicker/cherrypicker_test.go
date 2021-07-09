@@ -16,7 +16,7 @@ limitations under the License.
 
 The original file of the code is at:
 https://github.com/kubernetes/test-infra/blob/master/prow/external-plugins/cherrypicker/server_test.go,
-which we modified to add support for copying the labels and reviewers.
+which we modified to add support for copying the labels.
 */
 
 package cherrypicker
@@ -84,21 +84,6 @@ func (f *fghc) AssignIssue(org, repo string, number int, logins []string) error 
 	return nil
 }
 
-func (f *fghc) RequestReview(org, repo string, number int, logins []string) error {
-	f.Lock()
-	defer f.Unlock()
-	var users []github.User
-	for _, login := range logins {
-		users = append(users, github.User{Login: login})
-	}
-	for i := range f.prs {
-		if number == f.prs[i].Number {
-			f.prs[i].RequestedReviewers = users
-		}
-	}
-	return nil
-}
-
 func (f *fghc) GetPullRequest(org, repo string, number int) (*github.PullRequest, error) {
 	f.Lock()
 	defer f.Unlock()
@@ -146,7 +131,7 @@ func (f *fghc) EnsureFork(forkingUser, org, repo string) (string, error) {
 	return repo, nil
 }
 
-var prFmt = `title=%q body=%q head=%s base=%s labels=%v reviewers=%v assignees=%v`
+var prFmt = `title=%q body=%q head=%s base=%s labels=%v assignees=%v`
 
 func prToString(pr github.PullRequest) string {
 	var labels []string
@@ -154,16 +139,11 @@ func prToString(pr github.PullRequest) string {
 		labels = append(labels, label.Name)
 	}
 
-	var reviewers []string
-	for _, reviewer := range pr.RequestedReviewers {
-		reviewers = append(reviewers, reviewer.Login)
-	}
-
 	var assignees []string
 	for _, assignee := range pr.Assignees {
 		assignees = append(assignees, assignee.Login)
 	}
-	return fmt.Sprintf(prFmt, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, reviewers, assignees)
+	return fmt.Sprintf(prFmt, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, assignees)
 }
 
 func (f *fghc) CreateIssue(org, repo, title, body string, milestone int, labels, assignees []string) (int, error) {
@@ -315,11 +295,6 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 			Merged: true,
 			Title:  "This is a fix for X",
 			Body:   body,
-			RequestedReviewers: []github.User{
-				{
-					Login: "user1",
-				},
-			},
 			Assignees: []github.User{
 				{
 					Login: "user2",
@@ -364,12 +339,8 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 			expectedLabels = append(expectedLabels, label.Name)
 		}
 		expectedLabels = append(expectedLabels, "type/cherrypick-for-"+branch)
-		var expectedReviewers []string
-		for _, reviewer := range ghc.pr.RequestedReviewers {
-			expectedReviewers = append(expectedReviewers, reviewer.Login)
-		}
 		return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
-			branch, expectedLabels, expectedReviewers, expectedAssignees)
+			branch, expectedLabels, expectedAssignees)
 	}
 
 	getSecret := func() []byte {
@@ -484,11 +455,6 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 			Merged:   true,
 			MergeSHA: new(string),
 			Title:    "This is a fix for Y",
-			RequestedReviewers: []github.User{
-				{
-					Login: "user1",
-				},
-			},
 		},
 	}
 
@@ -595,13 +561,9 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 					}
 				}
 				expectedLabels = append(expectedLabels, "type/cherrypick-for-"+branch)
-				var expectedReviewers []string
-				for _, reviewer := range pr.PullRequest.RequestedReviewers {
-					expectedReviewers = append(expectedReviewers, reviewer.Login)
-				}
 				expectedAssignees := []string{"developer"}
 				return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
-					branch, expectedLabels, expectedReviewers, expectedAssignees)
+					branch, expectedLabels, expectedAssignees)
 			}
 
 			expectedPRsNum := 2
@@ -722,11 +684,6 @@ func testCherryPickPRWithComment(clients localgit.Clients, t *testing.T) {
 						Name: "test",
 					},
 				},
-				RequestedReviewers: []github.User{
-					{
-						Login: "user1",
-					},
-				},
 				Assignees: []github.User{
 					{
 						Login: "approver",
@@ -757,11 +714,6 @@ func testCherryPickPRWithComment(clients localgit.Clients, t *testing.T) {
 			Labels: []github.Label{
 				{
 					Name: "test",
-				},
-			},
-			RequestedReviewers: []github.User{
-				{
-					Login: "user1",
 				},
 			},
 			Assignees: []github.User{
@@ -811,13 +763,9 @@ func testCherryPickPRWithComment(clients localgit.Clients, t *testing.T) {
 		for _, label := range pr.PullRequest.Labels {
 			expectedLabels = append(expectedLabels, label.Name)
 		}
-		var expectedReviewers []string
-		for _, reviewer := range pr.PullRequest.RequestedReviewers {
-			expectedReviewers = append(expectedReviewers, reviewer.Login)
-		}
 		expectedAssignees := []string{"approver"}
 		return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
-			branch, expectedLabels, expectedReviewers, expectedAssignees)
+			branch, expectedLabels, expectedAssignees)
 	}
 
 	if len(ghc.prs) != len(expectedBranches) {
@@ -901,11 +849,6 @@ func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 				Merged:   true,
 				MergeSHA: new(string),
 				Title:    "This is a fix for Y",
-				RequestedReviewers: []github.User{
-					{
-						Login: "user1",
-					},
-				},
 			},
 			Label: label,
 		}
@@ -1043,13 +986,9 @@ func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 							expectedLabels = append(expectedLabels, label.Name)
 						}
 						expectedLabels = append(expectedLabels, "type/cherrypick-for-"+branch)
-						var expectedReviewers []string
-						for _, reviewer := range pr(lb).PullRequest.RequestedReviewers {
-							expectedReviewers = append(expectedReviewers, reviewer.Login)
-						}
 						expectedAssignees := []string{"developer"}
 						return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
-							branch, expectedLabels, expectedReviewers, expectedAssignees)
+							branch, expectedLabels, expectedAssignees)
 					}
 
 					if tc.shouldToggle {

@@ -28,7 +28,6 @@ ti-community-cherrypicker 将帮助我们自动的 cherry-pick PR 的改动到�
 除了实现 cherry-pick 的核心功能之外，它还支持了一些其他功能：
 
 - 使用 labels 来标记需要 cherry-pick 到哪些分支
-- 复制当前 PR 的 reviewers 到 cherry-pick 的 PR 
 - 将 cherry-pick 的 PR 分配给作者或者请求人（请求 cherry-pick 的人）
 - 复制当前 PR 已有的 labels
 

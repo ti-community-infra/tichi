@@ -16,7 +16,7 @@ limitations under the License.
 
 The original file of the code is at:
 https://github.com/kubernetes/test-infra/blob/master/prow/external-plugins/cherrypicker/server.go,
-which we modified to add support for copying the labels and reviewers.
+which we modified to add support for copying the labels.
 */
 
 package cherrypicker
@@ -59,7 +59,6 @@ const upstreamRemoteName = "upstream"
 type githubClient interface {
 	AddLabels(org, repo string, number int, labels ...string) error
 	AssignIssue(org, repo string, number int, logins []string) error
-	RequestReview(org, repo string, number int, logins []string) error
 	CreateComment(org, repo string, number int, comment string) error
 	CreateFork(org, repo string) (string, error)
 	CreatePullRequest(org, repo, title, body, head, base string, canModify bool) (int, error)
@@ -681,19 +680,6 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 
 	if err := s.GitHubClient.AddLabels(org, repo, createdNum, labels.List()...); err != nil {
 		logger.WithError(err).Warnf("Failed to add labels %v", labels.List())
-	}
-
-	// Copying original pull request reviewers.
-	var reviewers []string
-	for _, reviewer := range pr.RequestedReviewers {
-		reviewers = append(reviewers, reviewer.Login)
-	}
-	if err := s.GitHubClient.RequestReview(org, repo, createdNum, reviewers); err != nil {
-		logger.WithError(err).Warn("failed to request review to new PR")
-		// Ignore returning errors on failure to request review as this is likely
-		// due to users not being members of the org so that they can't be requested
-		// in PRs.
-		return nil
 	}
 
 	// Assign pull request to requestor.

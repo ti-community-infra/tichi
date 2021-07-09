@@ -28,7 +28,6 @@ Note: **The above `resolve conflict` means that the tool will `git add` the conf
 In addition to implementing the core functionality of cherry-pick, it also supports a number of other features:
 
 - Use labels to mark which branches needs cherry-pick
-- Copy the reviewers of the current PR to the PR of cherry-pick 
 - Assign the PR of cherry-pick to the author or requester (the person who requested cherry-pick)
 - Copy the labels already added for the current PR
 
