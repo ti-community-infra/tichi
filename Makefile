@@ -54,7 +54,7 @@ staticcheck: tools/bin/golangci-lint
 	tools/bin/golangci-lint run  $$($(PACKAGE_DIRECTORIES)) --timeout 500s
 
 tools/bin/golangci-lint:
-	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ./tools/bin v1.31.0
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ./tools/bin v1.41.1
 
 label-dumpling-checks:
 	@echo "label-dumpling checks"

@@ -72,9 +72,6 @@ func validate(o options) error {
 	if err := yaml.Unmarshal(bytes, config); err != nil {
 		return err
 	}
-	if err := config.Validate(); err != nil {
-		return err
-	}
 
-	return nil
+	return config.Validate()
 }

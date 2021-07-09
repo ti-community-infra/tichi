@@ -534,11 +534,7 @@ func (c *Configuration) Validate() error {
 		return err
 	}
 
-	if err := validateTars(c.TiCommunityTars); err != nil {
-		return err
-	}
-
-	return nil
+	return validateTars(c.TiCommunityTars)
 }
 
 // validateLogLevel will return an error if the value of the log level is invalid.
