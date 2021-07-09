@@ -16,7 +16,7 @@ limitations under the License.
 
 The original file of the code is at:
 https://github.com/kubernetes/test-infra/blob/master/prow/external-plugins/cherrypicker/server.go,
-which we modified to add support for copying the labels and.
+which we modified to add support for copying the labels.
 */
 
 package cherrypicker
