@@ -11,9 +11,7 @@ periodics:
             - /app/robots/commenter/app.binary
           args:
             - |-
-              --query=repo:ti-community-infra/test-dev
-              -label:lifecycle/frozen
-              label:lifecycle/rotten
+              --query=repo:ti-community-infra/test-dev -label:lifecycle/frozen label:lifecycle/rotten
             - --updated=720h
             - --token=/etc/github/token
             - |-
@@ -47,10 +45,7 @@ periodics:
             - /app/robots/commenter/app.binary
           args:
             - |-
-              --query=repo:ti-community-infra/test-dev
-              -label:lifecycle/frozen
-              label:lifecycle/stale
-              -label:lifecycle/rotten
+              --query=repo:ti-community-infra/test-dev -label:lifecycle/frozen label:lifecycle/stale -label:lifecycle/rotten
             - --updated=720h
             - --token=/etc/github/token
             - |-
@@ -86,10 +81,7 @@ periodics:
             - /app/robots/commenter/app.binary
           args:
             - |-
-              --query=repo:ti-community-infra/test-dev
-              -label:lifecycle/frozen
-              -label:lifecycle/stale
-              -label:lifecycle/rotten
+              --query=repo:ti-community-infra/test-dev -label:lifecycle/frozen -label:lifecycle/stale -label:lifecycle/rotten
             - --updated=2160h
             - --token=/etc/github/token
             - |-
