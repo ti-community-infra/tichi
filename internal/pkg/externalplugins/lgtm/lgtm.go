@@ -73,13 +73,13 @@ func HelpProvider(_ *tiexternalplugins.ConfigAgent) externalplugins.ExternalPlug
 
 type githubClient interface {
 	AddLabel(owner, repo string, number int, label string) error
-	CreateComment(owner, repo string, number int, comment string) error
-	EditComment(org, repo string, id int, comment string) error
 	RemoveLabel(owner, repo string, number int, label string) error
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
-	BotUserChecker() (func(candidate string) bool, error)
+	CreateComment(owner, repo string, number int, comment string) error
+	EditComment(org, repo string, id int, comment string) error
 	ListIssueComments(org, repo string, number int) ([]github.IssueComment, error)
 	DeleteComment(org, repo string, ID int) error
+	BotUserChecker() (func(candidate string) bool, error)
 }
 
 // reviewCtx contains information about each review event.
