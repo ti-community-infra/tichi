@@ -60,12 +60,12 @@ type fakeGithubClient struct {
 	lock sync.RWMutex
 }
 
-// AddLabel adds a label
+// AddLabel adds a label.
 func (f *fakeGithubClient) AddLabel(owner, repo string, number int, label string) error {
 	return f.AddLabels(owner, repo, number, label)
 }
 
-// AddLabels adds a list of labels
+// AddLabels adds a list of labels.
 func (f *fakeGithubClient) AddLabels(owner, repo string, number int, labels ...string) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
@@ -94,7 +94,7 @@ func (f *fakeGithubClient) AddLabels(owner, repo string, number int, labels ...s
 	return nil
 }
 
-// RemoveLabel removes a label
+// RemoveLabel removes a label.
 func (f *fakeGithubClient) RemoveLabel(owner, repo string, number int, label string) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
@@ -106,7 +106,7 @@ func (f *fakeGithubClient) RemoveLabel(owner, repo string, number int, label str
 	return fmt.Errorf("cannot remove %v from %s/%s/#%d", label, owner, repo, number)
 }
 
-// GetIssueLabels gets labels on an issue
+// GetIssueLabels gets labels on an issue.
 func (f *fakeGithubClient) GetIssueLabels(owner, repo string, number int) ([]github.Label, error) {
 	f.lock.RLock()
 	defer f.lock.RUnlock()
@@ -124,7 +124,7 @@ func (f *fakeGithubClient) GetIssueLabels(owner, repo string, number int) ([]git
 	return la, nil
 }
 
-// CreateComment adds a comment to a PR
+// CreateComment adds a comment to a PR.
 func (f *fakeGithubClient) CreateComment(owner, repo string, number int, comment string) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
