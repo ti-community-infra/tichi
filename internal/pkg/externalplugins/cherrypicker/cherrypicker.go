@@ -565,6 +565,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 
 	// Try git am --3way localPath.
 	if err := r.Am(localPath); err != nil {
+		hasConflicts = true
 		var errs []error
 		logger.WithError(err).Warnf("Failed to apply #%d on top of target branch %q.", num, targetBranch)
 		if opts.IssueOnConflict {
@@ -577,7 +578,6 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 				return nil
 			}
 		} else {
-			hasConflicts = true
 			// Try to fetch upstream.
 			ex := exec.New()
 			dir := r.Directory()
