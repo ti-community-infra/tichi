@@ -3,7 +3,6 @@ package lgtm
 
 import (
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"regexp"
 	"strings"
 	"sync"
@@ -12,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/github/fakegithub"
@@ -139,34 +139,34 @@ func (f *fakeGithubClient) CreateComment(owner, repo string, number int, comment
 }
 
 // EditComment edits a comment. Its a stub that does nothing.
-func (f *fakeGithubClient) EditComment(org, repo string, ID int, comment string) error {
+func (f *fakeGithubClient) EditComment(org, repo string, id int, comment string) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	for num, ics := range f.IssueComments {
 		for i, ic := range ics {
-			if ic.ID == ID {
+			if ic.ID == id {
 				f.IssueComments[num][i].Body = comment
 				return nil
 			}
 		}
 	}
-	return fmt.Errorf("could not find issue comment %d", ID)
+	return fmt.Errorf("could not find issue comment %d", id)
 }
 
 // DeleteComment deletes a comment.
-func (f *fakeGithubClient) DeleteComment(owner, repo string, ID int) error {
+func (f *fakeGithubClient) DeleteComment(owner, repo string, id int) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
-	f.IssueCommentsDeleted = append(f.IssueCommentsDeleted, fmt.Sprintf("%s/%s#%d", owner, repo, ID))
+	f.IssueCommentsDeleted = append(f.IssueCommentsDeleted, fmt.Sprintf("%s/%s#%d", owner, repo, id))
 	for num, ics := range f.IssueComments {
 		for i, ic := range ics {
-			if ic.ID == ID {
+			if ic.ID == id {
 				f.IssueComments[num] = append(ics[:i], ics[i+1:]...)
 				return nil
 			}
 		}
 	}
-	return fmt.Errorf("could not find issue comment %d", ID)
+	return fmt.Errorf("could not find issue comment %d", id)
 }
 
 // ListIssueComments returns comments.
@@ -192,28 +192,28 @@ func getNotificationMessage(reviewers []string) string {
 
 	if err != nil {
 		return ""
-	} else {
-		return *message
 	}
+
+	return *message
 }
 
 // compareComments used to determine whether two comment lists are equal.
 func compareComments(actualComments []string, expectComments []string) bool {
 	if len(actualComments) != len(expectComments) {
 		return false
-	} else {
-		if len(actualComments) == 0 {
-			return true
-		}
+	}
 
-		for i := 0; i < len(actualComments); i++ {
-			if expectComments[i] != actualComments[i] {
-				return false
-			}
-		}
-
+	if len(actualComments) == 0 {
 		return true
 	}
+
+	for i := 0; i < len(actualComments); i++ {
+		if expectComments[i] != actualComments[i] {
+			return false
+		}
+	}
+
+	return true
 }
 
 func TestLGTMFromApproveReview(t *testing.T) {
