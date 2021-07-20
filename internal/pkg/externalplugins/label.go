@@ -5,6 +5,8 @@ import "fmt"
 const (
 	// CanMergeLabel is the name of the merge label applied by the merge plugin.
 	CanMergeLabel = "status/can-merge"
+	// CherryPickHasConflicts is the name of the conflicts label applied by the cherry-pick plugin.
+	CherryPickHasConflicts = "status/cherry-pick-has-conflicts"
 )
 
 const (
