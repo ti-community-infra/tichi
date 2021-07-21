@@ -6,7 +6,7 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: gcr.io/k8s-prow/checkconfig:v20210709-f607a865fb
+        - image: gcr.io/k8s-prow/checkconfig:v20210716-430fa04d50
           command:
             - /checkconfig
           args:
@@ -182,7 +182,7 @@ postsubmits:
       - ^master$
     spec:
       containers:
-        - image: gcr.io/k8s-prow/label_sync:v20210709-f607a865fb
+        - image: gcr.io/k8s-prow/label_sync:v20210716-430fa04d50
           command:
             - /app/label_sync/app.binary
           args:
