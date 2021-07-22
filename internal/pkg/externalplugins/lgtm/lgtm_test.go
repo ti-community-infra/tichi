@@ -398,7 +398,7 @@ func TestLGTMFromApproveReview(t *testing.T) {
 					User: github.User{
 						Login: botName,
 					},
-					Body: "redundant comment",
+					Body: "other comment",
 				},
 				{
 					ID: 1002,
@@ -420,7 +420,7 @@ func TestLGTMFromApproveReview(t *testing.T) {
 					User: github.User{
 						Login: botName,
 					},
-					Body: "redundant comment",
+					Body: "other comment",
 				},
 				{
 					ID: 1002,
@@ -494,12 +494,14 @@ func TestLGTMFromApproveReview(t *testing.T) {
 
 			var actualComments []string
 			for _, actualComment := range fc.IssueComments[5] {
-				actualComments = append(actualComments, actualComment.Body)
+				comment := fmt.Sprintf("%d:%s", actualComment.ID, actualComment.Body)
+				actualComments = append(actualComments, comment)
 			}
 
 			var expectComments []string
 			for _, expectComment := range tc.expectComments {
-				expectComments = append(expectComments, expectComment.Body)
+				comment := fmt.Sprintf("%d:%s", expectComment.ID, expectComment.Body)
+				expectComments = append(expectComments, comment)
 			}
 
 			if compareComments(actualComments, expectComments) == false {
