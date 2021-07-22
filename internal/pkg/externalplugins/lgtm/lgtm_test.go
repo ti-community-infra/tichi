@@ -3,12 +3,15 @@ package lgtm
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/github/fakegithub"
@@ -18,6 +21,8 @@ var (
 	lgtmOne = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 1)
 	lgtmTwo = fmt.Sprintf("%s%d", externalplugins.LgtmLabelPrefix, 2)
 )
+
+const botName = "ti-chi-bot"
 
 type fakeOwnersClient struct {
 	reviewers []string
@@ -32,16 +37,197 @@ func (f *fakeOwnersClient) LoadOwners(_ string,
 	}, nil
 }
 
+type fakeGithubClient struct {
+	IssueCommentID int
+	IssueComments  map[int][]github.IssueComment
+
+	// All Labels That Exist In The Repo
+	RepoLabelsExisting []string
+	// org/repo#number:label
+	IssueLabelsAdded    []string
+	IssueLabelsExisting []string
+	IssueLabelsRemoved  []string
+
+	// org/repo#number:body
+	IssueCommentsAdded []string
+	// org/repo#issuecommentid
+	IssueCommentsDeleted []string
+
+	PullRequests  map[int]*github.PullRequest
+	Collaborators []string
+
+	// lock to be thread safe
+	lock sync.RWMutex
+}
+
+// AddLabel adds a label.
+func (f *fakeGithubClient) AddLabel(owner, repo string, number int, label string) error {
+	return f.AddLabels(owner, repo, number, label)
+}
+
+// AddLabels adds a list of labels.
+func (f *fakeGithubClient) AddLabels(owner, repo string, number int, labels ...string) error {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	for _, label := range labels {
+		labelString := fmt.Sprintf("%s/%s#%d:%s", owner, repo, number, label)
+		if sets.NewString(f.IssueLabelsAdded...).Has(labelString) {
+			return fmt.Errorf("cannot add %v to %s/%s/#%d", label, owner, repo, number)
+		}
+		if f.RepoLabelsExisting == nil {
+			f.IssueLabelsAdded = append(f.IssueLabelsAdded, labelString)
+			continue
+		}
+
+		var repoLabelExists bool
+		for _, l := range f.RepoLabelsExisting {
+			if label == l {
+				f.IssueLabelsAdded = append(f.IssueLabelsAdded, labelString)
+				repoLabelExists = true
+				break
+			}
+		}
+		if !repoLabelExists {
+			return fmt.Errorf("cannot add %v to %s/%s/#%d", label, owner, repo, number)
+		}
+	}
+	return nil
+}
+
+// RemoveLabel removes a label.
+func (f *fakeGithubClient) RemoveLabel(owner, repo string, number int, label string) error {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	labelString := fmt.Sprintf("%s/%s#%d:%s", owner, repo, number, label)
+	if !sets.NewString(f.IssueLabelsRemoved...).Has(labelString) {
+		f.IssueLabelsRemoved = append(f.IssueLabelsRemoved, labelString)
+		return nil
+	}
+	return fmt.Errorf("cannot remove %v from %s/%s/#%d", label, owner, repo, number)
+}
+
+// GetIssueLabels gets labels on an issue.
+func (f *fakeGithubClient) GetIssueLabels(owner, repo string, number int) ([]github.Label, error) {
+	f.lock.RLock()
+	defer f.lock.RUnlock()
+	re := regexp.MustCompile(fmt.Sprintf(`^%s/%s#%d:(.*)$`, owner, repo, number))
+	la := []github.Label{}
+	allLabels := sets.NewString(f.IssueLabelsExisting...)
+	allLabels.Insert(f.IssueLabelsAdded...)
+	allLabels.Delete(f.IssueLabelsRemoved...)
+	for _, l := range allLabels.List() {
+		groups := re.FindStringSubmatch(l)
+		if groups != nil {
+			la = append(la, github.Label{Name: groups[1]})
+		}
+	}
+	return la, nil
+}
+
+// CreateComment adds a comment to a PR.
+func (f *fakeGithubClient) CreateComment(owner, repo string, number int, comment string) error {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	f.IssueCommentID++
+	f.IssueCommentsAdded = append(f.IssueCommentsAdded, fmt.Sprintf("%s/%s#%d:%s", owner, repo, number, comment))
+	f.IssueComments[number] = append(f.IssueComments[number], github.IssueComment{
+		ID:   f.IssueCommentID,
+		Body: comment,
+		User: github.User{Login: botName},
+	})
+	return nil
+}
+
+// EditComment edits a comment. Its a stub that does nothing.
+func (f *fakeGithubClient) EditComment(org, repo string, id int, comment string) error {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	for num, ics := range f.IssueComments {
+		for i, ic := range ics {
+			if ic.ID == id {
+				f.IssueComments[num][i].Body = comment
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("could not find issue comment %d", id)
+}
+
+// DeleteComment deletes a comment.
+func (f *fakeGithubClient) DeleteComment(owner, repo string, id int) error {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	f.IssueCommentsDeleted = append(f.IssueCommentsDeleted, fmt.Sprintf("%s/%s#%d", owner, repo, id))
+	for num, ics := range f.IssueComments {
+		for i, ic := range ics {
+			if ic.ID == id {
+				f.IssueComments[num] = append(ics[:i], ics[i+1:]...)
+				return nil
+			}
+		}
+	}
+	return fmt.Errorf("could not find issue comment %d", id)
+}
+
+// ListIssueComments returns comments.
+func (f *fakeGithubClient) ListIssueComments(owner, repo string, number int) ([]github.IssueComment, error) {
+	f.lock.RLock()
+	defer f.lock.RUnlock()
+	return append([]github.IssueComment{}, f.IssueComments[number]...), nil
+}
+
+func (f *fakeGithubClient) BotUserChecker() (func(candidate string) bool, error) {
+	return func(candidate string) bool {
+		candidate = strings.TrimSuffix(candidate, "[bot]")
+		return candidate == botName
+	}, nil
+}
+
+func getNotificationMessage(reviewers []string) string {
+	ownersLink := fmt.Sprintf(ownersclient.OwnersURLFmt, "https://prow-dev.tidb.io/tichi", "org", "repo", 5)
+	message, err := getMessage(reviewers,
+		"https://prow-dev.tidb.io/command-help",
+		"https://book.prow.tidb.io/#/en/workflows/pr",
+		ownersLink, "org", "repo")
+
+	if err != nil {
+		return ""
+	}
+
+	return *message
+}
+
+// compareComments used to determine whether two comment lists are equal.
+func compareComments(actualComments []string, expectComments []string) bool {
+	if len(actualComments) != len(expectComments) {
+		return false
+	}
+
+	if len(actualComments) == 0 {
+		return true
+	}
+
+	for i := 0; i < len(actualComments); i++ {
+		if expectComments[i] != actualComments[i] {
+			return false
+		}
+	}
+
+	return true
+}
+
 func TestLGTMFromApproveReview(t *testing.T) {
 	var testcases = []struct {
-		name         string
-		state        github.ReviewState
-		action       github.ReviewEventAction
-		body         string
-		reviewer     string
-		currentLabel string
-		isCancel     bool
-		shouldToggle bool
+		name           string
+		comments       []github.IssueComment
+		state          github.ReviewState
+		action         github.ReviewEventAction
+		body           string
+		reviewer       string
+		currentLabel   string
+		isCancel       bool
+		shouldToggle   bool
+		expectComments []github.IssueComment
 	}{
 		{
 			name:         "Edit approve review by reviewer, no lgtm on pr",
@@ -65,21 +251,57 @@ func TestLGTMFromApproveReview(t *testing.T) {
 			shouldToggle: false,
 		},
 		{
-			name:         "Request changes review by reviewer, lgtm on pr",
+			name: "Request changes review by reviewer, lgtm on pr",
+			comments: []github.IssueComment{
+				{
+					ID: 1000,
+					User: github.User{
+						Login: botName,
+					},
+					Body: getNotificationMessage([]string{"collab1"}),
+				},
+			},
 			state:        github.ReviewStateChangesRequested,
 			action:       github.ReviewActionSubmitted,
 			reviewer:     "collab1",
 			currentLabel: lgtmOne,
 			isCancel:     true,
 			shouldToggle: true,
+			expectComments: []github.IssueComment{
+				{
+					ID: 1000,
+					User: github.User{
+						Login: botName,
+					},
+					Body: getNotificationMessage(nil),
+				},
+			},
 		},
 		{
-			name:         "Approve review by reviewer, no lgtm on pr",
+			name: "Approve review by reviewer, no lgtm on pr",
+			comments: []github.IssueComment{
+				{
+					ID: 1000,
+					User: github.User{
+						Login: botName,
+					},
+					Body: getNotificationMessage([]string{"collab2"}),
+				},
+			},
 			state:        github.ReviewStateApproved,
 			action:       github.ReviewActionSubmitted,
 			reviewer:     "collab1",
 			currentLabel: lgtmOne,
 			shouldToggle: true,
+			expectComments: []github.IssueComment{
+				{
+					ID: 1000,
+					User: github.User{
+						Login: botName,
+					},
+					Body: getNotificationMessage([]string{"collab1", "collab2"}),
+				},
+			},
 		},
 		{
 			name:         "Approve review by reviewer, LGTM is enough",
@@ -146,28 +368,78 @@ func TestLGTMFromApproveReview(t *testing.T) {
 			shouldToggle: false,
 		},
 		{
-			name:         "(Deprecated) Comment body has /lgtm cancel on Approve Review",
+			name: "(Deprecated) Comment body has /lgtm cancel on Approve Review",
+			comments: []github.IssueComment{
+				{
+					ID:   100,
+					User: github.User{Login: botName},
+					Body: getNotificationMessage([]string{"collab2"}),
+				},
+			},
 			state:        github.ReviewStateApproved,
 			action:       github.ReviewActionSubmitted,
 			reviewer:     "collab1",
 			body:         "/lgtm cancel",
 			currentLabel: lgtmOne,
 			shouldToggle: true,
-		},
-	}
-	SHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
-	for _, tc := range testcases {
-		fc := &fakegithub.FakeClient{
-			IssueComments:    make(map[int][]github.IssueComment),
-			IssueLabelsAdded: []string{},
-			PullRequests: map[int]*github.PullRequest{
-				5: {
-					Head: github.PullRequestBranch{
-						SHA: SHA,
-					},
+			expectComments: []github.IssueComment{
+				{
+					ID:   100,
+					User: github.User{Login: botName},
+					Body: getNotificationMessage([]string{"collab1", "collab2"}),
 				},
 			},
-			Collaborators: []string{"collab1", "collab2"},
+		},
+		{
+			name: "The comment list contains redundant comments",
+			comments: []github.IssueComment{
+				{
+					ID: 1001,
+					User: github.User{
+						Login: botName,
+					},
+					Body: "other comment",
+				},
+				{
+					ID: 1002,
+					User: github.User{
+						Login: botName,
+					},
+					Body: getNotificationMessage([]string{"collab1"}),
+				},
+			},
+			state:        github.ReviewStateChangesRequested,
+			action:       github.ReviewActionSubmitted,
+			reviewer:     "collab1",
+			currentLabel: lgtmOne,
+			isCancel:     true,
+			shouldToggle: true,
+			expectComments: []github.IssueComment{
+				{
+					ID: 1001,
+					User: github.User{
+						Login: botName,
+					},
+					Body: "other comment",
+				},
+				{
+					ID: 1002,
+					User: github.User{
+						Login: botName,
+					},
+					Body: getNotificationMessage(nil),
+				},
+			},
+		},
+	}
+	for _, tc := range testcases {
+		fc := &fakeGithubClient{
+			IssueComments: map[int][]github.IssueComment{
+				5: tc.comments,
+			},
+			IssueLabelsExisting: []string{},
+			IssueLabelsAdded:    []string{},
+			IssueLabelsRemoved:  []string{},
 		}
 		e := &github.ReviewEvent{
 			Action: tc.action,
@@ -185,6 +457,9 @@ func TestLGTMFromApproveReview(t *testing.T) {
 		}
 
 		cfg := &externalplugins.Configuration{}
+		cfg.CommandHelpLink = "https://prow-dev.tidb.io/command-help"
+		cfg.PRProcessLink = "https://book.prow.tidb.io/#/en/workflows/pr"
+		cfg.TichiWebURL = "https://prow-dev.tidb.io/tichi"
 		cfg.TiCommunityLgtm = []externalplugins.TiCommunityLgtm{
 			{
 				Repos:              []string{"org/repo"},
@@ -215,6 +490,22 @@ func TestLGTMFromApproveReview(t *testing.T) {
 				} else if len(fc.IssueLabelsRemoved) > 0 {
 					t.Error("should not have removed " + lgtmOne)
 				}
+			}
+
+			var actualComments []string
+			for _, actualComment := range fc.IssueComments[5] {
+				comment := fmt.Sprintf("%d:%s", actualComment.ID, actualComment.Body)
+				actualComments = append(actualComments, comment)
+			}
+
+			var expectComments []string
+			for _, expectComment := range tc.expectComments {
+				comment := fmt.Sprintf("%d:%s", expectComment.ID, expectComment.Body)
+				expectComments = append(expectComments, comment)
+			}
+
+			if compareComments(actualComments, expectComments) == false {
+				t.Errorf("expect comments: %s, but got comments: %s", expectComments, actualComments)
 			}
 		} else if len(fc.IssueLabelsRemoved) > 0 {
 			t.Error("should not have removed " + lgtmOne + ".")

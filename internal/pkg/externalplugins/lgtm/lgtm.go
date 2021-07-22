@@ -73,12 +73,13 @@ func HelpProvider(_ *tiexternalplugins.ConfigAgent) externalplugins.ExternalPlug
 
 type githubClient interface {
 	AddLabel(owner, repo string, number int, label string) error
-	CreateComment(owner, repo string, number int, comment string) error
 	RemoveLabel(owner, repo string, number int, label string) error
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
-	BotUserChecker() (func(candidate string) bool, error)
+	CreateComment(owner, repo string, number int, comment string) error
+	EditComment(org, repo string, id int, comment string) error
 	ListIssueComments(org, repo string, number int) ([]github.IssueComment, error)
 	DeleteComment(org, repo string, ID int) error
+	BotUserChecker() (func(candidate string) bool, error)
 }
 
 // reviewCtx contains information about each review event.
@@ -203,11 +204,14 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 		return fetchErr("issue comments", err)
 	}
 	notifications := filterComments(issueComments, notificationMatcher(botUserChecker))
-	cleanupOldNotifications := func() {
-		for _, notification := range notifications {
-			notif := notification
-			if err := gc.DeleteComment(org, repo, notif.ID); err != nil {
-				log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repo, number, notif.ID)
+	latestNotification := getLastComment(notifications)
+	cleanupRedundantNotifications := func() {
+		if len(notifications) != 0 {
+			for _, notification := range notifications[:len(notifications)-1] {
+				notif := notification
+				if err := gc.DeleteComment(org, repo, notif.ID); err != nil {
+					log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repo, number, notif.ID)
+				}
 			}
 		}
 	}
@@ -222,19 +226,28 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 		if err != nil {
 			return err
 		}
-		err = gc.CreateComment(org, repo, number, *newMsg)
-		if err != nil {
-			return err
+
+		// Create or update the review notification comment.
+		if latestNotification == nil {
+			err := gc.CreateComment(org, repo, number, *newMsg)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := gc.EditComment(org, repo, latestNotification.ID, *newMsg)
+			if err != nil {
+				return err
+			}
 		}
+
 		log.Info("Removing LGTM label.")
 		if err := gc.RemoveLabel(org, repo, number, currentLabel); err != nil {
 			return err
 		}
 
-		// Clean up old notifications after we added the new notification.
-		cleanupOldNotifications()
+		// Clean up redundant notifications after we added the new notification.
+		cleanupRedundantNotifications()
 	} else if nextLabel != "" && wantLGTM {
-		latestNotification := getLastComment(notifications)
 		reviewedReviewers := getReviewersFromNotification(latestNotification)
 		// Ignore already reviewed reviewer.
 		if reviewedReviewers.Has(author) {
@@ -249,9 +262,17 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 			return err
 		}
 
-		err = gc.CreateComment(org, repo, number, *newMsg)
-		if err != nil {
-			return err
+		// Create or update the review notification comment.
+		if latestNotification == nil {
+			err := gc.CreateComment(org, repo, number, *newMsg)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := gc.EditComment(org, repo, latestNotification.ID, *newMsg)
+			if err != nil {
+				return err
+			}
 		}
 
 		log.Info("Adding LGTM label.")
@@ -265,8 +286,8 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 			return err
 		}
 
-		// Clean up old notifications after we added the new notification.
-		cleanupOldNotifications()
+		// Clean up redundant notifications after we added the new notification.
+		cleanupRedundantNotifications()
 	}
 
 	return nil
