@@ -582,10 +582,8 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 			ex := exec.New()
 			dir := r.Directory()
 
-			// Add the upstream remote.
-			upstreamURL := fmt.Sprintf("%s/%s", s.GitHubURL, pr.Base.Repo.FullName)
-
 			// Warning: Do not output url with authorization information to the log and response.
+			upstreamURL := fmt.Sprintf("%s/%s", s.GitHubURL, pr.Base.Repo.FullName)
 			upstreamURLWithAuth, err := url.Parse(upstreamURL)
 			if err != nil {
 				logger.WithError(err).Errorf("Failed to remote parse url: %s", upstreamURL)
@@ -593,6 +591,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 			}
 			upstreamURLWithAuth.User = url.UserPassword(s.BotUser.Login, string(s.GitHubTokenGenerator()))
 
+			// Add the upstream remote.
 			addUpstreamRemote := ex.Command("git", "remote", "add", upstreamRemoteName, upstreamURLWithAuth.String())
 			addUpstreamRemote.SetDir(dir)
 			out, err := addUpstreamRemote.CombinedOutput()
