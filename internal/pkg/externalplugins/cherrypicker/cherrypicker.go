@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -157,9 +158,10 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 // Server implements http.Handler. It validates incoming GitHub webhooks and
 // then dispatches them to the appropriate plugins.
 type Server struct {
-	TokenGenerator func() []byte
-	BotUser        *github.UserData
-	Email          string
+	WebhookSecretGenerator func() []byte
+	GitHubTokenGenerator   func() []byte
+	BotUser                *github.UserData
+	Email                  string
 
 	GitClient git.ClientFactory
 	// Used for unit testing
@@ -188,7 +190,7 @@ type cherryPickRequest struct {
 
 // ServeHTTP validates an incoming webhook and puts it into the event channel.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	eventType, eventGUID, payload, ok, _ := github.ValidateWebhook(w, r, s.TokenGenerator)
+	eventType, eventGUID, payload, ok, _ := github.ValidateWebhook(w, r, s.WebhookSecretGenerator)
 	if !ok {
 		return
 	}
@@ -580,14 +582,22 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 			ex := exec.New()
 			dir := r.Directory()
 
-			// Add the upstream remote.
+			// Warning: Do not output url with authorization information to the log and response.
 			upstreamURL := fmt.Sprintf("%s/%s", s.GitHubURL, pr.Base.Repo.FullName)
-			addUpstreamRemote := ex.Command("git", "remote", "add", upstreamRemoteName, upstreamURL)
+			upstreamURLWithAuth, err := url.Parse(upstreamURL)
+			if err != nil {
+				logger.WithError(err).Errorf("Failed to remote parse url: %s", upstreamURL)
+				errs = append(errs, fmt.Errorf("failed to parse remote url: %s", upstreamURL))
+			}
+			upstreamURLWithAuth.User = url.UserPassword(s.BotUser.Login, string(s.GitHubTokenGenerator()))
+
+			// Add the upstream remote.
+			addUpstreamRemote := ex.Command("git", "remote", "add", upstreamRemoteName, upstreamURLWithAuth.String())
 			addUpstreamRemote.SetDir(dir)
 			out, err := addUpstreamRemote.CombinedOutput()
 			if err != nil {
 				logger.WithError(err).Warnf("Failed to git remote add %s and the output look like: %s.", upstreamURL, out)
-				errs = append(errs, fmt.Errorf("failed to git remote add: %w", err))
+				errs = append(errs, fmt.Errorf("failed to git remote add %s %s", upstreamRemoteName, upstreamURL))
 			}
 
 			// Fetch the upstream remote.
@@ -596,7 +606,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 			out, err = fetchUpstreamRemote.CombinedOutput()
 			if err != nil {
 				logger.WithError(err).Warnf("Failed to fetch %s remote and the output look like: %s.", upstreamRemoteName, out)
-				errs = append(errs, fmt.Errorf("failed to git fetch upstream: %w", err))
+				errs = append(errs, fmt.Errorf("failed to git fetch %s", upstreamRemoteName))
 			}
 
 			//  Try git cherry-pick.

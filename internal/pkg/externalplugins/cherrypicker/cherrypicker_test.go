@@ -347,6 +347,10 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 		return []byte("sha=abcdefg")
 	}
 
+	getGithubToken := func() []byte {
+		return []byte("token")
+	}
+
 	cfg := &externalplugins.Configuration{}
 	cfg.TiCommunityCherrypicker = []externalplugins.TiCommunityCherrypicker{
 		{
@@ -359,14 +363,15 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 	ca.Set(cfg)
 
 	s := &Server{
-		BotUser:        botUser,
-		GitClient:      c,
-		ConfigAgent:    ca,
-		Push:           func(forkName, newBranch string, force bool) error { return nil },
-		GitHubClient:   ghc,
-		TokenGenerator: getSecret,
-		Log:            logrus.StandardLogger().WithField("client", "cherrypicker"),
-		Repos:          []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
+		BotUser:                botUser,
+		GitClient:              c,
+		ConfigAgent:            ca,
+		Push:                   func(forkName, newBranch string, force bool) error { return nil },
+		GitHubClient:           ghc,
+		WebhookSecretGenerator: getSecret,
+		GitHubTokenGenerator:   getGithubToken,
+		Log:                    logrus.StandardLogger().WithField("client", "cherrypicker"),
+		Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
 	}
 
 	if err := s.handleIssueComment(logrus.NewEntry(logrus.StandardLogger()), ic); err != nil {
@@ -464,6 +469,10 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 		return []byte("sha=abcdefg")
 	}
 
+	getGithubToken := func() []byte {
+		return []byte("token")
+	}
+
 	testCases := []struct {
 		name        string
 		labelPrefix string
@@ -536,14 +545,15 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 			ca.Set(cfg)
 
 			s := &Server{
-				BotUser:        botUser,
-				GitClient:      c,
-				ConfigAgent:    ca,
-				Push:           func(forkName, newBranch string, force bool) error { return nil },
-				GitHubClient:   ghc,
-				TokenGenerator: getSecret,
-				Log:            logrus.StandardLogger().WithField("client", "cherrypicker"),
-				Repos:          []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
+				BotUser:                botUser,
+				GitClient:              c,
+				ConfigAgent:            ca,
+				Push:                   func(forkName, newBranch string, force bool) error { return nil },
+				GitHubClient:           ghc,
+				WebhookSecretGenerator: getSecret,
+				GitHubTokenGenerator:   getGithubToken,
+				Log:                    logrus.StandardLogger().WithField("client", "cherrypicker"),
+				Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
 			}
 
 			if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), pr); err != nil {
@@ -730,6 +740,10 @@ func testCherryPickPRWithComment(clients localgit.Clients, t *testing.T) {
 		return []byte("sha=abcdefg")
 	}
 
+	getGithubToken := func() []byte {
+		return []byte("token")
+	}
+
 	cfg := &externalplugins.Configuration{}
 	cfg.TiCommunityCherrypicker = []externalplugins.TiCommunityCherrypicker{
 		{
@@ -741,14 +755,15 @@ func testCherryPickPRWithComment(clients localgit.Clients, t *testing.T) {
 	ca.Set(cfg)
 
 	s := &Server{
-		BotUser:        botUser,
-		GitClient:      c,
-		ConfigAgent:    ca,
-		Push:           func(forkName, newBranch string, force bool) error { return nil },
-		GitHubClient:   ghc,
-		TokenGenerator: getSecret,
-		Log:            logrus.StandardLogger().WithField("client", "cherrypicker"),
-		Repos:          []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
+		BotUser:                botUser,
+		GitClient:              c,
+		ConfigAgent:            ca,
+		Push:                   func(forkName, newBranch string, force bool) error { return nil },
+		GitHubClient:           ghc,
+		WebhookSecretGenerator: getSecret,
+		GitHubTokenGenerator:   getGithubToken,
+		Log:                    logrus.StandardLogger().WithField("client", "cherrypicker"),
+		Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
 	}
 
 	if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), pr); err != nil {
@@ -860,6 +875,10 @@ func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 		return []byte("sha=abcdefg")
 	}
 
+	getGithubToken := func() []byte {
+		return []byte("token")
+	}
+
 	testCases := []struct {
 		name         string
 		labelPrefix  string
@@ -963,14 +982,15 @@ func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 					ca.Set(cfg)
 
 					s := &Server{
-						BotUser:        botUser,
-						GitClient:      c,
-						ConfigAgent:    ca,
-						Push:           func(forkName, newBranch string, force bool) error { return nil },
-						GitHubClient:   ghc,
-						TokenGenerator: getSecret,
-						Log:            logrus.StandardLogger().WithField("client", "cherrypicker"),
-						Repos:          []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
+						BotUser:                botUser,
+						GitClient:              c,
+						ConfigAgent:            ca,
+						Push:                   func(forkName, newBranch string, force bool) error { return nil },
+						GitHubClient:           ghc,
+						WebhookSecretGenerator: getSecret,
+						GitHubTokenGenerator:   getGithubToken,
+						Log:                    logrus.StandardLogger().WithField("client", "cherrypicker"),
+						Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
 					}
 
 					if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), pr(lb)); err != nil {
@@ -1389,7 +1409,7 @@ foo/bar:
 		}
 
 		s := Server{
-			TokenGenerator: getSecret,
+			WebhookSecretGenerator: getSecret,
 		}
 
 		s.ServeHTTP(w, r)
@@ -1489,8 +1509,8 @@ foo/bar:
 		ca.Set(cfg)
 
 		s := Server{
-			TokenGenerator: getSecret,
-			ConfigAgent:    ca,
+			WebhookSecretGenerator: getSecret,
+			ConfigAgent:            ca,
 		}
 
 		s.ServeHTTP(w, r)

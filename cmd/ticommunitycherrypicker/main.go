@@ -111,10 +111,11 @@ func main() {
 	}
 
 	server := &cherrypicker.Server{
-		TokenGenerator: secretAgent.GetTokenGenerator(o.webhookSecretFile),
-		BotUser:        botUser,
-		Email:          email,
-		ConfigAgent:    epa,
+		WebhookSecretGenerator: secretAgent.GetTokenGenerator(o.webhookSecretFile),
+		GitHubTokenGenerator:   secretAgent.GetTokenGenerator(o.github.TokenPath),
+		BotUser:                botUser,
+		Email:                  email,
+		ConfigAgent:            epa,
 
 		GitClient:    git.ClientFactoryFrom(gitClient),
 		GitHubClient: githubClient,
