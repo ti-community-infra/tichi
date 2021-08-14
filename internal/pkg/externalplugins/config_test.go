@@ -3,6 +3,7 @@ package externalplugins
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"gotest.tools/assert"
@@ -14,12 +15,14 @@ func TestValidateConfig(t *testing.T) {
 		tichiWebURL     string
 		prProcessLink   string
 		commandHelpLink string
+		logLevel        string
 		lgtm            *TiCommunityLgtm
 		merge           *TiCommunityMerge
 		owners          *TiCommunityOwners
 		labelBlocker    *TiCommunityLabelBlocker
 		autoresponders  *TiCommunityAutoresponder
 		blunderbuss     *TiCommunityBlunderbuss
+		tars            *TiCommunityTars
 
 		expected error
 	}{
@@ -30,7 +33,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -67,6 +69,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: nil,
 		},
 		{
@@ -76,7 +81,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -113,6 +117,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: nil,
 		},
 		{
@@ -122,7 +129,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "http/bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -158,6 +164,9 @@ func TestValidateConfig(t *testing.T) {
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
 				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
 			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
@@ -168,7 +177,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -205,6 +213,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -214,7 +225,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -251,6 +261,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -260,7 +273,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -297,6 +309,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("error parsing regexp: missing argument to repetition operator: `?`"),
 		},
 		{
@@ -306,7 +321,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -343,6 +357,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -352,7 +369,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -389,6 +405,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("max reviewer count must more than 0"),
 		},
 		{
@@ -398,7 +417,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"tidb-community-bots/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -436,7 +454,59 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("grace period duration must not less than 0"),
+		},
+		{
+			name:            "invalid blunderbuss include_reviewers and exclude_reviewers",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{"reviewer1"},
+				IncludeReviewers:   []string{"reviewer2"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			labelBlocker: &TiCommunityLabelBlocker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				BlockLabels: []BlockLabel{
+					{
+						Regex:        `^status/can-merge$`,
+						Actions:      []string{"labeled", "unlabeled"},
+						TrustedTeams: []string{"release-team"},
+						TrustedUsers: []string{"ti-chi-bot"},
+					},
+				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
+			expected: fmt.Errorf("cannot set both include_reviewers and exclude_reviewers configurations"),
 		},
 		{
 			name:            "invalid tichiWebURL",
@@ -445,7 +515,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -481,6 +550,9 @@ func TestValidateConfig(t *testing.T) {
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
 				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
 			},
 			expected: fmt.Errorf("parse \"https//tichiWebURL\": invalid URI for request"),
 		},
@@ -491,7 +563,6 @@ func TestValidateConfig(t *testing.T) {
 			commandHelpLink: "https://commandHelpLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -527,6 +598,9 @@ func TestValidateConfig(t *testing.T) {
 						TrustedUsers: []string{"ti-chi-bot"},
 					},
 				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
 			},
 			expected: fmt.Errorf("parse \"https//prProcessLink\": invalid URI for request"),
 		},
@@ -537,7 +611,6 @@ func TestValidateConfig(t *testing.T) {
 			commandHelpLink: "https//commandHelpLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -574,6 +647,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("parse \"https//commandHelpLink\": invalid URI for request"),
 		},
 		{
@@ -583,7 +659,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -618,6 +693,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("error parsing regexp: missing argument to repetition operator: `?`"),
 		},
 		{
@@ -627,7 +705,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -662,6 +739,9 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("there must be at least one action"),
 		},
 		{
@@ -671,7 +751,6 @@ func TestValidateConfig(t *testing.T) {
 			prProcessLink:   "https://prProcessLink",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			merge: &TiCommunityMerge{
@@ -706,7 +785,107 @@ func TestValidateConfig(t *testing.T) {
 					},
 				},
 			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
 			expected: fmt.Errorf("actions contain illegal value nop"),
+		},
+		{
+			name:            "invalid log level",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
+			logLevel:        "nop",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"ti-community-infra/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"ti-community-infra/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			labelBlocker: &TiCommunityLabelBlocker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				BlockLabels: []BlockLabel{
+					{
+						Regex:        `^status/can-merge$`,
+						Actions:      []string{"labeled", "unlabeled"},
+						TrustedTeams: []string{"release-team"},
+						TrustedUsers: []string{"ti-chi-bot"},
+					},
+				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra/test-dev"},
+			},
+			expected: fmt.Errorf("not a valid logrus Level: \"nop\""),
+		},
+		{
+			name:            "invalid tar repo settings",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			labelBlocker: &TiCommunityLabelBlocker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				BlockLabels: []BlockLabel{
+					{
+						Regex:        `^status/can-merge$`,
+						Actions:      []string{"labeled", "unlabeled"},
+						TrustedTeams: []string{"release-team"},
+						TrustedUsers: []string{"ti-chi-bot"},
+					},
+				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra"},
+			},
+			expected: fmt.Errorf("found repo ti-community-infra that was not in org/repo format"),
 		},
 	}
 
@@ -717,6 +896,7 @@ func TestValidateConfig(t *testing.T) {
 				TichiWebURL:     tc.tichiWebURL,
 				PRProcessLink:   tc.prProcessLink,
 				CommandHelpLink: tc.commandHelpLink,
+				LogLevel:        tc.logLevel,
 				TiCommunityLgtm: []TiCommunityLgtm{
 					*tc.lgtm,
 				},
@@ -734,6 +914,9 @@ func TestValidateConfig(t *testing.T) {
 				},
 				TiCommunityLabelBlocker: []TiCommunityLabelBlocker{
 					*tc.labelBlocker,
+				},
+				TiCommunityTars: []TiCommunityTars{
+					*tc.tars,
 				},
 			}
 			actual := config.Validate()
@@ -763,7 +946,6 @@ func TestLgtmFor(t *testing.T) {
 			name: "Full name",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra/test-dev"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 			},
 			org:  "ti-community-infra",
@@ -773,7 +955,6 @@ func TestLgtmFor(t *testing.T) {
 			name: "Only org",
 			lgtm: &TiCommunityLgtm{
 				Repos:              []string{"ti-community-infra"},
-				ReviewActsAsLgtm:   true,
 				PullOwnersEndpoint: "http://bots.tidb.io/ti-community-bot",
 			},
 			org:  "ti-community-infra",
@@ -1243,6 +1424,216 @@ func TestLabelBlockerFor(t *testing.T) {
 				assert.DeepEqual(t, labelBlocker, &TiCommunityLabelBlocker{})
 			} else {
 				assert.DeepEqual(t, labelBlocker.Repos, tc.labelBlocker.Repos)
+			}
+		})
+	}
+}
+
+func TestContributionFor(t *testing.T) {
+	testcases := []struct {
+		name         string
+		contribution *TiCommunityContribution
+		org          string
+		repo         string
+		expectEmpty  *TiCommunityContribution
+	}{
+		{
+			name: "Full name",
+			contribution: &TiCommunityContribution{
+				Repos:   []string{"ti-community-infra/test-dev"},
+				Message: "message",
+			},
+			org:  "ti-community-infra",
+			repo: "test-dev",
+		},
+		{
+			name: "Only org",
+			contribution: &TiCommunityContribution{
+				Repos:   []string{"ti-community-infra"},
+				Message: "message",
+			},
+			org:  "ti-community-infra",
+			repo: "test-dev",
+		},
+		{
+			name: "Can not find",
+			contribution: &TiCommunityContribution{
+				Repos:   []string{"ti-community-infra"},
+				Message: "message",
+			},
+			org:         "ti-community-infra1",
+			repo:        "test-dev1",
+			expectEmpty: &TiCommunityContribution{},
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			config := Configuration{TiCommunityContribution: []TiCommunityContribution{
+				*tc.contribution,
+			}}
+
+			contribution := config.ContributionFor(tc.org, tc.repo)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, contribution, &TiCommunityContribution{})
+			} else {
+				assert.DeepEqual(t, contribution.Repos, tc.contribution.Repos)
+			}
+		})
+	}
+}
+
+func TestCherrypickerFor(t *testing.T) {
+	testcases := []struct {
+		name         string
+		cherrypicker *TiCommunityCherrypicker
+		org          string
+		repo         string
+		expectEmpty  *TiCommunityCherrypicker
+	}{
+		{
+			name: "Full name",
+			cherrypicker: &TiCommunityCherrypicker{
+				Repos:       []string{"ti-community-infra/test-dev"},
+				LabelPrefix: "cherrypick/",
+			},
+			org:  "ti-community-infra",
+			repo: "test-dev",
+		},
+		{
+			name: "Only org",
+			cherrypicker: &TiCommunityCherrypicker{
+				Repos:       []string{"ti-community-infra"},
+				LabelPrefix: "cherrypick/",
+			},
+			org:  "ti-community-infra",
+			repo: "test-dev",
+		},
+		{
+			name: "Can not find",
+			cherrypicker: &TiCommunityCherrypicker{
+				Repos:       []string{"ti-community-infra"},
+				LabelPrefix: "cherrypick/",
+			},
+			org:         "ti-community-infra1",
+			repo:        "test-dev1",
+			expectEmpty: &TiCommunityCherrypicker{},
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			config := Configuration{TiCommunityCherrypicker: []TiCommunityCherrypicker{
+				*tc.cherrypicker,
+			}}
+
+			cherrypicker := config.CherrypickerFor(tc.org, tc.repo)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, cherrypicker, &TiCommunityCherrypicker{})
+			} else {
+				assert.DeepEqual(t, cherrypicker.Repos, tc.cherrypicker.Repos)
+			}
+		})
+	}
+}
+
+func TestSetCherrypickerDefaults(t *testing.T) {
+	testcases := []struct {
+		name              string
+		labelPrefix       string
+		expectLabelPrefix string
+	}{
+		{
+			name:              "default",
+			labelPrefix:       "",
+			expectLabelPrefix: "cherrypick/",
+		},
+		{
+			name:              "overwrite",
+			labelPrefix:       "needs-cherry-pick-",
+			expectLabelPrefix: "needs-cherry-pick-",
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			c := &Configuration{
+				TiCommunityCherrypicker: []TiCommunityCherrypicker{
+					{
+						LabelPrefix: tc.labelPrefix,
+					},
+				},
+			}
+
+			c.setDefaults()
+
+			for _, cherrypicker := range c.TiCommunityCherrypicker {
+				if cherrypicker.LabelPrefix != tc.expectLabelPrefix {
+					t.Errorf("unexpected labelPrefix: %v, expected: %v",
+						cherrypicker.LabelPrefix, tc.expectLabelPrefix)
+				}
+			}
+		})
+	}
+}
+
+func TestSetTarsDefaults(t *testing.T) {
+	testcases := []struct {
+		name                string
+		onlyWhenLabel       string
+		excludeLabels       []string
+		expectOnlyWhenLabel string
+		expectExcludeLabels []string
+	}{
+		{
+			name:                "default",
+			onlyWhenLabel:       "",
+			expectOnlyWhenLabel: "status/can-merge",
+			expectExcludeLabels: []string{"needs-rebase", "do-not-merge/hold", "do-not-merge/work-in-progress"},
+		},
+		{
+			name:                "overwrite onlyWhenLabel",
+			onlyWhenLabel:       "lgtm",
+			expectOnlyWhenLabel: "lgtm",
+			expectExcludeLabels: []string{"needs-rebase", "do-not-merge/hold", "do-not-merge/work-in-progress"},
+		},
+		{
+			name:                "overwrite excludeLabels",
+			excludeLabels:       []string{"label1", "label2", "label3"},
+			expectOnlyWhenLabel: "status/can-merge",
+			expectExcludeLabels: []string{"label1", "label2", "label3"},
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			c := &Configuration{
+				TiCommunityTars: []TiCommunityTars{
+					{
+						OnlyWhenLabel: tc.onlyWhenLabel,
+						ExcludeLabels: tc.excludeLabels,
+					},
+				},
+			}
+
+			c.setDefaults()
+
+			for _, tars := range c.TiCommunityTars {
+				if tars.OnlyWhenLabel != tc.expectOnlyWhenLabel {
+					t.Errorf("unexpected onlyWhenLabel: %v, expected: %v",
+						tars.OnlyWhenLabel, tc.expectOnlyWhenLabel)
+				}
+
+				if !reflect.DeepEqual(tars.ExcludeLabels, tc.expectExcludeLabels) {
+					t.Errorf("unexpected excludeLabels: %v, expected: %v",
+						tars.ExcludeLabels, tc.expectExcludeLabels)
+				}
 			}
 		})
 	}

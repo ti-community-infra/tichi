@@ -63,13 +63,13 @@ func (f *fakeGithub) BotUserChecker() (func(candidate string) bool, error) {
 	}, nil
 }
 
-func (f *fakeGithub) CreateComment(org, repo string, number int, comment string) error {
+func (f *fakeGithub) CreateComment(org, repo string, number int, _ string) error {
 	f.commentCreated[testKey(org, repo, number)] = true
 	return nil
 }
 
 func (f *fakeGithub) DeleteStaleComments(org, repo string, number int,
-	comments []github.IssueComment, isStale func(github.IssueComment) bool) error {
+	_ []github.IssueComment, _ func(github.IssueComment) bool) error {
 	f.commentDeleted[testKey(org, repo, number)] = true
 	return nil
 }
@@ -90,15 +90,15 @@ func (f *fakeGithub) GetPullRequest(org, repo string, number int) (*github.PullR
 	return nil, fmt.Errorf("didn't find pull request %s/%s#%d", org, repo, number)
 }
 
-func (f *fakeGithub) GetSingleCommit(org, repo, ref string) (github.RepositoryCommit, error) {
+func (f *fakeGithub) GetSingleCommit(string, string, string) (github.RepositoryCommit, error) {
 	return f.baseCommit, nil
 }
 
-func (f *fakeGithub) ListPRCommits(org, repo string, number int) ([]github.RepositoryCommit, error) {
+func (f *fakeGithub) ListPRCommits(string, string, int) ([]github.RepositoryCommit, error) {
 	return f.prCommits, nil
 }
 
-func (f *fakeGithub) UpdatePullRequestBranch(org, repo string, number int, expectedHeadSha *string) error {
+func (f *fakeGithub) UpdatePullRequestBranch(string, string, int, *string) error {
 	if f.outOfDate {
 		f.outOfDate = false
 	}
@@ -127,15 +127,15 @@ func (f *fakeGithub) compareExpected(t *testing.T, org, repo string,
 	}
 }
 
-func getPullRequest() *github.PullRequest {
+func getPullRequest(org string, repo string, num int) *github.PullRequest {
 	pr := github.PullRequest{
 		Base: github.PullRequestBranch{
 			Repo: github.Repo{
-				Name:  "repo",
-				Owner: github.User{Login: "org"},
+				Name:  repo,
+				Owner: github.User{Login: org},
 			},
 		},
-		Number: 5,
+		Number: num,
 	}
 	return &pr
 }
@@ -144,6 +144,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 	currentBaseSHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	outOfDateSHA := "0bd3ed50c88cd53a0931609dsa9d-0a9d0-as9d0"
 	triggerLabel := "trigger-update"
+	excludeLabel := "exclude"
 
 	baseCommit := github.RepositoryCommit{
 		SHA: currentBaseSHA,
@@ -182,7 +183,6 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		name       string
 		pr         *github.PullRequest
 		labels     []github.Label
-		merged     bool
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
 		outOfDate  bool
@@ -197,7 +197,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		},
 		{
 			name: "updated no-op",
-			pr:   getPullRequest(),
+			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
 					Name: triggerLabel,
@@ -209,7 +209,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		},
 		{
 			name: "out of date with message",
-			pr:   getPullRequest(),
+			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
 					Name: triggerLabel,
@@ -225,7 +225,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		},
 		{
 			name: "out of date with empty message",
-			pr:   getPullRequest(),
+			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
 					Name: triggerLabel,
@@ -240,8 +240,8 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectUpdate:   true,
 		},
 		{
-			name: "out of date with message and non trigger label",
-			pr:   getPullRequest(),
+			name: "out of date with message and without trigger label",
+			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
 					Name: "random",
@@ -256,8 +256,27 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectUpdate:   false,
 		},
 		{
+			name: "out of date with message and with exclude label",
+			pr:   getPullRequest("org", "repo", 5),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+				{
+					Name: excludeLabel,
+				},
+			},
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			message:        "updated",
+			expectDeletion: false,
+			expectComment:  false,
+			expectUpdate:   false,
+		},
+		{
 			name: "out of date with message trigger label",
-			pr:   getPullRequest(),
+			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
 					Name: triggerLabel,
@@ -270,11 +289,6 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectDeletion: true,
 			expectComment:  true,
 			expectUpdate:   true,
-		},
-		{
-			name:   "merged pr is ignored",
-			pr:     getPullRequest(),
-			merged: true,
 		},
 	}
 
@@ -295,6 +309,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 					Repos:         []string{"org/repo"},
 					Message:       tc.message,
 					OnlyWhenLabel: triggerLabel,
+					ExcludeLabels: []string{excludeLabel},
 				},
 			}
 			if err := HandleIssueCommentEvent(logrus.WithField("plugin", PluginName), fc, ice, cfg); err != nil {
@@ -305,7 +320,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 	}
 }
 
-func TestHandlePullRequestEvent(t *testing.T) {
+func TestHandlePushEvent(t *testing.T) {
 	currentBaseSHA := "0bd3ed50c88cd53a09316bf7a298f900e9371652"
 	outOfDateSHA := "0bd3ed50c88cd53a0931609dsa9d-0a9d0-as9d0"
 	triggerLabel := "trigger-update"
@@ -313,6 +328,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 	baseCommit := github.RepositoryCommit{
 		SHA: currentBaseSHA,
 	}
+
 	outOfDatePrCommits := func() []github.RepositoryCommit {
 		prCommits := []github.RepositoryCommit{
 			{
@@ -325,7 +341,8 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		}
 		return prCommits
 	}
-	updatePrCommits := func() []github.RepositoryCommit {
+
+	updatedPrCommits := func() []github.RepositoryCommit {
 		prCommits := []github.RepositoryCommit{
 			{
 				Parents: []github.GitCommit{
@@ -338,13 +355,10 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		return prCommits
 	}
 
-	oldSleep := sleep
-	sleep = func(time.Duration) {}
-	defer func() { sleep = oldSleep }()
-
 	testcases := []struct {
 		name       string
-		merged     bool
+		pe         *github.PushEvent
+		pr         *github.PullRequest
 		labels     []github.Label
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
@@ -356,18 +370,32 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		expectUpdate   bool
 	}{
 		{
+			name: "tags ref, ignoring",
+			pe: &github.PushEvent{
+				Ref: "refs/tags/simple-tag",
+			},
+		},
+		{
 			name: "updated no-op",
+			pe: &github.PushEvent{
+				Ref: "refs/heads/main",
+			},
+			pr: getPullRequest("org1", "repo1", 6),
 			labels: []github.Label{
 				{
 					Name: triggerLabel,
 				},
 			},
 			baseCommit: baseCommit,
-			prCommits:  updatePrCommits(),
+			prCommits:  updatedPrCommits(),
 			outOfDate:  false,
 		},
 		{
 			name: "out of date with message",
+			pr:   getPullRequest("org1", "repo1", 6),
+			pe: &github.PushEvent{
+				Ref: "refs/heads/main",
+			},
 			labels: []github.Label{
 				{
 					Name: triggerLabel,
@@ -383,6 +411,10 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		},
 		{
 			name: "out of date with empty message",
+			pe: &github.PushEvent{
+				Ref: "refs/heads/main",
+			},
+			pr: getPullRequest("org1", "repo1", 6),
 			labels: []github.Label{
 				{
 					Name: triggerLabel,
@@ -397,22 +429,11 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectUpdate:   true,
 		},
 		{
-			name: "out of date with message and non trigger label",
-			labels: []github.Label{
-				{
-					Name: "random",
-				},
-			},
-			baseCommit:     baseCommit,
-			prCommits:      outOfDatePrCommits(),
-			outOfDate:      true,
-			message:        "updated",
-			expectDeletion: false,
-			expectComment:  false,
-			expectUpdate:   false,
-		},
-		{
 			name: "out of date with message and trigger label",
+			pe: &github.PushEvent{
+				Ref: "refs/heads/main",
+			},
+			pr: getPullRequest("org1", "repo1", 6),
 			labels: []github.Label{
 				{
 					Name: triggerLabel,
@@ -426,43 +447,33 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectComment:  true,
 			expectUpdate:   true,
 		},
-
-		{
-			name:   "merged pr is ignored",
-			merged: true,
-		},
 	}
+
+	oldSleep := sleep
+	sleep = func(time.Duration) {}
+	defer func() { sleep = oldSleep }()
 
 	for _, testcase := range testcases {
 		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
-			fc := newFakeGithubClient(nil, nil, tc.baseCommit, tc.prCommits, tc.outOfDate)
-			pre := &github.PullRequestEvent{
-				Action: github.PullRequestActionSynchronize,
-				PullRequest: github.PullRequest{
-					Base: github.PullRequestBranch{
-						Repo: github.Repo{
-							Name:  "repo",
-							Owner: github.User{Login: "org"},
-						},
-					},
-					Merged: tc.merged,
-					Number: 5,
-					Labels: tc.labels,
-				},
+			// For now we only add one pr.
+			var prs []pullRequest
+			if tc.pr != nil {
+				prs = generatePullRequests("org1", "repo1", tc.pr, tc.prCommits, tc.labels)
 			}
-			cfg := &externalplugins.Configuration{}
-			cfg.TiCommunityTars = []externalplugins.TiCommunityTars{
+			fc := newFakeGithubClient(prs, tc.pr, tc.baseCommit, tc.prCommits, tc.outOfDate)
+			externalConfig := &externalplugins.Configuration{}
+			externalConfig.TiCommunityTars = []externalplugins.TiCommunityTars{
 				{
-					Repos:         []string{"org/repo"},
+					Repos:         []string{"org1/repo1"},
 					Message:       tc.message,
 					OnlyWhenLabel: triggerLabel,
 				},
 			}
-			if err := HandlePullRequestEvent(logrus.WithField("plugin", PluginName), fc, pre, cfg); err != nil {
-				t.Fatalf("Unexpected error handling event: %v.", err)
+			if err := HandlePushEvent(logrus.WithField("plugin", PluginName), fc, tc.pe, externalConfig); err != nil {
+				t.Fatalf("error handling issue comment event: %v", err)
 			}
-			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.expectUpdate)
+			fc.compareExpected(t, "org1", "repo1", 6, tc.expectComment, tc.expectDeletion, tc.expectUpdate)
 		})
 	}
 }
@@ -505,7 +516,6 @@ func TestHandleAll(t *testing.T) {
 	testcases := []struct {
 		name       string
 		pr         *github.PullRequest
-		merged     bool
 		labels     []github.Label
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
@@ -521,7 +531,7 @@ func TestHandleAll(t *testing.T) {
 		},
 		{
 			name: "updated no-op",
-			pr:   getPullRequest(),
+			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
 					Name: triggerLabel,
@@ -533,7 +543,7 @@ func TestHandleAll(t *testing.T) {
 		},
 		{
 			name: "out of date with message",
-			pr:   getPullRequest(),
+			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
 					Name: triggerLabel,
@@ -549,7 +559,7 @@ func TestHandleAll(t *testing.T) {
 		},
 		{
 			name: "out of date with empty message",
-			pr:   getPullRequest(),
+			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
 					Name: triggerLabel,
@@ -564,24 +574,8 @@ func TestHandleAll(t *testing.T) {
 			expectUpdate:   true,
 		},
 		{
-			name: "out of date with message and non trigger label",
-			pr:   getPullRequest(),
-			labels: []github.Label{
-				{
-					Name: "random",
-				},
-			},
-			baseCommit:     baseCommit,
-			prCommits:      outOfDatePrCommits(),
-			outOfDate:      true,
-			message:        "updated",
-			expectDeletion: false,
-			expectComment:  false,
-			expectUpdate:   false,
-		},
-		{
 			name: "out of date with message and trigger label",
-			pr:   getPullRequest(),
+			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
 					Name: triggerLabel,
@@ -595,12 +589,6 @@ func TestHandleAll(t *testing.T) {
 			expectComment:  true,
 			expectUpdate:   true,
 		},
-		{
-			name:      "merged pr is ignored",
-			pr:        getPullRequest(),
-			merged:    true,
-			prCommits: updatedPrCommits(),
-		},
 	}
 
 	oldSleep := sleep
@@ -610,54 +598,10 @@ func TestHandleAll(t *testing.T) {
 	for _, testcase := range testcases {
 		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
-			var prs []pullRequest
 			// For now we only add one pr.
+			var prs []pullRequest
 			if tc.pr != nil {
-				graphPr := pullRequest{}
-				// Set the basic info.
-				graphPr.Number = githubql.Int(tc.pr.Number)
-				graphPr.Repository.Name = "repo"
-				graphPr.Repository.Owner.Login = "org"
-				graphPr.Author.Login = githubql.String(tc.pr.User.Login)
-				graphPr.BaseRef.Name = githubql.String(tc.pr.Base.Ref)
-				graphPr.Merged = githubql.Boolean(tc.merged)
-
-				// Convert the commit.
-				lastCommit := tc.prCommits[len(tc.prCommits)-1]
-				graphCommit := struct {
-					Commit struct {
-						OID     githubql.GitObjectID `graphql:"oid"`
-						Parents struct {
-							Nodes []struct {
-								OID githubql.GitObjectID `graphql:"oid"`
-							}
-						} `graphql:"parents(first:100)"`
-					}
-				}{}
-				for _, parent := range lastCommit.Parents {
-					s := struct {
-						OID githubql.GitObjectID `graphql:"oid"`
-					}{
-						OID: githubql.GitObjectID(parent.SHA),
-					}
-					graphCommit.Commit.Parents.Nodes = append(graphCommit.Commit.Parents.Nodes, s)
-				}
-
-				// Set the labels.
-				if len(tc.labels) != 0 {
-					tc.pr.Labels = tc.labels
-					for _, label := range tc.pr.Labels {
-						s := struct {
-							Name githubql.String
-						}{
-							Name: githubql.String(label.Name),
-						}
-						graphPr.Labels.Nodes = append(graphPr.Labels.Nodes, s)
-					}
-				}
-
-				graphPr.Commits.Nodes = append(graphPr.Commits.Nodes, graphCommit)
-				prs = append(prs, graphPr)
+				prs = generatePullRequests("org", "repo", tc.pr, tc.prCommits, tc.labels)
 			}
 			fc := newFakeGithubClient(prs, tc.pr, tc.baseCommit, tc.prCommits, tc.outOfDate)
 			cfg := &plugins.Configuration{
@@ -677,6 +621,58 @@ func TestHandleAll(t *testing.T) {
 			fc.compareExpected(t, "org", "repo", 5, tc.expectComment, tc.expectDeletion, tc.expectUpdate)
 		})
 	}
+}
+
+func generatePullRequests(org string, repo string, pr *github.PullRequest,
+	prCommits []github.RepositoryCommit, labels []github.Label) []pullRequest {
+	var prs []pullRequest
+
+	graphPr := pullRequest{}
+	// Set the basic info.
+	graphPr.Number = githubql.Int(pr.Number)
+	graphPr.Repository.Name = githubql.String(repo)
+	graphPr.Repository.Owner.Login = githubql.String(org)
+	graphPr.Author.Login = githubql.String(pr.User.Login)
+	graphPr.BaseRef.Name = githubql.String(pr.Base.Ref)
+
+	// Convert the commit.
+	lastCommit := prCommits[len(prCommits)-1]
+	graphCommit := struct {
+		Commit struct {
+			OID     githubql.GitObjectID `graphql:"oid"`
+			Parents struct {
+				Nodes []struct {
+					OID githubql.GitObjectID `graphql:"oid"`
+				}
+			} `graphql:"parents(first:100)"`
+		}
+	}{}
+	for _, parent := range lastCommit.Parents {
+		s := struct {
+			OID githubql.GitObjectID `graphql:"oid"`
+		}{
+			OID: githubql.GitObjectID(parent.SHA),
+		}
+		graphCommit.Commit.Parents.Nodes = append(graphCommit.Commit.Parents.Nodes, s)
+	}
+
+	// Set the labels.
+	if len(labels) != 0 {
+		pr.Labels = labels
+		for _, label := range pr.Labels {
+			s := struct {
+				Name githubql.String
+			}{
+				Name: githubql.String(label.Name),
+			}
+			graphPr.Labels.Nodes = append(graphPr.Labels.Nodes, s)
+		}
+	}
+
+	graphPr.Commits.Nodes = append(graphPr.Commits.Nodes, graphCommit)
+	prs = append(prs, graphPr)
+
+	return prs
 }
 
 func TestShouldPrune(t *testing.T) {

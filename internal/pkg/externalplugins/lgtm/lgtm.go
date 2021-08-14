@@ -11,12 +11,15 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
+	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
+	"k8s.io/test-infra/prow/plugins"
+
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
 const (
@@ -29,13 +32,6 @@ const (
 )
 
 var (
-	configInfoReviewActsAsLgtm = "'Approve' review action will add a LGTM " +
-		"and 'Request Changes' review action will remove the LGTM."
-
-	// lgtmRe is the regex that matches lgtm comments.
-	lgtmRe = regexp.MustCompile(`(?mi)^/lgtm\s*$`)
-	// lgtmCancelRe is the regex that matches lgtm cancel comments.
-	lgtmCancelRe = regexp.MustCompile(`(?mi)^/lgtm cancel\s*$`)
 	// notificationRegex is the regex that matches the notifications.
 	notificationRegex = regexp.MustCompile("<!--" + ReviewNotificationIdentifier + "-->$")
 	// reviewersRegex is the regex that matches the reviewers, such as: - hi-rustin.
@@ -44,38 +40,31 @@ var (
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(epa *externalplugins.ConfigAgent) func(
-	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+func HelpProvider(_ *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
-		configInfo := map[string]string{}
-		cfg := epa.Config()
-		for _, repo := range enabledRepos {
-			opts := cfg.LgtmFor(repo.Org, repo.Repo)
-			var isConfigured bool
-			var configInfoStrings []string
-			configInfoStrings = append(configInfoStrings, "The plugin has these configurations:<ul>")
-			if opts.ReviewActsAsLgtm {
-				configInfoStrings = append(configInfoStrings, "<li>"+configInfoReviewActsAsLgtm+"</li>")
-				isConfigured = true
-			}
-			configInfoStrings = append(configInfoStrings, "</ul>")
-			if isConfigured {
-				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
-			}
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
+			TiCommunityLgtm: []tiexternalplugins.TiCommunityLgtm{
+				{
+					Repos:              []string{"ti-community-infra/test-dev"},
+					PullOwnersEndpoint: "https://prow-dev.tidb.io/ti-community-owners",
+				},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
 		}
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: "The ti-community-lgtm plugin manages the 'status/LGT{number}' (Looks Good To Me) label.",
-			Config:      configInfo,
+			Snippet:     yamlSnippet,
+			Events:      []string{tiexternalplugins.PullRequestReviewEvent, tiexternalplugins.PullRequestEvent},
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
-			Usage:       "/lgtm [cancel] or triggers by GitHub review action.",
-			Description: "Add or remove the 'status/LGT{number}' label. Additionally, the PR author can use '/lgtm cancel'.",
+			Usage:       "Triggered by GitHub review action: 'Approve' or 'Request Changes'.",
+			Description: "Add or remove the 'status/LGT{number}' label.",
 			Featured:    true,
-			WhoCanUse:   "Collaborators of this repository. Additionally, the PR author can use '/lgtm cancel'.",
+			WhoCanUse:   "Reviewers of this pull request.",
 			Examples: []string{
-				"/lgtm",
-				"/lgtm cancel",
 				"<a href=\"https://help.github.com/articles/about-pull-request-reviews/\">'Approve' or 'Request Changes'</a>"},
 		})
 		return pluginHelp, nil
@@ -84,12 +73,13 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 
 type githubClient interface {
 	AddLabel(owner, repo string, number int, label string) error
-	CreateComment(owner, repo string, number int, comment string) error
 	RemoveLabel(owner, repo string, number int, label string) error
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
-	BotUserChecker() (func(candidate string) bool, error)
+	CreateComment(owner, repo string, number int, comment string) error
+	EditComment(org, repo string, id int, comment string) error
 	ListIssueComments(org, repo string, number int) ([]github.IssueComment, error)
 	DeleteComment(org, repo string, ID int) error
+	BotUserChecker() (func(candidate string) bool, error)
 }
 
 // reviewCtx contains information about each review event.
@@ -99,47 +89,8 @@ type reviewCtx struct {
 	number                             int
 }
 
-// HandleIssueCommentEvent handles a GitHub issue comment event and adds or removes a
-// "status/LGT{number}" label.
-func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent, cfg *externalplugins.Configuration,
-	ol ownersclient.OwnersLoader, log *logrus.Entry) error {
-	// Only consider open PRs and new comments.
-	if !ice.Issue.IsPullRequest() || ice.Issue.State != "open" || ice.Action != github.IssueCommentActionCreated {
-		return nil
-	}
-
-	rc := reviewCtx{
-		author:      ice.Comment.User.Login,
-		issueAuthor: ice.Issue.User.Login,
-		body:        ice.Comment.Body,
-		htmlURL:     ice.Comment.HTMLURL,
-		repo:        ice.Repo,
-		number:      ice.Issue.Number,
-	}
-
-	// If we create an "/lgtm" comment, add lgtm if necessary.
-	// If we create a "/lgtm cancel" comment, remove lgtm if necessary.
-	wantLGTM := false
-	if lgtmRe.MatchString(rc.body) {
-		wantLGTM = true
-	} else if lgtmCancelRe.MatchString(rc.body) {
-		wantLGTM = false
-	} else {
-		return nil
-	}
-
-	// Use common handler to do the rest.
-	return handle(wantLGTM, cfg, rc, gc, ol, log)
-}
-
 func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
-	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
-	// If ReviewActsAsLgtm is disabled, ignore review event.
-	opts := cfg.LgtmFor(pullReviewEvent.Repo.Owner.Login, pullReviewEvent.Repo.Name)
-	if !opts.ReviewActsAsLgtm {
-		return nil
-	}
-
+	cfg *tiexternalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	rc := reviewCtx{
 		author:      pullReviewEvent.Review.User.Login,
 		issueAuthor: pullReviewEvent.PullRequest.User.Login,
@@ -149,7 +100,7 @@ func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
 		htmlURL:     pullReviewEvent.Review.HTMLURL,
 	}
 
-	// Only react to reviews that are being submitted (not editted or dismissed).
+	// Only react to reviews that are being submitted (not edited or dismissed).
 	if pullReviewEvent.Action != github.ReviewActionSubmitted {
 		return nil
 	}
@@ -174,40 +125,8 @@ func HandlePullReviewEvent(gc githubClient, pullReviewEvent *github.ReviewEvent,
 	return handle(wantLGTM, cfg, rc, gc, ol, log)
 }
 
-func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *github.ReviewCommentEvent,
-	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
-	// Only consider open PRs and new comments.
-	if pullReviewCommentEvent.PullRequest.State != "open" ||
-		pullReviewCommentEvent.Action != github.ReviewCommentActionCreated {
-		return nil
-	}
-
-	rc := reviewCtx{
-		author:      pullReviewCommentEvent.Comment.User.Login,
-		issueAuthor: pullReviewCommentEvent.PullRequest.User.Login,
-		body:        pullReviewCommentEvent.Comment.Body,
-		htmlURL:     pullReviewCommentEvent.Comment.HTMLURL,
-		repo:        pullReviewCommentEvent.Repo,
-		number:      pullReviewCommentEvent.PullRequest.Number,
-	}
-
-	// If we create an "/lgtm" comment, add lgtm if necessary.
-	// If we create a "/lgtm cancel" comment, remove lgtm if necessary.
-	wantLGTM := false
-	if lgtmRe.MatchString(rc.body) {
-		wantLGTM = true
-	} else if lgtmCancelRe.MatchString(rc.body) {
-		wantLGTM = false
-	} else {
-		return nil
-	}
-
-	// Use common handler to do the rest.
-	return handle(wantLGTM, cfg, rc, gc, ol, log)
-}
-
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
-	config *externalplugins.Configuration, log *logrus.Entry) error {
+	config *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	if pe.Action != github.PullRequestActionOpened {
 		log.Debug("Not a pull request opened action, skipping...")
 		return nil
@@ -226,7 +145,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	return gc.CreateComment(org, repo, number, *reviewMsg)
 }
 
-func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
+func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx,
 	gc githubClient, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	funcStart := time.Now()
 	defer func() {
@@ -234,7 +153,6 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	}()
 
 	author := rc.author
-	issueAuthor := rc.issueAuthor
 	number := rc.number
 	body := rc.body
 	htmlURL := rc.htmlURL
@@ -242,15 +160,6 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 	repo := rc.repo.Name
 	fetchErr := func(context string, err error) error {
 		return fmt.Errorf("failed to get %s for %s/%s#%d: %v", context, org, repo, number, err)
-	}
-
-	// Author cannot LGTM own PR, comment and abort.
-	isAuthor := author == issueAuthor
-	if isAuthor && wantLGTM {
-		resp := "you cannot `/lgtm` your own PR."
-		log.Infof("Commenting \"%s\".", resp)
-		return gc.CreateComment(rc.repo.Owner.Login, rc.repo.Name, rc.number,
-			externalplugins.FormatResponseRaw(rc.body, rc.htmlURL, rc.author, resp))
 	}
 
 	// Get ti-community-lgtm config.
@@ -268,16 +177,18 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 
 	// Not reviewers but want to add LGTM.
 	if !reviewers.Has(author) && wantLGTM {
-		resp := "`/lgtm` is only allowed for the reviewers in [list](" + tichiURL + ")."
-		log.Infof("Reply /lgtm request in comment: \"%s\"", resp)
-		return gc.CreateComment(org, repo, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
+		resp := "Thanks for your review. "
+		resp += "The bot only counts approvals from reviewers and higher roles in [list](" + tichiURL + "), "
+		resp += "but you're still welcome to leave your comments."
+		log.Infof("Reply approve pull request in comment: \"%s\"", resp)
+		return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
-	// Not author or reviewers but want to remove LGTM.
-	if !reviewers.Has(author) && !isAuthor && !wantLGTM {
-		resp := "`/lgtm cancel` is only allowed for the PR author or the reviewers in [list](" + tichiURL + ")."
-		log.Infof("Reply /lgtm cancel request in comment: \"%s\"", resp)
-		return gc.CreateComment(org, repo, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
+	// Not reviewers but want to remove LGTM.
+	if !reviewers.Has(author) && !wantLGTM {
+		resp := "Request changes is only allowed for the reviewers in [list](" + tichiURL + ")."
+		log.Infof("Reply request changes pull request in comment: \"%s\"", resp)
+		return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
 	labels, err := gc.GetIssueLabels(org, repo, number)
@@ -293,18 +204,21 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		return fetchErr("issue comments", err)
 	}
 	notifications := filterComments(issueComments, notificationMatcher(botUserChecker))
-	cleanupOldNotifications := func() {
-		for _, notification := range notifications {
-			notif := notification
-			if err := gc.DeleteComment(org, repo, notif.ID); err != nil {
-				log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repo, number, notif.ID)
+	latestNotification := getLastComment(notifications)
+	cleanupRedundantNotifications := func() {
+		if len(notifications) != 0 {
+			for _, notification := range notifications[:len(notifications)-1] {
+				notif := notification
+				if err := gc.DeleteComment(org, repo, notif.ID); err != nil {
+					log.WithError(err).Errorf("Failed to delete comment from %s/%s#%d, ID: %d.", org, repo, number, notif.ID)
+				}
 			}
 		}
 	}
 
 	// Now we update the LGTM labels, having checked all cases where changing.
 	// Only add the label if it doesn't have it, and vice versa.
-	currentLabel, nextLabel := getCurrentAndNextLabel(externalplugins.LgtmLabelPrefix, labels,
+	currentLabel, nextLabel := getCurrentAndNextLabel(tiexternalplugins.LgtmLabelPrefix, labels,
 		reviewersAndNeedsLGTM.NeedsLgtm)
 	// Remove the label if necessary, we're done after this.
 	if currentLabel != "" && !wantLGTM {
@@ -312,19 +226,28 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 		if err != nil {
 			return err
 		}
-		err = gc.CreateComment(org, repo, number, *newMsg)
-		if err != nil {
-			return err
+
+		// Create or update the review notification comment.
+		if latestNotification == nil {
+			err := gc.CreateComment(org, repo, number, *newMsg)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := gc.EditComment(org, repo, latestNotification.ID, *newMsg)
+			if err != nil {
+				return err
+			}
 		}
+
 		log.Info("Removing LGTM label.")
 		if err := gc.RemoveLabel(org, repo, number, currentLabel); err != nil {
 			return err
 		}
 
-		// Clean up old notifications after we added the new notification.
-		cleanupOldNotifications()
+		// Clean up redundant notifications after we added the new notification.
+		cleanupRedundantNotifications()
 	} else if nextLabel != "" && wantLGTM {
-		latestNotification := getLastComment(notifications)
 		reviewedReviewers := getReviewersFromNotification(latestNotification)
 		// Ignore already reviewed reviewer.
 		if reviewedReviewers.Has(author) {
@@ -339,9 +262,17 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 			return err
 		}
 
-		err = gc.CreateComment(org, repo, number, *newMsg)
-		if err != nil {
-			return err
+		// Create or update the review notification comment.
+		if latestNotification == nil {
+			err := gc.CreateComment(org, repo, number, *newMsg)
+			if err != nil {
+				return err
+			}
+		} else {
+			err := gc.EditComment(org, repo, latestNotification.ID, *newMsg)
+			if err != nil {
+				return err
+			}
 		}
 
 		log.Info("Adding LGTM label.")
@@ -355,8 +286,8 @@ func handle(wantLGTM bool, config *externalplugins.Configuration, rc reviewCtx,
 			return err
 		}
 
-		// Clean up old notifications after we added the new notification.
-		cleanupOldNotifications()
+		// Clean up redundant notifications after we added the new notification.
+		cleanupRedundantNotifications()
 	}
 
 	return nil
@@ -447,8 +378,8 @@ The full list of commands accepted by this bot can be found [here]({{ .commandHe
 
 <details>
 
-Reviewer can indicate their review by writing `+"`/lgtm`"+` in a comment.
-Reviewer can cancel approval by writing `+"`/lgtm cancel`"+` in a comment.
+Reviewer can indicate their review by submitting an approval review.
+Reviewer can cancel approval by submitting a request changes review.
 </details>
 
 <!--{{ .reviewNotificationIdentifier }}-->

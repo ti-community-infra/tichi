@@ -8,12 +8,15 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
+	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
+	"k8s.io/test-infra/prow/plugins"
+
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
 // PluginName will register into prow.
@@ -36,8 +39,7 @@ var (
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(epa *externalplugins.ConfigAgent) func(
-	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 		configInfo := map[string]string{}
 		cfg := epa.Config()
@@ -55,10 +57,28 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
 			}
 		}
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
+			TiCommunityMerge: []tiexternalplugins.TiCommunityMerge{
+				{
+					Repos:              []string{"ti-community-infra/test-dev"},
+					StoreTreeHash:      true,
+					PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+				},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
+		}
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: "The ti-community-merge plugin controls the merge process by adding or removing the '" +
-				externalplugins.CanMergeLabel + "' label.",
-			Config: configInfo,
+				tiexternalplugins.CanMergeLabel + "' label.",
+			Config:  configInfo,
+			Snippet: yamlSnippet,
+			Events: []string{
+				tiexternalplugins.IssueCommentEvent,
+				tiexternalplugins.PullRequestReviewCommentEvent,
+				tiexternalplugins.PullRequestEvent,
+			},
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
@@ -100,7 +120,7 @@ type commentPruner interface {
 
 // HandleIssueCommentEvent handles a GitHub issue comment event and adds or removes a
 // "status/can-merge" label.
-func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent, cfg *externalplugins.Configuration,
+func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent, cfg *tiexternalplugins.Configuration,
 	ol ownersclient.OwnersLoader, cp commentPruner, log *logrus.Entry) error {
 	// Only consider open PRs and new comments.
 	if !ice.Issue.IsPullRequest() || ice.Issue.State != "open" || ice.Action != github.IssueCommentActionCreated {
@@ -132,7 +152,7 @@ func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent, cfg
 }
 
 func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *github.ReviewCommentEvent,
-	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, cp commentPruner, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, ol ownersclient.OwnersLoader, cp commentPruner, log *logrus.Entry) error {
 	// Only consider open PRs and new comments.
 	if pullReviewCommentEvent.PullRequest.State != "open" ||
 		pullReviewCommentEvent.Action != github.ReviewCommentActionCreated {
@@ -164,7 +184,7 @@ func HandlePullReviewCommentEvent(gc githubClient, pullReviewCommentEvent *githu
 }
 
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
-	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	if pe.PullRequest.Merged {
 		return nil
 	}
@@ -186,7 +206,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	}
 	hasCanMerge := false
 	for _, label := range labels {
-		if label.Name == externalplugins.CanMergeLabel {
+		if label.Name == tiexternalplugins.CanMergeLabel {
 			hasCanMerge = true
 		}
 	}
@@ -228,7 +248,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 		}
 	}
 
-	if err := gc.RemoveLabel(org, repo, number, externalplugins.CanMergeLabel); err != nil {
+	if err := gc.RemoveLabel(org, repo, number, tiexternalplugins.CanMergeLabel); err != nil {
 		return fmt.Errorf("failed to remove 'can-merge' label: %v", err)
 	}
 
@@ -239,7 +259,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	return gc.CreateComment(org, repo, number, removeCanMergeLabelNoti)
 }
 
-func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
+func handle(wantMerge bool, config *tiexternalplugins.Configuration, rc reviewCtx,
 	gc githubClient, ol ownersclient.OwnersLoader, cp commentPruner, log *logrus.Entry) error {
 	author := rc.author
 	issueAuthor := rc.issueAuthor
@@ -265,16 +285,18 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 
 	// Not committers but want merge.
 	if !committers.Has(author) && wantMerge {
-		resp := "`/merge` is only allowed for the committers in [list](" + tichiURL + ")."
+		resp := "`/merge` is only allowed for the committers, "
+		resp += "you can assign this pull request to the committer in [list](" + tichiURL + ") "
+		resp += "by filling `/assign @committer` in the comment to help merge this pull request."
 		log.Infof("Reply /merge request in comment: \"%s\"", resp)
-		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
+		return gc.CreateComment(org, repoName, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
 	// Not author or committers but want remove merge.
 	if !committers.Has(author) && !isAuthor && !wantMerge {
 		resp := "`/merge cancel` is only allowed for the PR author and the committers in [list](" + tichiURL + ")."
 		log.Infof("Reply /merge cancel request with comment: \"%s\"", resp)
-		return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
+		return gc.CreateComment(org, repoName, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 	}
 
 	// Now we update the 'status/cam-merge' labels, having checked all cases where changing.
@@ -285,17 +307,17 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 	}
 	hasCanMerge := false
 	for _, label := range labels {
-		if label.Name == externalplugins.CanMergeLabel {
+		if label.Name == tiexternalplugins.CanMergeLabel {
 			hasCanMerge = true
 		}
 	}
 
-	isSatisfy := isLGTMSatisfy(externalplugins.LgtmLabelPrefix, labels, owners.NeedsLgtm)
+	isSatisfy := isLGTMSatisfy(tiexternalplugins.LgtmLabelPrefix, labels, owners.NeedsLgtm)
 
 	// Remove the label if necessary, we're done after this.
 	if hasCanMerge && !wantMerge {
-		log.Info("Removing '" + externalplugins.CanMergeLabel + "' label.")
-		if err := gc.RemoveLabel(org, repoName, number, externalplugins.CanMergeLabel); err != nil {
+		log.Info("Removing '" + tiexternalplugins.CanMergeLabel + "' label.")
+		if err := gc.RemoveLabel(org, repoName, number, tiexternalplugins.CanMergeLabel); err != nil {
 			return err
 		}
 		if opts.StoreTreeHash {
@@ -322,8 +344,8 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 					log.WithError(err).Error("Failed to add comment.")
 				}
 			}
-			log.Info("Adding '" + externalplugins.CanMergeLabel + "' label.")
-			if err := gc.AddLabel(org, repoName, number, externalplugins.CanMergeLabel); err != nil {
+			log.Info("Adding '" + tiexternalplugins.CanMergeLabel + "' label.")
+			if err := gc.AddLabel(org, repoName, number, tiexternalplugins.CanMergeLabel); err != nil {
 				return err
 			}
 			// Delete the 'status/can-merge' removed noti after the 'status/can-merge' label is added.
@@ -331,9 +353,9 @@ func handle(wantMerge bool, config *externalplugins.Configuration, rc reviewCtx,
 				return strings.Contains(comment.Body, removeCanMergeLabelNoti)
 			})
 		} else {
-			resp := fmt.Sprintf("`/merge` in this pull request requires %d `/lgtm`.", owners.NeedsLgtm)
+			resp := fmt.Sprintf("`/merge` in this pull request requires %d approval(s).", owners.NeedsLgtm)
 			log.Infof("Reply /merge request with comment: \"%s\"", resp)
-			return gc.CreateComment(org, repoName, number, externalplugins.FormatResponseRaw(body, htmlURL, author, resp))
+			return gc.CreateComment(org, repoName, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
 		}
 	}
 
@@ -349,7 +371,7 @@ func isLGTMSatisfy(prefix string, labels []github.Label, needsLgtm int) bool {
 		}
 	}
 
-	return needsLgtm == currentLgtmNumber
+	return currentLgtmNumber >= needsLgtm
 }
 
 func isAllGuaranteed(prCommits []github.RepositoryCommit, lastCanMergeTreeHash string, log *logrus.Entry) bool {

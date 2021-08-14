@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: prow
+  name: ti-community-contribution
+  labels:
+    app: ti-community-contribution
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ti-community-contribution
+  template:
+    metadata:
+      labels:
+        app: ti-community-contribution
+    spec:
+      serviceAccountName: "hook"
+      terminationGracePeriodSeconds: 180
+      containers:
+        - name: ti-community-contribution
+          image: ticommunityinfra/tichi-contribution-plugin:v1.7.2
+          imagePullPolicy: Always
+          args:
+            - --dry-run=false
+            - --github-token-path=/etc/github/token
+            - --github-endpoint=http://ghproxy
+            - --github-endpoint=https://api.github.com
+          ports:
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - name: hmac
+              mountPath: /etc/webhook
+              readOnly: true
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+            - name: plugins
+              mountPath: /etc/plugins
+              readOnly: true
+            - name: external-plugins-config
+              mountPath: /etc/external_plugins_config
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 3
+      volumes:
+        - name: hmac
+          secret:
+            secretName: hmac-token
+        - name: github-token
+          secret:
+            secretName: github-token
+        - name: plugins
+          configMap:
+            name: plugins
+        - name: external-plugins-config
+          configMap:
+            name: external-plugins-config

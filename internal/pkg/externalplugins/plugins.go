@@ -38,6 +38,17 @@ func (pa *ConfigAgent) Load(path string) error {
 		return err
 	}
 
+	// Set up a unified log configuration.
+	lvl, err := logrus.ParseLevel(np.LogLevel)
+	if err != nil {
+		return err
+	}
+
+	logrus.SetLevel(lvl)
+	logrus.SetFormatter(&logrus.JSONFormatter{})
+	// Output line number and call function information.
+	logrus.SetReportCaller(true)
+
 	pa.Set(np)
 	return nil
 }

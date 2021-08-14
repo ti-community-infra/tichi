@@ -27,17 +27,17 @@ const (
 )
 
 // defaultCheckPeriod specifies the default period for test ticker.
-var defaultCheckPeriod = time.Minute * 5
+var defaultCheckPeriod = time.Minute * 1
 
-// Ref: https://developer.github.com/v3/checks/runs/#parameters.
+// Ref: https://docs.github.com/en/rest/reference/checks#create-a-check-run--parameters.
 const (
 	// checkRunStatusCompleted means the check run passed.
 	checkRunStatusCompleted = "completed"
 
-	// checkRunConclusionNeutral means the check run neutral.
+	// checkRunConclusionNeutral means the check run conclusion is neutral.
 	checkRunConclusionNeutral = "neutral"
 
-	// checkRunConclusionSuccess means the check run success.
+	// checkRunConclusionSuccess means the check run conclusion is success.
 	checkRunConclusionSuccess = "success"
 )
 
@@ -124,9 +124,13 @@ func Retesting(log *logrus.Entry, ghc githubClient, client gitRepoClient,
 			return err
 		}
 
-		contexts := options.Contexts.Strings()
-		log.Infof("Retesting %v.", contexts)
-		err = client.Commit(fmt.Sprintf("Retesting %v", contexts), string(rawLog))
+		var prs string
+		for _, pull := range spec.Refs.Pulls {
+			prs += fmt.Sprintf("#%d ", pull.Number)
+		}
+		log.Infof("Retesting %s.", prs)
+
+		err = client.Commit(fmt.Sprintf("Retesting %s", prs), string(rawLog))
 		if err != nil {
 			return err
 		}
@@ -202,13 +206,13 @@ func checkContexts(log *logrus.Entry, ghc githubClient, contexts prowflagutil.St
 	if err != nil {
 		return false, fmt.Errorf("list %s check runs failed: %v", retestingBranch, err)
 	}
-	for _, runs := range checkRun.CheckRuns {
-		if runs.Status == checkRunStatusCompleted {
-			if runs.Conclusion == checkRunConclusionNeutral || runs.Conclusion == checkRunConclusionSuccess {
-				log.Infof("%s runs passed.", runs.Name)
-				passedContexts.Insert(runs.Name)
-			} else if requireContextSet.Has(runs.Name) {
-				return false, fmt.Errorf("require context %s failed", runs.Name)
+	for _, run := range checkRun.CheckRuns {
+		if run.Status == checkRunStatusCompleted {
+			if run.Conclusion == checkRunConclusionNeutral || run.Conclusion == checkRunConclusionSuccess {
+				log.Infof("%s runs passed.", run.Name)
+				passedContexts.Insert(run.Name)
+			} else if requireContextSet.Has(run.Name) {
+				return false, fmt.Errorf("require context %s failed", run.Name)
 			}
 		}
 	}

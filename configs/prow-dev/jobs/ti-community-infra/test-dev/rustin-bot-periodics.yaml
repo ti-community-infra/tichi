@@ -6,14 +6,11 @@ periodics:
       description: Closes rotten issues after 30d of inactivity
     spec:
       containers:
-        - image: gcr.io/k8s-prow/commenter:v20210123-aa0de54ee1
+        - image: gcr.io/k8s-prow/commenter:v20210806-c95403cd67
           command:
             - /app/robots/commenter/app.binary
           args:
-            - |-
-              --query=repo:ti-community-infra/test-dev
-              -label:lifecycle/frozen
-              label:lifecycle/rotten
+            - --query=repo:ti-community-infra/test-dev -label:lifecycle/frozen label:lifecycle/rotten
             - --updated=720h
             - --token=/etc/github/token
             - |-
@@ -42,15 +39,11 @@ periodics:
       description: Adds lifecycle/rotten to stale issues after 30d of inactivity
     spec:
       containers:
-        - image: gcr.io/k8s-prow/commenter:v20210123-aa0de54ee1
+        - image: gcr.io/k8s-prow/commenter:v20210806-c95403cd67
           command:
             - /app/robots/commenter/app.binary
           args:
-            - |-
-              --query=repo:ti-community-infra/test-dev
-              -label:lifecycle/frozen
-              label:lifecycle/stale
-              -label:lifecycle/rotten
+            - --query=repo:ti-community-infra/test-dev -label:lifecycle/frozen label:lifecycle/stale -label:lifecycle/rotten
             - --updated=720h
             - --token=/etc/github/token
             - |-
@@ -81,15 +74,11 @@ periodics:
       description: Adds lifecycle/stale to issues after 30d of inactivity
     spec:
       containers:
-        - image: gcr.io/k8s-prow/commenter:v20210123-aa0de54ee1
+        - image: gcr.io/k8s-prow/commenter:v20210806-c95403cd67
           command:
             - /app/robots/commenter/app.binary
           args:
-            - |-
-              --query=repo:ti-community-infra/test-dev
-              -label:lifecycle/frozen
-              -label:lifecycle/stale
-              -label:lifecycle/rotten
+            - --query=repo:ti-community-infra/test-dev -label:lifecycle/frozen -label:lifecycle/stale -label:lifecycle/rotten
             - --updated=2160h
             - --token=/etc/github/token
             - |-

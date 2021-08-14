@@ -8,8 +8,10 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	prowapi "k8s.io/test-infra/prow/apis/prowjobs/v1"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
 	"k8s.io/test-infra/prow/github"
+	"k8s.io/test-infra/prow/pod-utils/downwardapi"
 )
 
 type fghc struct {
@@ -332,8 +334,15 @@ func TestRetesting(t *testing.T) {
 			gc := fgc{}
 			// Setup the check period.
 			defaultCheckPeriod = time.Nanosecond * 1
+			spec := &downwardapi.JobSpec{
+				Refs: &prowapi.Refs{Pulls: []prowapi.Pull{
+					{
+						Number: 1,
+					},
+				}},
+			}
 
-			err := Retesting(logrus.WithField("rerere", "testing"), nil, &gc, &tc.options, org, repo, nil)
+			err := Retesting(logrus.WithField("rerere", "testing"), nil, &gc, &tc.options, org, repo, spec)
 
 			if err != nil {
 				if len(tc.expectError) == 0 {

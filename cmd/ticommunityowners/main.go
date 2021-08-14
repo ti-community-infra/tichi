@@ -18,7 +18,6 @@ import (
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
 	"k8s.io/test-infra/prow/interrupts"
 	"k8s.io/test-infra/prow/pjutil"
-	"k8s.io/test-infra/prow/plugins/lgtm"
 )
 
 type options struct {
@@ -66,26 +65,25 @@ func main() {
 		logrus.Fatalf("Invalid options: %v", err)
 	}
 
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	// TODO: Use global option from the prow config.
-	logrus.SetLevel(logrus.InfoLevel)
-	log := logrus.StandardLogger().WithField("plugin", lgtm.PluginName)
-
-	secretAgent := &secret.Agent{}
-	if err := secretAgent.Start([]string{o.github.TokenPath, o.webhookSecretFile}); err != nil {
-		logrus.WithError(err).Fatal("Error starting secrets agent.")
-	}
+	log := logrus.StandardLogger().WithField("plugin", owners.PluginName)
 
 	epa := &tiexternalplugins.ConfigAgent{}
 	if err := epa.Start(o.externalPluginsConfig, false); err != nil {
 		log.WithError(err).Fatalf("Error loading external plugin config from %q.", o.externalPluginsConfig)
 	}
 
+	secretAgent := &secret.Agent{}
+	if err := secretAgent.Start([]string{o.github.TokenPath, o.webhookSecretFile}); err != nil {
+		logrus.WithError(err).Fatal("Error starting secrets agent.")
+	}
+
 	githubClient, err := o.github.GitHubClient(secretAgent, o.dryRun)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting GitHub client.")
 	}
-	githubClient.Throttle(360, 360)
+	// NOTICE: This error is only possible when using the GitHub APP,
+	// but if we use the APP auth later we will have to handle the err.
+	_ = githubClient.Throttle(360, 360)
 
 	// Skip https verify.
 	//nolint:gosec

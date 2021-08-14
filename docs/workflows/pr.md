@@ -4,7 +4,7 @@
 
 在引入 Tide 之后 PR 的协作流程发生了一些变化，但是基本的大框架还是保留了下来。主要的调整发生在 PR 合并阶段，从原来一次性的 `/merge` 命令去触发机器人运行测试合并代码变成了 `/merge` 只负责打上 `status/can-merge` 标签。当 PR 的标签满足要求并且所有测试通过后，PR 将会自动合并无需人为干预。
 
-**⚠️ 注意：在阅读以下内容之前请先仔细阅读 [Tide](components/tide.md)、[ti-community-lgtm](plugins/lgtm.md)、[ti-community-tars](plugins/tars.md)、[rerere](components/rerere.md)、[ti-community-blunderbuss](plugins/blunderbuss.md) 和 [ti-community-merge](plugins/merge.md) 章节内容**。
+**⚠️ 注意：在阅读以下内容之前请先仔细阅读 [Tide](components/tide.md)、[ti-community-lgtm](plugins/lgtm.md)、[ti-community-tars](plugins/tars.md)、[ti-community-blunderbuss](plugins/blunderbuss.md) 和 [ti-community-merge](plugins/merge.md) 章节内容**。
 
 ## PR 协作流程
 
@@ -14,7 +14,7 @@
   - 根据 ti-community-blunderbuss 配置随机选取多个 reviewers
 - **第二阶段：** reviewers review 代码 ([ti-community-lgtm](plugins/lgtm.md) 提供支持)
   - reviewer 会查看代码的质量，正确性，工程考量等
-  - 如果 reviewer 认为代码没有问题，reviewer 会使用 `/lgtm` 同意这些改动；如果 reviewer 后续觉得代码还是有问题，可以通过 `/lgtm cancel` 来取消同意代码改动
+  - 如果 reviewer 认为代码没有问题，reviewer 会提交 Approve 意见同意这些改动；如果 reviewer 后续觉得代码还是有问题，可以提交 Request Changes 意见来取消同意代码改动
   - 一旦 reviewer 使用上述命令，机器人 ti-chi-bot 就会自动打上或移除 lgtm 相关标签 
 - **第三阶段：** committers 审核代码 ([ti-community-merge](plugins/merge.md) 提供支持)
   - committer 对 PR 进行再审核，考察与其他功能的依赖关系，向前/向后的兼容性等
@@ -56,10 +56,6 @@
 2. PR 合并当前 master 到 PR 导致 `status/can-merge` 标签消失
 
 **第一个问题使用 [ti-community-tars](plugins/tars.md) 自动更新就可以解决。第二个问题因为我们可以识别到使用 GitHub 更新按钮更新 master 到 PR 的提交的 committer 为 `web-flow`，所以可以根据 committer 来判断是否信任该提交。**
-
-### 大型仓库推荐使用 rerere 
-
-我们使用 [ti-community-tars](plugins/tars.md) 并且打开  Require branches to be up to date before merging 可以解决 PR 合并问题，但是对于大型仓库来说，这样会极大的浪费测试资源。所以推荐使用 rerere 解决该问题，详见：[rerere](components/rerere.md)。
 
 ## Q&A
 

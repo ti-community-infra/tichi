@@ -6,7 +6,7 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: gcr.io/k8s-prow/checkconfig:v20210123-aa0de54ee1
+        - image: gcr.io/k8s-prow/checkconfig:v20210806-c95403cd67
           command:
             - /checkconfig
           args:
@@ -16,6 +16,106 @@ presubmits:
             - --warnings=validate-urls
             - --warnings=unknown-fields
             - --warnings=duplicate-job-refs
+  - name: pull-tichi-validate-external-plugin-yaml
+    decorate: true
+    run_if_changed: 'configs/prow-dev/config/external_plugins_config.yaml'
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: ticommunityinfra/tichi-check-external-plugin-config:v1.7.2
+          command:
+            - check-external-plugin-config
+          args:
+            - --external-plugin-config-path=configs/prow-dev/config/external_plugins_config.yaml
+  - name: pull-tichi-unit-test
+    decorate: true
+    always_run: true
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: golang:1.16
+          command:
+            - /bin/bash
+            - -c
+            - "GIT_COMMIT=${PULL_PULL_SHA} make check cover"
+          env:
+            - name: CODECOV_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: codecov-tokens
+                  key: ti-community-infra-tichi-codecov-token
+  - name: pull-tichi-label-dumpling-checks
+    decorate: true
+    run_if_changed: 'tools/label-dumpling/'
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: rust:1.52
+          command:
+            - /bin/bash
+            - -c
+            - "make label-dumpling-checks"
+  - name: pull-tichi-web-node10-lint
+    decorate: true
+    always_run: true
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: node:10
+          command:
+            - /bin/bash
+            - -c
+            - >
+              cd ./web &&
+              npm ci &&
+              npm run build &&
+              npm run lint
+  - name: pull-tichi-web-node12-lint
+    decorate: true
+    always_run: true
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: node:12
+          command:
+            - /bin/bash
+            - -c
+            - >
+              cd ./web &&
+              npm ci &&
+              npm run build &&
+              npm run lint
+  - name: pull-tichi-web-node14-lint
+    decorate: true
+    always_run: true
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: node:14
+          command:
+            - /bin/bash
+            - -c
+            - >
+              cd ./web &&
+              npm ci &&
+              npm run build &&
+              npm run lint
+  - name: pull-tichi-validate-labels-yaml
+    decorate: true
+    run_if_changed: 'configs/prow-dev/config/labels.*'
+    branches:
+      - ^master$
+    spec:
+      containers:
+        - image: golang:1.16
+          command:
+            - scripts/verify-labels.sh
   - name: pull-tichi-rerere
     decorate: true
     always_run: true
@@ -26,39 +126,20 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: rustinliu/rerere-component:v1.1.1
+        - image: ticommunityinfra/rerere-component:v1.7.2
           command:
             - rerere
           args:
             - --github-token-path=/etc/github/token
             - --dry-run=false
             - --github-endpoint=https://api.github.com
-            - --require-contexts=build
             - --require-contexts=lint
+            - --require-contexts=post-tichi-unit-test
+            - --require-contexts=post-tichi-web-node14-lint
             - --labels=status/can-merge
-          volumeMounts:
-            - name: github-token
-              mountPath: /etc/github
-              readOnly: true
-      volumes:
-        - name: github-token
-          secret:
-            secretName: github-token
-  - name: pull-tichi-validate-labels-yaml
-    decorate: true
-    run_if_changed: 'configs/prow-dev/config/labels.yaml'
-    branches:
-      - ^master$
-    spec:
-      containers:
-        - image: gcr.io/k8s-prow/label_sync:v20201217-2de500de27
-          command:
-            - /app/label_sync/app.binary
-          args:
-            - --config=configs/prow-dev/config/labels.yaml
-            - --confirm=false
-            - --only=ti-community-infra/test-dev
-            - --token=/etc/github/token
+            - --retesting-branch=rerere
+            - --git-user-from-github=true
+            - --git-token-path=/etc/github/token
           volumeMounts:
             - name: github-token
               mountPath: /etc/github
@@ -101,7 +182,7 @@ postsubmits:
       - ^master$
     spec:
       containers:
-        - image: gcr.io/k8s-prow/label_sync:v20201217-2de500de27
+        - image: gcr.io/k8s-prow/label_sync:v20210806-c95403cd67
           command:
             - /app/label_sync/app.binary
           args:
@@ -117,3 +198,47 @@ postsubmits:
         - name: github-token
           secret:
             secretName: github-token
+  - name: post-tichi-unit-test
+    decorate: true
+    branches:
+      - ^(master|rerere)$
+    spec:
+      containers:
+        - image: golang:1.16
+          command:
+            - /bin/bash
+            - -c
+            - "GIT_COMMIT=${PULL_PULL_SHA} make check cover"
+          env:
+            - name: CODECOV_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: codecov-tokens
+                  key: ti-community-infra-tichi-codecov-token
+  - name: post-tichi-label-dumpling-checks
+    decorate: true
+    run_if_changed: 'tools/label-dumpling/'
+    branches:
+      - ^(master|rerere)$
+    spec:
+      containers:
+        - image: rust:1.52
+          command:
+            - /bin/bash
+            - -c
+            - "make label-dumpling-checks"
+  - name: post-tichi-web-node14-lint
+    decorate: true
+    branches:
+      - ^(master|rerere)$
+    spec:
+      containers:
+        - image: node:14
+          command:
+            - /bin/bash
+            - -c
+            - >
+              cd ./web &&
+              npm ci &&
+              npm run build &&
+              npm run lint

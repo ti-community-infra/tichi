@@ -18,7 +18,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
         - name: tichi-web
-          image: rustinliu/tichi-web:v1.1.1
+          image: ticommunityinfra/tichi-web:v1.7.2
           imagePullPolicy: Always
           ports:
             - name: http
@@ -44,7 +44,6 @@ spec:
               scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 3
-            timeoutSeconds: 300
       volumes:
         - name: external-plugins-config
           configMap:

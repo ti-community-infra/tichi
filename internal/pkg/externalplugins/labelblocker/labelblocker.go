@@ -6,11 +6,14 @@ import (
 	"strings"
 
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/pluginhelp"
+	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
+	"k8s.io/test-infra/prow/plugins"
+
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
 const PluginName = "ti-community-label-blocker"
@@ -37,8 +40,7 @@ type labelCtx struct {
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(epa *externalplugins.ConfigAgent) func(
-	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 		configInfo := map[string]string{}
 		cfg := epa.Config()
@@ -76,9 +78,30 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
 			}
 		}
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
+			TiCommunityLabelBlocker: []tiexternalplugins.TiCommunityLabelBlocker{
+				{
+					Repos: []string{"ti-community-infra/test-dev"},
+					BlockLabels: []tiexternalplugins.BlockLabel{
+						{
+							Regex:        "^status/LGT[\\d]+$",
+							Actions:      []string{"labeled"},
+							TrustedTeams: []string{"release-team"},
+							TrustedUsers: []string{"hi-rustin"},
+							Message:      "You can't add the status/can-merge label.",
+						},
+					},
+				},
+			},
+		})
+		if err != nil {
+			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
+		}
 		pluginHelp := &pluginhelp.PluginHelp{
 			Description: "The ti-community-label-blocker will prevent untrusted users from adding or removing labels.",
 			Config:      configInfo,
+			Snippet:     yamlSnippet,
+			Events:      []string{tiexternalplugins.PullRequestEvent, tiexternalplugins.IssuesEvent},
 		}
 
 		return pluginHelp, nil
@@ -87,7 +110,7 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 
 // HandlePullRequestEvent handles a GitHub pull request event.
 func HandlePullRequestEvent(gc githubClient, pullRequestEvent *github.PullRequestEvent,
-	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	// Only consider the labeled / unlabeled actions.
 	if pullRequestEvent.Action != github.PullRequestActionLabeled &&
 		pullRequestEvent.Action != github.PullRequestActionUnlabeled {
@@ -108,7 +131,7 @@ func HandlePullRequestEvent(gc githubClient, pullRequestEvent *github.PullReques
 
 // HandleIssueEvent handles a GitHub issue event.
 func HandleIssueEvent(gc githubClient, issueEvent *github.IssueEvent,
-	cfg *externalplugins.Configuration, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	// Only consider the labeled / unlabeled actions.
 	if issueEvent.Action != github.IssueActionLabeled &&
 		issueEvent.Action != github.IssueActionUnlabeled {
@@ -127,7 +150,7 @@ func HandleIssueEvent(gc githubClient, issueEvent *github.IssueEvent,
 	return handle(cfg, ctx, gc, log)
 }
 
-func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, log *logrus.Entry) error {
+func handle(cfg *tiexternalplugins.Configuration, ctx labelCtx, gc githubClient, log *logrus.Entry) error {
 	owner := ctx.repo.Owner.Login
 	repo := ctx.repo.Name
 	labelBlocker := cfg.LabelBlockerFor(owner, repo)
@@ -179,7 +202,7 @@ func handle(cfg *externalplugins.Configuration, ctx labelCtx, gc githubClient, l
 			}
 
 			reason := fmt.Sprintf("In response to %s label named %s.", operate, ctx.label)
-			response := externalplugins.FormatResponse(ctx.sender, blockLabel.Message, reason)
+			response := tiexternalplugins.FormatResponse(ctx.sender, blockLabel.Message, reason)
 			err := gc.CreateComment(owner, repo, ctx.number, response)
 
 			if err != nil {

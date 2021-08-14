@@ -5,14 +5,19 @@ import (
 	"fmt"
 	"net/url"
 	"regexp"
+	"strings"
 
+	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/test-infra/prow/labels"
 )
 
 const (
 	// defaultGracePeriodDuration define the time for blunderbuss plugin to wait
 	// before requesting a review (default five seconds).
 	defaultGracePeriodDuration = 5
+	// defaultLogLevel defines the default log level of all ti community plugins.
+	defaultLogLevel = logrus.InfoLevel
 )
 
 // Allowed value of the action configuration of the label blocker plugin.
@@ -23,9 +28,19 @@ const (
 
 // Configuration is the top-level serialization target for external plugin Configuration.
 type Configuration struct {
-	TichiWebURL     string `json:"tichi-web-url,omitempty"`
-	PRProcessLink   string `json:"pr-process-link,omitempty"`
-	CommandHelpLink string `json:"command-help-link,omitempty"`
+	TichiWebURL     string `json:"tichi_web_url,omitempty"`
+	PRProcessLink   string `json:"pr_process_link,omitempty"`
+	CommandHelpLink string `json:"command_help_link,omitempty"`
+
+	// LogLevel enables dynamically updating the log level of the
+	// standard logger that is used by all ti community plugin.
+	//
+	// Valid values:
+	//
+	// "trace" "debug", "info", "warn", "warning", "error", "fatal", "panic"
+	//
+	// Defaults to "info".
+	LogLevel string `json:"log_level,omitempty"`
 
 	TiCommunityLgtm          []TiCommunityLgtm          `json:"ti-community-lgtm,omitempty"`
 	TiCommunityMerge         []TiCommunityMerge         `json:"ti-community-merge,omitempty"`
@@ -35,6 +50,8 @@ type Configuration struct {
 	TiCommunityBlunderbuss   []TiCommunityBlunderbuss   `json:"ti-community-blunderbuss,omitempty"`
 	TiCommunityTars          []TiCommunityTars          `json:"ti-community-tars,omitempty"`
 	TiCommunityLabelBlocker  []TiCommunityLabelBlocker  `json:"ti-community-label-blocker,omitempty"`
+	TiCommunityContribution  []TiCommunityContribution  `json:"ti-community-contribution,omitempty"`
+	TiCommunityCherrypicker  []TiCommunityCherrypicker  `json:"ti-community-cherrypicker,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -42,9 +59,6 @@ type Configuration struct {
 type TiCommunityLgtm struct {
 	// Repos is either of the form org/repos or just org.
 	Repos []string `json:"repos,omitempty"`
-	// ReviewActsAsLgtm indicates that a GitHub review of "merge" or "request changes"
-	// acts as adding or removing the lgtm label.
-	ReviewActsAsLgtm bool `json:"review_acts_as_lgtm,omitempty"`
 	// PullOwnersEndpoint specifies the URL of the reviewer of pull request.
 	PullOwnersEndpoint string `json:"pull_owners_endpoint,omitempty"`
 }
@@ -81,6 +95,9 @@ type TiCommunityOwners struct {
 	//
 	// TrustTeams specifies the GitHub teams whose members are trusted.
 	TrustTeams []string `json:"trusted_teams,omitempty"`
+	// UseGitHubPermission specifies the permissions to use GitHub.
+	// People with write and admin permissions have reviewer and committer permissions.
+	UseGitHubPermission bool `json:"use_github_permission,omitempty"`
 	// Branches specifies the branch level configuration that will override the repository
 	// level configuration.
 	Branches map[string]TiCommunityOwnerBranchConfig `json:"branches,omitempty"`
@@ -92,6 +109,9 @@ type TiCommunityOwnerBranchConfig struct {
 	DefaultRequireLgtm int `json:"default_require_lgtm,omitempty"`
 	// TrustTeams specifies the GitHub teams whose members are trusted by the branch.
 	TrustTeams []string `json:"trusted_teams,omitempty"`
+	// UseGitHubPermission specifies the permissions to use GitHub.
+	// People with write and admin permissions have reviewer and committer permissions.
+	UseGitHubPermission bool `json:"use_github_permission,omitempty"`
 }
 
 // TiCommunityLabel is the config for the label plugin.
@@ -136,6 +156,8 @@ type TiCommunityBlunderbuss struct {
 	// MaxReviewerCount is the maximum number of reviewers to request
 	// reviews from. Defaults to 0 meaning no limit.
 	MaxReviewerCount int `json:"max_request_count,omitempty"`
+	// IncludeReviewers specifies which reviewers are the only ones involved in the code review.
+	IncludeReviewers []string `json:"include_reviewers,omitempty"`
 	// ExcludeReviewers specifies which reviewers do not participate in code review.
 	ExcludeReviewers []string `json:"exclude_reviewers,omitempty"`
 	// PullOwnersEndpoint specifies the URL of the reviewer of pull request.
@@ -162,6 +184,24 @@ type TiCommunityTars struct {
 	Message string `json:"message,omitempty"`
 	// OnlyWhenLabel specifies that the automatic update is triggered only when the PR has this label.
 	OnlyWhenLabel string `json:"only_when_label,omitempty"`
+	// ExcludeLabels specifies that the automatic update are not triggered when the PR has these labels.
+	ExcludeLabels []string `json:"exclude_labels,omitempty"`
+}
+
+// setDefaults will set the default label for the config of tars plugin.
+func (c *TiCommunityTars) setDefaults() {
+	if len(c.OnlyWhenLabel) == 0 {
+		c.OnlyWhenLabel = CanMergeLabel
+	}
+
+	if len(c.ExcludeLabels) == 0 {
+		// Label: needs-rebase.
+		c.ExcludeLabels = append(c.ExcludeLabels, labels.NeedsRebase)
+		// Label: do-not-merge/hold.
+		c.ExcludeLabels = append(c.ExcludeLabels, labels.Hold)
+		// Label: do-not-merge/work-in-progress.
+		c.ExcludeLabels = append(c.ExcludeLabels, labels.WorkInProgress)
+	}
 }
 
 // TiCommunityLabelBlocker is the config for the label blocker plugin.
@@ -184,6 +224,37 @@ type BlockLabel struct {
 	TrustedUsers []string `json:"trusted_users,omitempty"`
 	// Message specifies the message feedback to the user after blocking the label.
 	Message string `json:"message,omitempty"`
+}
+
+// TiCommunityContribution is the config for the contribution plugin.
+type TiCommunityContribution struct {
+	// Repos is either of the form org/repo or just org.
+	Repos []string `json:"repos,omitempty"`
+	// Message specifies the tips for the contributor's PR.
+	Message string `json:"message,omitempty"`
+}
+
+// TiCommunityCherrypicker is the config for the cherrypicker plugin.
+type TiCommunityCherrypicker struct {
+	// Repos is either of the form org/repo or just org.
+	Repos []string `json:"repos,omitempty"`
+	// AllowAll specifies whether everyone is allowed to cherry pick.
+	AllowAll bool `json:"allow_all,omitempty"`
+	// IssueOnConflict specifies whether to create an Issue when there is a PR conflict.
+	IssueOnConflict bool `json:"create_issue_on_conflict,omitempty"`
+	// LabelPrefix specifies the label prefix for cherrypicker.
+	LabelPrefix string `json:"label_prefix,omitempty"`
+	// PickedLabelPrefix specifies the label prefix after picked.
+	PickedLabelPrefix string `json:"picked_label_prefix,omitempty"`
+	// ExcludeLabels specifies the labels that need to be excluded when copying the labels of the original PR.
+	ExcludeLabels []string `json:"excludeLabels,omitempty"`
+}
+
+// setDefaults will set the default value for the config of blunderbuss plugin.
+func (c *TiCommunityCherrypicker) setDefaults() {
+	if len(c.LabelPrefix) == 0 {
+		c.LabelPrefix = DefaultCherryPickLabelPrefix
+	}
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists
@@ -333,6 +404,27 @@ func (c *Configuration) TarsFor(org, repo string) *TiCommunityTars {
 	return &TiCommunityTars{}
 }
 
+// ContributionFor finds the TiCommunityContribution for a repo, if one exists.
+// TiCommunityContribution configuration can be listed for a repository
+// or an organization.
+func (c *Configuration) ContributionFor(org, repo string) *TiCommunityContribution {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, contribution := range c.TiCommunityContribution {
+		if !sets.NewString(contribution.Repos...).Has(fullName) {
+			continue
+		}
+		return &contribution
+	}
+	// If you don't find anything, loop again looking for an org config
+	for _, contribution := range c.TiCommunityContribution {
+		if !sets.NewString(contribution.Repos...).Has(org) {
+			continue
+		}
+		return &contribution
+	}
+	return &TiCommunityContribution{}
+}
+
 // LabelBlockerFor finds the TiCommunityLabelBlocker for a repo, if one exists.
 // TiCommunityLabelBlocker configuration can be listed for a repository
 // or an organization.
@@ -354,16 +446,48 @@ func (c *Configuration) LabelBlockerFor(org, repo string) *TiCommunityLabelBlock
 	return &TiCommunityLabelBlocker{}
 }
 
+// CherrypickerFor finds the TiCommunityCherrypicker for a repo, if one exists.
+// TiCommunityCherrypicker configuration can be listed for a repository
+// or an organization.
+func (c *Configuration) CherrypickerFor(org, repo string) *TiCommunityCherrypicker {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, cherrypicker := range c.TiCommunityCherrypicker {
+		if !sets.NewString(cherrypicker.Repos...).Has(fullName) {
+			continue
+		}
+		return &cherrypicker
+	}
+	// If you don't find anything, loop again looking for an org config
+	for _, cherrypicker := range c.TiCommunityCherrypicker {
+		if !sets.NewString(cherrypicker.Repos...).Has(org) {
+			continue
+		}
+		return &cherrypicker
+	}
+	return &TiCommunityCherrypicker{}
+}
+
 // setDefaults will set the default value for the configuration of all plugins.
 func (c *Configuration) setDefaults() {
 	for i := range c.TiCommunityBlunderbuss {
 		c.TiCommunityBlunderbuss[i].setDefaults()
 	}
+
+	for i := range c.TiCommunityCherrypicker {
+		c.TiCommunityCherrypicker[i].setDefaults()
+	}
+
+	for i := range c.TiCommunityTars {
+		c.TiCommunityTars[i].setDefaults()
+	}
+
+	if len(c.LogLevel) == 0 {
+		c.LogLevel = defaultLogLevel.String()
+	}
 }
 
 // Validate will return an error if there are any invalid external plugin config.
 func (c *Configuration) Validate() error {
-	// TODO: Put the setDefaults function in a more suitable place.
 	// Defaulting should run before validation.
 	c.setDefaults()
 
@@ -379,6 +503,10 @@ func (c *Configuration) Validate() error {
 
 	// Validate command help link.
 	if _, err := url.ParseRequestURI(c.CommandHelpLink); err != nil {
+		return err
+	}
+
+	if err := validateLogLevel(c.LogLevel); err != nil {
 		return err
 	}
 
@@ -403,6 +531,16 @@ func (c *Configuration) Validate() error {
 	}
 
 	if err := validateLabelBlocker(c.TiCommunityLabelBlocker); err != nil {
+		return err
+	}
+
+	return validateTars(c.TiCommunityTars)
+}
+
+// validateLogLevel will return an error if the value of the log level is invalid.
+func validateLogLevel(logLevel string) error {
+	_, err := logrus.ParseLevel(logLevel)
+	if err != nil {
 		return err
 	}
 
@@ -472,6 +610,9 @@ func validateBlunderbuss(blunderbusses []TiCommunityBlunderbuss) error {
 		if blunderbuss.GracePeriodDuration < 0 {
 			return errors.New("grace period duration must not less than 0")
 		}
+		if len(blunderbuss.IncludeReviewers) != 0 && len(blunderbuss.ExcludeReviewers) != 0 {
+			return errors.New("cannot set both include_reviewers and exclude_reviewers configurations")
+		}
 	}
 
 	return nil
@@ -509,6 +650,22 @@ func validateLabelBlockerAction(actions []string) error {
 			continue
 		} else {
 			return fmt.Errorf("actions contain illegal value %s", action)
+		}
+	}
+
+	return nil
+}
+
+// validateTars will return an error if tars is set for org.
+// If set directly to org will query the query to a large number of pull requests,
+// which will create a dos attack to the CI system.
+func validateTars(tars []TiCommunityTars) error {
+	for _, tar := range tars {
+		for _, repo := range tar.Repos {
+			slashSplit := strings.Split(repo, "/")
+			if n := len(slashSplit); n != 2 {
+				return fmt.Errorf("found repo %s that was not in org/repo format", repo)
+			}
 		}
 	}
 

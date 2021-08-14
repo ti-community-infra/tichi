@@ -2,7 +2,9 @@ package owners
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +12,7 @@ import (
 	"sort"
 	"testing"
 
+	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"gotest.tools/assert"
@@ -17,7 +20,8 @@ import (
 )
 
 type fakegithub struct {
-	PullRequests map[int]*github.PullRequest
+	PullRequests  map[int]*github.PullRequest
+	Collaborators []RepositoryCollaboratorConnection
 }
 
 // GetPullRequest returns details about the PR.
@@ -27,6 +31,15 @@ func (f *fakegithub) GetPullRequest(owner, repo string, number int) (*github.Pul
 		return nil, fmt.Errorf("pull request number %d does not exist", number)
 	}
 	return val, nil
+}
+
+func (f *fakegithub) Query(_ context.Context, q interface{}, _ map[string]interface{}) error {
+	query, ok := q.(*collaboratorsQuery)
+	if !ok {
+		return errors.New("invalid query format")
+	}
+	query.Repository.Collaborators.Edges = f.Collaborators
+	return nil
 }
 
 // ListTeams return a list of fake teams that correspond to the fake team members returned by ListTeamMembers.
@@ -200,6 +213,33 @@ func TestListOwners(t *testing.T) {
 		Message: "Test members.",
 	}
 
+	collaborators := []RepositoryCollaboratorConnection{
+		{
+			Permission: "",
+			Node:       struct{ Login githubql.String }{Login: "passerby"},
+		},
+		{
+			Permission: readPermission,
+			Node:       struct{ Login githubql.String }{Login: "collab1"},
+		},
+		{
+			Permission: triagePermission,
+			Node:       struct{ Login githubql.String }{Login: "collab2"},
+		},
+		{
+			Permission: writePermission,
+			Node:       struct{ Login githubql.String }{Login: "collab3"},
+		},
+		{
+			Permission: maintainPermission,
+			Node:       struct{ Login githubql.String }{Login: "collab4"},
+		},
+		{
+			Permission: adminPermission,
+			Node:       struct{ Login githubql.String }{Login: "collab5"},
+		},
+	}
+
 	org := "ti-community-infra"
 	repoName := "test-dev"
 	pullNumber := 1
@@ -214,6 +254,7 @@ func TestListOwners(t *testing.T) {
 		trustTeams             []string
 		defaultRequireLgtm     int
 		requireLgtmLabelPrefix string
+		useGitHubPermission    bool
 		branchesConfig         map[string]tiexternalplugins.TiCommunityOwnerBranchConfig
 
 		expectCommitters []string
@@ -447,7 +488,7 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: 3,
 		},
 		{
-			name:         "owners plugin config contains multiple trusted teams",
+			name:         "has one sig label and multiple trusted teams",
 			sigResponses: []SigResponse{sig1Res},
 			labels: []github.Label{
 				{
@@ -469,7 +510,103 @@ func TestListOwners(t *testing.T) {
 				"admin1", "admin2", "sig-leader1", "sig-leader2",
 				"releaser1", "releaser2",
 			},
-			expectNeedsLgtm: 2,
+			expectNeedsLgtm: defaultRequireLgtmNum,
+		},
+		{
+			name:                "use GitHub permission",
+			sigResponses:        []SigResponse{sig1Res},
+			labels:              []github.Label{},
+			useGitHubPermission: true,
+			expectCommitters: []string{
+				"collab3", "collab4", "collab5",
+			},
+			expectReviewers: []string{
+				"collab2", "collab3", "collab4", "collab5",
+			},
+			expectNeedsLgtm: defaultRequireLgtmNum,
+		},
+		{
+			name:         "use GitHub permission and require one lgtm",
+			sigResponses: []SigResponse{sig1Res},
+			labels: []github.Label{
+				{
+					Name: "require-LGT1",
+				},
+			},
+			requireLgtmLabelPrefix: "require-LGT",
+			useGitHubPermission:    true,
+			expectCommitters: []string{
+				"collab3", "collab4", "collab5",
+			},
+			expectReviewers: []string{
+				"collab2", "collab3", "collab4", "collab5",
+			},
+			expectNeedsLgtm: 1,
+		},
+		{
+			name:                   "use GitHub permission and a trust team",
+			sigResponses:           []SigResponse{sig1Res},
+			labels:                 []github.Label{},
+			trustTeams:             []string{"Leads"},
+			requireLgtmLabelPrefix: "require-LGT",
+			useGitHubPermission:    true,
+			expectCommitters: []string{
+				"collab3", "collab4", "collab5",
+				// Team members.
+				"sig-leader1", "sig-leader2",
+			},
+			expectReviewers: []string{
+				"collab2", "collab3", "collab4", "collab5",
+				// Team members.
+				"sig-leader1", "sig-leader2",
+			},
+			expectNeedsLgtm: defaultRequireLgtmNum,
+		},
+		{
+			name:               "use GitHub permission and owners plugin config contains branch config",
+			sigResponses:       []SigResponse{sig1Res},
+			labels:             []github.Label{},
+			defaultRequireLgtm: 2,
+			trustTeams:         []string{"Leads"},
+			branchesConfig: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
+				"master": {
+					DefaultRequireLgtm:  3,
+					TrustTeams:          []string{"Admins"},
+					UseGitHubPermission: true,
+				},
+				"release": {
+					DefaultRequireLgtm: 4,
+					TrustTeams:         []string{"Releasers"},
+				},
+			},
+			expectCommitters: []string{
+				"collab3", "collab4", "collab5",
+				// Team members.
+				"admin1", "admin2",
+			},
+			expectReviewers: []string{
+				"collab2", "collab3", "collab4", "collab5",
+				// Team members.
+				"admin1", "admin2",
+			},
+			expectNeedsLgtm: 3,
+		},
+		{
+			name:         "use GitHub permission and has one sig label",
+			sigResponses: []SigResponse{sig1Res},
+			labels: []github.Label{
+				{
+					Name: "sig/sig1",
+				},
+			},
+			useGitHubPermission: true,
+			expectCommitters: []string{
+				"collab3", "collab4", "collab5",
+			},
+			expectReviewers: []string{
+				"collab2", "collab3", "collab4", "collab5",
+			},
+			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 	}
 
@@ -482,9 +619,10 @@ func TestListOwners(t *testing.T) {
 
 			config := &tiexternalplugins.Configuration{}
 			repoConfig := tiexternalplugins.TiCommunityOwners{
-				Repos:              []string{"ti-community-infra/test-dev"},
-				SigEndpoint:        testServer.URL,
-				DefaultRequireLgtm: tc.defaultRequireLgtm,
+				Repos:               []string{"ti-community-infra/test-dev"},
+				SigEndpoint:         testServer.URL,
+				DefaultRequireLgtm:  tc.defaultRequireLgtm,
+				UseGitHubPermission: tc.useGitHubPermission,
 			}
 
 			if len(tc.defaultSigName) != 0 {
@@ -495,7 +633,7 @@ func TestListOwners(t *testing.T) {
 				repoConfig.TrustTeams = tc.trustTeams
 			}
 
-			if tc.requireLgtmLabelPrefix != "" {
+			if len(tc.requireLgtmLabelPrefix) != 0 {
 				repoConfig.RequireLgtmLabelPrefix = tc.requireLgtmLabelPrefix
 			}
 
@@ -560,6 +698,7 @@ func TestListOwners(t *testing.T) {
 						State:  "open",
 					},
 				},
+				Collaborators: collaborators,
 			}
 
 			// NOTICE: adds labels.

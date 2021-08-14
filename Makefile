@@ -21,7 +21,12 @@ PACKAGE_DIRECTORIES := $(PACKAGE_LIST) | sed 's|github.com/ti-community-infra/$(
 FILES     := $$(find $$($(PACKAGE_DIRECTORIES)) -name "*.go")
 
 
-.PHONY: clean test dev check tidy
+.PHONY: clean test cover fmt tidy staticcheck dev check label-dumpling-checks
+
+
+dev: check staticcheck test
+
+check: fmt tidy
 
 clean:
 	$(GO) clean -i ./...
@@ -31,12 +36,11 @@ test:
 	$(GOTEST) $(PACKAGES)
 	@>&2 echo "Great, all tests passed."
 
-test-with-coverage:
+cover:
+	rm -rf coverage.txt
 	$(GOTEST) $(PACKAGES) -race -coverprofile=coverage.txt -covermode=atomic
-
-dev: check test
-
-check: fmt tidy staticcheck
+	echo "Uploading coverage results..."
+	@curl -s https://codecov.io/bash | bash
 
 fmt:
 	@echo "gofmt (simplify)"
@@ -50,5 +54,9 @@ staticcheck: tools/bin/golangci-lint
 	tools/bin/golangci-lint run  $$($(PACKAGE_DIRECTORIES)) --timeout 500s
 
 tools/bin/golangci-lint:
-	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ./tools/bin v1.31.0
+	curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b ./tools/bin v1.41.1
+
+label-dumpling-checks:
+	@echo "label-dumpling checks"
+	./scripts/label-dumpling-checks.sh
 

@@ -11,6 +11,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/tars"
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"
@@ -53,7 +54,7 @@ func gatherOptions() options {
 	fs.StringVar(&o.externalPluginsConfig, "external-plugins-config",
 		"/etc/external_plugins_config/external_plugins_config.yaml", "Path to external plugin config file.")
 	fs.BoolVar(&o.dryRun, "dry-run", true, "Dry run for testing. Uses API tokens but does not mutate.")
-	fs.DurationVar(&o.updatePeriod, "update-period", time.Minute*30, "Period duration for periodic scans of all PRs.")
+	fs.DurationVar(&o.updatePeriod, "update-period", time.Minute*20, "Period duration for periodic scans of all PRs.")
 	fs.StringVar(&o.webhookSecretFile, "hmac-secret-file", "/etc/webhook/hmac",
 		"Path to the file containing the GitHub HMAC secret.")
 
@@ -70,18 +71,16 @@ func main() {
 		logrus.Fatalf("Invalid options: %v", err)
 	}
 
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	logrus.SetLevel(logrus.InfoLevel)
 	log := logrus.StandardLogger().WithField("plugin", tars.PluginName)
+
+	pa := &plugins.ConfigAgent{}
+	if err := pa.Start(o.pluginConfig, nil, "", false); err != nil {
+		log.WithError(err).Fatalf("Error loading plugin config from %q.", o.pluginConfig)
+	}
 
 	secretAgent := &secret.Agent{}
 	if err := secretAgent.Start([]string{o.github.TokenPath, o.webhookSecretFile}); err != nil {
 		logrus.WithError(err).Fatal("Error starting secrets agent.")
-	}
-
-	pa := &plugins.ConfigAgent{}
-	if err := pa.Start(o.pluginConfig, false); err != nil {
-		log.WithError(err).Fatalf("Error loading plugin config from %q.", o.pluginConfig)
 	}
 
 	epa := &tiexternalplugins.ConfigAgent{}
@@ -93,7 +92,9 @@ func main() {
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting GitHub client.")
 	}
-	githubClient.Throttle(360, 360)
+	// NOTICE: This error is only possible when using the GitHub APP,
+	// but if we use the APP auth later we will have to handle the err.
+	_ = githubClient.Throttle(360, 360)
 
 	server := &Server{
 		tokenGenerator: secretAgent.GetTokenGenerator(o.webhookSecretFile),
@@ -158,23 +159,23 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 	config := s.configAgent.Config()
 
 	switch eventType {
-	case "pull_request":
-		var pre github.PullRequestEvent
-		if err := json.Unmarshal(payload, &pre); err != nil {
-			return err
-		}
-		go func() {
-			if err := tars.HandlePullRequestEvent(l, s.ghc, &pre, config); err != nil {
-				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
-			}
-		}()
-	case "issue_comment":
+	case tiexternalplugins.IssueCommentEvent:
 		var ice github.IssueCommentEvent
 		if err := json.Unmarshal(payload, &ice); err != nil {
 			return err
 		}
 		go func() {
 			if err := tars.HandleIssueCommentEvent(l, s.ghc, &ice, config); err != nil {
+				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
+			}
+		}()
+	case tiexternalplugins.PushEvent:
+		var pe github.PushEvent
+		if err := json.Unmarshal(payload, &pe); err != nil {
+			return err
+		}
+		go func() {
+			if err := tars.HandlePushEvent(l, s.ghc, &pe, config); err != nil {
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()

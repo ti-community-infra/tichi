@@ -16,12 +16,15 @@ import (
 )
 
 type fakeGitHubClient struct {
-	pr        *github.PullRequest
-	requested []string
+	pr          *github.PullRequest
+	prChanges   []github.PullRequestChange
+	fileCommits map[string][]github.RepositoryCommit
+	requested   []string
 }
 
-func newFakeGitHubClient(pr *github.PullRequest) *fakeGitHubClient {
-	return &fakeGitHubClient{pr: pr}
+func newFakeGitHubClient(pr *github.PullRequest, prChanges []github.PullRequestChange,
+	fileCommits map[string][]github.RepositoryCommit) *fakeGitHubClient {
+	return &fakeGitHubClient{pr: pr, prChanges: prChanges, fileCommits: fileCommits}
 }
 
 func (c *fakeGitHubClient) RequestReview(org, repo string, number int, logins []string) error {
@@ -42,28 +45,6 @@ func (c *fakeGitHubClient) GetPullRequest(_, _ string, _ int) (*github.PullReque
 	return c.pr, nil
 }
 
-func (c *fakeGitHubClient) UnrequestReview(_, _ string, _ int, unRequestReviewerLogins []string) error {
-	var remainReviewers []string
-
-	for _, requestedReviewerLogin := range c.requested {
-		existed := false
-		for _, unRequestReviewerLogin := range unRequestReviewerLogins {
-			if requestedReviewerLogin == unRequestReviewerLogin {
-				existed = true
-				break
-			}
-		}
-
-		if !existed {
-			remainReviewers = append(remainReviewers, requestedReviewerLogin)
-		}
-	}
-
-	c.requested = remainReviewers
-
-	return nil
-}
-
 func (c *fakeGitHubClient) GetIssueLabels(_, _ string, _ int) ([]github.Label, error) {
 	return c.pr.Labels, nil
 }
@@ -73,6 +54,18 @@ func (c *fakeGitHubClient) AddLabel(_, _ string, _ int, labelName string) error 
 	label.Name = labelName
 	c.pr.Labels = append(c.pr.Labels, label)
 	return nil
+}
+
+func (c *fakeGitHubClient) GetPullRequestChanges(_, _ string, _ int) ([]github.PullRequestChange, error) {
+	return c.prChanges, nil
+}
+
+func (c *fakeGitHubClient) ListFileCommits(_, _, path string) ([]github.RepositoryCommit, error) {
+	commits, ok := c.fileCommits[path]
+	if ok {
+		return commits, nil
+	}
+	return nil, errors.New("can not get commits of the file path")
 }
 
 type fakeOwnersClient struct {
@@ -226,7 +219,21 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			},
 			Labels: mapLabelNameToLabel(tc.labels),
 		}
-		fc := newFakeGitHubClient(&pr)
+		prChanges := []github.PullRequestChange{
+			{
+				Filename: "test/file1",
+			},
+		}
+		fileCommits := map[string][]github.RepositoryCommit{
+			"test/file1": {
+				{
+					Author: github.User{
+						Login: "author",
+					},
+				},
+			},
+		}
+		fc := newFakeGitHubClient(&pr, prChanges, fileCommits)
 		e := &github.IssueCommentEvent{
 			Action: tc.action,
 			Issue: github.Issue{
@@ -297,8 +304,8 @@ func TestHandlePullRequest(t *testing.T) {
 			body:                "/auto-cc",
 			requireSigLabel:     false,
 			state:               "open",
-			maxReviewersCount:   2,
-			expectReviewerCount: 2,
+			maxReviewersCount:   1,
+			expectReviewerCount: 1,
 		},
 		{
 			name:                "PR opened in a repository that require SIG label",
@@ -356,8 +363,7 @@ func TestHandlePullRequest(t *testing.T) {
 			excludeReviewers: []string{
 				"collab2",
 			},
-
-			expectReviewerCount: 1,
+			expectReviewerCount: 2,
 		},
 		{
 			name:                "add new sig label for open PR",
@@ -387,6 +393,15 @@ func TestHandlePullRequest(t *testing.T) {
 			expectReviewerCount: 0,
 		},
 		{
+			name:                "add new sig label for open PR with /cc",
+			action:              github.PullRequestActionLabeled,
+			state:               "open",
+			body:                "/cc @hi-rustin",
+			label:               "sig/planner",
+			maxReviewersCount:   2,
+			expectReviewerCount: 0,
+		},
+		{
 			name:   "add new sig label for open PR contained pending reviewers",
 			action: github.PullRequestActionLabeled,
 			state:  "open",
@@ -397,7 +412,7 @@ func TestHandlePullRequest(t *testing.T) {
 				"admin1",
 			},
 			maxReviewersCount:   2,
-			expectReviewerCount: 2,
+			expectReviewerCount: 1,
 		},
 	}
 
@@ -409,7 +424,31 @@ func TestHandlePullRequest(t *testing.T) {
 		tc := testcase
 		t.Logf("Running scenario %q", tc.name)
 		pr := github.PullRequest{Number: 5, User: github.User{Login: "author"}, Body: tc.body}
-		fc := newFakeGitHubClient(&pr)
+		prChanges := []github.PullRequestChange{
+			{
+				Filename: "test/file1",
+			},
+		}
+		fileCommits := map[string][]github.RepositoryCommit{
+			"test/file1": {
+				{
+					Author: github.User{
+						Login: "author",
+					},
+				},
+				{
+					Author: github.User{
+						Login: "author",
+					},
+				},
+				{
+					Author: github.User{
+						Login: "collab2",
+					},
+				},
+			},
+		}
+		fc := newFakeGitHubClient(&pr, prChanges, fileCommits)
 		fc.requested = tc.requestedReviewers
 
 		// Mock the sleep function.
@@ -461,7 +500,7 @@ func TestHandlePullRequest(t *testing.T) {
 		}
 
 		foc := &fakeOwnersClient{
-			reviewers: []string{"collab1", "collab2"},
+			reviewers: []string{"collab1", "collab2", "collab3"},
 			needsLgtm: 2,
 		}
 
@@ -478,10 +517,12 @@ func TestHandlePullRequest(t *testing.T) {
 
 func TestGetReviewers(t *testing.T) {
 	var testcases = []struct {
-		name             string
-		author           string
-		reviewers        []string
-		excludeReviewers []string
+		name               string
+		author             string
+		reviewers          []string
+		includeReviewers   []string
+		excludeReviewers   []string
+		requestedReviewers []github.User
 
 		expectReviewers []string
 	}{
@@ -508,14 +549,56 @@ func TestGetReviewers(t *testing.T) {
 				"reviewers1", "reviewers3",
 			},
 		},
+		{
+			name:   "include reviewers",
+			author: "author",
+			reviewers: []string{
+				"author", "reviewers1", "reviewers2", "reviewers3",
+			},
+			includeReviewers: []string{
+				"reviewers2",
+			},
+			expectReviewers: []string{
+				"reviewers2",
+			},
+		},
+		{
+			name:   "include reviewers with no permissions reviewers",
+			author: "author",
+			reviewers: []string{
+				"author", "reviewers1", "reviewers2", "reviewers3",
+			},
+			includeReviewers: []string{
+				"reviewers2", "reviewers3", "reviewers4", "reviewers5",
+			},
+			expectReviewers: []string{
+				"reviewers2", "reviewers3",
+			},
+		},
+		{
+			name:   "requested reviewers",
+			author: "author",
+			reviewers: []string{
+				"author", "reviewers1", "reviewers2", "reviewers3",
+			},
+			requestedReviewers: []github.User{
+				{
+					Login: "reviewers2",
+				},
+			},
+			expectReviewers: []string{
+				"reviewers1", "reviewers3",
+			},
+		},
 	}
 
 	for _, tc := range testcases {
-		reviewers := getReviewers(tc.author, tc.reviewers, tc.excludeReviewers, logrus.WithField("plugin", PluginName))
+		reviewers := listAvailableReviewers(tc.author, tc.reviewers, tc.includeReviewers, tc.excludeReviewers,
+			tc.requestedReviewers).List()
 		sort.Strings(reviewers)
 		sort.Strings(tc.expectReviewers)
 		if !reflect.DeepEqual(reviewers, tc.expectReviewers) {
-			t.Errorf("[%s] expected the requested reviewers to be %q, but got %q.", tc.name, tc.excludeReviewers, reviewers)
+			t.Errorf("[%s] expected the requested reviewers to be %q, but got %q.", tc.name, tc.expectReviewers, reviewers)
 		}
 	}
 }
@@ -574,7 +657,7 @@ func TestHelpProvider(t *testing.T) {
 	}
 }
 
-func TestContainIssueLabels(t *testing.T) {
+func TestContainSigLabels(t *testing.T) {
 	testcases := []struct {
 		name        string
 		labelNames  []string

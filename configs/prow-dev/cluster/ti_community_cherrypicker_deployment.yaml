@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: prow
+  name: ti-community-cherrypicker
+  labels:
+    app: ti-community-cherrypicker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ti-community-cherrypicker
+  template:
+    metadata:
+      labels:
+        app: ti-community-cherrypicker
+    spec:
+      terminationGracePeriodSeconds: 180
+      containers:
+        - name: ti-community-cherrypicker
+          image: ticommunityinfra/tichi-cherrypicker-plugin:v1.7.2
+          imagePullPolicy: Always
+          args:
+            - --dry-run=false
+            - --github-token-path=/etc/github/token
+            - --github-endpoint=http://ghproxy
+            - --github-endpoint=https://api.github.com
+          ports:
+            - name: http
+              containerPort: 80
+          volumeMounts:
+            - name: hmac
+              mountPath: /etc/webhook
+              readOnly: true
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+            - name: external-plugins-config
+              mountPath: /etc/external_plugins_config
+              readOnly: true
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz/ready
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 3
+      volumes:
+        - name: hmac
+          secret:
+            secretName: hmac-token
+        - name: github-token
+          secret:
+            secretName: github-token
+        - name: external-plugins-config
+          configMap:
+            name: external-plugins-config

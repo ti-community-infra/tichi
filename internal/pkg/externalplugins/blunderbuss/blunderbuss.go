@@ -2,25 +2,32 @@ package blunderbuss
 
 import (
 	"fmt"
+	"math/rand"
 	"regexp"
 	"strings"
 	"time"
 
+	wr "github.com/mroth/weightedrand"
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
-	"k8s.io/test-infra/prow/pkg/layeredsets"
 	"k8s.io/test-infra/prow/pluginhelp"
+	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
 	"k8s.io/test-infra/prow/plugins"
 	"k8s.io/test-infra/prow/plugins/assign"
+
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
 const (
 	// PluginName defines this plugin's registered name.
 	PluginName = "ti-community-blunderbuss"
+	// defaultWeight specifies the default contribution weight.
+	defaultWeight = 1
+	// weightIncrement specifies the weight of the contribution added by each code change.
+	weightIncrement = 1
 )
 
 var (
@@ -32,14 +39,14 @@ var sleep = time.Sleep
 type githubClient interface {
 	RequestReview(org, repo string, number int, logins []string) error
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
-	UnrequestReview(org, repo string, number int, logins []string) error
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
+	GetPullRequestChanges(org, repo string, number int) ([]github.PullRequestChange, error)
+	ListFileCommits(org, repo, path string) ([]github.RepositoryCommit, error)
 }
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
-func HelpProvider(epa *externalplugins.ConfigAgent) func(
-	enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
 	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 		configInfo := map[string]string{}
 		cfg := epa.Config()
@@ -58,11 +65,12 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
 			}
 		}
-		yamlSnippet, err := plugins.CommentMap.GenYaml(&externalplugins.Configuration{
-			TiCommunityBlunderbuss: []externalplugins.TiCommunityBlunderbuss{
+		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
+			TiCommunityBlunderbuss: []tiexternalplugins.TiCommunityBlunderbuss{
 				{
 					Repos:              []string{"ti-community-infra/test-dev"},
 					MaxReviewerCount:   2,
+					IncludeReviewers:   []string{},
 					ExcludeReviewers:   []string{},
 					PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
 				},
@@ -72,9 +80,11 @@ func HelpProvider(epa *externalplugins.ConfigAgent) func(
 			logrus.WithError(err).Warnf("cannot generate comments for %s plugin", PluginName)
 		}
 		pluginHelp := &pluginhelp.PluginHelp{
-			Description: "The blunderbuss plugin automatically requests reviews from reviewers when a new PR is created.",
-			Config:      configInfo,
-			Snippet:     yamlSnippet,
+			Description: "The blunderbuss plugin automatically requests reviews from reviewers when a new PR is created or " +
+				"when a sig label is labeled.",
+			Config:  configInfo,
+			Snippet: yamlSnippet,
+			Events:  []string{tiexternalplugins.PullRequestEvent, tiexternalplugins.IssueCommentEvent},
 		}
 		pluginHelp.AddCommand(pluginhelp.Command{
 			Usage:       "/auto-cc",
@@ -96,19 +106,26 @@ func configString(maxReviewerCount int) string {
 		maxReviewerCount, pluralSuffix)
 }
 
-// HandleIssueCommentEvent handles a GitHub pull request event and requests review.
+// HandlePullRequestEvent handles a GitHub pull request event and requests review.
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
-	cfg *externalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
+	cfg *tiexternalplugins.Configuration, ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	pr := &pe.PullRequest
+	// If a PR already has reviewers, we do not automatically assign them.
+	if len(pr.RequestedReviewers) > 0 {
+		return nil
+	}
+
 	repo := &pe.Repo
 	opts := cfg.BlunderbussFor(repo.Owner.Login, repo.Name)
+	// If there is already /cc, the author has specified reviewers.
+	prBodyWithoutCcCommand := !assign.CCRegexp.MatchString(pr.Body)
 
 	isPrLabeledEvent := pe.Action == github.PullRequestActionLabeled
-	openPrWithSigLabel := pe.PullRequest.State == "open" && strings.Contains(pe.Label.Name, externalplugins.SigPrefix)
+	openPrWithSigLabel := pe.PullRequest.State == "open" && strings.Contains(pe.Label.Name, tiexternalplugins.SigPrefix)
 
-	// Only handle the event of assigning SIG label to the open PR.
-	if isPrLabeledEvent && openPrWithSigLabel {
-		return handlePullRequestLabeled(
+	// Only handle the event of add SIG label to the open PR.
+	if isPrLabeledEvent && openPrWithSigLabel && prBodyWithoutCcCommand {
+		return handle(
 			gc,
 			opts,
 			repo,
@@ -120,10 +137,9 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 
 	isPrOpenedEvent := pe.Action == github.PullRequestActionOpened
 	repoNonRequireSigLabel := !opts.RequireSigLabel
-	openPrWithoutCcCommand := !assign.CCRegexp.MatchString(pr.Body)
 
 	// Only handle the event of opening non-CC PR, when the require_sig_label option is not turned on.
-	if isPrOpenedEvent && repoNonRequireSigLabel && openPrWithoutCcCommand {
+	if isPrOpenedEvent && repoNonRequireSigLabel && prBodyWithoutCcCommand {
 		// Wait a few seconds to allow other automation plugin to apply labels (Mainly SIG label).
 		gracePeriod := time.Duration(opts.GracePeriodDuration) * time.Second
 		sleep(gracePeriod)
@@ -153,35 +169,8 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	return nil
 }
 
-// handlePullRequestLabeled handles the sig label labeled event.
-func handlePullRequestLabeled(gc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo *github.Repo,
-	pr *github.PullRequest, log *logrus.Entry, ol ownersclient.OwnersLoader) error {
-	// Cancel requesting all pending reviewers.
-	var reviewerLogins []string
-	for _, reviewer := range pr.RequestedReviewers {
-		reviewerLogins = append(reviewerLogins, reviewer.Login)
-	}
-
-	err := gc.UnrequestReview(repo.Owner.Login, repo.Name, pr.Number, reviewerLogins)
-
-	if err != nil {
-		log.WithError(err).Warn("Failed to cancel requesting reviewers of the SIG that the label specified.")
-	} else {
-		log.Infof("Cancel requesting reviews of users %s.", reviewerLogins)
-	}
-
-	return handle(
-		gc,
-		opts,
-		repo,
-		pr,
-		log,
-		ol,
-	)
-}
-
 // HandleIssueCommentEvent handles a GitHub issue comment event and requests review.
-func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg *externalplugins.Configuration,
+func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg *tiexternalplugins.Configuration,
 	ol ownersclient.OwnersLoader, log *logrus.Entry) error {
 	// Only consider open PRs and new comments.
 	if ce.Action != github.IssueCommentActionCreated || !ce.Issue.IsPullRequest() || ce.Issue.State == "closed" {
@@ -217,52 +206,124 @@ func HandleIssueCommentEvent(gc githubClient, ce *github.IssueCommentEvent, cfg 
 	)
 }
 
-func handle(ghc githubClient, opts *externalplugins.TiCommunityBlunderbuss, repo *github.Repo, pr *github.PullRequest,
+func handle(gc githubClient, opts *tiexternalplugins.TiCommunityBlunderbuss, repo *github.Repo, pr *github.PullRequest,
 	log *logrus.Entry, ol ownersclient.OwnersLoader) error {
 	owners, err := ol.LoadOwners(opts.PullOwnersEndpoint, repo.Owner.Login, repo.Name, pr.Number)
 	if err != nil {
-		return fmt.Errorf("error loading RepoOwners: %v", err)
+		return fmt.Errorf("error loading repo owners: %v", err)
 	}
 
-	reviewers := getReviewers(pr.User.Login, owners.Reviewers, opts.ExcludeReviewers, log)
+	// List all available reviewers.
+	availableReviewers := listAvailableReviewers(pr.User.Login, owners.Reviewers, opts.IncludeReviewers,
+		opts.ExcludeReviewers, pr.RequestedReviewers)
+
 	maxReviewerCount := opts.MaxReviewerCount
-
-	// If the maximum count of reviewers greater than 0, it needs to be split.
-	if maxReviewerCount > 0 && len(reviewers) > maxReviewerCount {
-		log.Infof("Limiting request of %d reviewers to %d maxReviewers.", len(reviewers), maxReviewerCount)
-		reviewers = reviewers[:maxReviewerCount]
+	// If maxReviewerCount is not set or there are not enough reviewers, then all reviewers are assigned.
+	if maxReviewerCount == 0 || len(availableReviewers) <= maxReviewerCount {
+		log.Infof("Requesting all available reviewers %s.", availableReviewers.List())
+		return gc.RequestReview(repo.Owner.Login, repo.Name, pr.Number, availableReviewers.List())
 	}
 
-	if len(reviewers) > 0 {
-		log.Infof("Requesting reviews from users %s.", reviewers)
-		return ghc.RequestReview(repo.Owner.Login, repo.Name, pr.Number, reviewers)
+	// Always seed random!
+	rand.Seed(time.Now().UTC().UnixNano())
+	// List the contributors of the changes.
+	contributors, err := listChangesContributors(gc, repo.Owner.Login, repo.Name, pr.Number, log)
+	if err != nil {
+		return err
 	}
-	return nil
+
+	// Filter out unavailable contributors.
+	for contributor := range contributors {
+		if !availableReviewers.Has(contributor) {
+			delete(contributors, contributor)
+		}
+	}
+
+	// The default weight for other reviewers is 1.
+	for _, reviewer := range availableReviewers.List() {
+		_, ok := contributors[reviewer]
+		if !ok {
+			contributors[reviewer] = defaultWeight
+		}
+	}
+	// Create weighted selectors chooser on the number of changes made to the code.
+	var choices []wr.Choice
+	for contributor, weight := range contributors {
+		choices = append(choices, wr.Choice{
+			Item:   contributor,
+			Weight: weight,
+		})
+	}
+	reviewers := sets.NewString()
+
+	chooser, err := wr.NewChooser(
+		choices...,
+	)
+	if err != nil {
+		return err
+	}
+	for len(reviewers) < maxReviewerCount {
+		// Rand pick.
+		reviewers.Insert(chooser.Pick().(string))
+	}
+
+	log.Infof("Requesting reviews from users %s.", reviewers.List())
+	return gc.RequestReview(repo.Owner.Login, repo.Name, pr.Number, reviewers.List())
 }
 
-func getReviewers(author string, reviewers []string, excludeReviewers []string, log *logrus.Entry) []string {
+func listAvailableReviewers(author string, reviewers []string, includeReviewers []string, excludeReviewers []string,
+	requestedReviewers []github.User) sets.String {
 	authorSet := sets.NewString(github.NormLogin(author))
+	includeReviewersSet := sets.NewString(includeReviewers...)
 	excludeReviewersSet := sets.NewString(excludeReviewers...)
+	requestedReviewersSet := sets.NewString()
+	for _, reviewer := range requestedReviewers {
+		requestedReviewersSet.Insert(reviewer.Login)
+	}
+
 	reviewersSet := sets.NewString()
 	reviewersSet.Insert(reviewers...)
 
-	var result []string
-	// Exclude the author.
-	availableReviewers := layeredsets.NewString(
-		reviewersSet.Difference(authorSet).Difference(excludeReviewersSet).List()...)
-
-	for availableReviewers.Len() > 0 {
-		reviewer := availableReviewers.PopRandom()
-		result = append(result, reviewer)
-		log.Infof("Added %s as reviewers. %d reviewers found.", reviewer, len(result))
+	if len(includeReviewers) != 0 {
+		nonReviewers := includeReviewersSet.Difference(reviewersSet)
+		includeReviewersSet = includeReviewersSet.Difference(nonReviewers)
+		return includeReviewersSet.Difference(authorSet).Difference(requestedReviewersSet)
 	}
 
-	return result
+	return reviewersSet.Difference(authorSet).Difference(excludeReviewersSet).Difference(requestedReviewersSet)
+}
+
+func listChangesContributors(gc githubClient, org string, repo string, num int,
+	log *logrus.Entry) (map[string]uint, error) {
+	changes, err := gc.GetPullRequestChanges(org, repo, num)
+	if err != nil {
+		return nil, fmt.Errorf("error get pull request changes: %v", err)
+	}
+
+	contributors := make(map[string]uint)
+	for _, change := range changes {
+		commits, err := gc.ListFileCommits(org, repo, change.Filename)
+		if err != nil {
+			log.WithError(err).Warnf("Failed list file commits of %s.", change.Filename)
+		}
+
+		for _, commit := range commits {
+			contributor := commit.Author.Login
+			weight, ok := contributors[contributor]
+			if ok {
+				contributors[contributor] = weight + weightIncrement
+			} else {
+				contributors[contributor] = defaultWeight
+			}
+		}
+	}
+
+	return contributors, nil
 }
 
 func containSigLabel(labels []github.Label) bool {
 	for _, label := range labels {
-		if strings.HasPrefix(label.Name, externalplugins.SigPrefix) {
+		if strings.HasPrefix(label.Name, tiexternalplugins.SigPrefix) {
 			return true
 		}
 	}

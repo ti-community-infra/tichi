@@ -6,21 +6,21 @@
 
 ## 设计思路
 
-实现该工具不仅要考虑到我们需要新建 label，而且要考虑到旧的 label 可能需要迁移维护等情况。所以 Kubernetes 社区在定义 label 时新增了一些字段来处理这些情况：
+实现该工具不仅要考虑到我们需要新建 label，而且要考虑到旧的 label 可能需要迁移维护的情况。所以 Kubernetes 社区在定义 label 时新增了一些字段来处理这些情况：
 
 | 参数名           | 类型       | 说明                              |
 | ---------------- | ---------- | --------------------------------- |
 | name             | string     | label 的名称                      |
 | color            | string     | label 的颜色                      |
 | description      | string     | label 的描述                      |
-| target           | string     | label 的生效目标：prs/issues/both |
+| target           | string     | label 的作用目标：prs/issues/both |
 | prowPlugin       | string     | 哪一个 prow plugin 添加这个 label |
 | isExternalPlugin | bool       | 是否为外部插件添加                |
 | addedBy          | string     | 谁可以添加                        |
 | previously       | []Label    | 迁移之前旧的 labels               |
-| deleteAfter      | *time.Time | label 多久以后删除                |
+| deleteAfter      | *time.Time | 多久之后删除 label                |
 
-通过对 label 的一些扩展，我们定义清楚了这些 label 的基本信息并且能够灵活的迁移维护 label。
+通过对 label 的一些扩展，我们定义清楚了这些 label 的基本信息并且能够灵活的迁移维护所有的 label。
 
 例如：
 
@@ -38,7 +38,7 @@
 例如：
 
 ```yaml
-default: # default 将这些标签应用给所有的 repos
+default: # 将这些 default 标签应用给所有的 repos
   labels:
     - name: priority/P0
       color: red
@@ -85,4 +85,4 @@ repos: # 针对每个 repo 进行单独配置
 
 ### 这些 label 什么时候更新？
 
-目前为一个[定时任务](https://github.com/ti-community-infra/configs/blob/main/prow/cluster/label_sync.yaml)，每小时的第 17 分钟尝试更新。
+每次更新 [labels 文件](https://github.com/ti-community-infra/configs/blob/main/prow/config/labels.yaml) 之后会触发 [Prow Job](https://github.com/ti-community-infra/configs/blob/fa8e01168a1734a3e372c8e552aef27c102c8f60/prow/jobs/ti-community-infra/configs/configs-postsubmits.yaml#L61) 进行更新。

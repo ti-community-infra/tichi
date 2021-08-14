@@ -4,18 +4,18 @@
 
 设计 owners 主要是为 ti-community-lgtm 和 ti-community-merge 服务，在 Kubernetes 社区中，他们使用 [OWNERS](https://github.com/kubernetes/test-infra/blob/master/OWNERS) 文件定义权限，在该文件中指定了当前目录及子目录的 reviewers 和 approvers。但是目前 TiDB 社区已经依赖于社区先前的 [Bot](https://github.com/pingcap-incubator/cherry-bot) 运行了很长一段时间。大家在先前的 Bot 的使用过程中摸索出了一套协作机制。如果直接采用 Kubernetes 社区的机制会带来非常高的学习成本，水土不服。
 
-所以决定研发一个适合当前 TiDB 社区协作模式的权限控制服务，基于目前 TiDB 社区的 [sig](https://github.com/pingcap/community) 架构定义了每个 PR 的权限。
+所以我们决定研发一个适合当前 TiDB 社区协作模式的权限控制服务，基于目前 TiDB 社区的 [SIG](https://github.com/pingcap/community) 架构来定义每个 PR 的权限。
 
 ## 权限设计
 
-基于目前 TiDB 的 sig 的设计，将权限划分如下：
+基于目前 TiDB 的 SIG 的设计，将权限划分如下：
 
-- committers（**可以使用 /merge 命令**）
+- committers（**可以合并 PR**）
   - maintainers
   - techLeaders
   - coLeaders
   - committers
-- reviewers (**可以使用 /lgtm 命令**)
+- reviewers (**可以赞同 PR**)
   - maintainers
   - techLeaders
   - coLeaders
@@ -30,34 +30,41 @@
 
 接口路径：`/repos/:org/:repo/pulls/:number/owners`
 
-因为要基于 sig 来划分权限，所以要求这些 PR 中能够获取到当前 PR 所属的 sig。owners 会在当前 PR 中查找以 `sig/` 开头的标签，然后查找该 sig 的信息。最终根据获取到的 sig 的信息生成 owners。
+因为要基于 SIG 来划分权限，所以要求这些 PR 中能够获取到当前 PR 所属的 SIG。owners 会在当前 PR 中查找以 `sig/` 开头的标签，然后查找该 SIG 的信息。最终根据获取到的 SIG 的信息生成 owners。
 
-但是可能确实存在一些特殊情况找不到对应的sig：
-- 一些模块暂时未划分清楚 sig：使用 TiDB 社区所有 sig 的 reviewers 和 committers
-- 一些小型仓库直接隶属于某个 sig: 支持为该仓库配置默认的 sig
+但是确实存在一些特殊情况找不到对应的 SIG：
+- 一些模块暂时未划分清楚 SIG 所属：使用 TiDB 社区所有 SIG 的 reviewers 和 committers
+- 一些小型仓库直接隶属于某个 SIG: 支持为该仓库配置默认的 SIG
+- 一些仓库的 PR 跟 SIG 无关：支持使用仓库的 [GitHub 权限](https://docs.github.com/en/organizations/managing-access-to-your-organizations-repositories/repository-permission-levels-for-an-organization)
+  - committers（**可以合并 PR**）
+    - Admin 权限
+    - Maintain 权限
+    - Write 权限
+  - reviewers (**可以赞同 PR**)
+    - Triage 权限
 
-这样基本上就能够实现该服务。
-
-注：因为 maintainers 没有隶属于任何一个 sig，所以会通过一个配置项来直接从 GitHub team 获取。
+注：因为 maintainers 没有隶属于任何一个 SIG，所以会通过一个配置项来直接从 GitHub team 获取。
 
 ## 参数配置
 
 | 参数名                    | 类型                    | 说明                                                                       |
 | ------------------------- | ----------------------- | -------------------------------------------------------------------------- |
 | repos                     | []string                | 配置生效仓库                                                               |
-| sig_endpoint              | string                  | 获取 sig 信息 RESTFUL 接口地址                                             |
-| default_sig_name          | string                  | 为该仓库设置默认 sig 名字                                                  |
+| sig_endpoint              | string                  | 获取 SIG 信息的 RESTFUL 接口地址                                           |
+| default_sig_name          | string                  | 为该仓库设置默认的 SIG                                                     |
 | default_require_lgtm      | int                     | 为该仓库设置默认需要的 lgtm 个数                                           |
 | require_lgtm_label_prefix | string                  | 插件支持通过标签指定当前 PR 需要的 lgtm 个数，该选项用于设置相关标签的前缀 |
 | trusted_teams             | []string                | 信任的 GitHub team 名称列表（一般为 maintainers team）                     |
+| use_github_permission     | bool                    | 使用 GitHub 权限                                                           |
 | branches                  | map[string]BranchConfig | 分支粒度的参数配置, map结构的key是分支名称，对分支的配置会覆盖对仓库的配置 |
 
 ### BranchConfig
 
-| 参数名               | 类型     | 说明                             |
-| -------------------- | -------- | -------------------------------- |
-| default_require_lgtm | int      | 为该分支设置默认需要的 lgtm 个数 |
-| trusted_teams        | []string | 为该分支设置信任的 GitHub team   |
+| 参数名                | 类型     | 说明                             |
+| --------------------- | -------- | -------------------------------- |
+| default_require_lgtm  | int      | 为该分支设置默认需要的 lgtm 个数 |
+| trusted_teams         | []string | 为该分支设置信任的 GitHub team   |
+| use_github_permission | bool     | 使用 GitHub 权限                 |
 
 例如：
 
@@ -78,6 +85,7 @@ ti-community-owners:
         default_require_lgtm: 2
         trusted_teams:
           - bots-maintainers
+        use_github_permission: true
 ```
 
 ## Q&A

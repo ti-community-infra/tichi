@@ -12,6 +12,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/merge"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
 	"k8s.io/test-infra/pkg/flagutil"
@@ -69,26 +70,25 @@ func main() {
 		logrus.Fatalf("Invalid options: %v", err)
 	}
 
-	logrus.SetFormatter(&logrus.JSONFormatter{})
-	// TODO: Use global option from the prow config.
-	logrus.SetLevel(logrus.InfoLevel)
 	log := logrus.StandardLogger().WithField("plugin", merge.PluginName)
-
-	secretAgent := &secret.Agent{}
-	if err := secretAgent.Start([]string{o.github.TokenPath, o.webhookSecretFile}); err != nil {
-		logrus.WithError(err).Fatal("Error starting secrets agent.")
-	}
 
 	epa := &tiexternalplugins.ConfigAgent{}
 	if err := epa.Start(o.externalPluginsConfig, false); err != nil {
 		log.WithError(err).Fatalf("Error loading external plugin config from %q.", o.externalPluginsConfig)
 	}
 
+	secretAgent := &secret.Agent{}
+	if err := secretAgent.Start([]string{o.github.TokenPath, o.webhookSecretFile}); err != nil {
+		logrus.WithError(err).Fatal("Error starting secrets agent.")
+	}
+
 	githubClient, err := o.github.GitHubClient(secretAgent, o.dryRun)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting GitHub client.")
 	}
-	githubClient.Throttle(360, 360)
+	// NOTICE: This error is only possible when using the GitHub APP,
+	// but if we use the APP auth later we will have to handle the err.
+	_ = githubClient.Throttle(360, 360)
 
 	// Skip https verify.
 	//nolint:gosec
@@ -153,7 +153,7 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 	// Get external plugins config.
 	config := s.configAgent.Config()
 	switch eventType {
-	case "issue_comment":
+	case tiexternalplugins.IssueCommentEvent:
 		var ice github.IssueCommentEvent
 		if err := json.Unmarshal(payload, &ice); err != nil {
 			return err
@@ -168,7 +168,7 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
-	case "pull_request_review_comment":
+	case tiexternalplugins.PullRequestReviewCommentEvent:
 		var pullReviewCommentEvent github.ReviewCommentEvent
 		if err := json.Unmarshal(payload, &pullReviewCommentEvent); err != nil {
 			return err
@@ -183,7 +183,7 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
-	case "pull_request":
+	case tiexternalplugins.PullRequestEvent:
 		var pe github.PullRequestEvent
 		if err := json.Unmarshal(payload, &pe); err != nil {
 			return err
