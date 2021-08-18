@@ -48,23 +48,27 @@ Note: Because maintainers are not attached to any SIG, they will be fetched dire
 ## Parameter Configuration 
 
 | Parameter Name            | Type                    | Description                                                                                                                                                          |
-| ------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|---------------------------|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | repos                     | []string                | Repositories                                                                                                                                                         |
 | sig_endpoint              | string                  | Address of the RESTFUL API for obtaining SIG information                                                                                                             |
 | default_sig_name          | string                  | Set the default SIG for this repository                                                                                                                              |
 | default_require_lgtm      | int                     | Set the default number of lgtm required for this repository                                                                                                          |
 | require_lgtm_label_prefix | string                  | The plugin supports specifying the number of lgtm required for the current PR by label, and this option is used to set the prefix of the relevant label              |
 | trusted_teams             | []string                | List of trusted GitHub team names (generally maintainers team)                                                                                                       |
+| committer_teams           | []string                | Specify a list of GitHub Team names whose members can serve as Committers                                                                                            |
+| reviewer_teams            | []string                | Specify a list of GitHub Team names whose members can serve as Reviewers                                                                                             |
 | use_github_permission     | bool                    | Use GitHub permissions                                                                                                                                               |
 | branches                  | map[string]BranchConfig | Branch granularity parameters configuration, map structure key is the branch name, the configuration of the branch will override the configuration of the repository |
 
 ### BranchConfig
 
-| Parameter Name        | Type     | Description                                            |
-| --------------------- | -------- | ------------------------------------------------------ |
-| default_require_lgtm  | int      | Set the default number of lgtm required for the branch |
-| trusted_teams         | []string | Set up a trusted GitHub team for the branch            |
-| use_github_permission | bool     | Use GitHub permissions                                 |
+| Parameter Name        | Type     | Description                                                                             |
+|-----------------------|----------|-----------------------------------------------------------------------------------------|
+| default_require_lgtm  | int      | Set the default number of lgtm required for the branch                                  |
+| trusted_teams         | []string | Set up a trusted GitHub team for the branch                                             |
+| committer_teams       | []string | Set up a list of GitHub Team names for the branch whose members can serve as Committers |
+| reviewer_teams        | []string | Set up a list of GitHub Team names for the branch whose members can serve as Reviewers  |
+| use_github_permission | bool     | Use GitHub permissions                                                                  |
 
 For example:
 
@@ -79,12 +83,19 @@ ti-community-owners:
     require_lgtm_label_prefix: require/LGT
     trusted_teams:
       - bots-maintainers
+    committer_teams:
+      - bots-committers
+    reviewer_teams:
       - bots-reviewers
     branches:
       release:
         default_require_lgtm: 2
         trusted_teams:
           - bots-maintainers
+        committer_teams:
+          - bots-committers
+        reviewer_teams:
+          - bots-reviewers
         use_github_permission: true
 ```
 
