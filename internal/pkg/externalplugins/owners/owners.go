@@ -181,9 +181,11 @@ func (s *Server) listOwnersByAllSigs(opts *tiexternalplugins.TiCommunityOwners,
 
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
-			Committers: sets.NewString(committers...).Insert(trustTeamMembers...).Insert(committerTeamMembers...).List(),
-			Reviewers:  sets.NewString(reviewers...).Insert(trustTeamMembers...).Insert(reviewerTeamMembers...).List(),
-			NeedsLgtm:  requireLgtm,
+			Committers: sets.NewString(committers...).Insert(trustTeamMembers...).
+				Insert(committerTeamMembers...).List(),
+			Reviewers: sets.NewString(reviewers...).Insert(trustTeamMembers...).
+				Insert(committerTeamMembers...).Insert(reviewerTeamMembers...).List(),
+			NeedsLgtm: requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
 	}, nil
@@ -256,9 +258,11 @@ func (s *Server) listOwnersBySigs(sigNames []string, opts *tiexternalplugins.TiC
 
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
-			Committers: sets.NewString(committers...).Insert(trustTeamMembers...).Insert(committerTeamMembers...).List(),
-			Reviewers:  sets.NewString(reviewers...).Insert(trustTeamMembers...).Insert(reviewerTeamMembers...).List(),
-			NeedsLgtm:  requireLgtm,
+			Committers: sets.NewString(committers...).Insert(trustTeamMembers...).
+				Insert(committerTeamMembers...).List(),
+			Reviewers: sets.NewString(reviewers...).Insert(trustTeamMembers...).
+				Insert(committerTeamMembers...).Insert(reviewerTeamMembers...).List(),
+			NeedsLgtm: requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
 	}, nil
@@ -285,8 +289,10 @@ func (s *Server) listOwnersByGitHubPermission(org string, repo string,
 			committersLogin = append(committersLogin, login)
 		}
 	}
-	committers := sets.NewString(committersLogin...).Insert(trustTeamMembers...).Insert(committerTeamMembers...).List()
-	reviewers := sets.NewString(reviewersLogin...).Insert(trustTeamMembers...).Insert(reviewerTeamMembers...).List()
+	committers := sets.NewString(committersLogin...).Insert(trustTeamMembers...).
+		Insert(committerTeamMembers...).List()
+	reviewers := sets.NewString(reviewersLogin...).Insert(trustTeamMembers...).
+		Insert(committerTeamMembers...).Insert(reviewerTeamMembers...).List()
 
 	if requireLgtm == 0 {
 		requireLgtm = defaultRequireLgtmNum
