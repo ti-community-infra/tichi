@@ -57,6 +57,14 @@ func (f *fakegithub) ListTeams(org string) ([]github.Team, error) {
 			ID:   60,
 			Name: "Releasers",
 		},
+		{
+			ID:   70,
+			Name: "Reviewers",
+		},
+		{
+			ID:   80,
+			Name: "Committers",
+		},
 	}, nil
 }
 
@@ -78,6 +86,14 @@ func (f *fakegithub) ListTeamMembers(_ string, teamID int, role string) ([]githu
 			{Login: "admin1"},
 			{Login: "releaser1"},
 			{Login: "releaser2"},
+		},
+		70: {
+			{Login: "reviewer1"},
+			{Login: "reviewer2"},
+		},
+		80: {
+			{Login: "committer1"},
+			{Login: "committer2"},
 		},
 	}
 	members, ok := teams[teamID]
@@ -252,6 +268,9 @@ func TestListOwners(t *testing.T) {
 		labels                 []github.Label
 		defaultSigName         string
 		trustTeams             []string
+		useGitHubTeams         bool
+		reviewerTeams          []string
+		committerTeams         []string
 		defaultRequireLgtm     int
 		requireLgtmLabelPrefix string
 		useGitHubPermission    bool
@@ -608,6 +627,19 @@ func TestListOwners(t *testing.T) {
 			},
 			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
+		{
+			name:           "use github teams to obtain reviewers and committers",
+			useGitHubTeams: true,
+			reviewerTeams:  []string{"Reviewers"},
+			committerTeams: []string{"Committers"},
+			expectCommitters: []string{
+				"committer1", "committer2",
+			},
+			expectReviewers: []string{
+				"committer1", "committer2", "reviewer1", "reviewer2",
+			},
+			expectNeedsLgtm: defaultRequireLgtmNum,
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -631,6 +663,16 @@ func TestListOwners(t *testing.T) {
 
 			if tc.trustTeams != nil {
 				repoConfig.TrustTeams = tc.trustTeams
+			}
+
+			repoConfig.UseGitHubTeams = tc.useGitHubTeams
+
+			if tc.reviewerTeams != nil {
+				repoConfig.ReviewerTeams = tc.reviewerTeams
+			}
+
+			if tc.committerTeams != nil {
+				repoConfig.CommitterTeams = tc.committerTeams
 			}
 
 			if len(tc.requireLgtmLabelPrefix) != 0 {

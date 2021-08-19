@@ -47,28 +47,30 @@
 
 ## 参数配置
 
-| 参数名                    | 类型                    | 说明                                                                       |
-|---------------------------|-------------------------|----------------------------------------------------------------------------|
-| repos                     | []string                | 配置生效仓库                                                               |
-| sig_endpoint              | string                  | 获取 SIG 信息的 RESTFUL 接口地址                                           |
-| default_sig_name          | string                  | 为该仓库设置默认的 SIG                                                     |
-| default_require_lgtm      | int                     | 为该仓库设置默认需要的 lgtm 个数                                           |
-| require_lgtm_label_prefix | string                  | 插件支持通过标签指定当前 PR 需要的 lgtm 个数，该选项用于设置相关标签的前缀 |
-| trusted_teams             | []string                | 信任的 GitHub team 名称列表（一般为 maintainers team）                     |
-| committer_teams           | []string                | 指定其成员可以作为 Committer 的 GitHub Team 名称列表                       |
-| reviewer_teams            | []string                | 指定其成员可以作为 Reviewer 的 GitHub Team 名称列表                        |
-| use_github_permission     | bool                    | 使用 GitHub 权限                                                           |
-| branches                  | map[string]BranchConfig | 分支粒度的参数配置, map结构的key是分支名称，对分支的配置会覆盖对仓库的配置 |
+| 参数名                     | 类型                    | 说明                                                                       |
+|----------------------------|-------------------------|----------------------------------------------------------------------------|
+| repos                      | []string                | 配置生效仓库                                                               |
+| sig_endpoint               | string                  | 获取 SIG 信息的 RESTFUL 接口地址                                           |
+| default_sig_name           | string                  | 为该仓库设置默认的 SIG                                                     |
+| default_require_lgtm       | int                     | 为该仓库设置默认需要的 lgtm 个数                                           |
+| require_lgtm_label_prefix  | string                  | 插件支持通过标签指定当前 PR 需要的 lgtm 个数，该选项用于设置相关标签的前缀 |
+| trusted_teams (deprecated) | []string                | 信任的 GitHub team 名称列表（一般为 maintainers team）                     |
+| use_github_teams           | bool                    | 通过 GitHub Teams 来获取 Committers 和 Reviewers 列表                      |
+| committer_teams            | []string                | 指定其成员可以作为 Committer 的 GitHub Team 名称列表                       |
+| reviewer_teams             | []string                | 指定其成员可以作为 Reviewer 的 GitHub Team 名称列表                        |
+| use_github_permission      | bool                    | 使用 GitHub 权限                                                           |
+| branches                   | map[string]BranchConfig | 分支粒度的参数配置, map结构的key是分支名称，对分支的配置会覆盖对仓库的配置 |
 
 ### BranchConfig
 
-| 参数名                | 类型     | 说明                                                         |
-|-----------------------|----------|--------------------------------------------------------------|
-| default_require_lgtm  | int      | 为该分支设置默认需要的 lgtm 个数                             |
-| trusted_teams         | []string | 为该分支设置信任的 GitHub team                               |
-| committer_teams       | []string | 为该分支设置其成员可以作为 Committer 的 GitHub Team 名称列表 |
-| reviewer_teams        | []string | 为该分支设置其成员可以作为 Reviewer 的 GitHub Team 名称列表  |
-| use_github_permission | bool     | 使用 GitHub 权限                                             |
+| 参数名                     | 类型     | 说明                                                         |
+|----------------------------|----------|--------------------------------------------------------------|
+| default_require_lgtm       | int      | 为该分支设置默认需要的 lgtm 个数                             |
+| trusted_teams (deprecated) | []string | 为该分支设置信任的 GitHub team                               |
+| use_github_teams           | bool     | 通过 GitHub Teams 来获取 Committers 和 Reviewers 列表        |
+| committer_teams            | []string | 为该分支设置其成员可以作为 Committer 的 GitHub Team 名称列表 |
+| reviewer_teams             | []string | 为该分支设置其成员可以作为 Reviewer 的 GitHub Team 名称列表  |
+| use_github_permission      | bool     | 使用 GitHub 权限                                             |
 
 例如：
 
@@ -81,8 +83,7 @@ ti-community-owners:
       - ti-community-infra/ti-challenge-bot
     sig_endpoint: https://bots.tidb.io/ti-community-bot
     require_lgtm_label_prefix: require/LGT
-    trusted_teams:
-      - bots-maintainers
+    use_github_teams: true
     committer_teams:
       - bots-committers
     reviewer_teams:
@@ -90,12 +91,6 @@ ti-community-owners:
     branches:
       release:
         default_require_lgtm: 2
-        trusted_teams:
-          - bots-maintainers
-        committer_teams:
-          - bots-committers
-        reviewer_teams:
-          - bots-reviewers
         use_github_permission: true
 ```
 

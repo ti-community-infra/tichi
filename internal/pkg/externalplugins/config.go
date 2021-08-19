@@ -95,6 +95,8 @@ type TiCommunityOwners struct {
 	//
 	// TrustTeams specifies the GitHub teams whose members are trusted.
 	TrustTeams []string `json:"trusted_teams,omitempty"`
+	// UseGitHubTeams specifies whether to obtain reviewers and committers list through GitHub teams.
+	UseGitHubTeams bool `json:"use_github_teams,omitempty"`
 	// ReviewerTeams specifies the GitHub teams whose members can review pull request.
 	ReviewerTeams []string `json:"reviewer_teams,omitempty"`
 	// CommitterTeams specifies the GitHub teams whose members can merge pull request.
@@ -113,6 +115,8 @@ type TiCommunityOwnerBranchConfig struct {
 	DefaultRequireLgtm int `json:"default_require_lgtm,omitempty"`
 	// TrustTeams specifies the GitHub teams whose members are trusted by the branch.
 	TrustTeams []string `json:"trusted_teams,omitempty"`
+	// UseGitHubTeams specifies whether to obtain reviewers and committers list through GitHub teams.
+	UseGitHubTeams bool `json:"use_github_teams,omitempty"`
 	// ReviewerTeams specifies the GitHub teams whose members can review pull request.
 	ReviewerTeams []string `json:"reviewer_teams,omitempty"`
 	// CommitterTeams specifies the GitHub teams whose members can merge pull request.

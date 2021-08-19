@@ -54,7 +54,8 @@ Note: Because maintainers are not attached to any SIG, they will be fetched dire
 | default_sig_name          | string                  | Set the default SIG for this repository                                                                                                                              |
 | default_require_lgtm      | int                     | Set the default number of lgtm required for this repository                                                                                                          |
 | require_lgtm_label_prefix | string                  | The plugin supports specifying the number of lgtm required for the current PR by label, and this option is used to set the prefix of the relevant label              |
-| trusted_teams             | []string                | List of trusted GitHub team names (generally maintainers team)                                                                                                       |
+| trusted_teams (deprecated)| []string                | List of trusted GitHub team names (generally maintainers team)                                                                                                       |
+| use_github_teams          | bool                    | Get a list of Committers and Reviewers through GitHub Teams                                                                                                          |
 | committer_teams           | []string                | Specify a list of GitHub Team names whose members can serve as Committers                                                                                            |
 | reviewer_teams            | []string                | Specify a list of GitHub Team names whose members can serve as Reviewers                                                                                             |
 | use_github_permission     | bool                    | Use GitHub permissions                                                                                                                                               |
@@ -62,13 +63,14 @@ Note: Because maintainers are not attached to any SIG, they will be fetched dire
 
 ### BranchConfig
 
-| Parameter Name        | Type     | Description                                                                             |
-|-----------------------|----------|-----------------------------------------------------------------------------------------|
-| default_require_lgtm  | int      | Set the default number of lgtm required for the branch                                  |
-| trusted_teams         | []string | Set up a trusted GitHub team for the branch                                             |
-| committer_teams       | []string | Set up a list of GitHub Team names for the branch whose members can serve as Committers |
-| reviewer_teams        | []string | Set up a list of GitHub Team names for the branch whose members can serve as Reviewers  |
-| use_github_permission | bool     | Use GitHub permissions                                                                  |
+| Parameter Name              | Type     | Description                                                                             |
+|-----------------------------|----------|-----------------------------------------------------------------------------------------|
+| default_require_lgtm        | int      | Set the default number of lgtm required for the branch                                  |
+| trusted_teams  (deprecated) | []string | Set up a trusted GitHub team for the branch                                             |
+| use_github_teams            | bool     | Get a list of Committers and Reviewers through GitHub Teams                             |
+| committer_teams             | []string | Set up a list of GitHub Team names for the branch whose members can serve as Committers |
+| reviewer_teams              | []string | Set up a list of GitHub Team names for the branch whose members can serve as Reviewers  |
+| use_github_permission       | bool     | Use GitHub permissions                                                                  |
 
 For example:
 
@@ -81,8 +83,7 @@ ti-community-owners:
       - ti-community-infra/ti-challenge-bot
     sig_endpoint: https://bots.tidb.io/ti-community-bot
     require_lgtm_label_prefix: require/LGT
-    trusted_teams:
-      - bots-maintainers
+    use_github_teams: true
     committer_teams:
       - bots-committers
     reviewer_teams:
@@ -90,12 +91,6 @@ ti-community-owners:
     branches:
       release:
         default_require_lgtm: 2
-        trusted_teams:
-          - bots-maintainers
-        committer_teams:
-          - bots-committers
-        reviewer_teams:
-          - bots-reviewers
         use_github_permission: true
 ```
 

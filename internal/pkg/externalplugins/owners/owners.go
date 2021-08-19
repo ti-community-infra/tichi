@@ -128,8 +128,7 @@ type Server struct {
 }
 
 func (s *Server) listOwnersByAllSigs(opts *tiexternalplugins.TiCommunityOwners,
-	trustTeamMembers []string, reviewerTeamMembers []string, committerTeamMembers []string,
-	requireLgtm int) (*ownersclient.OwnersResponse, error) {
+	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	var committers []string
 	var reviewers []string
 
@@ -181,19 +180,16 @@ func (s *Server) listOwnersByAllSigs(opts *tiexternalplugins.TiCommunityOwners,
 
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
-			Committers: sets.NewString(committers...).Insert(trustTeamMembers...).
-				Insert(committerTeamMembers...).List(),
-			Reviewers: sets.NewString(reviewers...).Insert(trustTeamMembers...).
-				Insert(committerTeamMembers...).Insert(reviewerTeamMembers...).List(),
-			NeedsLgtm: requireLgtm,
+			Committers: sets.NewString(committers...).Insert(trustTeamMembers...).List(),
+			Reviewers:  sets.NewString(reviewers...).Insert(trustTeamMembers...).List(),
+			NeedsLgtm:  requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
 	}, nil
 }
 
 func (s *Server) listOwnersBySigs(sigNames []string, opts *tiexternalplugins.TiCommunityOwners,
-	trustTeamMembers []string, reviewerTeamMembers []string, committerTeamMembers []string,
-	requireLgtm int) (*ownersclient.OwnersResponse, error) {
+	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	var committers []string
 	var reviewers []string
 	var maxNeedsLgtm int
@@ -258,19 +254,16 @@ func (s *Server) listOwnersBySigs(sigNames []string, opts *tiexternalplugins.TiC
 
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
-			Committers: sets.NewString(committers...).Insert(trustTeamMembers...).
-				Insert(committerTeamMembers...).List(),
-			Reviewers: sets.NewString(reviewers...).Insert(trustTeamMembers...).
-				Insert(committerTeamMembers...).Insert(reviewerTeamMembers...).List(),
-			NeedsLgtm: requireLgtm,
+			Committers: sets.NewString(committers...).Insert(trustTeamMembers...).List(),
+			Reviewers:  sets.NewString(reviewers...).Insert(trustTeamMembers...).List(),
+			NeedsLgtm:  requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
 	}, nil
 }
 
 func (s *Server) listOwnersByGitHubPermission(org string, repo string,
-	trustTeamMembers []string, reviewerTeamMembers []string, committerTeamMembers []string,
-	requireLgtm int) (*ownersclient.OwnersResponse, error) {
+	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	collaborators, err := listCollaborators(context.Background(), s.Log, s.Gc, org, repo)
 	if err != nil {
 		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed to list collaborators.")
@@ -289,10 +282,31 @@ func (s *Server) listOwnersByGitHubPermission(org string, repo string,
 			committersLogin = append(committersLogin, login)
 		}
 	}
-	committers := sets.NewString(committersLogin...).Insert(trustTeamMembers...).
-		Insert(committerTeamMembers...).List()
-	reviewers := sets.NewString(reviewersLogin...).Insert(trustTeamMembers...).
-		Insert(committerTeamMembers...).Insert(reviewerTeamMembers...).List()
+	committers := sets.NewString(committersLogin...).Insert(trustTeamMembers...).List()
+	reviewers := sets.NewString(reviewersLogin...).Insert(trustTeamMembers...).List()
+
+	if requireLgtm == 0 {
+		requireLgtm = defaultRequireLgtmNum
+	}
+
+	return &ownersclient.OwnersResponse{
+		Data: ownersclient.Owners{
+			Committers: committers,
+			Reviewers:  reviewers,
+			NeedsLgtm:  requireLgtm,
+		},
+		Message: listOwnersSuccessMessage,
+	}, nil
+}
+
+func (s *Server) listOwnersByGitHubTeams(reviewerTeamMembers []string,
+	committerTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
+	var committersLogin []string
+	var reviewersLogin []string
+
+	committers := sets.NewString(committersLogin...).Insert(committerTeamMembers...).List()
+	reviewers := sets.NewString(reviewersLogin...).Insert(committerTeamMembers...).
+		Insert(reviewerTeamMembers...).List()
 
 	if requireLgtm == 0 {
 		requireLgtm = defaultRequireLgtmNum
@@ -343,8 +357,6 @@ func (s *Server) ListOwners(org string, repo string, number int,
 
 	// Notice: If the branch of the PR has extra trusted teams config, it will override the repository config.
 	var trustTeams []string
-	var reviewerTeams []string
-	var committerTeams []string
 
 	// Notice: If the configuration of the trust team gives an empty slice (not nil slice), the plugin
 	// will consider that the branch does not trust any team.
@@ -354,35 +366,11 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		trustTeams = opts.TrustTeams
 	}
 
-	if hasBranchConfig && branchConfig.ReviewerTeams != nil {
-		reviewerTeams = branchConfig.ReviewerTeams
-	} else {
-		reviewerTeams = opts.ReviewerTeams
-	}
-
-	if hasBranchConfig && branchConfig.CommitterTeams != nil {
-		committerTeams = branchConfig.CommitterTeams
-	} else {
-		committerTeams = opts.CommitterTeams
-	}
-
 	// Avoid duplication when one user exists in multiple teams.
 	trustTeamMembers := sets.String{}
 	for _, trustTeam := range trustTeams {
 		members := getTeamMembers(s.Log, s.Gc, org, trustTeam)
 		trustTeamMembers.Insert(members...)
-	}
-
-	reviewerTeamMembers := sets.String{}
-	for _, reviewerTeam := range reviewerTeams {
-		members := getTeamMembers(s.Log, s.Gc, org, reviewerTeam)
-		reviewerTeamMembers.Insert(members...)
-	}
-
-	committerTeamMembers := sets.String{}
-	for _, committerTeam := range committerTeams {
-		members := getTeamMembers(s.Log, s.Gc, org, committerTeam)
-		committerTeamMembers.Insert(members...)
 	}
 
 	useGitHubPermission := false
@@ -398,6 +386,47 @@ func (s *Server) ListOwners(org string, repo string, number int,
 			org,
 			repo,
 			trustTeamMembers.List(),
+			requireLgtm,
+		)
+	}
+
+	useGitHubTeams := false
+	// The branch configuration will override the total configuration.
+	if hasBranchConfig {
+		useGitHubTeams = branchConfig.UseGitHubTeams
+	} else {
+		useGitHubTeams = opts.UseGitHubTeams
+	}
+	// If you use GitHub teams, you can handle it directly.
+	if useGitHubTeams {
+		var reviewerTeams []string
+		var committerTeams []string
+
+		if hasBranchConfig && branchConfig.ReviewerTeams != nil {
+			reviewerTeams = branchConfig.ReviewerTeams
+		} else {
+			reviewerTeams = opts.ReviewerTeams
+		}
+
+		if hasBranchConfig && branchConfig.CommitterTeams != nil {
+			committerTeams = branchConfig.CommitterTeams
+		} else {
+			committerTeams = opts.CommitterTeams
+		}
+
+		reviewerTeamMembers := sets.String{}
+		for _, reviewerTeam := range reviewerTeams {
+			members := getTeamMembers(s.Log, s.Gc, org, reviewerTeam)
+			reviewerTeamMembers.Insert(members...)
+		}
+
+		committerTeamMembers := sets.String{}
+		for _, committerTeam := range committerTeams {
+			members := getTeamMembers(s.Log, s.Gc, org, committerTeam)
+			committerTeamMembers.Insert(members...)
+		}
+
+		return s.listOwnersByGitHubTeams(
 			reviewerTeamMembers.List(),
 			committerTeamMembers.List(),
 			requireLgtm,
@@ -417,8 +446,6 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		return s.listOwnersByAllSigs(
 			opts,
 			trustTeamMembers.List(),
-			reviewerTeamMembers.List(),
-			committerTeamMembers.List(),
 			requireLgtm,
 		)
 	}
@@ -427,8 +454,6 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		sigNames,
 		opts,
 		trustTeamMembers.List(),
-		reviewerTeamMembers.List(),
-		committerTeamMembers.List(),
 		requireLgtm,
 	)
 }
