@@ -10,7 +10,7 @@
     "lint:fix": "prettier --write \"**\""
   },
   "dependencies": {
-    "antd": "^4.16.11",
+    "antd": "^4.16.12",
     "axios": "^0.21.0",
     "js-yaml": "^4.1.0",
     "next": "11.1.0",
