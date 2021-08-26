@@ -267,8 +267,6 @@ func TestListOwners(t *testing.T) {
 		membersResponse        *MembersResponse
 		labels                 []github.Label
 		defaultSigName         string
-		trustTeams             []string
-		useGitHubTeams         bool
 		reviewerTeams          []string
 		committerTeams         []string
 		defaultRequireLgtm     int
@@ -457,7 +455,7 @@ func TestListOwners(t *testing.T) {
 					Name: "sig/sig1",
 				},
 			},
-			trustTeams: []string{"Leads"},
+			committerTeams: []string{"Leads"},
 			expectCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
@@ -481,7 +479,7 @@ func TestListOwners(t *testing.T) {
 				},
 			},
 			defaultRequireLgtm: 2,
-			trustTeams:         []string{"Leads"},
+			committerTeams:     []string{"Leads"},
 			branchesConfig: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
 				"master": {
 					DefaultRequireLgtm: 3,
@@ -496,13 +494,13 @@ func TestListOwners(t *testing.T) {
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 				// Team members.
-				"admin1", "admin2",
+				"sig-leader1", "sig-leader2",
 			},
 			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 				// Team members.
-				"admin1", "admin2",
+				"sig-leader1", "sig-leader2",
 			},
 			expectNeedsLgtm: 3,
 		},
@@ -514,7 +512,7 @@ func TestListOwners(t *testing.T) {
 					Name: "sig/sig1",
 				},
 			},
-			trustTeams: []string{"Leads", "Admins", "Releasers"},
+			committerTeams: []string{"Leads", "Admins", "Releasers"},
 			expectCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
@@ -566,7 +564,7 @@ func TestListOwners(t *testing.T) {
 			name:                   "use GitHub permission and a trust team",
 			sigResponses:           []SigResponse{sig1Res},
 			labels:                 []github.Label{},
-			trustTeams:             []string{"Leads"},
+			committerTeams:         []string{"Leads"},
 			requireLgtmLabelPrefix: "require-LGT",
 			useGitHubPermission:    true,
 			expectCommitters: []string{
@@ -586,7 +584,7 @@ func TestListOwners(t *testing.T) {
 			sigResponses:       []SigResponse{sig1Res},
 			labels:             []github.Label{},
 			defaultRequireLgtm: 2,
-			trustTeams:         []string{"Leads"},
+			committerTeams:     []string{"Leads"},
 			branchesConfig: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
 				"master": {
 					DefaultRequireLgtm:  3,
@@ -601,12 +599,12 @@ func TestListOwners(t *testing.T) {
 			expectCommitters: []string{
 				"collab3", "collab4", "collab5",
 				// Team members.
-				"admin1", "admin2",
+				"sig-leader1", "sig-leader2",
 			},
 			expectReviewers: []string{
 				"collab2", "collab3", "collab4", "collab5",
 				// Team members.
-				"admin1", "admin2",
+				"sig-leader1", "sig-leader2",
 			},
 			expectNeedsLgtm: 3,
 		},
@@ -628,14 +626,18 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
-			name:           "use github teams to obtain reviewers and committers",
-			useGitHubTeams: true,
-			reviewerTeams:  []string{"Reviewers"},
-			committerTeams: []string{"Committers"},
+			name:                "use GitHub permission and config contains reviewer teams and committers teams",
+			useGitHubPermission: true,
+			reviewerTeams:       []string{"Reviewers"},
+			committerTeams:      []string{"Committers"},
 			expectCommitters: []string{
+				"collab3", "collab4", "collab5",
+				// Team members.
 				"committer1", "committer2",
 			},
 			expectReviewers: []string{
+				"collab2", "collab3", "collab4", "collab5",
+				// Team members.
 				"committer1", "committer2", "reviewer1", "reviewer2",
 			},
 			expectNeedsLgtm: defaultRequireLgtmNum,
@@ -660,12 +662,6 @@ func TestListOwners(t *testing.T) {
 			if len(tc.defaultSigName) != 0 {
 				repoConfig.DefaultSigName = tc.defaultSigName
 			}
-
-			if tc.trustTeams != nil {
-				repoConfig.TrustTeams = tc.trustTeams
-			}
-
-			repoConfig.UseGitHubTeams = tc.useGitHubTeams
 
 			if tc.reviewerTeams != nil {
 				repoConfig.ReviewerTeams = tc.reviewerTeams
