@@ -448,7 +448,7 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
 		{
-			name:         "has one sig label and a trust team",
+			name:         "has one sig label and a committer team",
 			sigResponses: []SigResponse{sig1Res},
 			labels: []github.Label{
 				{
@@ -483,29 +483,30 @@ func TestListOwners(t *testing.T) {
 			branchesConfig: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
 				"master": {
 					DefaultRequireLgtm: 3,
-					TrustTeams:         []string{"Admins"},
+					CommitterTeams:     []string{"Committers", "Admins"},
+					ReviewerTeams:      []string{"Reviewers"},
 				},
 				"release": {
 					DefaultRequireLgtm: 4,
-					TrustTeams:         []string{"Releasers"},
+					CommitterTeams:     []string{"Releasers"},
 				},
 			},
 			expectCommitters: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2",
 				// Team members.
-				"sig-leader1", "sig-leader2",
+				"admin1", "admin2",
 			},
 			expectReviewers: []string{
 				"leader1", "leader2", "coLeader1", "coLeader2",
 				"committer1", "committer2", "reviewer1", "reviewer2",
 				// Team members.
-				"sig-leader1", "sig-leader2",
+				"admin1", "admin2",
 			},
 			expectNeedsLgtm: 3,
 		},
 		{
-			name:         "has one sig label and multiple trusted teams",
+			name:         "has one sig label and multiple committers teams",
 			sigResponses: []SigResponse{sig1Res},
 			labels: []github.Label{
 				{
@@ -561,7 +562,7 @@ func TestListOwners(t *testing.T) {
 			expectNeedsLgtm: 1,
 		},
 		{
-			name:                   "use GitHub permission and a trust team",
+			name:                   "use GitHub permission and a committer team",
 			sigResponses:           []SigResponse{sig1Res},
 			labels:                 []github.Label{},
 			committerTeams:         []string{"Leads"},
@@ -588,23 +589,22 @@ func TestListOwners(t *testing.T) {
 			branchesConfig: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
 				"master": {
 					DefaultRequireLgtm:  3,
-					TrustTeams:          []string{"Admins"},
 					UseGitHubPermission: true,
+					CommitterTeams:      []string{"Admins"},
 				},
 				"release": {
 					DefaultRequireLgtm: 4,
-					TrustTeams:         []string{"Releasers"},
 				},
 			},
 			expectCommitters: []string{
 				"collab3", "collab4", "collab5",
 				// Team members.
-				"sig-leader1", "sig-leader2",
+				"admin1", "admin2",
 			},
 			expectReviewers: []string{
 				"collab2", "collab3", "collab4", "collab5",
 				// Team members.
-				"sig-leader1", "sig-leader2",
+				"admin1", "admin2",
 			},
 			expectNeedsLgtm: 3,
 		},
