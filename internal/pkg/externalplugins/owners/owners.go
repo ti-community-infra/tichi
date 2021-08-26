@@ -352,15 +352,26 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		committerTeams = opts.CommitterTeams
 	}
 
+	// Notice: Get all available org teams in advance to reduce API requests.
+	orgTeams := make([]github.Team, 0)
+	if len(reviewerTeams) != 0 || len(committerTeams) != 0 {
+		teams, err := s.Gc.ListTeams(org)
+		if err != nil {
+			s.Log.WithField("pullNumber", number).WithError(err).Error("Failed to get org teams.")
+			return nil, err
+		}
+		orgTeams = teams
+	}
+
 	reviewerTeamMembers := sets.String{}
 	for _, reviewerTeam := range reviewerTeams {
-		members := getTeamMembers(s.Log, s.Gc, org, reviewerTeam)
+		members := getTeamMembers(s.Log, s.Gc, org, orgTeams, reviewerTeam)
 		reviewerTeamMembers.Insert(members...)
 	}
 
 	committerTeamMembers := sets.String{}
 	for _, committerTeam := range committerTeams {
-		members := getTeamMembers(s.Log, s.Gc, org, committerTeam)
+		members := getTeamMembers(s.Log, s.Gc, org, orgTeams, committerTeam)
 		committerTeamMembers.Insert(members...)
 	}
 
@@ -444,24 +455,28 @@ func getRequireLgtmByLabel(labels []github.Label, labelPrefix string) (int, erro
 }
 
 // getTeamMembers returns the members of trust team.
-func getTeamMembers(log *logrus.Entry, gc githubClient, org, trustTeam string) []string {
-	if len(trustTeam) > 0 {
-		if teams, err := gc.ListTeams(org); err == nil {
-			for _, teamInOrg := range teams {
-				if strings.Compare(teamInOrg.Name, trustTeam) == 0 {
-					if members, err := gc.ListTeamMembers(org, teamInOrg.ID, github.RoleAll); err == nil {
-						var membersLogin []string
-						for _, member := range members {
-							membersLogin = append(membersLogin, member.Login)
-						}
-						return membersLogin
-					}
-					log.WithError(err).Errorf("Failed to list members in %s:%s.", org, teamInOrg.Name)
-				}
+func getTeamMembers(log *logrus.Entry, gc githubClient, org string, orgTeams []github.Team, trustTeam string) []string {
+	if len(trustTeam) == 0 {
+		return []string{}
+	}
+
+	for _, teamInOrg := range orgTeams {
+		if strings.Compare(teamInOrg.Name, trustTeam) == 0 {
+			var members []github.TeamMember
+			var err error
+			if members, err = gc.ListTeamMembers(org, teamInOrg.ID, github.RoleAll); err != nil {
+				log.WithError(err).Errorf("Failed to list members in %s:%s.", org, teamInOrg.Name)
+				return []string{}
 			}
-		} else {
-			log.WithError(err).Errorf("Failed to list teams in org %s.", org)
+
+			var membersLogin []string
+			for _, member := range members {
+				membersLogin = append(membersLogin, member.Login)
+			}
+
+			return membersLogin
 		}
 	}
+
 	return []string{}
 }
