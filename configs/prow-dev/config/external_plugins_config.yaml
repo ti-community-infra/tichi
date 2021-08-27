@@ -19,13 +19,17 @@ ti-community-owners:
     default_require_lgtm: 1
     sig_endpoint: https://bots.tidb.io/ti-community-bot
     use_github_permission: true
-    trusted_teams:
-      - bots-test
+    reviewer_teams:
+      - community-infra-reviewers
+    committer_teams:
+      - community-infra-committers
     branches:
       try:
         default_require_lgtm: 2
-        trusted_teams:
-          - bots-test
+        reviewer_teams:
+          - community-infra-reviewers
+        committer_teams:
+          - community-infra-maintainers
 
 ti-community-label:
   - repos:
