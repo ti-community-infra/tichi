@@ -90,11 +90,10 @@ type TiCommunityOwners struct {
 	DefaultRequireLgtm int `json:"default_require_lgtm,omitempty"`
 	// RequireLgtmLabelPrefix specifies the prefix of require lgtm label.
 	RequireLgtmLabelPrefix string `json:"require_lgtm_label_prefix,omitempty"`
-	// WARNING: This disables the security mechanism that prevents a malicious member (or
-	// compromised GitHub account) from merging arbitrary code. Use with caution.
-	//
-	// TrustTeams specifies the GitHub teams whose members are trusted.
-	TrustTeams []string `json:"trusted_teams,omitempty"`
+	// ReviewerTeams specifies the GitHub teams whose members can review pull request.
+	ReviewerTeams []string `json:"reviewer_teams,omitempty"`
+	// CommitterTeams specifies the GitHub teams whose members can merge pull request.
+	CommitterTeams []string `json:"committer_teams,omitempty"`
 	// UseGitHubPermission specifies the permissions to use GitHub.
 	// People with write and admin permissions have reviewer and committer permissions.
 	UseGitHubPermission bool `json:"use_github_permission,omitempty"`
@@ -107,8 +106,10 @@ type TiCommunityOwners struct {
 type TiCommunityOwnerBranchConfig struct {
 	// DefaultRequireLgtm specifies the default require lgtm number of the branch.
 	DefaultRequireLgtm int `json:"default_require_lgtm,omitempty"`
-	// TrustTeams specifies the GitHub teams whose members are trusted by the branch.
-	TrustTeams []string `json:"trusted_teams,omitempty"`
+	// ReviewerTeams specifies the GitHub teams whose members can review pull request.
+	ReviewerTeams []string `json:"reviewer_teams,omitempty"`
+	// CommitterTeams specifies the GitHub teams whose members can merge pull request.
+	CommitterTeams []string `json:"committer_teams,omitempty"`
 	// UseGitHubPermission specifies the permissions to use GitHub.
 	// People with write and admin permissions have reviewer and committer permissions.
 	UseGitHubPermission bool `json:"use_github_permission,omitempty"`

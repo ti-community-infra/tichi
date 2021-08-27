@@ -128,7 +128,8 @@ type Server struct {
 }
 
 func (s *Server) listOwnersByAllSigs(opts *tiexternalplugins.TiCommunityOwners,
-	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
+	reviewerTeamMembers []string, committerTeamMembers []string, requireLgtm int,
+) (*ownersclient.OwnersResponse, error) {
 	var committers []string
 	var reviewers []string
 
@@ -180,17 +181,17 @@ func (s *Server) listOwnersByAllSigs(opts *tiexternalplugins.TiCommunityOwners,
 
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
-			Committers: sets.NewString(committers...).Insert(trustTeamMembers...).List(),
-			Reviewers:  sets.NewString(reviewers...).Insert(trustTeamMembers...).List(),
+			Committers: sets.NewString(committers...).Insert(committerTeamMembers...).List(),
+			Reviewers:  sets.NewString(reviewers...).Insert(committerTeamMembers...).Insert(reviewerTeamMembers...).List(),
 			NeedsLgtm:  requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
 	}, nil
 }
 
-func (s *Server) listOwnersBySigs(sigNames []string,
-	opts *tiexternalplugins.TiCommunityOwners, trustTeamMembers []string,
-	requireLgtm int) (*ownersclient.OwnersResponse, error) {
+func (s *Server) listOwnersBySigs(sigNames []string, opts *tiexternalplugins.TiCommunityOwners,
+	reviewerTeamMembers []string, committerTeamMembers []string, requireLgtm int,
+) (*ownersclient.OwnersResponse, error) {
 	var committers []string
 	var reviewers []string
 	var maxNeedsLgtm int
@@ -255,8 +256,8 @@ func (s *Server) listOwnersBySigs(sigNames []string,
 
 	return &ownersclient.OwnersResponse{
 		Data: ownersclient.Owners{
-			Committers: sets.NewString(committers...).Insert(trustTeamMembers...).List(),
-			Reviewers:  sets.NewString(reviewers...).Insert(trustTeamMembers...).List(),
+			Committers: sets.NewString(committers...).Insert(committerTeamMembers...).List(),
+			Reviewers:  sets.NewString(reviewers...).Insert(committerTeamMembers...).Insert(reviewerTeamMembers...).List(),
 			NeedsLgtm:  requireLgtm,
 		},
 		Message: listOwnersSuccessMessage,
@@ -264,15 +265,15 @@ func (s *Server) listOwnersBySigs(sigNames []string,
 }
 
 func (s *Server) listOwnersByGitHubPermission(org string, repo string,
-	trustTeamMembers []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
+	reviewerTeamMembers []string, committerTeamTeams []string, requireLgtm int) (*ownersclient.OwnersResponse, error) {
 	collaborators, err := listCollaborators(context.Background(), s.Log, s.Gc, org, repo)
 	if err != nil {
 		s.Log.WithField("org", org).WithField("repo", repo).WithError(err).Error("Failed to list collaborators.")
 		return nil, err
 	}
 
-	var reviewersLogin []string
 	var committersLogin []string
+	var reviewersLogin []string
 	for login, permission := range collaborators {
 		if permission == triagePermission {
 			reviewersLogin = append(reviewersLogin, login)
@@ -283,8 +284,8 @@ func (s *Server) listOwnersByGitHubPermission(org string, repo string,
 			committersLogin = append(committersLogin, login)
 		}
 	}
-	reviewers := sets.NewString(reviewersLogin...).Insert(trustTeamMembers...).List()
-	committers := sets.NewString(committersLogin...).Insert(trustTeamMembers...).List()
+	committers := sets.NewString(committersLogin...).Insert(committerTeamTeams...).List()
+	reviewers := sets.NewString(reviewersLogin...).Insert(committerTeamTeams...).Insert(reviewerTeamMembers...).List()
 
 	if requireLgtm == 0 {
 		requireLgtm = defaultRequireLgtmNum
@@ -317,14 +318,14 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	branchName := pull.Base.Ref
 	branchConfig, hasBranchConfig := opts.Branches[branchName]
 
-	// Get the require lgtm number from PR's label.
+	// Get the required lgtm number from PR's label.
 	requireLgtm, err := getRequireLgtmByLabel(pull.Labels, opts.RequireLgtmLabelPrefix)
 	if err != nil {
 		s.Log.WithField("pullNumber", number).WithError(err).Error("Failed to parse require lgtm.")
 		return nil, err
 	}
 
-	// When we cannot find the require label from the PR, try to use the default require lgtm.
+	// When we cannot find the required label from the PR, try to use the default require lgtm.
 	if requireLgtm == 0 {
 		if hasBranchConfig && branchConfig.DefaultRequireLgtm != 0 {
 			requireLgtm = branchConfig.DefaultRequireLgtm
@@ -333,23 +334,45 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		}
 	}
 
-	// Notice: If the branch of the PR has extra trust team config, it will override the repository config.
-	var trustTeams []string
+	// Notice: If the branch of the PR has extra trusted teams config, it will override the repository config.
+	var reviewerTeams []string
+	var committerTeams []string
 
 	// Notice: If the configuration of the trust team gives an empty slice (not nil slice), the plugin
 	// will consider that the branch does not trust any team.
-	if hasBranchConfig && branchConfig.TrustTeams != nil {
-		trustTeams = branchConfig.TrustTeams
+	if hasBranchConfig && branchConfig.ReviewerTeams != nil {
+		reviewerTeams = branchConfig.ReviewerTeams
 	} else {
-		trustTeams = opts.TrustTeams
+		reviewerTeams = opts.ReviewerTeams
 	}
 
-	// Avoid duplication when one user exists in multiple trusted teams.
-	trustTeamMembers := sets.String{}
+	if hasBranchConfig && branchConfig.CommitterTeams != nil {
+		committerTeams = branchConfig.CommitterTeams
+	} else {
+		committerTeams = opts.CommitterTeams
+	}
 
-	for _, trustTeam := range trustTeams {
-		members := getTrustTeamMembers(s.Log, s.Gc, org, trustTeam)
-		trustTeamMembers.Insert(members...)
+	// Notice: Get all available org teams in advance to reduce API requests.
+	orgTeams := make([]github.Team, 0)
+	if len(reviewerTeams) != 0 || len(committerTeams) != 0 {
+		teams, err := s.Gc.ListTeams(org)
+		if err != nil {
+			s.Log.WithField("pullNumber", number).WithError(err).Error("Failed to get org teams.")
+			return nil, err
+		}
+		orgTeams = teams
+	}
+
+	reviewerTeamMembers := sets.String{}
+	for _, reviewerTeam := range reviewerTeams {
+		members := getTeamMembers(s.Log, s.Gc, org, orgTeams, reviewerTeam)
+		reviewerTeamMembers.Insert(members...)
+	}
+
+	committerTeamMembers := sets.String{}
+	for _, committerTeam := range committerTeams {
+		members := getTeamMembers(s.Log, s.Gc, org, orgTeams, committerTeam)
+		committerTeamMembers.Insert(members...)
 	}
 
 	useGitHubPermission := false
@@ -361,23 +384,40 @@ func (s *Server) ListOwners(org string, repo string, number int,
 	}
 	// If you use GitHub permissions, you can handle it directly.
 	if useGitHubPermission {
-		return s.listOwnersByGitHubPermission(org, repo, trustTeamMembers.List(), requireLgtm)
+		return s.listOwnersByGitHubPermission(
+			org,
+			repo,
+			reviewerTeamMembers.List(),
+			committerTeamMembers.List(),
+			requireLgtm,
+		)
 	}
 
 	// Find sig names by labels.
 	sigNames := getSigNamesByLabels(pull.Labels)
 
-	// Use default sig name if cannot find.
+	// Use default sig name if not found any sig name.
 	if len(sigNames) == 0 && len(opts.DefaultSigName) != 0 {
 		sigNames = append(sigNames, opts.DefaultSigName)
 	}
 	// When we cannot find a sig label for PR and there is no default sig name,
 	// the members of all sig will be reviewers and committers.
 	if len(sigNames) == 0 {
-		return s.listOwnersByAllSigs(opts, trustTeamMembers.List(), requireLgtm)
+		return s.listOwnersByAllSigs(
+			opts,
+			reviewerTeamMembers.List(),
+			committerTeamMembers.List(),
+			requireLgtm,
+		)
 	}
 
-	return s.listOwnersBySigs(sigNames, opts, trustTeamMembers.List(), requireLgtm)
+	return s.listOwnersBySigs(
+		sigNames,
+		opts,
+		reviewerTeamMembers.List(),
+		committerTeamMembers.List(),
+		requireLgtm,
+	)
 }
 
 // getSigNamesByLabels returns the names of sig when the label prefix matches.
@@ -414,25 +454,29 @@ func getRequireLgtmByLabel(labels []github.Label, labelPrefix string) (int, erro
 	return noRequireLgtm, nil
 }
 
-// getTrustTeamMembers returns the members of trust team.
-func getTrustTeamMembers(log *logrus.Entry, gc githubClient, org, trustTeam string) []string {
-	if len(trustTeam) > 0 {
-		if teams, err := gc.ListTeams(org); err == nil {
-			for _, teamInOrg := range teams {
-				if strings.Compare(teamInOrg.Name, trustTeam) == 0 {
-					if members, err := gc.ListTeamMembers(org, teamInOrg.ID, github.RoleAll); err == nil {
-						var membersLogin []string
-						for _, member := range members {
-							membersLogin = append(membersLogin, member.Login)
-						}
-						return membersLogin
-					}
-					log.WithError(err).Errorf("Failed to list members in %s:%s.", org, teamInOrg.Name)
-				}
+// getTeamMembers returns the members of trust team.
+func getTeamMembers(log *logrus.Entry, gc githubClient, org string, orgTeams []github.Team, trustTeam string) []string {
+	if len(trustTeam) == 0 {
+		return []string{}
+	}
+
+	for _, teamInOrg := range orgTeams {
+		if strings.Compare(teamInOrg.Name, trustTeam) == 0 {
+			var members []github.TeamMember
+			var err error
+			if members, err = gc.ListTeamMembers(org, teamInOrg.ID, github.RoleAll); err != nil {
+				log.WithError(err).Errorf("Failed to list members in %s:%s.", org, teamInOrg.Name)
+				return []string{}
 			}
-		} else {
-			log.WithError(err).Errorf("Failed to list teams in org %s.", org)
+
+			var membersLogin []string
+			for _, member := range members {
+				membersLogin = append(membersLogin, member.Login)
+			}
+
+			return membersLogin
 		}
 	}
+
 	return []string{}
 }
