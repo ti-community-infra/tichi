@@ -53,7 +53,8 @@
 | sig_endpoint              | string                  | 获取 SIG 信息的 RESTFUL 接口地址                                           |
 | default_sig_name          | string                  | 为该仓库设置默认的 SIG                                                     |
 | default_require_lgtm      | int                     | 为该仓库设置默认需要的 lgtm 个数                                           |
-| require_lgtm_label_prefix | string                  | 插件支持通过标签指定当前 PR 需要的 lgtm 个数，该选项用于设置相关标签的前缀 |
+| require_lgtm_label_prefix | string                  | 插件支持通过标签指定当前 PR 需要的 lgtm 个数，该选项用于设置相关标签的前缀     |
+| use_github_team           | bool                    | 使用指定 GitHub Team 作为 reviewer teams 和 committer teams            |                                                         |
 | committer_teams           | []string                | 指定其成员可以作为 Committer 的 GitHub Team 名称列表                       |
 | reviewer_teams            | []string                | 指定其成员可以作为 Reviewer 的 GitHub Team 名称列表                        |
 | use_github_permission     | bool                    | 使用 GitHub 权限                                                           |
@@ -64,6 +65,7 @@
 | 参数名                | 类型     | 说明                                                         |
 |-----------------------|----------|--------------------------------------------------------------|
 | default_require_lgtm  | int      | 为该分支设置默认需要的 lgtm 个数                             |
+| use_github_team       | bool     | 使用指定 GitHub Team 作为 reviewer teams 和 committer teams  |
 | committer_teams       | []string | 为该分支设置其成员可以作为 Committer 的 GitHub Team 名称列表 |
 | reviewer_teams        | []string | 为该分支设置其成员可以作为 Reviewer 的 GitHub Team 名称列表  |
 | use_github_permission | bool     | 使用 GitHub 权限                                             |
@@ -79,6 +81,7 @@ ti-community-owners:
       - ti-community-infra/ti-challenge-bot
     sig_endpoint: https://bots.tidb.io/ti-community-bot
     require_lgtm_label_prefix: require/LGT
+    use_github_team: true
     reviewer_teams:
       - bots-reviewers
     committer_teams:
