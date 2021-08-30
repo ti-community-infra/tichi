@@ -272,6 +272,7 @@ func TestListOwners(t *testing.T) {
 		defaultRequireLgtm     int
 		requireLgtmLabelPrefix string
 		useGitHubPermission    bool
+		useGitHubTeam          bool
 		branchesConfig         map[string]tiexternalplugins.TiCommunityOwnerBranchConfig
 
 		expectCommitters []string
@@ -642,6 +643,91 @@ func TestListOwners(t *testing.T) {
 			},
 			expectNeedsLgtm: defaultRequireLgtmNum,
 		},
+		{
+			name:           "use GitHub teams",
+			sigResponses:   []SigResponse{sig1Res},
+			labels:         []github.Label{},
+			useGitHubTeam:  true,
+			committerTeams: []string{"Committers"},
+			reviewerTeams:  []string{"Reviewers"},
+			expectCommitters: []string{
+				"committer1", "committer2",
+			},
+			expectReviewers: []string{
+				"reviewer1", "reviewer2", "committer1", "committer2",
+			},
+			expectNeedsLgtm: defaultRequireLgtmNum,
+		},
+		{
+			name:         "use GitHub teams and require one lgtm",
+			sigResponses: []SigResponse{sig1Res},
+			labels: []github.Label{
+				{
+					Name: "require-LGT1",
+				},
+			},
+			requireLgtmLabelPrefix: "require-LGT",
+			useGitHubTeam:          true,
+			committerTeams:         []string{"Committers"},
+			reviewerTeams:          []string{"Reviewers"},
+			expectCommitters: []string{
+				"committer1", "committer2",
+			},
+			expectReviewers: []string{
+				"reviewer1", "reviewer2", "committer1", "committer2",
+			},
+			expectNeedsLgtm: 1,
+		},
+		{
+			name:               "use GitHub team and owners plugin config contains branch config",
+			sigResponses:       []SigResponse{sig1Res},
+			labels:             []github.Label{},
+			defaultRequireLgtm: 2,
+			useGitHubTeam:      true,
+			reviewerTeams:      []string{"Reviewers"},
+			committerTeams:     []string{"Committers"},
+			branchesConfig: map[string]tiexternalplugins.TiCommunityOwnerBranchConfig{
+				"master": {
+					DefaultRequireLgtm: 3,
+					UseGithubTeam:      true,
+					CommitterTeams:     []string{"Admins"},
+				},
+				"release": {
+					DefaultRequireLgtm: 4,
+					UseGithubTeam:      true,
+					CommitterTeams:     []string{"Leads"},
+				},
+			},
+			expectCommitters: []string{
+				// Team members.
+				"admin1", "admin2",
+			},
+			expectReviewers: []string{
+				"reviewer1", "reviewer2",
+				// Team members.
+				"admin1", "admin2",
+			},
+			expectNeedsLgtm: 3,
+		},
+		{
+			name:         "use GitHub team and has one sig label",
+			sigResponses: []SigResponse{sig1Res},
+			labels: []github.Label{
+				{
+					Name: "sig/sig1",
+				},
+			},
+			useGitHubTeam:  true,
+			committerTeams: []string{"Committers"},
+			reviewerTeams:  []string{"Reviewers"},
+			expectCommitters: []string{
+				"committer1", "committer2",
+			},
+			expectReviewers: []string{
+				"committer1", "committer2", "reviewer1", "reviewer2",
+			},
+			expectNeedsLgtm: defaultRequireLgtmNum,
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -657,6 +743,7 @@ func TestListOwners(t *testing.T) {
 				SigEndpoint:         testServer.URL,
 				DefaultRequireLgtm:  tc.defaultRequireLgtm,
 				UseGitHubPermission: tc.useGitHubPermission,
+				UseGithubTeam:       tc.useGitHubTeam,
 			}
 
 			if len(tc.defaultSigName) != 0 {

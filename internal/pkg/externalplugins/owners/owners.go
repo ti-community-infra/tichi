@@ -301,6 +301,26 @@ func (s *Server) listOwnersByGitHubPermission(org string, repo string,
 	}, nil
 }
 
+func (s *Server) listOwnersByGitHubTeam(
+	reviewerTeamMembers []string, committerTeamTeams []string, requireLgtm int,
+) (*ownersclient.OwnersResponse, error) {
+	committers := sets.NewString(committerTeamTeams...).List()
+	reviewers := sets.NewString(committerTeamTeams...).Insert(reviewerTeamMembers...).List()
+
+	if requireLgtm == 0 {
+		requireLgtm = defaultRequireLgtmNum
+	}
+
+	return &ownersclient.OwnersResponse{
+		Data: ownersclient.Owners{
+			Committers: committers,
+			Reviewers:  reviewers,
+			NeedsLgtm:  requireLgtm,
+		},
+		Message: listOwnersSuccessMessage,
+	}, nil
+}
+
 // ListOwners returns owners of tidb community PR.
 func (s *Server) ListOwners(org string, repo string, number int,
 	config *tiexternalplugins.Configuration) (*ownersclient.OwnersResponse, error) {
@@ -387,6 +407,21 @@ func (s *Server) ListOwners(org string, repo string, number int,
 		return s.listOwnersByGitHubPermission(
 			org,
 			repo,
+			reviewerTeamMembers.List(),
+			committerTeamMembers.List(),
+			requireLgtm,
+		)
+	}
+
+	useGitHubTeam := false
+	// The branch configuration will override the total configuration.
+	if hasBranchConfig {
+		useGitHubTeam = branchConfig.UseGithubTeam
+	} else {
+		useGitHubTeam = opts.UseGithubTeam
+	}
+	if useGitHubTeam {
+		return s.listOwnersByGitHubTeam(
 			reviewerTeamMembers.List(),
 			committerTeamMembers.List(),
 			requireLgtm,

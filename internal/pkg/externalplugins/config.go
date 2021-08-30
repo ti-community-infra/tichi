@@ -97,6 +97,8 @@ type TiCommunityOwners struct {
 	// UseGitHubPermission specifies the permissions to use GitHub.
 	// People with write and admin permissions have reviewer and committer permissions.
 	UseGitHubPermission bool `json:"use_github_permission,omitempty"`
+	// UseGithubTeam specifies the permissions to use specified GitHub team as committer teams or reviewer teams.
+	UseGithubTeam bool `json:"use_github_team,omitempty"`
 	// Branches specifies the branch level configuration that will override the repository
 	// level configuration.
 	Branches map[string]TiCommunityOwnerBranchConfig `json:"branches,omitempty"`
@@ -113,6 +115,8 @@ type TiCommunityOwnerBranchConfig struct {
 	// UseGitHubPermission specifies the permissions to use GitHub.
 	// People with write and admin permissions have reviewer and committer permissions.
 	UseGitHubPermission bool `json:"use_github_permission,omitempty"`
+	// UseGithubTeam specifies the permissions to use specified GitHub team as committer teams or reviewer teams.
+	UseGithubTeam bool `json:"use_github_team,omitempty"`
 }
 
 // TiCommunityLabel is the config for the label plugin.
