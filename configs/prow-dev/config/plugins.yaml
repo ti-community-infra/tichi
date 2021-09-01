@@ -68,7 +68,7 @@ plugins:
     - milestone
     - milestoneapplier
     - trigger
-    - blockades
+    - blockade
   ti-community-infra/tichi:
     - config-updater
 
