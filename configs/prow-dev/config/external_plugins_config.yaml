@@ -75,6 +75,8 @@ ti-community-label-blocker:
         actions:
           - labeled
           - unlabeled
+        trusted_users:
+          - mini-bot
         trusted_teams:
           - config-review-team
         message: You can't add the do-not-merge/blocked-paths label.
