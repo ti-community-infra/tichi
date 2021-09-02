@@ -646,7 +646,7 @@ func TestHandlePullRequest(t *testing.T) {
 			prCommits: map[string][]github.RepositoryCommit{
 				prName: {
 					{
-						SHA: SHA,
+						SHA: treeSHA,
 					},
 				},
 			},
@@ -721,7 +721,7 @@ func TestHandlePullRequest(t *testing.T) {
 			prCommits: map[string][]github.RepositoryCommit{
 				prName: {
 					{
-						SHA: SHA,
+						SHA: treeSHA,
 					},
 				},
 			},
