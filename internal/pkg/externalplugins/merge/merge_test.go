@@ -648,6 +648,9 @@ func TestHandlePullRequest(t *testing.T) {
 					{
 						SHA: SHA,
 					},
+					{
+						SHA: treeSHA,
+					},
 				},
 			},
 			issueComments: map[int][]github.IssueComment{
@@ -683,6 +686,9 @@ func TestHandlePullRequest(t *testing.T) {
 				prName: {
 					{
 						SHA: SHA,
+					},
+					{
+						SHA: treeSHA,
 					},
 				},
 			},
@@ -722,6 +728,9 @@ func TestHandlePullRequest(t *testing.T) {
 				prName: {
 					{
 						SHA: SHA,
+					},
+					{
+						SHA: treeSHA,
 					},
 				},
 			},
@@ -1099,6 +1108,16 @@ func TestAllGuaranteed(t *testing.T) {
 		commits          []github.RepositoryCommit
 		expectGuaranteed bool
 	}{
+		{
+			name:            "No guaranteed commit",
+			lastCanMergeSha: treeSHA,
+			commits: []github.RepositoryCommit{
+				{
+					SHA: "no-guaranteed",
+				},
+			},
+			expectGuaranteed: false,
+		},
 		{
 			name:            "Only one commit",
 			lastCanMergeSha: treeSHA,
