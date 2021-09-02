@@ -492,20 +492,21 @@ func TestHandleAll(t *testing.T) {
 			{
 				Parents: []github.GitCommit{
 					{
-						SHA: outOfDateSHA,
+						SHA: "314506403e9c39bf599b53be524e16b25c8124cf",
 					},
 				},
 			},
-		}
-		return prCommits
-	}
-
-	updatedPrCommits := func() []github.RepositoryCommit {
-		prCommits := []github.RepositoryCommit{
 			{
 				Parents: []github.GitCommit{
 					{
-						SHA: currentBaseSHA,
+						SHA: "fc57072d7d4fc4220d4856ceb6bd6c861e9ef3a0",
+					},
+				},
+			},
+			{
+				Parents: []github.GitCommit{
+					{
+						SHA: outOfDateSHA,
 					},
 				},
 			},
@@ -530,7 +531,7 @@ func TestHandleAll(t *testing.T) {
 			name: "No pull request, ignoring",
 		},
 		{
-			name: "updated no-op",
+			name: "the first commit is based on current base commit, ignoring",
 			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
@@ -538,8 +539,73 @@ func TestHandleAll(t *testing.T) {
 				},
 			},
 			baseCommit: baseCommit,
-			prCommits:  updatedPrCommits(),
-			outOfDate:  false,
+			prCommits: []github.RepositoryCommit{
+				{
+					SHA: "314506403e9c39bf599b53be524e16b25c8124cf",
+					Parents: []github.GitCommit{
+						{
+							SHA: currentBaseSHA,
+						},
+					},
+				},
+				{
+					SHA: "546c9f753db86f80e50f26f4da588d0d24b78c51",
+					Parents: []github.GitCommit{
+						{
+							SHA: "314506403e9c39bf599b53be524e16b25c8124cf",
+						},
+					},
+				},
+				{
+					SHA: "e8de18edf50ed760701f3b8b91245142b9d0d974",
+					Parents: []github.GitCommit{
+						{
+							SHA: "546c9f753db86f80e50f26f4da588d0d24b78c51",
+						},
+					},
+				},
+			},
+			outOfDate: false,
+		},
+		{
+			name: "PR have already merged the latest base, ignoring",
+			pr:   getPullRequest("org", "repo", 5),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
+			baseCommit: baseCommit,
+			prCommits: []github.RepositoryCommit{
+				{
+					SHA: "314506403e9c39bf599b53be524e16b25c8124cf",
+					Parents: []github.GitCommit{
+						{
+							SHA: "f0a713b8f7b52e3aebfd16e68911b1b69129bf11",
+						},
+					},
+				},
+				{
+					SHA: "546c9f753db86f80e50f26f4da588d0d24b78c51",
+					Parents: []github.GitCommit{
+						{
+							SHA: "314506403e9c39bf599b53be524e16b25c8124cf",
+						},
+						{
+							SHA: currentBaseSHA,
+						},
+					},
+				},
+				{
+					SHA: "e8de18edf50ed760701f3b8b91245142b9d0d974",
+					Parents: []github.GitCommit{
+						{
+							SHA: "546c9f753db86f80e50f26f4da588d0d24b78c51",
+						},
+					},
+				},
+			},
+			outOfDate: false,
 		},
 		{
 			name: "out of date with message",
@@ -644,7 +710,7 @@ func generatePullRequests(org string, repo string, pr *github.PullRequest,
 				Nodes []struct {
 					OID githubql.GitObjectID `graphql:"oid"`
 				}
-			} `graphql:"parents(first:100)"`
+			} `graphql:"parents(first:10)"`
 		}
 	}{}
 	for _, parent := range lastCommit.Parents {
