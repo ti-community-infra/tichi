@@ -646,6 +646,9 @@ func TestHandlePullRequest(t *testing.T) {
 			prCommits: map[string][]github.RepositoryCommit{
 				prName: {
 					{
+						SHA: SHA,
+					},
+					{
 						SHA: treeSHA,
 					},
 				},
@@ -684,6 +687,9 @@ func TestHandlePullRequest(t *testing.T) {
 					{
 						SHA: SHA,
 					},
+					{
+						SHA: treeSHA,
+					},
 				},
 			},
 			IssueLabelsRemoved: []string{externalplugins.CanMergeLabel},
@@ -720,6 +726,9 @@ func TestHandlePullRequest(t *testing.T) {
 			},
 			prCommits: map[string][]github.RepositoryCommit{
 				prName: {
+					{
+						SHA: SHA,
+					},
 					{
 						SHA: treeSHA,
 					},
