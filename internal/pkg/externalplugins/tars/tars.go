@@ -66,10 +66,10 @@ type pullRequest struct {
 					Nodes []struct {
 						OID githubql.GitObjectID `graphql:"oid"`
 					}
-				} `graphql:"parents(first:100)"`
+				} `graphql:"parents(first:10)"`
 			}
 		}
-	} `graphql:"commits(last:1)"`
+	} `graphql:"commits(last:100)"`
 	Labels struct {
 		Nodes []struct {
 			Name githubql.String
@@ -367,7 +367,7 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *tiexterna
 	tars := cfg.TarsFor(org, repo)
 
 	// Must have last commit.
-	if len(pr.Commits.Nodes) == 0 || len(pr.Commits.Nodes) != 1 {
+	if len(pr.Commits.Nodes) == 0 {
 		return false, nil
 	}
 
@@ -376,9 +376,14 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *tiexterna
 	if err != nil {
 		return false, err
 	}
-	for _, prCommitParent := range pr.Commits.Nodes[0].Commit.Parents.Nodes {
-		if string(prCommitParent.OID) == currentBaseCommit.SHA {
-			updated = true
+
+check:
+	for _, prCommit := range pr.Commits.Nodes {
+		for _, prCommitParent := range prCommit.Commit.Parents.Nodes {
+			if string(prCommitParent.OID) == currentBaseCommit.SHA {
+				updated = true
+				break check
+			}
 		}
 	}
 
