@@ -149,6 +149,15 @@ func HandleIssueCommentEvent(log *logrus.Entry, ghc githubClient, ice *github.Is
 		return nil
 	}
 
+	// Ignore comments from bots.
+	isBot, err := ghc.BotUserChecker()
+	if err != nil {
+		return err
+	}
+	if isBot(ice.Comment.User.Login) {
+		return nil
+	}
+
 	// Delay for a few seconds to give GitHub time to add or remove the label,
 	// as the comment may be a command related to a PR merge(such as /hold or /merge).
 	// See: https://github.com/ti-community-infra/tichi/issues/524.

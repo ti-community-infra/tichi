@@ -16,6 +16,8 @@ import (
 	"k8s.io/test-infra/prow/plugins"
 )
 
+const botName = "ti-chi-bot"
+
 func testKey(org, repo string, num int) string {
 	return fmt.Sprintf("%s/%s#%d", org, repo, num)
 }
@@ -59,7 +61,7 @@ func newFakeGithubClient(prs []pullRequest, pr *github.PullRequest,
 
 func (f *fakeGithub) BotUserChecker() (func(candidate string) bool, error) {
 	return func(candidate string) bool {
-		return candidate == "tichi"
+		return candidate == botName
 	}, nil
 }
 
@@ -186,6 +188,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
 		outOfDate  bool
+		commenter  string
 		message    string
 
 		expectComment  bool
@@ -290,6 +293,23 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectComment:  true,
 			expectUpdate:   true,
 		},
+		{
+			name: "out of date with comment from bot",
+			pr:   getPullRequest("org", "repo", 5),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			commenter:      botName,
+			message:        "updated",
+			expectDeletion: false,
+			expectComment:  false,
+			expectUpdate:   false,
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -299,6 +319,11 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			ice := &github.IssueCommentEvent{}
 			if tc.pr != nil {
 				ice.Issue.PullRequest = &struct{}{}
+			}
+			if len(tc.commenter) != 0 {
+				ice.Comment.User = github.User{
+					Login: tc.commenter,
+				}
 			}
 			if len(tc.labels) != 0 {
 				tc.pr.Labels = tc.labels
@@ -749,7 +774,7 @@ func generatePullRequests(org string, repo string, pr *github.PullRequest,
 func TestShouldPrune(t *testing.T) {
 	message := "updated"
 	isBot := func(candidate string) bool {
-		return candidate == "ti-community-bot"
+		return candidate == botName
 	}
 	f := shouldPrune(isBot, message)
 
@@ -784,7 +809,7 @@ func TestShouldPrune(t *testing.T) {
 			comment: github.IssueComment{
 				Body: "updated",
 				User: github.User{
-					Login: "ti-community-bot",
+					Login: botName,
 				},
 			},
 			shouldPrune: true,
