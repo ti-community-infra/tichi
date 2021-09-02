@@ -377,7 +377,8 @@ func isLGTMSatisfy(prefix string, labels []github.Label, needsLgtm int) bool {
 func isAllGuaranteed(prCommits []github.RepositoryCommit, lastCanMergeTreeHash string, log *logrus.Entry) bool {
 	guaranteed := true
 
-	lastGuaranteedIndex := 0
+	// NOTICE: We use -1 here because it is possible that the user recommitted all commits.
+	lastGuaranteedIndex := -1
 	for i, commit := range prCommits {
 		if commit.SHA == lastCanMergeTreeHash {
 			lastGuaranteedIndex = i

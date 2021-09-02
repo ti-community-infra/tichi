@@ -1100,6 +1100,16 @@ func TestAllGuaranteed(t *testing.T) {
 		expectGuaranteed bool
 	}{
 		{
+			name:            "No guaranteed commit",
+			lastCanMergeSha: treeSHA,
+			commits: []github.RepositoryCommit{
+				{
+					SHA: "no-guaranteed",
+				},
+			},
+			expectGuaranteed: false,
+		},
+		{
 			name:            "Only one commit",
 			lastCanMergeSha: treeSHA,
 			commits: []github.RepositoryCommit{
