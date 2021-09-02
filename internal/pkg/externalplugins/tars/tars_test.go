@@ -559,7 +559,7 @@ func TestHandleAll(t *testing.T) {
 			name: "No pull request, ignoring",
 		},
 		{
-			name: "the first commit is based on current base commit, ignoring",
+			name: "PR is based on the latest commit of target branch, ignoring",
 			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
@@ -596,7 +596,7 @@ func TestHandleAll(t *testing.T) {
 			outOfDate: false,
 		},
 		{
-			name: "PR have already merged the latest base, ignoring",
+			name: "PR has already merged the latest commit of target branch, ignoring",
 			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
