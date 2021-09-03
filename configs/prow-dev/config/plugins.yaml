@@ -111,3 +111,7 @@ external_plugins:
     - name: ti-community-contribution
       events:
         - pull_request
+    - name: ti-community-tars
+      events:
+        - issue_comment
+        - push

@@ -97,3 +97,15 @@ ti-community-cherrypicker:
       - status/LGT1
       - status/LGT2
       - status/LGT3
+
+ti-community-tars:
+  - repos:
+      - ti-community-infra/test-dev
+    only_when_label: "status/can-merge"
+    exclude_labels:
+      - needs-rebase
+      - do-not-merge/work-in-progress
+# Notice: only for test, make tars test easily.
+#      - do-not-merge/hold
+    message: |
+      Your PR was out of date, I have automatically updated it for you.
