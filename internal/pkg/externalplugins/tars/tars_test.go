@@ -16,6 +16,8 @@ import (
 	"k8s.io/test-infra/prow/plugins"
 )
 
+const botName = "ti-chi-bot"
+
 func testKey(org, repo string, num int) string {
 	return fmt.Sprintf("%s/%s#%d", org, repo, num)
 }
@@ -59,7 +61,7 @@ func newFakeGithubClient(prs []pullRequest, pr *github.PullRequest,
 
 func (f *fakeGithub) BotUserChecker() (func(candidate string) bool, error) {
 	return func(candidate string) bool {
-		return candidate == "tichi"
+		return candidate == botName
 	}, nil
 }
 
@@ -186,6 +188,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		baseCommit github.RepositoryCommit
 		prCommits  []github.RepositoryCommit
 		outOfDate  bool
+		commenter  string
 		message    string
 
 		expectComment  bool
@@ -290,6 +293,23 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectComment:  true,
 			expectUpdate:   true,
 		},
+		{
+			name: "out of date with comment from bot",
+			pr:   getPullRequest("org", "repo", 5),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
+			baseCommit:     baseCommit,
+			prCommits:      outOfDatePrCommits(),
+			outOfDate:      true,
+			commenter:      botName,
+			message:        "updated",
+			expectDeletion: false,
+			expectComment:  false,
+			expectUpdate:   false,
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -299,6 +319,11 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			ice := &github.IssueCommentEvent{}
 			if tc.pr != nil {
 				ice.Issue.PullRequest = &struct{}{}
+			}
+			if len(tc.commenter) != 0 {
+				ice.Comment.User = github.User{
+					Login: tc.commenter,
+				}
 			}
 			if len(tc.labels) != 0 {
 				tc.pr.Labels = tc.labels
@@ -490,22 +515,26 @@ func TestHandleAll(t *testing.T) {
 	outOfDatePrCommits := func() []github.RepositoryCommit {
 		prCommits := []github.RepositoryCommit{
 			{
+				SHA: "314506403e9c39bf599b53be524e16b25c8124cf",
 				Parents: []github.GitCommit{
 					{
-						SHA: outOfDateSHA,
+						SHA: "f0a713b8f7b52e3aebfd16e68911b1b69129bf11",
 					},
 				},
 			},
-		}
-		return prCommits
-	}
-
-	updatedPrCommits := func() []github.RepositoryCommit {
-		prCommits := []github.RepositoryCommit{
 			{
+				SHA: outOfDateSHA,
 				Parents: []github.GitCommit{
 					{
-						SHA: currentBaseSHA,
+						SHA: "314506403e9c39bf599b53be524e16b25c8124cf",
+					},
+				},
+			},
+			{
+				SHA: "546c9f753db86f80e50f26f4da588d0d24b78c51",
+				Parents: []github.GitCommit{
+					{
+						SHA: outOfDateSHA,
 					},
 				},
 			},
@@ -530,7 +559,7 @@ func TestHandleAll(t *testing.T) {
 			name: "No pull request, ignoring",
 		},
 		{
-			name: "updated no-op",
+			name: "PR is based on the latest commit of target branch, ignoring",
 			pr:   getPullRequest("org", "repo", 5),
 			labels: []github.Label{
 				{
@@ -538,8 +567,73 @@ func TestHandleAll(t *testing.T) {
 				},
 			},
 			baseCommit: baseCommit,
-			prCommits:  updatedPrCommits(),
-			outOfDate:  false,
+			prCommits: []github.RepositoryCommit{
+				{
+					SHA: "314506403e9c39bf599b53be524e16b25c8124cf",
+					Parents: []github.GitCommit{
+						{
+							SHA: currentBaseSHA,
+						},
+					},
+				},
+				{
+					SHA: "546c9f753db86f80e50f26f4da588d0d24b78c51",
+					Parents: []github.GitCommit{
+						{
+							SHA: "314506403e9c39bf599b53be524e16b25c8124cf",
+						},
+					},
+				},
+				{
+					SHA: "e8de18edf50ed760701f3b8b91245142b9d0d974",
+					Parents: []github.GitCommit{
+						{
+							SHA: "546c9f753db86f80e50f26f4da588d0d24b78c51",
+						},
+					},
+				},
+			},
+			outOfDate: false,
+		},
+		{
+			name: "PR has already merged the latest commit of target branch, ignoring",
+			pr:   getPullRequest("org", "repo", 5),
+			labels: []github.Label{
+				{
+					Name: triggerLabel,
+				},
+			},
+			baseCommit: baseCommit,
+			prCommits: []github.RepositoryCommit{
+				{
+					SHA: "314506403e9c39bf599b53be524e16b25c8124cf",
+					Parents: []github.GitCommit{
+						{
+							SHA: "f0a713b8f7b52e3aebfd16e68911b1b69129bf11",
+						},
+					},
+				},
+				{
+					SHA: "546c9f753db86f80e50f26f4da588d0d24b78c51",
+					Parents: []github.GitCommit{
+						{
+							SHA: "314506403e9c39bf599b53be524e16b25c8124cf",
+						},
+						{
+							SHA: currentBaseSHA,
+						},
+					},
+				},
+				{
+					SHA: "e8de18edf50ed760701f3b8b91245142b9d0d974",
+					Parents: []github.GitCommit{
+						{
+							SHA: "546c9f753db86f80e50f26f4da588d0d24b78c51",
+						},
+					},
+				},
+			},
+			outOfDate: false,
 		},
 		{
 			name: "out of date with message",
@@ -636,24 +730,27 @@ func generatePullRequests(org string, repo string, pr *github.PullRequest,
 	graphPr.BaseRef.Name = githubql.String(pr.Base.Ref)
 
 	// Convert the commit.
-	lastCommit := prCommits[len(prCommits)-1]
-	graphCommit := struct {
-		Commit struct {
-			OID     githubql.GitObjectID `graphql:"oid"`
-			Parents struct {
-				Nodes []struct {
-					OID githubql.GitObjectID `graphql:"oid"`
-				}
-			} `graphql:"parents(first:100)"`
+	for _, prCommit := range prCommits {
+		graphCommit := struct {
+			Commit struct {
+				OID     githubql.GitObjectID `graphql:"oid"`
+				Parents struct {
+					Nodes []struct {
+						OID githubql.GitObjectID `graphql:"oid"`
+					}
+				} `graphql:"parents(first:10)"`
+			}
+		}{}
+		graphCommit.Commit.OID = githubql.GitObjectID(prCommit.Commit.SHA)
+		for _, parent := range prCommit.Parents {
+			s := struct {
+				OID githubql.GitObjectID `graphql:"oid"`
+			}{
+				OID: githubql.GitObjectID(parent.SHA),
+			}
+			graphCommit.Commit.Parents.Nodes = append(graphCommit.Commit.Parents.Nodes, s)
 		}
-	}{}
-	for _, parent := range lastCommit.Parents {
-		s := struct {
-			OID githubql.GitObjectID `graphql:"oid"`
-		}{
-			OID: githubql.GitObjectID(parent.SHA),
-		}
-		graphCommit.Commit.Parents.Nodes = append(graphCommit.Commit.Parents.Nodes, s)
+		graphPr.Commits.Nodes = append(graphPr.Commits.Nodes, graphCommit)
 	}
 
 	// Set the labels.
@@ -669,7 +766,6 @@ func generatePullRequests(org string, repo string, pr *github.PullRequest,
 		}
 	}
 
-	graphPr.Commits.Nodes = append(graphPr.Commits.Nodes, graphCommit)
 	prs = append(prs, graphPr)
 
 	return prs
@@ -678,7 +774,7 @@ func generatePullRequests(org string, repo string, pr *github.PullRequest,
 func TestShouldPrune(t *testing.T) {
 	message := "updated"
 	isBot := func(candidate string) bool {
-		return candidate == "ti-community-bot"
+		return candidate == botName
 	}
 	f := shouldPrune(isBot, message)
 
@@ -713,7 +809,7 @@ func TestShouldPrune(t *testing.T) {
 			comment: github.IssueComment{
 				Body: "updated",
 				User: github.User{
-					Login: "ti-community-bot",
+					Login: botName,
 				},
 			},
 			shouldPrune: true,
