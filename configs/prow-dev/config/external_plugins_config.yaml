@@ -104,8 +104,8 @@ ti-community-tars:
     only_when_label: "status/can-merge"
     exclude_labels:
       - needs-rebase
+      - do-not-merge/work-in-progress
 # Notice: only for test, make tars test easily.
 #      - do-not-merge/hold
-#      - do-not-merge/work-in-progress
     message: |
       Your PR was out of date, I have automatically updated it for you.
