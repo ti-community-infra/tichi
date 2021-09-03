@@ -375,7 +375,7 @@ func handle(log *logrus.Entry, ghc githubClient, pr *pullRequest, cfg *tiexterna
 	updated := false
 	tars := cfg.TarsFor(org, repo)
 
-	// Must have last commit.
+	// Must be at least one commit.
 	if len(pr.Commits.Nodes) == 0 {
 		return false, nil
 	}
