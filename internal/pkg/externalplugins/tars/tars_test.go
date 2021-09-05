@@ -738,7 +738,7 @@ func generatePullRequests(org string, repo string, pr *github.PullRequest,
 					Nodes []struct {
 						OID githubql.GitObjectID `graphql:"oid"`
 					}
-				} `graphql:"parents(first:10)"`
+				} `graphql:"parents(first:5)"`
 			}
 		}{}
 		graphCommit.Commit.OID = githubql.GitObjectID(prCommit.Commit.SHA)
