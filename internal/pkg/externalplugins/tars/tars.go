@@ -66,10 +66,10 @@ type pullRequest struct {
 					Nodes []struct {
 						OID githubql.GitObjectID `graphql:"oid"`
 					}
-				} `graphql:"parents(first:10)"`
+				} `graphql:"parents(first:5)"`
 			}
 		}
-	} `graphql:"commits(last:100)"`
+	} `graphql:"commits(last:20)"`
 	Labels struct {
 		Nodes []struct {
 			Name githubql.String
