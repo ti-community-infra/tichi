@@ -23,7 +23,7 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: ticommunityinfra/tichi-check-external-plugin-config:v1.8.2
+        - image: ticommunityinfra/tichi-check-external-plugin-config:v1.8.3
           command:
             - check-external-plugin-config
           args:
@@ -126,7 +126,7 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: ticommunityinfra/rerere-component:v1.8.2
+        - image: ticommunityinfra/rerere-component:v1.8.3
           command:
             - rerere
           args:
