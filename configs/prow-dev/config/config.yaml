@@ -14,7 +14,6 @@ branch-protection:
               required_status_checks:
                 contexts:
                   - "tide"
-                  - "Semantic Pull Request"
                 strict: true
 
 in_repo_config:
