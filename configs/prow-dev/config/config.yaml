@@ -88,4 +88,5 @@ tide:
       ti-community-infra:
         repos:
           test-dev:
+            skip-unknown-contexts: true
             from-branch-protection: true
