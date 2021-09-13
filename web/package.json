@@ -22,7 +22,7 @@
     "@types/node": "^16.7.10",
     "@types/react": "^17.0.20",
     "husky": "^7.0.2",
-    "prettier": "^2.3.2",
+    "prettier": "^2.4.0",
     "typescript": "^4.4.2"
   },
   "husky": {
