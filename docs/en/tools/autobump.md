@@ -46,7 +46,7 @@ periodics:
         base_ref: master
     spec:
       containers:
-        - image: gcr.io/k8s-prow/autobump:v20210827-98f54bde95
+        - image: gcr.io/k8s-prow/autobump:v20210909-6c59eee681
           command:
             - /autobump.sh
           args:
