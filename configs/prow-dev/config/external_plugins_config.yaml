@@ -71,15 +71,6 @@ ti-community-label-blocker:
         trusted_users:
           - mini-bot
         message: You can't add the status/can-merge label.
-      - regex: "^do-not-merge/blocked-paths$"
-        actions:
-          - labeled
-          - unlabeled
-        trusted_users:
-          - mini-bot
-        trusted_teams:
-          - config-review-team
-        message: You can't add the do-not-merge/blocked-paths label.
 
 ti-community-contribution:
   - repos:
