@@ -29,17 +29,6 @@ require_matching_label:
       There are no type labels on this issue. Please add an appropriate label by using one of the following commands:
       - `/type <type-name>`
 
-blockades:
-  - repos:
-      - ti-community-infra/test-dev
-    blockregexps:
-      - ^sessionctx/variable/
-      - ^config/config.toml.example
-    explanation: |
-      Modifying the configuration file requires additional review.
-
-      /cc @config-review-team
-
 triggers:
   - repos:
       - ti-community-infra/test-dev
@@ -68,7 +57,6 @@ plugins:
     - milestone
     - milestoneapplier
     - trigger
-    - blockade
   ti-community-infra/tichi:
     - config-updater
 
