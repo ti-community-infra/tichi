@@ -7,15 +7,12 @@ skipPullRequest: false
 gitHubOrg: "ti-community-infra"
 gitHubRepo: "tichi"
 remoteName: "tichi"
-upstreamURLBase: "https://raw.githubusercontent.com/ti-community-infra/tichi/master"
 includedConfigPaths:
   - "."
 targetVersion: "latest"
 prefixes:
   - name: "Prow"
     prefix: "gcr.io/k8s-prow/"
-    refConfigFile: "configs/prow-dev/cluster/deck_deployment.yaml"
-    stagingRefConfigFile: "configs/prow-dev/cluster/deck_deployment.yaml"
     repo: "https://github.com/kubernetes/test-infra"
     summarise: true
     consistentImages: true
