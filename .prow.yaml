@@ -1,4 +1,22 @@
 presubmits:
+  - name: presubmit-tichi-autobump
+    always_run: true
+    decorate: true
+    spec:
+      containers:
+        - image: gcr.io/k8s-prow/generic-autobumper:v20210927-dcb18f49a5
+          command:
+            - /app/prow/cmd/generic-autobumper/app.binary
+          args:
+            - --config=configs/prow-dev/autobump-config/tichi-prow-component-autobump-config.yaml
+          volumeMounts:
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+      volumes:
+        - name: github-token
+          secret:
+            secretName: github-token
   - name: pull-tichi-validate-prow-yaml
     decorate: true
     run_if_changed: 'configs/prow-dev/'
