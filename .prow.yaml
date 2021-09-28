@@ -8,7 +8,7 @@ presubmits:
           command:
             - /app/prow/cmd/generic-autobumper/app.binary
           args:
-            - --config=configs/prow/autobump-config/tichi-prow-component-autobump-config.yaml
+            - --config=configs/prow-dev/autobump-config/tichi-prow-component-autobump-config.yaml
           volumeMounts:
             - name: github-token
               mountPath: /etc/github
