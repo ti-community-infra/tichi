@@ -4,7 +4,7 @@ presubmits:
     decorate: true
     spec:
       containers:
-        - image: gcr.io/k8s-prow/generic-autobumper:v20210927-dcb18f49a5
+        - image: gcr.io/k8s-prow/generic-autobumper:v20210927-70e0b57c79
           command:
             - /app/prow/cmd/generic-autobumper/app.binary
           args:
@@ -24,7 +24,7 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: gcr.io/k8s-prow/checkconfig:v20210909-6c59eee681
+        - image: gcr.io/k8s-prow/checkconfig:v20210927-70e0b57c79
           command:
             - /checkconfig
           args:
@@ -200,7 +200,7 @@ postsubmits:
       - ^master$
     spec:
       containers:
-        - image: gcr.io/k8s-prow/label_sync:v20210909-6c59eee681
+        - image: gcr.io/k8s-prow/label_sync:v20210927-70e0b57c79
           command:
             - /app/label_sync/app.binary
           args:
