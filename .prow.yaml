@@ -2,11 +2,6 @@ presubmits:
   - name: presubmit-tichi-autobump
     always_run: true
     decorate: true
-    extra_refs:
-      # Check out the repo containing the config and deployment files for your Prow instance.
-      - org: ti-community-infra
-        repo: tichi
-        base_ref: master
     spec:
       containers:
         - image: gcr.io/k8s-prow/generic-autobumper:v20210927-dcb18f49a5
