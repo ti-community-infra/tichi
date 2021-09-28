@@ -1,15 +1,7 @@
 presubmits:
   - name: presubmit-tichi-autobump
-    # Run at minute 5 past every hour from 15 through 23 on every Monday (At UTC+8 timezone).
-    # cron: "05 7-15 * * 1"
     always_run: true
     decorate: true
-    max_concurrency: 1
-    extra_refs:
-      # Check out the repo containing the config and deployment files for your Prow instance.
-      - org: ti-community-infra
-        repo: tichi
-        base_ref: master
     spec:
       containers:
         - image: gcr.io/k8s-prow/generic-autobumper:v20210927-dcb18f49a5
