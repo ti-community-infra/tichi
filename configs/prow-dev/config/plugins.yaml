@@ -44,6 +44,9 @@ milestone_applier:
   ti-community-infra/test-dev:
     master: v0.1.0
 
+override:
+  allow_top_level_owners: true
+
 plugins:
   ti-community-infra/test-dev:
     - assign
@@ -57,6 +60,7 @@ plugins:
     - milestone
     - milestoneapplier
     - trigger
+    - override
   ti-community-infra/tichi:
     - config-updater
 
