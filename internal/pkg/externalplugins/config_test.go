@@ -9,6 +9,10 @@ import (
 	"gotest.tools/assert"
 )
 
+const (
+	issueTitleRegex = "^(\\[TI-[1-9]\\d*\\])+.+: .{10,160}$"
+)
+
 func TestValidateConfig(t *testing.T) {
 	testcases := []struct {
 		name            string
@@ -23,6 +27,7 @@ func TestValidateConfig(t *testing.T) {
 		autoresponders  *TiCommunityAutoresponder
 		blunderbuss     *TiCommunityBlunderbuss
 		tars            *TiCommunityTars
+		matchChecker    *TiCommunityMatchChecker
 
 		expected error
 	}{
@@ -72,6 +77,18 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
+
 			expected: nil,
 		},
 		{
@@ -120,6 +137,18 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
+
 			expected: nil,
 		},
 		{
@@ -168,6 +197,18 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
+
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -215,6 +256,17 @@ func TestValidateConfig(t *testing.T) {
 			},
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
+			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
 			},
 			expected: fmt.Errorf("parse \"http/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
@@ -264,6 +316,17 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -311,6 +374,17 @@ func TestValidateConfig(t *testing.T) {
 			},
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
+			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
 			},
 			expected: fmt.Errorf("error parsing regexp: missing argument to repetition operator: `?`"),
 		},
@@ -360,6 +434,17 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
 			expected: fmt.Errorf("parse \"https/bots.tidb.io/ti-community-bot\": invalid URI for request"),
 		},
 		{
@@ -407,6 +492,17 @@ func TestValidateConfig(t *testing.T) {
 			},
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
+			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
 			},
 			expected: fmt.Errorf("max reviewer count must more than 0"),
 		},
@@ -457,6 +553,17 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
 			expected: fmt.Errorf("grace period duration must not less than 0"),
 		},
 		{
@@ -506,6 +613,17 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
 			expected: fmt.Errorf("cannot set both include_reviewers and exclude_reviewers configurations"),
 		},
 		{
@@ -553,6 +671,17 @@ func TestValidateConfig(t *testing.T) {
 			},
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
+			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
 			},
 			expected: fmt.Errorf("parse \"https//tichiWebURL\": invalid URI for request"),
 		},
@@ -602,6 +731,17 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
 			expected: fmt.Errorf("parse \"https//prProcessLink\": invalid URI for request"),
 		},
 		{
@@ -650,6 +790,17 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
 			expected: fmt.Errorf("parse \"https//commandHelpLink\": invalid URI for request"),
 		},
 		{
@@ -695,6 +846,17 @@ func TestValidateConfig(t *testing.T) {
 			},
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
+			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
 			},
 			expected: fmt.Errorf("error parsing regexp: missing argument to repetition operator: `?`"),
 		},
@@ -742,6 +904,17 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
 			expected: fmt.Errorf("there must be at least one action"),
 		},
 		{
@@ -787,6 +960,17 @@ func TestValidateConfig(t *testing.T) {
 			},
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
+			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
 			},
 			expected: fmt.Errorf("actions contain illegal value nop"),
 		},
@@ -837,6 +1021,17 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
 			expected: fmt.Errorf("not a valid logrus Level: \"nop\""),
 		},
 		{
@@ -885,7 +1080,193 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra"},
 			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
 			expected: fmt.Errorf("found repo ti-community-infra that was not in org/repo format"),
+		},
+		{
+			name:            "invalid match rule no specified issue or pull request",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			labelBlocker: &TiCommunityLabelBlocker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				BlockLabels: []BlockLabel{
+					{
+						Regex:        `^status/can-merge$`,
+						Actions:      []string{"labeled", "unlabeled"},
+						TrustedTeams: []string{"release-team"},
+						TrustedUsers: []string{"ti-chi-bot"},
+					},
+				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra"},
+			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						Title:        true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
+			expected: fmt.Errorf("issue or pull request need to be specified to verify"),
+		},
+		{
+			name:            "invalid match rule no specified scopes",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			labelBlocker: &TiCommunityLabelBlocker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				BlockLabels: []BlockLabel{
+					{
+						Regex:        `^status/can-merge$`,
+						Actions:      []string{"labeled", "unlabeled"},
+						TrustedTeams: []string{"release-team"},
+						TrustedUsers: []string{"ti-chi-bot"},
+					},
+				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra"},
+			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Regexp:       issueTitleRegex,
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
+			expected: fmt.Errorf("at least one of scopes(title, body, commit message) need to be specified"),
+		},
+		{
+			name:            "invalid match regex",
+			tichiWebURL:     "https://tichiWebURL",
+			commandHelpLink: "https://commandHelpLink",
+			prProcessLink:   "https://prProcessLink",
+			lgtm: &TiCommunityLgtm{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			merge: &TiCommunityMerge{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			owners: &TiCommunityOwners{
+				Repos:       []string{"tidb-community-bots/test-dev"},
+				SigEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			autoresponders: &TiCommunityAutoresponder{
+				Repos: []string{"tidb-community-bots/test-dev"},
+				AutoResponds: []AutoRespond{
+					{
+						Regex:   `(?mi)^/merge\s*$`,
+						Message: "/run-all-test",
+					},
+				},
+			},
+			blunderbuss: &TiCommunityBlunderbuss{
+				Repos:              []string{"tidb-community-bots/test-dev"},
+				MaxReviewerCount:   2,
+				ExcludeReviewers:   []string{},
+				PullOwnersEndpoint: "https://bots.tidb.io/ti-community-bot",
+			},
+			labelBlocker: &TiCommunityLabelBlocker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				BlockLabels: []BlockLabel{
+					{
+						Regex:        `^status/can-merge$`,
+						Actions:      []string{"labeled", "unlabeled"},
+						TrustedTeams: []string{"release-team"},
+						TrustedUsers: []string{"ti-chi-bot"},
+					},
+				},
+			},
+			tars: &TiCommunityTars{
+				Repos: []string{"ti-community-infra"},
+			},
+			matchChecker: &TiCommunityMatchChecker{
+				Repos: []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{
+					{
+						PullRequest:  true,
+						Title:        true,
+						Regexp:       "(1",
+						MissingLabel: "do-not-merge/invalid-title",
+					},
+				},
+			},
+			expected: fmt.Errorf("the regex of matching rule is broken: error parsing regexp: missing closing ): `(1`"),
 		},
 	}
 
@@ -917,6 +1298,9 @@ func TestValidateConfig(t *testing.T) {
 				},
 				TiCommunityTars: []TiCommunityTars{
 					*tc.tars,
+				},
+				TiCommunityMatchChecker: []TiCommunityMatchChecker{
+					*tc.matchChecker,
 				},
 			}
 			actual := config.Validate()
@@ -1577,6 +1961,62 @@ func TestSetCherrypickerDefaults(t *testing.T) {
 					t.Errorf("unexpected labelPrefix: %v, expected: %v",
 						cherrypicker.LabelPrefix, tc.expectLabelPrefix)
 				}
+			}
+		})
+	}
+}
+
+func TestMatchCheckerFor(t *testing.T) {
+	testcases := []struct {
+		name         string
+		matchChecker *TiCommunityMatchChecker
+		org          string
+		repo         string
+		expectEmpty  *TiCommunityMatchChecker
+	}{
+		{
+			name: "Full name",
+			matchChecker: &TiCommunityMatchChecker{
+				Repos:              []string{"ti-community-infra/test-dev"},
+				RequiredMatchRules: []RequiredMatchRule{},
+			},
+			org:  "ti-community-infra",
+			repo: "test-dev",
+		},
+		{
+			name: "Only org",
+			matchChecker: &TiCommunityMatchChecker{
+				Repos:              []string{"ti-community-infra"},
+				RequiredMatchRules: []RequiredMatchRule{},
+			},
+			org:  "ti-community-infra",
+			repo: "test-dev",
+		},
+		{
+			name: "Can not find",
+			matchChecker: &TiCommunityMatchChecker{
+				Repos:              []string{"ti-community-infra"},
+				RequiredMatchRules: []RequiredMatchRule{},
+			},
+			org:         "ti-community-infra1",
+			repo:        "test-dev1",
+			expectEmpty: &TiCommunityMatchChecker{},
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			config := Configuration{TiCommunityMatchChecker: []TiCommunityMatchChecker{
+				*tc.matchChecker,
+			}}
+
+			contribution := config.MatchCheckerFor(tc.org, tc.repo)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, contribution, &TiCommunityMatchChecker{})
+			} else {
+				assert.DeepEqual(t, contribution.Repos, tc.matchChecker.Repos)
 			}
 		})
 	}
