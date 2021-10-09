@@ -268,7 +268,7 @@ type TiCommunityFormatChecker struct {
 	// Repos are either of the form org/repo or just org.
 	Repos []string `json:"repos,omitempty"`
 	// RequiredMatchRules specifies rules required to match.
-	RequiredMatchRules []RequiredMatchRule `json:"required_matching_rules,omitempty"`
+	RequiredMatchRules []RequiredMatchRule `json:"required_match_rules,omitempty"`
 }
 
 // RequiredMatchRule is config about match rules for checking issue or PR content.
