@@ -30,7 +30,7 @@ const (
 
 var (
 	// notificationRegex is the regex that matches the notifications.
-	notificationRegex = regexp.MustCompile("<!--" + checkerNotificationIdentifier + "-->$")
+	notificationRegex = regexp.MustCompile("<!--" + checkerNotificationIdentifier + "-->\\s*$")
 )
 
 type githubClient interface {
@@ -402,7 +402,7 @@ func generateTemplate(templ, name string, data interface{}) (string, error) {
 
 // generateNotification returns the comment body that we want the checker plugin to display on Issue / PR.
 func generateNotification(messages []string) (string, error) {
-	msg := strings.Join(messages, "\n<hr>\n")
+	msg := strings.Join(messages, "\n<hr>\n\n")
 	notification, err := generateTemplate(`
 [FORMAT CHECKER NOTIFICATION]
 
