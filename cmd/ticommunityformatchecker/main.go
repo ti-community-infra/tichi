@@ -11,7 +11,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/matchchecker"
+	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/formatchecker"
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
@@ -66,7 +66,7 @@ func main() {
 		logrus.Fatalf("Invalid options: %v", err)
 	}
 
-	log := logrus.StandardLogger().WithField("plugin", matchchecker.PluginName)
+	log := logrus.StandardLogger().WithField("plugin", formatchecker.PluginName)
 
 	epa := &tiexternalplugins.ConfigAgent{}
 	if err := epa.Start(o.externalPluginsConfig, false); err != nil {
@@ -99,7 +99,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/", server)
 
-	helpProvider := matchchecker.HelpProvider(epa)
+	helpProvider := formatchecker.HelpProvider(epa)
 	externalplugins.ServeExternalPluginHelp(mux, log, helpProvider)
 	httpServer := &http.Server{Addr: ":" + strconv.Itoa(o.port), Handler: mux}
 
@@ -145,7 +145,7 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			return err
 		}
 		go func() {
-			if err := matchchecker.HandlePullRequestEvent(s.gc, &pe, config, l); err != nil {
+			if err := formatchecker.HandlePullRequestEvent(s.gc, &pe, config, l); err != nil {
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()
@@ -155,7 +155,7 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			return err
 		}
 		go func() {
-			if err := matchchecker.HandleIssueEvent(s.gc, &ie, config, l); err != nil {
+			if err := formatchecker.HandleIssueEvent(s.gc, &ie, config, l); err != nil {
 				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
 			}
 		}()

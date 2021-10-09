@@ -1,4 +1,4 @@
-package matchchecker
+package formatchecker
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ import (
 
 const (
 	// PluginName will register into prow.
-	PluginName = "ti-community-matching-checker"
+	PluginName = "ti-community-format-checker"
 	// checkerNotificationIdentifier defines the identifier for the review notifications.
 	checkerNotificationIdentifier = "Checker Notification Identifier"
 	// issueNumberGroupName is used to specify the regular expression group name for the issue number part.
@@ -52,7 +52,7 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		cfg := epa.Config()
 
 		for _, repo := range enabledRepos {
-			opts := cfg.MatchCheckerFor(repo.Org, repo.Repo)
+			opts := cfg.FormatCheckerFor(repo.Org, repo.Repo)
 			var isConfigured bool
 			var configInfoStrings []string
 
@@ -87,7 +87,7 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		}
 
 		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
-			TiCommunityMatchChecker: []tiexternalplugins.TiCommunityMatchChecker{
+			TiCommunityFormatChecker: []tiexternalplugins.TiCommunityFormatChecker{
 				{
 					Repos: []string{"ti-community-infra/test-dev"},
 					RequiredMatchRules: []tiexternalplugins.RequiredMatchRule{
@@ -129,7 +129,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	repo := pe.Repo.Name
 	num := pe.Number
 
-	blocker := cfg.MatchCheckerFor(org, repo)
+	blocker := cfg.FormatCheckerFor(org, repo)
 	needCheckCommits := false
 	rulesForPullRequest := make([]tiexternalplugins.RequiredMatchRule, 0)
 	for _, rule := range blocker.RequiredMatchRules {
@@ -177,7 +177,7 @@ func HandleIssueEvent(gc githubClient, ie *github.IssueEvent,
 	repo := ie.Repo.Name
 	num := ie.Issue.Number
 
-	blocker := cfg.MatchCheckerFor(org, repo)
+	blocker := cfg.FormatCheckerFor(org, repo)
 	rulesForIssue := make([]tiexternalplugins.RequiredMatchRule, 0)
 	for _, rule := range blocker.RequiredMatchRules {
 		if rule.Issue {
@@ -404,7 +404,7 @@ func generateTemplate(templ, name string, data interface{}) (string, error) {
 func generateNotification(messages []string) (string, error) {
 	msg := strings.Join(messages, "\n<hr>\n")
 	notification, err := generateTemplate(`
-[Checker Notification]
+[FORMAT CHECKER NOTIFICATION]
 
 {{ .msg }}
 

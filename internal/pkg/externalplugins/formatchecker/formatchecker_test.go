@@ -1,4 +1,4 @@
-package matchchecker
+package formatchecker
 
 import (
 	"fmt"
@@ -360,7 +360,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		}
 
 		cfg := &externalplugins.Configuration{}
-		cfg.TiCommunityMatchChecker = []externalplugins.TiCommunityMatchChecker{
+		cfg.TiCommunityFormatChecker = []externalplugins.TiCommunityFormatChecker{
 			{
 				Repos:              []string{"org/repo"},
 				RequiredMatchRules: tc.requiredMatchingRules,
@@ -417,13 +417,13 @@ func TestHandleIssueEvent(t *testing.T) {
 	}
 
 	testcases := []struct {
-		name                  string
-		action                github.IssueEventAction
-		title                 string
-		body                  string
-		labels                []string
-		commitMessages        []string
-		requiredMatchingRules []externalplugins.RequiredMatchRule
+		name               string
+		action             github.IssueEventAction
+		title              string
+		body               string
+		labels             []string
+		commitMessages     []string
+		requiredMatchRules []externalplugins.RequiredMatchRule
 
 		expectAddedLabels   []string
 		expectDeletedLabels []string
@@ -434,7 +434,7 @@ func TestHandleIssueEvent(t *testing.T) {
 			action: github.IssueActionOpened,
 			title:  "[TI-12345] pkg: what's changed (#999)",
 			labels: []string{},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:          true,
 					Title:          true,
@@ -453,7 +453,7 @@ func TestHandleIssueEvent(t *testing.T) {
 			action: github.IssueActionOpened,
 			title:  "invalid title",
 			labels: []string{},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:          true,
 					Title:          true,
@@ -474,7 +474,7 @@ func TestHandleIssueEvent(t *testing.T) {
 			action: github.IssueActionOpened,
 			body:   `Issue Body content`,
 			labels: []string{},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:        true,
 					Body:         true,
@@ -497,7 +497,7 @@ func TestHandleIssueEvent(t *testing.T) {
 			close #12345
 `,
 			labels: []string{},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:        true,
 					Body:         true,
@@ -516,7 +516,7 @@ func TestHandleIssueEvent(t *testing.T) {
 				"First commit message",
 				"Second commit message",
 			},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:         true,
 					CommitMessage: true,
@@ -537,7 +537,7 @@ func TestHandleIssueEvent(t *testing.T) {
 			labels: []string{
 				"do-not-merge/invalid-title",
 			},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:        true,
 					Title:        true,
@@ -555,7 +555,7 @@ func TestHandleIssueEvent(t *testing.T) {
 			name:   "check issue number but issue number is wrong",
 			action: github.IssueActionEdited,
 			title:  "[TI-1234] pkg: what's changed",
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:        true,
 					Title:        true,
@@ -610,10 +610,10 @@ func TestHandleIssueEvent(t *testing.T) {
 		}
 
 		cfg := &externalplugins.Configuration{}
-		cfg.TiCommunityMatchChecker = []externalplugins.TiCommunityMatchChecker{
+		cfg.TiCommunityFormatChecker = []externalplugins.TiCommunityFormatChecker{
 			{
 				Repos:              []string{"org/repo"},
-				RequiredMatchRules: tc.requiredMatchingRules,
+				RequiredMatchRules: tc.requiredMatchRules,
 			},
 		}
 
@@ -683,7 +683,7 @@ func TestHelpProvider(t *testing.T) {
 		{
 			name: "All configs enabled",
 			config: &externalplugins.Configuration{
-				TiCommunityMatchChecker: []externalplugins.TiCommunityMatchChecker{
+				TiCommunityFormatChecker: []externalplugins.TiCommunityFormatChecker{
 					{
 						Repos: []string{"org2/repo"},
 						RequiredMatchRules: []externalplugins.RequiredMatchRule{

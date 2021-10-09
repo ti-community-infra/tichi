@@ -52,7 +52,7 @@ type Configuration struct {
 	TiCommunityLabelBlocker  []TiCommunityLabelBlocker  `json:"ti-community-label-blocker,omitempty"`
 	TiCommunityContribution  []TiCommunityContribution  `json:"ti-community-contribution,omitempty"`
 	TiCommunityCherrypicker  []TiCommunityCherrypicker  `json:"ti-community-cherrypicker,omitempty"`
-	TiCommunityMatchChecker  []TiCommunityMatchChecker  `json:"ti-community-matching-checker,omitempty"`
+	TiCommunityFormatChecker []TiCommunityFormatChecker `json:"ti-community-format-checker,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -263,8 +263,8 @@ func (c *TiCommunityCherrypicker) setDefaults() {
 	}
 }
 
-// TiCommunityMatchChecker is the config for the matching-checker plugin.
-type TiCommunityMatchChecker struct {
+// TiCommunityFormatChecker is the config for the format-checker plugin.
+type TiCommunityFormatChecker struct {
 	// Repos are either of the form org/repo or just org.
 	Repos []string `json:"repos,omitempty"`
 	// RequiredMatchRules specifies rules required to match.
@@ -501,25 +501,25 @@ func (c *Configuration) CherrypickerFor(org, repo string) *TiCommunityCherrypick
 	return &TiCommunityCherrypicker{}
 }
 
-// MatchCheckerFor finds the TiCommunityMatchChecker for a repo, if one exists.
-// TiCommunityMatchChecker configuration can be listed for a repository
+// FormatCheckerFor finds the TiCommunityFormatChecker for a repo, if one exists.
+// TiCommunityFormatChecker configuration can be listed for a repository
 // or an organization.
-func (c *Configuration) MatchCheckerFor(org, repo string) *TiCommunityMatchChecker {
+func (c *Configuration) FormatCheckerFor(org, repo string) *TiCommunityFormatChecker {
 	fullName := fmt.Sprintf("%s/%s", org, repo)
-	for _, matchChecker := range c.TiCommunityMatchChecker {
+	for _, matchChecker := range c.TiCommunityFormatChecker {
 		if !sets.NewString(matchChecker.Repos...).Has(fullName) {
 			continue
 		}
 		return &matchChecker
 	}
 	// If you don't find anything, loop again looking for an org config
-	for _, matchChecker := range c.TiCommunityMatchChecker {
+	for _, matchChecker := range c.TiCommunityFormatChecker {
 		if !sets.NewString(matchChecker.Repos...).Has(org) {
 			continue
 		}
 		return &matchChecker
 	}
-	return &TiCommunityMatchChecker{}
+	return &TiCommunityFormatChecker{}
 }
 
 // setDefaults will set the default value for the configuration of all plugins.
@@ -589,7 +589,7 @@ func (c *Configuration) Validate() error {
 		return err
 	}
 
-	if err := validateMatchBlocker(c.TiCommunityMatchChecker); err != nil {
+	if err := validateMatchBlocker(c.TiCommunityFormatChecker); err != nil {
 		return err
 	}
 
@@ -732,7 +732,7 @@ func validateTars(tars []TiCommunityTars) error {
 }
 
 // validateMatchBlocker will return an error if the regex cannot compile or actions is illegal.
-func validateMatchBlocker(matchBlockers []TiCommunityMatchChecker) error {
+func validateMatchBlocker(matchBlockers []TiCommunityFormatChecker) error {
 	for _, matchBlocker := range matchBlockers {
 		for _, rule := range matchBlocker.RequiredMatchRules {
 			_, err := regexp.Compile(rule.Regexp)
