@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"text/template"
 
@@ -21,13 +22,15 @@ import (
 const (
 	// PluginName will register into prow.
 	PluginName = "ti-community-matching-checker"
-	// CheckerNotificationIdentifier defines the identifier for the review notifications.
-	CheckerNotificationIdentifier = "Checker Notification Identifier"
+	// checkerNotificationIdentifier defines the identifier for the review notifications.
+	checkerNotificationIdentifier = "Checker Notification Identifier"
+	// issueNumberGroupName is used to specify the regular expression group name for the issue number part.
+	issueNumberGroupName = "issue_number"
 )
 
 var (
 	// notificationRegex is the regex that matches the notifications.
-	notificationRegex = regexp.MustCompile("<!--" + CheckerNotificationIdentifier + "-->$")
+	notificationRegex = regexp.MustCompile("<!--" + checkerNotificationIdentifier + "-->$")
 )
 
 type githubClient interface {
@@ -38,6 +41,7 @@ type githubClient interface {
 	ListIssueComments(org, repo string, number int) ([]github.IssueComment, error)
 	ListPRCommits(org, repo string, number int) ([]github.RepositoryCommit, error)
 	BotUserChecker() (func(candidate string) bool, error)
+	GetIssue(org, repo string, number int) (*github.Issue, error)
 }
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
@@ -215,20 +219,15 @@ func handle(
 
 		titleMatch := false
 		if rule.Title {
-			titleMatch = regex.MatchString(title)
+			titleMatch = checkTitle(gc, log, org, repo, title, regex)
 		}
 		bodyMatch := false
 		if rule.Body {
-			bodyMatch = regex.MatchString(body)
+			bodyMatch = checkBody(gc, log, org, repo, body, regex)
 		}
 		commitMessageMatch := false
 		if rule.CommitMessage {
-			for _, message := range commitMessages {
-				if regex.MatchString(message) {
-					commitMessageMatch = true
-					break
-				}
-			}
+			commitMessageMatch = checkCommitMessage(gc, log, org, repo, commitMessages, regex)
 		}
 
 		noMatch := !titleMatch && !bodyMatch && !commitMessageMatch
@@ -283,6 +282,63 @@ func handle(
 	}
 
 	return utilerrors.NewAggregate(errs)
+}
+
+func checkTitle(gc githubClient, log *logrus.Entry, org, repo, title string, regex *regexp.Regexp) bool {
+	match := regex.MatchString(title)
+	if !match {
+		return false
+	}
+	return checkIssueNumber(gc, log, org, repo, title, regex)
+}
+
+func checkBody(gc githubClient, log *logrus.Entry, org, repo, body string, regex *regexp.Regexp) bool {
+	match := regex.MatchString(body)
+	if !match {
+		return false
+	}
+	return checkIssueNumber(gc, log, org, repo, body, regex)
+}
+
+func checkCommitMessage(
+	gc githubClient, log *logrus.Entry, org, repo string, commitMessages []string,
+	regex *regexp.Regexp,
+) bool {
+	match := false
+	for _, message := range commitMessages {
+		if regex.MatchString(message) && checkIssueNumber(gc, log, org, repo, message, regex) {
+			match = true
+		}
+	}
+
+	return match
+}
+
+func checkIssueNumber(gc githubClient, log *logrus.Entry, org, repo, str string, regex *regexp.Regexp) bool {
+	matches := regex.FindStringSubmatch(str)
+	groupNames := regex.SubexpNames()
+
+	for i, groupName := range groupNames {
+		if groupName == issueNumberGroupName {
+			issueNumberStr := matches[i]
+			issueNumber, err := strconv.Atoi(issueNumberStr)
+			if err != nil {
+				log.WithError(err).Errorf("Failed to parse issue number: %s", issueNumberStr)
+				return false
+			}
+			issue, err := gc.GetIssue(org, repo, issueNumber)
+			if err != nil {
+				log.WithError(err).Errorf("Failed to get issue: %s/%s#%d", org, repo, issueNumber)
+				return false
+			}
+			if issue.PullRequest != nil {
+				log.WithError(err).Errorf("Pull request number can not used as issue number.")
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 // cleanUpOldNotifications used to clean up old Notifications.
@@ -355,7 +411,7 @@ func generateNotification(messages []string) (string, error) {
 <!--{{ .checkerNotificationIdentifier }}-->
 `, "message", map[string]interface{}{
 		"msg":                           msg,
-		"checkerNotificationIdentifier": CheckerNotificationIdentifier,
+		"checkerNotificationIdentifier": checkerNotificationIdentifier,
 	})
 	if err != nil {
 		return "", err

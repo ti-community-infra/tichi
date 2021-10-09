@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	issueTitleRegex  = "^(\\[TI-[1-9]\\d*\\])+.+: .{10,160}$"
+	issueTitleRegex  = "^(\\[TI-(?P<issue_number>[1-9]\\d*)\\])+.+: .{10,160}$"
 	issueNumberRegex = "#([1-9]\\d*)"
 )
 
@@ -258,6 +258,63 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				formattedLabel("do-not-merge/needs-issue-number"),
 			},
 		},
+		{
+			name:   "check issue number and the issue number is correct",
+			action: github.PullRequestActionEdited,
+			title:  "[TI-12345][TI-12346] pkg: what's changed",
+			labels: []string{
+				"do-not-merge/invalid-title",
+			},
+			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+				},
+			},
+
+			expectAddedLabels: []string{},
+			expectDeletedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+		},
+		{
+			name:   "check issue number but issue number is wrong",
+			action: github.PullRequestActionEdited,
+			title:  "[TI-1234] pkg: what's changed",
+			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:   "check issue number but one of issue numbers is wrong",
+			action: github.PullRequestActionEdited,
+			title:  "[TI-12345][TI-1234] pkg: what's changed",
+			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+			expectDeletedLabels: []string{},
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -280,6 +337,20 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		}
 
 		fc := &fakegithub.FakeClient{
+			Issues: map[int]*github.Issue{
+				12345: {
+					Number:      12345,
+					PullRequest: nil,
+				},
+				12346: {
+					Number:      12346,
+					PullRequest: nil,
+				},
+				1234: {
+					Number:      1234,
+					PullRequest: &struct{}{},
+				},
+			},
 			IssueComments:      make(map[int][]github.IssueComment),
 			IssueLabelsAdded:   []string{},
 			IssueLabelsRemoved: []string{},
@@ -319,15 +390,15 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		sort.Strings(tc.expectAddedLabels)
 		sort.Strings(fc.IssueLabelsAdded)
 		if !reflect.DeepEqual(tc.expectAddedLabels, fc.IssueLabelsAdded) {
-			t.Errorf("expected the labels %q to be added, but %q were added",
-				tc.expectAddedLabels, fc.IssueLabelsAdded)
+			t.Errorf("For case %s, expected the labels %q to be added, but %q were added",
+				tc.name, tc.expectAddedLabels, fc.IssueLabelsAdded)
 		}
 
 		sort.Strings(tc.expectDeletedLabels)
 		sort.Strings(fc.IssueLabelsRemoved)
 		if !reflect.DeepEqual(tc.expectDeletedLabels, fc.IssueLabelsRemoved) {
-			t.Errorf("expected the labels %q to be deleted, but %q were deleted",
-				tc.expectDeletedLabels, fc.IssueLabelsRemoved)
+			t.Errorf("For case %s, expected the labels %q to be deleted, but %q were deleted",
+				tc.name, tc.expectDeletedLabels, fc.IssueLabelsRemoved)
 		}
 
 		if !tc.shouldComment && len(fc.IssueCommentsAdded) != 0 {
@@ -480,6 +551,24 @@ func TestHandleIssueEvent(t *testing.T) {
 				formattedLabel("do-not-merge/invalid-title"),
 			},
 		},
+		{
+			name:   "check issue number but issue number is wrong",
+			action: github.IssueActionEdited,
+			title:  "[TI-1234] pkg: what's changed",
+			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+				{
+					Issue:        true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+			expectDeletedLabels: []string{},
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -502,6 +591,16 @@ func TestHandleIssueEvent(t *testing.T) {
 		}
 
 		fc := &fakegithub.FakeClient{
+			Issues: map[int]*github.Issue{
+				12345: {
+					Number:      12345,
+					PullRequest: nil,
+				},
+				1234: {
+					Number:      1234,
+					PullRequest: &struct{}{},
+				},
+			},
 			IssueComments:      make(map[int][]github.IssueComment),
 			IssueLabelsAdded:   []string{},
 			IssueLabelsRemoved: []string{},

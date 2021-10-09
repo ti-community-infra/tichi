@@ -285,8 +285,6 @@ type RequiredMatchRule struct {
 	CommitMessage bool `json:"commit_message,omitempty"`
 	// Regexp specifies the regular expression used for text match.
 	Regexp string `json:"regexp"`
-	// CheckIssueNumber specifies to check the issue number.
-	CheckIssueNumber bool `json:"check_issue_number,omitempty"`
 	// MissingMessage specifies the content commented by bot when there is no match.
 	MissingMessage string `json:"missing_message,omitempty"`
 	// MissingLabel specifies the label added by the bot when there is no match.
