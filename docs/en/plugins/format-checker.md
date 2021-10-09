@@ -41,7 +41,7 @@ ti-community-format-checker:
     required_match_rules:
       - pull_request: true
         title: true
-        regexp: "^(\[TI-(?P<issue_number>[1-9]\d*)\])+.+: .{10,160}$"
+        regexp: "^(\\[TI-(?P<issue_number>[1-9]\\d*)\\])+.+: .{10,160}$"
         missing_message: |
           Please follow PR Title Format: `[TI-<issue_number>] pkg, pkg2, pkg3: what is changed`
           Or if the count of mainly changed packages are more than 3, use `[TI-<issue_number>] *: what is changed`
