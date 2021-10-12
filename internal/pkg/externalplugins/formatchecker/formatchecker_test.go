@@ -158,25 +158,6 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "PR commits with issue number",
-			action: github.PullRequestActionOpened,
-			commitMessages: []string{
-				"First commit message\nclose #12345",
-				"Second commit message",
-			},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
-				{
-					PullRequest:   true,
-					CommitMessage: true,
-					Regexp:        "#([1-9]\\d*)",
-					MissingLabel:  "do-not-merge/invalid-commit-message",
-				},
-			},
-
-			expectAddedLabels:   []string{},
-			expectDeletedLabels: []string{},
-		},
-		{
 			name:   "PR title updated with issue number",
 			action: github.PullRequestActionEdited,
 			title:  "[TI-12345] pkg: what's changed",
