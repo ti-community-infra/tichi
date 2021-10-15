@@ -10,7 +10,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
-	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
@@ -200,7 +199,6 @@ func handle(
 	gc githubClient, log *logrus.Entry, org, repo string, num int, title, body string, commitMessages []string,
 	labels []github.Label, rules []tiexternalplugins.RequiredMatchRule,
 ) error {
-	var errs []error
 	messages := sets.NewString()
 	labelsExisted := sets.NewString()
 	labelsNeedDeleted := sets.NewString()
@@ -213,7 +211,7 @@ func handle(
 	for _, rule := range rules {
 		regex, err := regexp.Compile(rule.Regexp)
 		if err != nil {
-			errs = append(errs, err)
+			log.WithError(err).Errorf("Failed to compile regex: %s.", rule.Regexp)
 			continue
 		}
 
@@ -250,7 +248,7 @@ func handle(
 		for _, label := range labelsDeleted {
 			err := gc.RemoveLabel(org, repo, num, label)
 			if err != nil {
-				errs = append(errs, err)
+				log.WithError(err).Errorf("Failed to remove label %s for %s/%s#%d.", label, org, repo, num)
 			}
 		}
 	}
@@ -259,14 +257,16 @@ func handle(
 	if len(labelsAdded) != 0 {
 		err := gc.AddLabels(org, repo, num, labelsAdded...)
 		if err != nil {
-			errs = append(errs, err)
+			log.WithError(err).Errorf("Failed to add labels %s for %s/%s#%d.", labelsAdded, org, repo, num)
 		}
 	}
 
 	// Clean up the old notifications.
 	err := cleanUpOldNotifications(gc, log, org, repo, num)
 	if err != nil {
-		return err
+		// Notice: Even if the cleanup of the old notification fails, the addition of the new notification
+		// should not be blocked.
+		log.WithError(err).Errorf("Failed to clean up the old notifications.")
 	}
 
 	// Add the new notification comment.
@@ -281,7 +281,7 @@ func handle(
 		}
 	}
 
-	return utilerrors.NewAggregate(errs)
+	return nil
 }
 
 func checkTitle(gc githubClient, log *logrus.Entry, org, repo, title string, regex *regexp.Regexp) bool {
