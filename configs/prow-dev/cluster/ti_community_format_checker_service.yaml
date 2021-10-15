@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: prow
+  name: ti-community-format-checker
+spec:
+  selector:
+    app: ti-community-format-checker
+  ports:
+    - port: 80
+  type: ClusterIP
