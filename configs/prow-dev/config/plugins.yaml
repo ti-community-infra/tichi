@@ -107,3 +107,7 @@ external_plugins:
       events:
         - issue_comment
         - push
+    - name: ti-community-format-checker
+      events:
+        - pull_request
+        - issues
