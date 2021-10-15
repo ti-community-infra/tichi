@@ -95,8 +95,20 @@ ti-community-tars:
     only_when_label: "status/can-merge"
     exclude_labels:
       - needs-rebase
-      - do-not-merge/work-in-progress
-# Notice: only for test, make tars test easily.
-#      - do-not-merge/hold
+      # Notice: only for test, make tars test easily.
+      #- do-not-merge/work-in-progress
+      - do-not-merge/invalid-commit-message
+      - do-not-merge/hold
     message: |
       Your PR was out of date, I have automatically updated it for you.
+
+ti-community-format-checker:
+  - repos:
+      - ti-community-infra/test-dev
+    required_match_rules:
+      - pull_request: true
+        commit_message: true
+        regexp: "#(?P<issue_number>[1-9]\\d*)"
+        missing_message: |
+          Please provide the associated issue number in the commit message, for example: `close #12345`, or `ref #12345`.
+        missing_label: do-not-merge/invalid-commit-message
