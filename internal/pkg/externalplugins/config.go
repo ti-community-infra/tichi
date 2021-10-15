@@ -506,18 +506,18 @@ func (c *Configuration) CherrypickerFor(org, repo string) *TiCommunityCherrypick
 // or an organization.
 func (c *Configuration) FormatCheckerFor(org, repo string) *TiCommunityFormatChecker {
 	fullName := fmt.Sprintf("%s/%s", org, repo)
-	for _, matchChecker := range c.TiCommunityFormatChecker {
-		if !sets.NewString(matchChecker.Repos...).Has(fullName) {
+	for _, formatChecker := range c.TiCommunityFormatChecker {
+		if !sets.NewString(formatChecker.Repos...).Has(fullName) {
 			continue
 		}
-		return &matchChecker
+		return &formatChecker
 	}
 	// If you don't find anything, loop again looking for an org config
-	for _, matchChecker := range c.TiCommunityFormatChecker {
-		if !sets.NewString(matchChecker.Repos...).Has(org) {
+	for _, formatChecker := range c.TiCommunityFormatChecker {
+		if !sets.NewString(formatChecker.Repos...).Has(org) {
 			continue
 		}
-		return &matchChecker
+		return &formatChecker
 	}
 	return &TiCommunityFormatChecker{}
 }

@@ -27,7 +27,7 @@ func TestValidateConfig(t *testing.T) {
 		autoresponders  *TiCommunityAutoresponder
 		blunderbuss     *TiCommunityBlunderbuss
 		tars            *TiCommunityTars
-		matchChecker    *TiCommunityFormatChecker
+		formatChecker   *TiCommunityFormatChecker
 
 		expected error
 	}{
@@ -77,7 +77,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -137,7 +137,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -197,7 +197,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -257,7 +257,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -316,7 +316,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -375,7 +375,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -434,7 +434,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -493,7 +493,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -553,7 +553,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -613,7 +613,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -672,7 +672,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -731,7 +731,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -790,7 +790,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -847,7 +847,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -904,7 +904,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -961,7 +961,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -1021,7 +1021,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra/test-dev"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -1080,7 +1080,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -1139,7 +1139,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -1197,7 +1197,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -1255,7 +1255,7 @@ func TestValidateConfig(t *testing.T) {
 			tars: &TiCommunityTars{
 				Repos: []string{"ti-community-infra"},
 			},
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos: []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{
 					{
@@ -1300,7 +1300,7 @@ func TestValidateConfig(t *testing.T) {
 					*tc.tars,
 				},
 				TiCommunityFormatChecker: []TiCommunityFormatChecker{
-					*tc.matchChecker,
+					*tc.formatChecker,
 				},
 			}
 			actual := config.Validate()
@@ -1966,17 +1966,17 @@ func TestSetCherrypickerDefaults(t *testing.T) {
 	}
 }
 
-func TestMatchCheckerFor(t *testing.T) {
+func TestFormatCheckerFor(t *testing.T) {
 	testcases := []struct {
-		name         string
-		matchChecker *TiCommunityFormatChecker
-		org          string
-		repo         string
-		expectEmpty  *TiCommunityFormatChecker
+		name          string
+		formatChecker *TiCommunityFormatChecker
+		org           string
+		repo          string
+		expectEmpty   *TiCommunityFormatChecker
 	}{
 		{
 			name: "Full name",
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos:              []string{"ti-community-infra/test-dev"},
 				RequiredMatchRules: []RequiredMatchRule{},
 			},
@@ -1985,7 +1985,7 @@ func TestMatchCheckerFor(t *testing.T) {
 		},
 		{
 			name: "Only org",
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos:              []string{"ti-community-infra"},
 				RequiredMatchRules: []RequiredMatchRule{},
 			},
@@ -1994,7 +1994,7 @@ func TestMatchCheckerFor(t *testing.T) {
 		},
 		{
 			name: "Can not find",
-			matchChecker: &TiCommunityFormatChecker{
+			formatChecker: &TiCommunityFormatChecker{
 				Repos:              []string{"ti-community-infra"},
 				RequiredMatchRules: []RequiredMatchRule{},
 			},
@@ -2008,7 +2008,7 @@ func TestMatchCheckerFor(t *testing.T) {
 		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
 			config := Configuration{TiCommunityFormatChecker: []TiCommunityFormatChecker{
-				*tc.matchChecker,
+				*tc.formatChecker,
 			}}
 
 			contribution := config.FormatCheckerFor(tc.org, tc.repo)
@@ -2016,7 +2016,7 @@ func TestMatchCheckerFor(t *testing.T) {
 			if tc.expectEmpty != nil {
 				assert.DeepEqual(t, contribution, &TiCommunityFormatChecker{})
 			} else {
-				assert.DeepEqual(t, contribution.Repos, tc.matchChecker.Repos)
+				assert.DeepEqual(t, contribution.Repos, tc.formatChecker.Repos)
 			}
 		})
 	}
