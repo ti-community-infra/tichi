@@ -52,6 +52,7 @@ type Configuration struct {
 	TiCommunityLabelBlocker  []TiCommunityLabelBlocker  `json:"ti-community-label-blocker,omitempty"`
 	TiCommunityContribution  []TiCommunityContribution  `json:"ti-community-contribution,omitempty"`
 	TiCommunityCherrypicker  []TiCommunityCherrypicker  `json:"ti-community-cherrypicker,omitempty"`
+	TiCommunityFormatChecker []TiCommunityFormatChecker `json:"ti-community-format-checker,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -260,6 +261,34 @@ func (c *TiCommunityCherrypicker) setDefaults() {
 	if len(c.LabelPrefix) == 0 {
 		c.LabelPrefix = DefaultCherryPickLabelPrefix
 	}
+}
+
+// TiCommunityFormatChecker is the config for the format-checker plugin.
+type TiCommunityFormatChecker struct {
+	// Repos are either of the form org/repo or just org.
+	Repos []string `json:"repos,omitempty"`
+	// RequiredMatchRules specifies rules required to match.
+	RequiredMatchRules []RequiredMatchRule `json:"required_match_rules,omitempty"`
+}
+
+// RequiredMatchRule is config about match rules for checking issue or PR content.
+type RequiredMatchRule struct {
+	// PullRequest specifies whether check for pull request.
+	PullRequest bool `json:"pull_request,omitempty"`
+	// Issue specifies whether check for issue.
+	Issue bool `json:"issue,omitempty"`
+	// Title specifies whether check the issue or pull request title.
+	Title bool `json:"title,omitempty"`
+	// Body specifies whether check the issue or pull request body.
+	Body bool `json:"body,omitempty"`
+	// CommitMessage specifies whether check the message of commits in the pull request.
+	CommitMessage bool `json:"commit_message,omitempty"`
+	// Regexp specifies the regular expression used for text match.
+	Regexp string `json:"regexp"`
+	// MissingMessage specifies the content commented by bot when there is no match.
+	MissingMessage string `json:"missing_message,omitempty"`
+	// MissingLabel specifies the label added by the bot when there is no match.
+	MissingLabel string `json:"missing_label,omitempty"`
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists
@@ -472,6 +501,27 @@ func (c *Configuration) CherrypickerFor(org, repo string) *TiCommunityCherrypick
 	return &TiCommunityCherrypicker{}
 }
 
+// FormatCheckerFor finds the TiCommunityFormatChecker for a repo, if one exists.
+// TiCommunityFormatChecker configuration can be listed for a repository
+// or an organization.
+func (c *Configuration) FormatCheckerFor(org, repo string) *TiCommunityFormatChecker {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, formatChecker := range c.TiCommunityFormatChecker {
+		if !sets.NewString(formatChecker.Repos...).Has(fullName) {
+			continue
+		}
+		return &formatChecker
+	}
+	// If you don't find anything, loop again looking for an org config
+	for _, formatChecker := range c.TiCommunityFormatChecker {
+		if !sets.NewString(formatChecker.Repos...).Has(org) {
+			continue
+		}
+		return &formatChecker
+	}
+	return &TiCommunityFormatChecker{}
+}
+
 // setDefaults will set the default value for the configuration of all plugins.
 func (c *Configuration) setDefaults() {
 	for i := range c.TiCommunityBlunderbuss {
@@ -536,6 +586,10 @@ func (c *Configuration) Validate() error {
 	}
 
 	if err := validateLabelBlocker(c.TiCommunityLabelBlocker); err != nil {
+		return err
+	}
+
+	if err := validateMatchBlocker(c.TiCommunityFormatChecker); err != nil {
 		return err
 	}
 
@@ -674,5 +728,24 @@ func validateTars(tars []TiCommunityTars) error {
 		}
 	}
 
+	return nil
+}
+
+// validateMatchBlocker will return an error if the regex cannot compile or actions is illegal.
+func validateMatchBlocker(matchBlockers []TiCommunityFormatChecker) error {
+	for _, matchBlocker := range matchBlockers {
+		for _, rule := range matchBlocker.RequiredMatchRules {
+			_, err := regexp.Compile(rule.Regexp)
+			if err != nil {
+				return fmt.Errorf("the regex of matching rule is broken: %v", err)
+			}
+			if !rule.PullRequest && !rule.Issue {
+				return fmt.Errorf("issue or pull request need to be specified to verify")
+			}
+			if !rule.Title && !rule.Body && !rule.CommitMessage {
+				return fmt.Errorf("at least one of scopes(title, body, commit message) need to be specified")
+			}
+		}
+	}
 	return nil
 }

@@ -118,6 +118,15 @@ builds:
     main: ./cmd/rerere/main.go
     env:
       - CGO_ENABLED=0
+  - id: "ti-community-format-checker"
+    binary: ticommunityformatchecker
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/ticommunityformatchecker/main.go
+    env:
+      - CGO_ENABLED=0
 source:
   enabled: true
 checksum:
@@ -261,3 +270,13 @@ dockers:
       - "ticommunityinfra/rerere-component:{{ .Tag }}"
       - "ticommunityinfra/rerere-component:{{ .Major }}"
     dockerfile: ./deployments/components/rerere/Dockerfile
+  -
+    binaries:
+      - ticommunityformatchecker
+    builds:
+      - ti-community-format-checker
+    image_templates:
+      - "ticommunityinfra/tichi-format-checker-plugin:latest"
+      - "ticommunityinfra/tichi-format-checker-plugin:{{ .Tag }}"
+      - "ticommunityinfra/tichi-format-checker-plugin:{{ .Major }}"
+    dockerfile: ./deployments/plugins/formatchecker/Dockerfile

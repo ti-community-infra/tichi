@@ -16,30 +16,31 @@ The TiDB community has customized a number of its own plugins based on this feat
 
 The following shows some commonly used components or plugins in the TiDB community. The external plugins whose name begin with `ti-community-` are developed and maintained by the [Community Infra SIG](https://developer.tidb.io/SIG/community-infra) of TiDB community. If you encounter any problems during use, you can contact us in [Slack](https://slack.tidb.io/invite?team=tidb-community&channel=sig-community-infra&ref=github).
 
-| plugin name                     | plugin type     | introduction                                                                                                                              |
-| ------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| tide                            | basic component | Manage the GitHub PR pool through some given conditions and automatically merge PR that meets the conditions.                             |
-| ti-community-owners             | external plugin | Determine the reviewer and committer of the PR based on information such as SIG or Github permissions.                                    |
-| ti-community-lgtm               | external plugin | Add, update or delete the `status/LGT*` label by submitting Approve or Request Changes review.                                                                                     |
-| ti-community-merge              | external plugin | Add or delete the `status/can-merge` label for PR by command.                                                                             |
-| ti-community-blunderbuss        | external plugin | Mainly responsible for automatically assigning reviewers based on SIG or Github permissions.                                              |
-| ti-community-autoresponder      | external plugin | Automatically reply based on the content of the comment.                                                                                  |
-| ti-community-tars               | external plugin | Mainly responsible for automatically merging the main branch into the current PR to ensure that the current PR's Base is kept up to date. |
-| ti-community-label              | external plugin | Add labels to PR or Issue via commands.                                                                                                   |
-| ti-community-label-blocker      | external plugin | Mainly responsible for preventing users from illegal operations on certain sensitive labels.                                              |
-| ti-community-contribution       | external plugin | Mainly responsible for adding `contribution` or `first-time-contributor` labels to the PRs of external contributors.                      |
-| ti-community-label-cherrypicker | external plugin | Mainly responsible for cherry-pick PR to other target branches.                                                                           |
-| needs-rebase                    | external plugin | When the PR needs to rebase, add labels or add comments to remind the PR author to rebase.                                                |
-| require-matching-label          | internal plugin | When a PR or Issue lacks a relevant label, add a label or comment to remind contributors to supplement.                                   |
-| hold                            | internal plugin | Add or cancel the non-combinable status of PR through the `/[un]hold` command.                                                            |
-| assign                          | internal plugin | Add or cancel the assignee of PR or Issue through the `/[un]assign` command.                                                              |
-| size                            | internal plugin | Evaluate the size of the PR based on the number of lines of code modification, and label the PR with `size/*`.                            |
-| lifecycle                       | internal plugin | Use labels to mark the life cycle of Issue or PR.                                                                                         |
-| wip                             | internal plugin | Add the `do-not-merge/work-in-progress` label to the PR under development to prevent the automatic assignment of reviewer and PR merge.   |
-| welcome                         | internal plugin | Send a welcome message to contributors who have contributed for the first time through a robot.                                           |
-| release-note                    | internal plugin | It is mainly responsible for detecting whether a PR has added a release note.                                                             |
-| label_sync                      | tool            | Able to synchronize the labels configured in the yaml file to one or more repositories.                                                   |
-| autobump                        | tool            | Update the version of upstream Prow and its related components and plugins by automatically submitting Pull Requests.                     |
+| plugin name                 | plugin type     | introduction                                                                                                                              |
+|-----------------------------|-----------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| tide                        | basic component | Manage the GitHub PR pool through some given conditions and automatically merge PR that meets the conditions.                             |
+| ti-community-owners         | external plugin | Determine the reviewer and committer of the PR based on information such as SIG or Github permissions.                                    |
+| ti-community-lgtm           | external plugin | Add, update or delete the `status/LGT*` label by submitting Approve or Request Changes review.                                            |
+| ti-community-merge          | external plugin | Add or delete the `status/can-merge` label for PR by command.                                                                             |
+| ti-community-blunderbuss    | external plugin | Mainly responsible for automatically assigning reviewers based on SIG or Github permissions.                                              |
+| ti-community-autoresponder  | external plugin | Automatically reply based on the content of the comment.                                                                                  |
+| ti-community-tars           | external plugin | Mainly responsible for automatically merging the main branch into the current PR to ensure that the current PR's Base is kept up to date. |
+| ti-community-label          | external plugin | Add labels to PR or Issue via commands.                                                                                                   |
+| ti-community-label-blocker  | external plugin | Mainly responsible for preventing users from illegal operations on certain sensitive labels.                                              |
+| ti-community-contribution   | external plugin | Mainly responsible for adding `contribution` or `first-time-contributor` labels to the PRs of external contributors.                      |
+| ti-community-cherrypicker   | external plugin | Mainly responsible for cherry-pick PR to other target branches.                                                                           |
+| ti-community-format-checker | external plugin | Mainly responsible for checking the title, content and format of the commit message of the PR or issue.                                   |
+| needs-rebase                | external plugin | When the PR needs to rebase, add labels or add comments to remind the PR author to rebase.                                                |
+| require-matching-label      | internal plugin | When a PR or Issue lacks a relevant label, add a label or comment to remind contributors to supplement.                                   |
+| hold                        | internal plugin | Add or cancel the non-combinable status of PR through the `/[un]hold` command.                                                            |
+| assign                      | internal plugin | Add or cancel the assignee of PR or Issue through the `/[un]assign` command.                                                              |
+| size                        | internal plugin | Evaluate the size of the PR based on the number of lines of code modification, and label the PR with `size/*`.                            |
+| lifecycle                   | internal plugin | Use labels to mark the life cycle of Issue or PR.                                                                                         |
+| wip                         | internal plugin | Add the `do-not-merge/work-in-progress` label to the PR under development to prevent the automatic assignment of reviewer and PR merge.   |
+| welcome                     | internal plugin | Send a welcome message to contributors who have contributed for the first time through a robot.                                           |
+| release-note                | internal plugin | It is mainly responsible for detecting whether a PR has added a release note.                                                             |
+| label_sync                  | tool            | Able to synchronize the labels configured in the yaml file to one or more repositories.                                                   |
+| autobump                    | tool            | Update the version of upstream Prow and its related components and plugins by automatically submitting Pull Requests.                     |
 
 At the same time, you can find all currently available components or plugins in [Plugins](https://prow.tidb.io/plugins) page, or in [Command](https://prow.tidb.io/command-help) to view the commands available in the specified repository.
 
