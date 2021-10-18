@@ -50,4 +50,4 @@ ti-community-format-checker:
 
 ## Reference Documents
 
-- [code](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/fotmatchecker)
+- [code](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/formatchecker)
