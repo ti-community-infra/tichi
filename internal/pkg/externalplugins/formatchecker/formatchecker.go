@@ -119,8 +119,9 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	cfg *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	if pe.Action != github.PullRequestActionOpened && pe.Action != github.PullRequestActionEdited &&
-		pe.Action != github.PullRequestActionReopened && pe.Action != github.PullRequestActionSynchronize {
-		log.Debug("Not a pull request opened action, skipping...")
+		pe.Action != github.PullRequestActionReopened && pe.Action != github.PullRequestActionSynchronize &&
+		pe.Action != github.PullRequestActionLabeled && pe.Action != github.PullRequestActionUnlabeled {
+		log.Debug("Skipping because not a valid pull request action.")
 		return nil
 	}
 
@@ -131,13 +132,26 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	blocker := cfg.FormatCheckerFor(org, repo)
 	needCheckCommits := false
 	rulesForPullRequest := make([]tiexternalplugins.RequiredMatchRule, 0)
+	skipLabels := sets.NewString()
 	for _, rule := range blocker.RequiredMatchRules {
 		if rule.PullRequest {
 			rulesForPullRequest = append(rulesForPullRequest, rule)
+			skipLabels.Insert(rule.SkipLabel)
 		}
 		if rule.CommitMessage {
 			needCheckCommits = true
 		}
+	}
+
+	// Skip if no rules need to be checked.
+	if len(rulesForPullRequest) == 0 {
+		return nil
+	}
+
+	// Skip labeled / unlabeled events unrelated to skip label.
+	isLabelEvent := pe.Action == github.PullRequestActionLabeled || pe.Action == github.PullRequestActionUnlabeled
+	if isLabelEvent && !skipLabels.Has(pe.Label.Name) {
+		return nil
 	}
 
 	// Notice: You need to get the list of commits through the API when you need to check the commit messages.
@@ -167,8 +181,14 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 func HandleIssueEvent(gc githubClient, ie *github.IssueEvent,
 	cfg *tiexternalplugins.Configuration, log *logrus.Entry) error {
 	if ie.Action != github.IssueActionOpened && ie.Action != github.IssueActionEdited &&
-		ie.Action != github.IssueActionReopened && ie.Issue.PullRequest != nil {
-		log.Debug("Not a issue opened or edited action, skipping...")
+		ie.Action != github.IssueActionReopened && ie.Action != github.IssueActionLabeled &&
+		ie.Action != github.IssueActionUnlabeled {
+		log.Debug("Skipping because not an valid issue action.")
+		return nil
+	}
+
+	if ie.Issue.PullRequest != nil {
+		log.Debug("Skipping because not an issue.")
 		return nil
 	}
 
@@ -176,12 +196,24 @@ func HandleIssueEvent(gc githubClient, ie *github.IssueEvent,
 	repo := ie.Repo.Name
 	num := ie.Issue.Number
 
-	blocker := cfg.FormatCheckerFor(org, repo)
+	checker := cfg.FormatCheckerFor(org, repo)
 	rulesForIssue := make([]tiexternalplugins.RequiredMatchRule, 0)
-	for _, rule := range blocker.RequiredMatchRules {
+	skipLabels := sets.NewString()
+	for _, rule := range checker.RequiredMatchRules {
 		if rule.Issue {
 			rulesForIssue = append(rulesForIssue, rule)
+			skipLabels.Insert(rule.SkipLabel)
 		}
+	}
+
+	if len(rulesForIssue) == 0 {
+		return nil
+	}
+
+	// Skip labeled / unlabeled events unrelated to skip label.
+	isLabelEvent := ie.Action == github.IssueActionLabeled || ie.Action == github.IssueActionUnlabeled
+	if isLabelEvent && !skipLabels.Has(ie.Label.Name) {
+		return nil
 	}
 
 	err := handle(
@@ -209,6 +241,14 @@ func handle(
 	}
 
 	for _, rule := range rules {
+		if len(rule.SkipLabel) != 0 && labelsExisted.Has(rule.SkipLabel) {
+			log.Infof("The rule is passed by the skip label %s.", rule.SkipLabel)
+			if len(rule.MissingLabel) != 0 && labelsExisted.Has(rule.MissingLabel) {
+				labelsNeedDeleted.Insert(rule.MissingLabel)
+			}
+			continue
+		}
+
 		regex, err := regexp.Compile(rule.Regexp)
 		if err != nil {
 			log.WithError(err).Errorf("Failed to compile regex: %s.", rule.Regexp)

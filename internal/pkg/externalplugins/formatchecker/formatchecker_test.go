@@ -25,13 +25,14 @@ func TestHandlePullRequestEvent(t *testing.T) {
 	}
 
 	testcases := []struct {
-		name                  string
-		action                github.PullRequestEventAction
-		title                 string
-		body                  string
-		labels                []string
-		commitMessages        []string
-		requiredMatchingRules []externalplugins.RequiredMatchRule
+		name               string
+		action             github.PullRequestEventAction
+		title              string
+		body               string
+		label              string
+		labels             []string
+		commitMessages     []string
+		requiredMatchRules []externalplugins.RequiredMatchRule
 
 		expectAddedLabels   []string
 		expectDeletedLabels []string
@@ -42,7 +43,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			action: github.PullRequestActionOpened,
 			title:  "[TI-12345] pkg: what's changed (#999)",
 			labels: []string{},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:    true,
 					Title:          true,
@@ -61,7 +62,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			action: github.PullRequestActionOpened,
 			title:  "invalid title",
 			labels: []string{},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:    true,
 					Title:          true,
@@ -82,7 +83,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			action: github.PullRequestActionOpened,
 			body:   `PR Body content`,
 			labels: []string{},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
 					Body:         true,
@@ -105,7 +106,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			close #12345
 `,
 			labels: []string{},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
 					Body:         true,
@@ -124,7 +125,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				"First commit message",
 				"Second commit message",
 			},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:   true,
 					CommitMessage: true,
@@ -145,7 +146,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				"First commit message\nclose #12345",
 				"Second commit message",
 			},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:   true,
 					CommitMessage: true,
@@ -164,7 +165,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			labels: []string{
 				"do-not-merge/invalid-title",
 			},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
 					Title:        true,
@@ -190,7 +191,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				"Second commit message",
 				"Third commit message\nclose #12345",
 			},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:   true,
 					Title:         true,
@@ -219,7 +220,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				"Second commit message",
 				"Third commit message\nclose #12345",
 			},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
 					Title:        true,
@@ -246,7 +247,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			labels: []string{
 				"do-not-merge/invalid-title",
 			},
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
 					Title:        true,
@@ -264,7 +265,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			name:   "check issue number but issue number is wrong",
 			action: github.PullRequestActionEdited,
 			title:  "[TI-1234] pkg: what's changed",
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
 					Title:        true,
@@ -282,12 +283,57 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			name:   "check issue number but one of issue numbers is wrong",
 			action: github.PullRequestActionEdited,
 			title:  "[TI-12345][TI-1234] pkg: what's changed",
-			requiredMatchingRules: []externalplugins.RequiredMatchRule{
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
 					Title:        true,
 					Regexp:       issueTitleRegex,
 					MissingLabel: "do-not-merge/invalid-title",
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:   "Labeled the skip label, pass the rule",
+			action: github.PullRequestActionLabeled,
+			label:  "skip-issue",
+			title:  "pkg: what's changed",
+			labels: []string{
+				"do-not-merge/invalid-title",
+				"skip-issue",
+			},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					SkipLabel:    "skip-issue",
+				},
+			},
+
+			expectAddedLabels: []string{},
+			expectDeletedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+		},
+		{
+			name:   "Unlabeled the skip label, recheck the rule",
+			action: github.PullRequestActionUnlabeled,
+			label:  "skip-issue",
+			title:  "pkg: what's changed",
+			labels: []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					SkipLabel:    "skip-issue",
 				},
 			},
 
@@ -344,7 +390,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		cfg.TiCommunityFormatChecker = []externalplugins.TiCommunityFormatChecker{
 			{
 				Repos:              []string{"org/repo"},
-				RequiredMatchRules: tc.requiredMatchingRules,
+				RequiredMatchRules: tc.requiredMatchRules,
 			},
 		}
 
@@ -361,6 +407,9 @@ func TestHandlePullRequestEvent(t *testing.T) {
 					Login: "org",
 				},
 				Name: "repo",
+			},
+			Label: github.Label{
+				Name: tc.label,
 			},
 		}
 		err := HandlePullRequestEvent(fc, pe, cfg, logrus.WithField("plugin", PluginName))
@@ -400,6 +449,7 @@ func TestHandleIssueEvent(t *testing.T) {
 	testcases := []struct {
 		name               string
 		action             github.IssueEventAction
+		label              string
 		title              string
 		body               string
 		labels             []string
@@ -550,6 +600,51 @@ func TestHandleIssueEvent(t *testing.T) {
 			},
 			expectDeletedLabels: []string{},
 		},
+		{
+			name:   "Labeled the skip label, pass the rule",
+			action: github.IssueActionLabeled,
+			label:  "skip-issue",
+			title:  "pkg: what's changed",
+			labels: []string{
+				"do-not-merge/invalid-title",
+				"skip-issue",
+			},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					Issue:        true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					SkipLabel:    "skip-issue",
+				},
+			},
+
+			expectAddedLabels: []string{},
+			expectDeletedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+		},
+		{
+			name:   "Unlabeled the skip label, recheck the rule",
+			action: github.IssueActionUnlabeled,
+			label:  "skip-issue",
+			title:  "pkg: what's changed",
+			labels: []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					Issue:        true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					SkipLabel:    "skip-issue",
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+			expectDeletedLabels: []string{},
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -611,6 +706,9 @@ func TestHandleIssueEvent(t *testing.T) {
 					Login: "org",
 				},
 				Name: "repo",
+			},
+			Label: github.Label{
+				Name: tc.label,
 			},
 		}
 		err := HandleIssueEvent(fc, ie, cfg, logrus.WithField("plugin", PluginName))
