@@ -25,11 +25,13 @@ func TestHandlePullRequestEvent(t *testing.T) {
 	}
 
 	testcases := []struct {
-		name               string
-		action             github.PullRequestEventAction
-		title              string
-		body               string
-		label              string
+		name   string
+		action github.PullRequestEventAction
+		// label is label labeled or unlabeled.
+		label string
+		title string
+		body  string
+		// labels is the labels existed on the pull request.
 		labels             []string
 		commitMessages     []string
 		requiredMatchRules []externalplugins.RequiredMatchRule
@@ -342,6 +344,25 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			},
 			expectDeletedLabels: []string{},
 		},
+		{
+			name:   "Labeled the other label, do not trigger the check",
+			action: github.PullRequestActionLabeled,
+			label:  "other",
+			title:  "pkg: what's changed",
+			labels: []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					SkipLabel:    "skip-issue",
+				},
+			},
+
+			expectAddedLabels:   []string{},
+			expectDeletedLabels: []string{},
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -643,6 +664,25 @@ func TestHandleIssueEvent(t *testing.T) {
 			expectAddedLabels: []string{
 				formattedLabel("do-not-merge/invalid-title"),
 			},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:   "Labeled the other label, do not trigger the check",
+			action: github.IssueActionLabeled,
+			label:  "other",
+			title:  "pkg: what's changed",
+			labels: []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					Issue:        true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					SkipLabel:    "skip-issue",
+				},
+			},
+
+			expectAddedLabels:   []string{},
 			expectDeletedLabels: []string{},
 		},
 	}
