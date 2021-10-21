@@ -129,11 +129,11 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	repo := pe.Repo.Name
 	num := pe.Number
 
-	blocker := cfg.FormatCheckerFor(org, repo)
+	checker := cfg.FormatCheckerFor(org, repo)
 	needCheckCommits := false
 	rulesForPullRequest := make([]tiexternalplugins.RequiredMatchRule, 0)
 	skipLabels := sets.NewString()
-	for _, rule := range blocker.RequiredMatchRules {
+	for _, rule := range checker.RequiredMatchRules {
 		if rule.PullRequest {
 			rulesForPullRequest = append(rulesForPullRequest, rule)
 			skipLabels.Insert(rule.SkipLabel)
