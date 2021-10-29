@@ -15,9 +15,10 @@
 以下展示的是 TiDB 社区当中较为常用的一些组件或插件，其中名称以 `ti-community-` 开头的外部插件是 TiDB 社区 [Community Infra SIG](https://developer.tidb.io/SIG/community-infra) 开发并正在维护的插件。如果你在使用过程中遇到任何问题，你都可以在 [Slack](https://slack.tidb.io/invite?team=tidb-community&channel=sig-community-infra&ref=github) 当中与我们取得联系。
 
 | 插件名称                        | 插件类型 | 功能简介                                                                                      |
-| ------------------------------- | -------- | --------------------------------------------------------------------------------------------- |
+|---------------------------------|----------|-----------------------------------------------------------------------------------------------|
 | tide                            | 基础组件 | 通过一些给定条件来管理 GitHub PR 池，自动合并符合条件的 PR。                                  |
 | rerere                          | 基础组件 | 将代码 push 到专门用来重新测试的分支上进行重新测试。                                          |
+| branchprotector                 | 基础组件 | 通过 yaml 文件配置仓库的分支保护，机器人会将配置自动同步到 GitHub 仓库。                      |
 | ti-community-owners             | 外部插件 | 根据 SIG 或 Github 权限等信息来确定 PR 的 reviewer 和 committer。                             |
 | ti-community-lgtm               | 外部插件 | 通过提交 Approve 或 Request Changes 评审意见，添加、更新或删除 PR 的 `status/LGT*` 标签。     |
 | ti-community-merge              | 外部插件 | 通过命令添加或删除 PR 的 `status/can-merge` 标签。                                            |
@@ -28,7 +29,7 @@
 | ti-community-label-blocker      | 外部插件 | 主要负责阻止用户对某些敏感标签的进行非法操作。                                                |
 | ti-community-label-contribution | 外部插件 | 主要负责为外部贡献者的 PR 添加 `contribution` 或 `first-time-contributor` 标签。              |
 | ti-community-cherrypicker       | 外部插件 | 主要负责将 PR cherry-pick 到其他目标分支。                                                    |
-| ti-community-format-checker     | 外部插件 | 主要负责将 PR 或 Issue 的标题、内容以及提交信息的格式进行检查。                                    |
+| ti-community-format-checker     | 外部插件 | 主要负责将 PR 或 Issue 的标题、内容以及提交信息的格式进行检查。                               |
 | needs-rebase                    | 外部插件 | 当 PR 需要进行 rebase 时，通过添加标签或添加评论提醒 PR 作者进行 rebase。                     |
 | require-matching-label          | 内置插件 | 当 PR 或 Issue 缺失相关标签时，通过添加标签或评论提醒贡献者进行补充。                         |
 | hold                            | 内置插件 | 通过 `/[un]hold` 命令，添加或取消 PR 的不可合并状态。                                         |
@@ -38,6 +39,7 @@
 | wip                             | 内置插件 | 为正在开发的 PR 添加 `do-not-merge/work-in-progress` 标签，阻止自动分配 reviewer 和 PR 合并。 |
 | welcome                         | 内置插件 | 通过机器人向首次贡献的贡献者发送欢迎语。                                                      |
 | release-note                    | 内置插件 | 主要负责检测 PR 是否添加了发布说明。                                                          |
+| dco                             | 内置插件 | 检查 PR 的所有 commit 是否都签署邮箱地址。                                                    |
 | label_sync                      | 工具     | 能够将 yaml 文件当中配置的标签同步到一个或多个仓库。                                          |
 | autobump                        | 工具     | 通过自动提交 Pull Request 的方式更新上游 Prow 及其相关组件和插件的版本。                      |
 

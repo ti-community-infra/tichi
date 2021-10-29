@@ -1,6 +1,7 @@
 - [基础组件](components.md)
   - [Tide](components/tide.md)
   - [rerere](components/rerere.md)
+  - [branchprotector](components/branchprotector.md)
 - [插件](plugins.md)
   - 外部插件
     - [ti-community-owners](plugins/owners.md)
@@ -22,6 +23,7 @@
     - [assign](plugins/assign.md)
     - [milestone](plugins/milestone.md)
     - [release-note](plugins/release-note.md)
+    - [dco](plugins/dco.md)
 - [工具](tools.md)
   - [label_sync](tools/label_sync.md)
   - [autobump](tools/autobump.md)
