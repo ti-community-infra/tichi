@@ -27,11 +27,11 @@ func TestHandlePullRequestEvent(t *testing.T) {
 	testcases := []struct {
 		name   string
 		action github.PullRequestEventAction
-		// label is label labeled or unlabeled.
+		// label that will be labeled or unlabeled.
 		label string
 		title string
 		body  string
-		// labels is the labels existed on the pull request.
+		// labels is the labels existed on the pull request (after the labeled / unlabeled event happened).
 		labels             []string
 		commitMessages     []string
 		requiredMatchRules []externalplugins.RequiredMatchRule
@@ -468,11 +468,13 @@ func TestHandleIssueEvent(t *testing.T) {
 	}
 
 	testcases := []struct {
-		name               string
-		action             github.IssueEventAction
-		label              string
-		title              string
-		body               string
+		name   string
+		action github.IssueEventAction
+		// label that will be labeled or unlabeled.
+		label string
+		title string
+		body  string
+		// labels is the labels existed on the pull request (after the labeled / unlabeled event happened).
 		labels             []string
 		commitMessages     []string
 		requiredMatchRules []externalplugins.RequiredMatchRule

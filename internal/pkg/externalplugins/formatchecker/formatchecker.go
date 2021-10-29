@@ -183,7 +183,7 @@ func HandleIssueEvent(gc githubClient, ie *github.IssueEvent,
 	if ie.Action != github.IssueActionOpened && ie.Action != github.IssueActionEdited &&
 		ie.Action != github.IssueActionReopened && ie.Action != github.IssueActionLabeled &&
 		ie.Action != github.IssueActionUnlabeled {
-		log.Debug("Skipping because not an valid issue action.")
+		log.Debug("Skipping because not a valid issue action.")
 		return nil
 	}
 
