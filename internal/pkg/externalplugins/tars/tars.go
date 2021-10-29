@@ -161,7 +161,7 @@ func HandleIssueCommentEvent(log *logrus.Entry, ghc githubClient, ice *github.Is
 	// Delay for a few seconds to give GitHub time to add or remove the label,
 	// as the comment may be a command related to a PR merge(such as /hold or /merge).
 	// See: https://github.com/ti-community-infra/tichi/issues/524.
-	sleep(time.Second * 5)
+	sleep(time.Second * 8)
 
 	pr, err := ghc.GetPullRequest(ice.Repo.Owner.Login, ice.Repo.Name, ice.Issue.Number)
 	if err != nil {
