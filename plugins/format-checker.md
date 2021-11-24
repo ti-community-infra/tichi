@@ -25,9 +25,9 @@
 | body            | bool   | 是否对  PR 或 issue 的内容部分进行校验                                    |
 | commit_message  | bool   | 是否对 PR 当中 commit 的 commit message 部分进行校验                      |
 | regexp          | string | 校验时使用的正则表达式                                                    |
-| missing_message | string | 当匹配失败时，对 PR 或 issue 进行评论回复，多个规则的提示信息会聚合在一起 |
+| missing_message | string | 当匹配失败时，对 PR 或 issue 进行评论回复，多个规则的提示信息会聚合在一起        |
 | missing_label   | string | 当匹配失败时，对 PR 或 issue 添加的标签                                   |
-
+| skip_label      | string | 指定能够跳过当前检查规则的标签                                             ｜
 
 匹配规则当中的正则表达式可以通过 [命名分组](https://pkg.go.dev/regexp#Regexp.SubexpNames) 的方式对特定部分进行额外的检查，目前支持的命名分组如下：
 
@@ -47,7 +47,10 @@ ti-community-format-checker:
           Please follow PR Title Format: `[TI-<issue_number>] pkg, pkg2, pkg3: what is changed`
           Or if the count of mainly changed packages are more than 3, use `[TI-<issue_number>] *: what is changed`
         missing_label: do-not-merge/invalid-title
+        skip_label: skip-issue
 ```
+
+注意: 如果想把匹配规则作为合并前必须通过的检查项，需要将 `missing_label` 设置为 [tide](components/tide) 组件的 `missingLabels` 选项，以及 [tars](plugins/tars) 插件的 `exclude_labels` 选项。
 
 ## 参考文档
 
