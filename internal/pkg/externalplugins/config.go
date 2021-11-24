@@ -289,6 +289,8 @@ type RequiredMatchRule struct {
 	MissingMessage string `json:"missing_message,omitempty"`
 	// MissingLabel specifies the label added by the bot when there is no match.
 	MissingLabel string `json:"missing_label,omitempty"`
+	// SkipLabel specifies the label added by the contributor for skipping the format checking.
+	SkipLabel string `json:"skip_label,omitempty"`
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists

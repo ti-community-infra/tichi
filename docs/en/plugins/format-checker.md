@@ -18,7 +18,7 @@ The plugin will use regular expressions to verify the title and content of the P
 ### RequiredMatchRule
 
 | Parameter name  | Type   | Description                                                                                                                          |
-|-----------------|--------|-- - ---------------------------------------------------------------------------------------------------------------------------------|
+|-----------------|--------|--------------------------------------------------------------------------------------------------------------------------------------|
 | pull_request    | bool   | Whether to verify the PR                                                                                                             |
 | issue           | bool   | Whether to verify the issue                                                                                                          |
 | title           | bool   | Whether to verify the title part of the PR or issue                                                                                  |
@@ -27,6 +27,7 @@ The plugin will use regular expressions to verify the title and content of the P
 | regexp          | string | Regular expression used in verification                                                                                              |
 | missing_message | string | When the match fails, comment and reply to the PR or issue, and the prompt information of multiple rules will be aggregated together |
 | missing_label   | string | The label added to PR or issue when the match fails                                                                                  |
+| skip_label      | string | Specify the label that can skip the current rule check                                                                               |
 
 The regular expressions in the matching rules can be used to perform additional checks on specific parts by [named group](https://pkg.go.dev/regexp#Regexp.SubexpNames). The currently supported named groups are as follows:
 
@@ -46,7 +47,10 @@ ti-community-format-checker:
           Please follow PR Title Format: `[TI-<issue_number>] pkg, pkg2, pkg3: what is changed`
           Or if the count of mainly changed packages are more than 3, use `[TI-<issue_number>] *: what is changed`
         missing_label: do-not-merge/invalid-title
+        skip_label: skip-issue
 ```
+
+Notice: If you want to use the matching rule as a check item that must be passed before merging, you need to set `missing_label` value as the `missingLabels` option of the [tide](en/components/tide) component and the `exclude_labels` option of [tars](en/plugins/tars) plugin.
 
 ## Reference Documents
 
