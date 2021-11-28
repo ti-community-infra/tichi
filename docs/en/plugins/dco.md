@@ -32,7 +32,7 @@ Contributors can use [`git commit --amend`](https://docs.github.com/en/github/co
 
 When all commits have been signed off, the robot will change the status of `dco` to passed.
 
-![doc_all_commits_signed_off](../../images/doc_all_commits_signed_off.png)
+![doc_all_commits_signed_off](https://user-images.githubusercontent.com/5086433/143772523-3eeaf9f0-3021-4eb9-9c9d-81f2ce7878cc.png)
 
 ## Configuration
 

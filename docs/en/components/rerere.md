@@ -6,8 +6,8 @@
 
 This component was developed to solve the problem of multiple PR merging mentioned in [Tide](components/tide.md):
 
--PR1: Rename bifurcate() to bifurcateCrab()
--PR2: call bifurcate()
+- PR1: Rename bifurcate() to bifurcateCrab()
+- PR2: call bifurcate()
 
 At this time, both PRs will use the current master as the Base branch for testing, and both PRs will pass. But once PR1 is merged into the master branch first, after the second PR merges (because the test also passed), it will cause the master to fail to find `bifurcate` error.
 
@@ -18,21 +18,22 @@ In order to efficiently merge PR and save test resources, we propose [multiple s
 ## Design ideas
 
 1. Prow Job will use the [clonerefs](https://github.com/kubernetes/test-infra/tree/master/prow/clonerefs) tool to merge the PR and the latest Base branch and then clone it to the Pod running the test, so We can always get the code base that has merged the latest Base, rerere can push the code to the retest branch for testing before the merge.
-2. Porw Job can set max_concurrency to control the maximum number of executions of the CI task. This is a natural FIFO queue. We can use this function to queue up retest tasks.
+2. Porw Job can set `max_concurrency` to control the maximum number of executions of the CI task. This is a natural FIFO queue. We can use this function to queue up retest tasks.
 3. Before the code is merged, Tide will check whether all Prow Jobs are tested using the latest Base. If the current CI Pod is not using the latest Base, Tide will automatically re-trigger the test, which ensures that all PRs will be retested with the latest Base before merging.
 4. In rerere, we will push the code to the designated test branch, and then regularly check whether all required CIs have passed. When all required CIs have passed, our rerere Prow Job will pass the test. Tide will automatically merge the current PR.
 
 ## Parameter configuration
 
-| Parameter name | Type | Description |
-| ---------------- | ------------- | ------------------ -------------------------------- |
-| retesting-branch | string | Branch name for retesting |
-| retry | int | The number of retries after the retest timeout |
-| timeout | time.Duration | timeout for each retest attempt |
-| labels | []string | Labels that must be present before retesting (for example: status/can-merge) |
-| require-contexts | []string | The name of the required CI task |
+| Parameter name   | Type          | Description                                                                  |
+| ---------------- | ------------- | ---------------------------------------------------------------------------- |
+| retesting-branch | string        | Branch name for retesting                                                    |
+| retry            | int           | The number of retries after the retest timeout                               |
+| timeout          | time.Duration | timeout for each retest attempt                                              |
+| labels           | []string      | Labels that must be present before retesting (for example: status/can-merge) |
+| require-contexts | []string      | The name of the required CI task                                             |
 
-E.g:
+
+Fox example:
 
 ```yaml
 presubmits:
@@ -70,7 +71,8 @@ presubmits:
 ```
 
 ## Reference documentation
--[Code Implementation](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/rerere)
+
+- [Code Implementation](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/rerere)
 
 ## Q&A
 
@@ -84,4 +86,6 @@ No, after using Tide, we don't need to use `/merge` continuously, just trigger t
 
 ### After I merge the PR manually, will it cause problems in the queue for retesting?
 
-No, except for the PR that you manually merged will be affected, other PRs will detect the Base change before the merge, and Tide will automatically re-trigger rerere for testing. **It is strongly recommended not to merge PR manually, just re-trigger after the test fails. When all required CIs pass, Tide will try to merge again. **
+No, except for the PR that you manually merged will be affected, other PRs will detect the Base change before the merge, and Tide will automatically re-trigger rerere for testing. 
+
+**It is strongly recommended not to merge PR manually, just re-trigger after the test fails. When all required CIs pass, Tide will try to merge again. **

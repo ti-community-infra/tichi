@@ -31,7 +31,7 @@ Signed-off-by: Random <random@example.com>
 
 当所有的 commit 都已经签署后，机器人会将 `dco` 的状态变成通过状态。 
 
-![doc_all_commits_signed_off](../images/doc_all_commits_signed_off.png)
+![doc_all_commits_signed_off](https://user-images.githubusercontent.com/5086433/143772523-3eeaf9f0-3021-4eb9-9c9d-81f2ce7878cc.png)
 
 ## 参数配置
 
