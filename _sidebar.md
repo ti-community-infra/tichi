@@ -22,6 +22,7 @@
     - [assign](plugins/assign.md)
     - [milestone](plugins/milestone.md)
     - [release-note](plugins/release-note.md)
+    - [dco](plugins/dco.md)
 - [工具](tools.md)
   - [label_sync](tools/label_sync.md)
   - [autobump](tools/autobump.md)
