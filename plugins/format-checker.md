@@ -27,7 +27,7 @@
 | regexp          | string | 校验时使用的正则表达式                                                    |
 | missing_message | string | 当匹配失败时，对 PR 或 issue 进行评论回复，多个规则的提示信息会聚合在一起        |
 | missing_label   | string | 当匹配失败时，对 PR 或 issue 添加的标签                                   |
-| skip_label      | string | 指定能够跳过当前检查规则的标签                                             ｜
+| skip_label      | string | 指定能够跳过当前检查规则的标签                                             |
 
 匹配规则当中的正则表达式可以通过 [命名分组](https://pkg.go.dev/regexp#Regexp.SubexpNames) 的方式对特定部分进行额外的检查，目前支持的命名分组如下：
 
