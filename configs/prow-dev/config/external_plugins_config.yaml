@@ -112,3 +112,4 @@ ti-community-format-checker:
         missing_message: |
           Please provide the associated issue number in the commit message, for example: `close #12345`, or `ref #12345`.
         missing_label: do-not-merge/invalid-commit-message
+        skip_label: skip-issue
