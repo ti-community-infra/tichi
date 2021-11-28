@@ -25,6 +25,8 @@ const (
 	checkerNotificationIdentifier = "Checker Notification Identifier"
 	// issueNumberGroupName is used to specify the regular expression group name for the issue number part.
 	issueNumberGroupName = "issue_number"
+	// issueStateClosed means this issue is closed.
+	issueStateClosed = "closed"
 )
 
 var (
@@ -125,6 +127,10 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 		return nil
 	}
 
+	if pe.PullRequest.State == issueStateClosed {
+		return nil
+	}
+
 	org := pe.Repo.Owner.Login
 	repo := pe.Repo.Name
 	num := pe.Number
@@ -189,6 +195,10 @@ func HandleIssueEvent(gc githubClient, ie *github.IssueEvent,
 
 	if ie.Issue.PullRequest != nil {
 		log.Debug("Skipping because not an issue.")
+		return nil
+	}
+
+	if ie.Issue.State == issueStateClosed {
 		return nil
 	}
 
