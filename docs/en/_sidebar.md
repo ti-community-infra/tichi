@@ -1,5 +1,6 @@
 - [Components](en/components.md)
   - [Tide](en/components/tide.md)
+  - [rerere](en/components/rerere.md)
 - [Plugins](en/plugins.md)
   - External
     - [ti-community-owners](en/plugins/owners.md)
@@ -21,6 +22,7 @@
     - [assign](en/plugins/assign.md)
     - [milestone](en/plugins/milestone.md)
     - [release-note](en/plugins/release-note.md)
+    - [dco](en/plugins/dco.md)
 - [tools](tools.md)
   - [label_sync](en/tools/label_sync.md)
   - [autobump](en/tools/autobump.md)
