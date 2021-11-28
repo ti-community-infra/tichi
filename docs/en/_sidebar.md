@@ -1,7 +1,6 @@
 - [Components](en/components.md)
   - [Tide](en/components/tide.md)
   - [rerere](en/components/rerere.md)
-  - [branchprotector](en/components/branchprotector.md)
 - [Plugins](en/plugins.md)
   - External
     - [ti-community-owners](en/plugins/owners.md)

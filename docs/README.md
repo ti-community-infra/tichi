@@ -18,7 +18,6 @@
 |---------------------------------|----------|-----------------------------------------------------------------------------------------------|
 | tide                            | 基础组件 | 通过一些给定条件来管理 GitHub PR 池，自动合并符合条件的 PR。                                  |
 | rerere                          | 基础组件 | 将代码 push 到专门用来重新测试的分支上进行重新测试。                                          |
-| branchprotector                 | 基础组件 | 通过 yaml 文件配置仓库的分支保护，机器人会将配置自动同步到 GitHub 仓库。                      |
 | ti-community-owners             | 外部插件 | 根据 SIG 或 Github 权限等信息来确定 PR 的 reviewer 和 committer。                             |
 | ti-community-lgtm               | 外部插件 | 通过提交 Approve 或 Request Changes 评审意见，添加、更新或删除 PR 的 `status/LGT*` 标签。     |
 | ti-community-merge              | 外部插件 | 通过命令添加或删除 PR 的 `status/can-merge` 标签。                                            |

@@ -1,7 +1,6 @@
 - [基础组件](components.md)
   - [Tide](components/tide.md)
   - [rerere](components/rerere.md)
-  - [branchprotector](components/branchprotector.md)
 - [插件](plugins.md)
   - 外部插件
     - [ti-community-owners](plugins/owners.md)
