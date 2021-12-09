@@ -107,9 +107,19 @@ ti-community-format-checker:
       - ti-community-infra/test-dev
     required_match_rules:
       - pull_request: true
-        commit_message: true
-        regexp: "(?i)(see|ref|close[sd]?|resolve[sd]?|fix(e[sd])?)\\s*#(?P<issue_number>[1-9]\\d*)"
+        body: true
+        regexp: "(?i)Issue Number:\\s*((,\\s*)?(ref|close[sd]?|resolve[sd]?|fix(e[sd])?)\\s*#(?P<issue_number>[1-9]\\d*))+"
         missing_message: |
-          Please provide the associated issue number in the commit message, for example: `close #12345`, or `ref #12345`.
-        missing_label: do-not-merge/invalid-commit-message
-        skip_label: skip-issue
+          To remove the `do-not-merge/needs-linked-issue` label, please provide the linked issue number in the PR body, for example: `Issue Number: close #123`, or `Issue Number: ref #456`.
+          <details>
+          
+          - If the current PR resolves the associated issue, please use the [syntax](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword) supported by GitHub to link it
+          
+          - If the current PR only refers to a certain issue, please use the specified `ref` keyword to link it
+          
+          - If the current PR associate a cross-repository issue, please create a trakcing issue linked to the issue in current repository in advance
+          
+          - If the current PR associate multiple issues, please use full syntax for each issue, such as `Issue Number: close #123, close #456`
+          
+          </details>
+        missing_label: do-not-merge/needs-linked-issue
