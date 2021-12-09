@@ -20,7 +20,7 @@ spec:
       serviceAccountName: "tide"
       containers:
         - name: tide
-          image: gcr.io/pingcap-testing-account/tide:v20211205-6f259ab
+          image: gcr.io/pingcap-testing-account/tide:v20211209-v20211209
           args:
             - --dry-run=false
             - --config-path=/etc/config/config.yaml
