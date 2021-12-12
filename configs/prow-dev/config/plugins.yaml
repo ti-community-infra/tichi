@@ -49,20 +49,22 @@ override:
 
 plugins:
   ti-community-infra/test-dev:
-    - assign
-    - branchcleaner
-    - size
-    - welcome
-    - wip
-    - lifecycle
-    - help
-    - hold
-    - milestone
-    - milestoneapplier
-    - trigger
-    - override
+    plugins:
+      - assign
+      - branchcleaner
+      - size
+      - welcome
+      - wip
+      - lifecycle
+      - help
+      - hold
+      - milestone
+      - milestoneapplier
+      - trigger
+      - override
   ti-community-infra/tichi:
-    - config-updater
+    plugins:
+      - config-updater
 
 external_plugins:
   ti-community-infra/test-dev:
