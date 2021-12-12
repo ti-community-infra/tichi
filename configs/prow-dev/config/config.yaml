@@ -58,10 +58,10 @@ plank:
         path_strategy: explicit
       gcs_credentials_secret: gcs-credentials
       utility_images:
-        clonerefs: gcr.io/k8s-prow/clonerefs:v20211206-64485af39f
-        entrypoint: gcr.io/k8s-prow/entrypoint:v20211206-64485af39f
-        initupload: gcr.io/k8s-prow/initupload:v20211206-64485af39f
-        sidecar: gcr.io/k8s-prow/sidecar:v20211206-64485af39f
+        clonerefs: gcr.io/k8s-prow/clonerefs:v20210909-6c59eee681
+        entrypoint: gcr.io/k8s-prow/entrypoint:v20210909-6c59eee681
+        initupload: gcr.io/k8s-prow/initupload:v20210909-6c59eee681
+        sidecar: gcr.io/k8s-prow/sidecar:v20210909-6c59eee681
 
 tide:
   sync_period: 2m
