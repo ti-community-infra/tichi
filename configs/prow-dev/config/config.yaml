@@ -86,6 +86,7 @@ tide:
         - do-not-merge/work-in-progress
         - do-not-merge/invalid-commit-message
         - needs-rebase
+      reviewApprovedRequired: true
 
   context_options:
     orgs:
