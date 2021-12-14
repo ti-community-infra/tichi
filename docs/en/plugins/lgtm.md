@@ -34,12 +34,13 @@ This feature is triggered in the following cases:
 
 - Use Approve/Request Changes feature of GitHub
 
-## Parameter Configuration 
+## Parameter Configuration
 
-| Parameter Name       | Type     | Description                                                                 |
-| -------------------- | -------- | --------------------------------------------------------------------------- |
-| repos                | []string | Repositories                                                                |
-| pull_owners_endpoint | string   | PR owners RESTFUL API                                                       |
+| Parameter Name               | Type     | Description                       |
+|------------------------------|----------|-----------------------------------|
+| repos                        | []string | Repositories                      |
+| pull_owners_endpoint         | string   | PR owners RESTFUL API             |
+| ignore_invalid_review_prompt | bool     | Do not prompt for invalid reviews |
 
 For example:
 
@@ -52,6 +53,7 @@ ti-community-lgtm:
       - ti-community-infra/ti-challenge-bot
       - tikv/pd
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners # You can define different URL to get owners
+    ignore_invalid_review_prompt: true
 ```
 
 ## Reference Documents

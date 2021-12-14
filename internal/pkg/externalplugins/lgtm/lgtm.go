@@ -181,7 +181,7 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 		resp += "The bot only counts approvals from reviewers and higher roles in [list](" + tichiURL + "), "
 		resp += "but you're still welcome to leave your comments."
 		log.Infof("Reply approve pull request in comment: \"%s\"", resp)
-		if !opts.IgnoreInvalidApprovalPrompt {
+		if !opts.IgnoreInvalidReviewPrompt {
 			return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, currentReviewer, resp))
 		}
 		return nil
@@ -191,7 +191,7 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 	if !reviewers.Has(currentReviewer) && !wantLGTM {
 		resp := "Request changes is only allowed for the reviewers in [list](" + tichiURL + ")."
 		log.Infof("Reply request changes pull request in comment: \"%s\"", resp)
-		if !opts.IgnoreInvalidApprovalPrompt {
+		if !opts.IgnoreInvalidReviewPrompt {
 			return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, currentReviewer, resp))
 		}
 		return nil
