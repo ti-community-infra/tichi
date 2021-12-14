@@ -281,14 +281,7 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 			}
 		}
 
-		log.Info("Adding LGTM label.")
-		// Remove current label.
-		if currentLabel != "" {
-			if err := gc.RemoveLabel(org, repo, number, currentLabel); err != nil {
-				return err
-			}
-		}
-		if err := gc.AddLabel(org, repo, number, nextLabel); err != nil {
+		if err := updateLabels(gc, log, org, repo, number, currentLabel, nextLabel); err != nil {
 			return err
 		}
 
@@ -317,6 +310,20 @@ func getCurrentAndNextLabel(prefix string, labels []github.Label, needsLgtm int)
 	}
 
 	return currentLabel, nextLabel
+}
+
+func updateLabels(gc githubClient, log *logrus.Entry, org, repo string, number int,
+	currentLabel, nextLabel string) error {
+	log.Info("Adding LGTM label.")
+
+	// Remove current label.
+	if currentLabel != "" {
+		if err := gc.RemoveLabel(org, repo, number, currentLabel); err != nil {
+			return err
+		}
+	}
+
+	return gc.AddLabel(org, repo, number, nextLabel)
 }
 
 // getReviewersFromNotification get the reviewers from latest notification.
