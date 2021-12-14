@@ -152,7 +152,7 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 		log.WithField("duration", time.Since(funcStart).String()).Debug("Completed handle")
 	}()
 
-	author := rc.author
+	currentReviewer := rc.author
 	number := rc.number
 	body := rc.body
 	htmlURL := rc.htmlURL
@@ -176,19 +176,25 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 	}
 
 	// Not reviewers but want to add LGTM.
-	if !reviewers.Has(author) && wantLGTM {
+	if !reviewers.Has(currentReviewer) && wantLGTM {
 		resp := "Thanks for your review. "
 		resp += "The bot only counts approvals from reviewers and higher roles in [list](" + tichiURL + "), "
 		resp += "but you're still welcome to leave your comments."
 		log.Infof("Reply approve pull request in comment: \"%s\"", resp)
-		return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
+		if !opts.IgnoreInvalidApprovalPrompt {
+			return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, currentReviewer, resp))
+		}
+		return nil
 	}
 
 	// Not reviewers but want to remove LGTM.
-	if !reviewers.Has(author) && !wantLGTM {
+	if !reviewers.Has(currentReviewer) && !wantLGTM {
 		resp := "Request changes is only allowed for the reviewers in [list](" + tichiURL + ")."
 		log.Infof("Reply request changes pull request in comment: \"%s\"", resp)
-		return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, author, resp))
+		if !opts.IgnoreInvalidApprovalPrompt {
+			return gc.CreateComment(org, repo, number, tiexternalplugins.FormatResponseRaw(body, htmlURL, currentReviewer, resp))
+		}
+		return nil
 	}
 
 	labels, err := gc.GetIssueLabels(org, repo, number)
@@ -250,13 +256,13 @@ func handle(wantLGTM bool, config *tiexternalplugins.Configuration, rc reviewCtx
 	} else if nextLabel != "" && wantLGTM {
 		reviewedReviewers := getReviewersFromNotification(latestNotification)
 		// Ignore already reviewed reviewer.
-		if reviewedReviewers.Has(author) {
-			log.Infof("Ignore %s's multiple reviews.", author)
+		if reviewedReviewers.Has(currentReviewer) {
+			log.Infof("Ignore %s's multiple reviews.", currentReviewer)
 			return nil
 		}
 
-		// Add author as reviewers and create new notification.
-		reviewedReviewers.Insert(author)
+		// Add currentReviewer as reviewers and create new notification.
+		reviewedReviewers.Insert(currentReviewer)
 		newMsg, err := getMessage(reviewedReviewers.List(), config.CommandHelpLink, config.PRProcessLink, tichiURL, org, repo)
 		if err != nil {
 			return err
