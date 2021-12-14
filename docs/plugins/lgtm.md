@@ -36,10 +36,11 @@ ti-community-lgtm 是会根据命令和权限自动的为 PR 添加 LGTM 对应 
 
 ## 参数配置
 
-| 参数名               | 类型     | 说明                                                              |
-| -------------------- | -------- | ----------------------------------------------------------------- |
-| repos                | []string | 配置生效仓库                                                      |
-| pull_owners_endpoint | string   | PR owners RESTFUL 接口地址                                        |
+| 参数名                          | 类型       | 说明                     |
+|------------------------------|----------|------------------------|
+| repos                        | []string | 配置生效仓库                 |
+| pull_owners_endpoint         | string   | PR owners RESTFUL 接口地址 |
+| ignore_invalid_review_prompt | bool     | 不对无效的 review 进行提示      |
 
 例如：
 
@@ -52,6 +53,7 @@ ti-community-lgtm:
       - ti-community-infra/ti-challenge-bot
       - tikv/pd
     pull_owners_endpoint: https://prow.tidb.io/ti-community-owners # 你可以定义不同的获取 owners 的链接
+    ignore_invalid_review_prompt: true
 ```
 
 ## 参考文档

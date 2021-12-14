@@ -62,6 +62,8 @@ type TiCommunityLgtm struct {
 	Repos []string `json:"repos,omitempty"`
 	// PullOwnersEndpoint specifies the URL of the reviewer of pull request.
 	PullOwnersEndpoint string `json:"pull_owners_endpoint,omitempty"`
+	// IgnoreInvalidReviewPrompt specifies no prompt when review is invalid, default is `false`.
+	IgnoreInvalidReviewPrompt bool `json:"ignore_invalid_review_prompt"`
 }
 
 // TiCommunityMerge specifies a configuration for a single merge.
