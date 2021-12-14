@@ -72,7 +72,13 @@ tide:
   merge_commit_template:
     ti-community-infra/test-dev:
       title: "{{ .Title }} (#{{ .Number }})"
-      body: ""
+      body: |
+        {{- $pattern := .Regexp "(?i)Issue Number:.+" -}}
+        {{- $body := print .Body -}}
+        {{- $org := print .Repository.Owner.Login -}}
+        {{- $repo := print .Repository.Name -}}
+        {{- $issueNumberLine := $pattern.FindString $body -}}
+        {{- .NormalizeIssueNumbers $issueNumberLine $org $repo "" -}}
 
   target_url: https://prow-dev.tidb.io/tide
 
