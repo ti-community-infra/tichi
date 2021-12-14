@@ -6,7 +6,7 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: ticommunityinfra/checkconfig:v20211209-v20211209
+        - image: ticommunityinfra/checkconfig:v20211214-v20211214
           command:
             - /checkconfig
           args:
