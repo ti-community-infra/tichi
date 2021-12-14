@@ -6,6 +6,7 @@ ti-community-lgtm:
   - repos:
       - ti-community-infra/test-dev
     pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
+    ignore_invalid_review_prompt: true
 
 ti-community-merge:
   - repos:
