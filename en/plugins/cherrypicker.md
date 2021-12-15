@@ -33,14 +33,15 @@ In addition to implementing the core functionality of cherry-pick, it also suppo
 
 ## Parameter Configuration 
 
-| Parameter Name           | Type     | Description                                                                                                                                      |
-| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| repos                    | []string | Repositories                                                                                                                                     |
-| allow_all                | bool     | Whether to allow non-Org members to trigger cherry-pick                                                                                          |
-| create_issue_on_conflict | bool     | Whether to create an Issue to track when there is a code conflict, if false then the conflicting code will be committed to the new PR by default |
-| label_prefix             | string   | The prefix of the label that triggers cherry-pick, default is `cherrypick/`                                                                      |
-| picked_label_prefix      | string   | The label prefix of the PR created by cherry-pick (e.g. `type/cherry-pick-for-release-5.0`)                                                      |
-| exclude_labels           | []string | Some labels that you don't want to be automatically copied by the plugin (e.g. some labels that control code merging)                            |
+| Parameter Name                          | Type     | Description                                                                                                                                      |
+|-----------------------------------------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| repos                                   | []string | Repositories                                                                                                                                     |
+| allow_all                               | bool     | Whether to allow non-Org members to trigger cherry-pick                                                                                          |
+| create_issue_on_conflict                | bool     | Whether to create an Issue to track when there is a code conflict, if false then the conflicting code will be committed to the new PR by default |
+| label_prefix                            | string   | The prefix of the label that triggers cherry-pick, default is `cherrypick/`                                                                      |
+| picked_label_prefix                     | string   | The label prefix of the PR created by cherry-pick (e.g. `type/cherry-pick-for-release-5.0`)                                                      |
+| exclude_labels                          | []string | Some labels that you don't want to be automatically copied by the plugin (e.g. some labels that control code merging)                            |
+| copy_issue_numbers_from_squashed_commit | bool     | Whether to copy the issue numbers in the squashed commit to the cherry-pick commit message when the patch cannot be applied directly             |
 
 For example:
 
@@ -56,6 +57,7 @@ ti-community-cherrypicker:
       - status/LGT1
       - status/LGT2
       - status/LGT3
+    copy_issue_numbers_from_squashed_commit: true
 ```
 
 ## Reference Documents
