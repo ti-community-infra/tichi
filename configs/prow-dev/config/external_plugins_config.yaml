@@ -89,6 +89,7 @@ ti-community-cherrypicker:
       - status/LGT1
       - status/LGT2
       - status/LGT3
+    copy_issue_numbers_from_squashed_commit: true
 
 ti-community-tars:
   - repos:
