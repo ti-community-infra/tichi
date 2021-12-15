@@ -54,6 +54,13 @@ type fghc struct {
 	prLabels   []github.Label
 	orgMembers []github.TeamMember
 	issues     []github.Issue
+	commits    map[string]github.RepositoryCommit
+}
+
+func (f *fghc) GetSingleCommit(org, repo, sha string) (github.RepositoryCommit, error) {
+	f.Lock()
+	defer f.Unlock()
+	return f.commits[sha], nil
 }
 
 func (f *fghc) AddLabels(org, repo string, number int, labels ...string) error {

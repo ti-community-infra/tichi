@@ -33,14 +33,15 @@ ti-community-cherrypicker 将帮助我们自动的 cherry-pick PR 的改动到�
 
 ## 参数配置 
 
-| 参数名                   | 类型     | 说明                                                                            |
-| ------------------------ | -------- | ------------------------------------------------------------------------------- |
-| repos                    | []string | 配置生效仓库                                                                    |
-| allow_all                | bool     | 是否允许非 Org 成员触发 cherry-pick                                             |
-| create_issue_on_conflict | bool     | 当代码冲突时，是否创建 Issue 来跟踪，如果为 false 则会默认提交冲突代码到新的 PR |
-| label_prefix             | string   | 触发 cherry-pick 的 label 的前缀，默认为 `cherrypick/`                          |
-| picked_label_prefix      | string   | cherry-pick 创建的 PR 的 label 前缀（例如：`type/cherry-pick-for-release-5.0`） |
-| exclude_labels           | []string | 一些不希望被该插件自动复制的 labels （例如：一些控制代码合并的 labels）         |
+| 参数名                                     | 类型       | 说明                                                                                     |
+|-----------------------------------------|----------|----------------------------------------------------------------------------------------|
+| repos                                   | []string | 配置生效仓库                                                                                 |
+| allow_all                               | bool     | 是否允许非 Org 成员触发 cherry-pick                                                             |
+| create_issue_on_conflict                | bool     | 当代码冲突时，是否创建 Issue 来跟踪，如果为 false 则会默认提交冲突代码到新的 PR                                       |
+| label_prefix                            | string   | 触发 cherry-pick 的 label 的前缀，默认为 `cherrypick/`                                           |
+| picked_label_prefix                     | string   | cherry-pick 创建的 PR 的 label 前缀（例如：`type/cherry-pick-for-release-5.0`）                   |
+| exclude_labels                          | []string | 一些不希望被该插件自动复制的 labels （例如：一些控制代码合并的 labels）                                            |
+| copy_issue_numbers_from_squashed_commit | bool     | 当无法直接应用 patch 时，是否将 squashed commit 当中的 Issue number 复制到 cherry-pick commit message 当中 |
 
 例如：
 
@@ -56,6 +57,7 @@ ti-community-cherrypicker:
       - status/LGT1
       - status/LGT2
       - status/LGT3
+    copy_issue_numbers_from_squashed_commit: true
 ```
 
 ## 参考文档
