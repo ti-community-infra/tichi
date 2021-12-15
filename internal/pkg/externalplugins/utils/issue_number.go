@@ -9,12 +9,14 @@ import (
 )
 
 const (
-	issueNumberBlockRegexp  = "(?i)%s\\s*%s(?P<issue_number>[1-9]\\d*)"
-	associatePrefixRegexp   = "(?P<associate_prefix>ref|close[sd]?|resolve[sd]?|fix(e[sd])?)"
-	issueNumberPrefixRegexp = "(?P<issue_number_prefix>(https|http)://github\\.com/[a-zA-Z0-9][a-zA-Z0-9-]{0,38}/[a-zA-Z0-9-_]{1,100}/issues/|[a-zA-Z0-9][a-zA-Z0-9-]{0,38}/[a-zA-Z0-9-_]{1,100}#|#)"
-	linkPrefixRegexp        = "(https|http)://github\\.com/(?P<org>[a-zA-Z0-9][a-zA-Z0-9-]{0,38})/(?P<repo>[a-zA-Z0-9-_]{1,100})/issues/"
-	fullPrefixRegexp        = "(?P<org>[a-zA-Z0-9][a-zA-Z0-9-]{0,38})/(?P<repo>[a-zA-Z0-9-_]{1,100})#"
-	shortPrefix             = "#"
+	issueNumberBlockRegexpTemplate  = "(?i)%s\\s*%s(?P<issue_number>[1-9]\\d*)"
+	associatePrefixRegexp           = "(?P<associate_prefix>ref|close[sd]?|resolve[sd]?|fix(e[sd])?)"
+	orgRegexp                       = "[a-zA-Z0-9][a-zA-Z0-9-]{0,38}"
+	repoRegexp                      = "[a-zA-Z0-9-_]{1,100}"
+	issueNumberPrefixRegexpTemplate = "(?P<issue_number_prefix>(https|http)://github\\.com/%s/%s/issues/|%s/%s#|#)"
+	linkPrefixRegexpTemplate        = "(https|http)://github\\.com/(?P<org>%s)/(?P<repo>%s)/issues/"
+	fullPrefixRegexpTemplate        = "(?P<org>%s)/(?P<repo>%s)#"
+	shortPrefix                     = "#"
 
 	associatePrefixGroupName   = "associate_prefix"
 	issueNumberPrefixGroupName = "issue_number_prefix"
@@ -22,6 +24,12 @@ const (
 	orgGroupName               = "org"
 	repoGroupName              = "repo"
 	defaultDelimiter           = ", "
+)
+
+var (
+	issueNumberPrefixRegexp = fmt.Sprintf(issueNumberPrefixRegexpTemplate, orgRegexp, repoRegexp, orgRegexp, repoRegexp)
+	linkPrefixRegexp        = fmt.Sprintf(linkPrefixRegexpTemplate, orgRegexp, repoRegexp)
+	fullPrefixRegexp        = fmt.Sprintf(fullPrefixRegexpTemplate, orgRegexp, repoRegexp)
 )
 
 type issueNumberValue struct {
@@ -47,8 +55,8 @@ func (d issueNumberData) put(associatePrefix, org, repo string, issueNumber int)
 // NormalizeIssueNumbers is an utils method in CommitTemplate that used to extract the issue numbers in the text
 // and normalize it by a uniform format.
 func NormalizeIssueNumbers(content, currOrg, currRepo, delimiter string) string {
-	pattern := fmt.Sprintf(issueNumberBlockRegexp, associatePrefixRegexp, issueNumberPrefixRegexp)
-	compile, err := regexp.Compile(pattern)
+	issueNumberBlockRegexp := fmt.Sprintf(issueNumberBlockRegexpTemplate, associatePrefixRegexp, issueNumberPrefixRegexp)
+	compile, err := regexp.Compile(issueNumberBlockRegexp)
 	if err != nil {
 		panic(fmt.Errorf("failed to compile the normalize regexp: %v", err))
 	}
@@ -62,11 +70,12 @@ func NormalizeIssueNumbers(content, currOrg, currRepo, delimiter string) string 
 		issueNumberPrefix := ""
 		issueNumber := 0
 		for i, groupName := range groupNames {
-			if groupName == associatePrefixGroupName {
+			switch groupName {
+			case associatePrefixGroupName:
 				associatePrefix = strings.ToLower(strings.TrimSpace(matches[i]))
-			} else if groupName == issueNumberPrefixGroupName {
+			case issueNumberPrefixGroupName:
 				issueNumberPrefix = strings.ToLower(strings.TrimSpace(matches[i]))
-			} else if groupName == issueNumberGroupName {
+			case issueNumberGroupName:
 				issueNumber, err = strconv.Atoi(strings.TrimSpace(matches[i]))
 				if err != nil {
 					panic(fmt.Errorf("failed to get issue number: %v", err))
@@ -115,9 +124,8 @@ func NormalizeIssueNumbers(content, currOrg, currRepo, delimiter string) string 
 func shortenPrefix(associatePrefix, org, repo, currOrg, currRepo string, issueNumber int) string {
 	if org == currOrg && repo == currRepo {
 		return fmt.Sprintf("%s #%d", associatePrefix, issueNumber)
-	} else {
-		return fmt.Sprintf("%s %s/%s#%d", associatePrefix, org, repo, issueNumber)
 	}
+	return fmt.Sprintf("%s %s/%s#%d", associatePrefix, org, repo, issueNumber)
 }
 
 // isLinkPrefix used to determine whether the prefix style of the issue number is link prefix,
@@ -149,7 +157,8 @@ func isLinkPrefix(prefix string) (bool, string, string) {
 	return true, org, repo
 }
 
-// isFullPrefix used to determine whether the prefix style of the issue number is full prefix, for example: pingcap/tidb#123.
+// isFullPrefix used to determine whether the prefix style of the issue number is full prefix,
+// for example: pingcap/tidb#123.
 func isFullPrefix(prefix string) (bool, string, string) {
 	compile, err := regexp.Compile(fullPrefixRegexp)
 	if err != nil {

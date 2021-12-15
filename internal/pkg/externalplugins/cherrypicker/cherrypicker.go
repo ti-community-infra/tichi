@@ -783,13 +783,11 @@ func createCherryPickCommitMessage(gc githubClient, log *logrus.Entry, copyIssue
 
 	if copyIssueNumbers {
 		sha := ""
-
 		if mergeSHA == nil {
 			log.Errorf("Failed to get the merge SHA of PR #%d.", num)
 			return cherryPickCommitMessage
-		} else {
-			sha = *mergeSHA
 		}
+		sha = *mergeSHA
 
 		commit, err := gc.GetSingleCommit(org, repo, sha)
 		if err != nil {

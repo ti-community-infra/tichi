@@ -57,10 +57,10 @@ type fghc struct {
 	commits    map[string]github.RepositoryCommit
 }
 
-func (f *fghc) GetSingleCommit(org, repo, SHA string) (github.RepositoryCommit, error) {
+func (f *fghc) GetSingleCommit(org, repo, sha string) (github.RepositoryCommit, error) {
 	f.Lock()
 	defer f.Unlock()
-	return f.commits[SHA], nil
+	return f.commits[sha], nil
 }
 
 func (f *fghc) AddLabels(org, repo string, number int, labels ...string) error {
