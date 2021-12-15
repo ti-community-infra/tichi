@@ -36,6 +36,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/utils"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
@@ -69,6 +70,7 @@ type githubClient interface {
 	GetPullRequestPatch(org, repo string, number int) ([]byte, error)
 	GetPullRequests(org, repo string) ([]github.PullRequest, error)
 	GetRepo(owner, name string) (github.FullRepo, error)
+	GetSingleCommit(org, repo, SHA string) (github.RepositoryCommit, error)
 	IsMember(org, user string) (bool, error)
 	ListIssueComments(org, repo string, number int) ([]github.IssueComment, error)
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
@@ -625,7 +627,10 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 				}
 
 				// Try commit with sign off.
-				commit := ex.Command("git", "commit", "-s", "-m", fmt.Sprintf(cherryPickTipFmt, num))
+				commitMessage := createCherryPickCommitMessage(
+					s.GitHubClient, s.Log, opts.CopyIssueNumbersFromSquashedCommit, org, repo, num, pr.MergeSHA,
+				)
+				commit := ex.Command("git", "commit", "-s", "-m", commitMessage)
 				commit.SetDir(dir)
 				out, err = commit.CombinedOutput()
 				if err != nil {
@@ -658,7 +663,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	}
 
 	// Open a PR in GitHub.
-	cherryPickBody := createCherrypickBody(num, body)
+	cherryPickBody := createCherryPickBody(num, body)
 	head := fmt.Sprintf("%s:%s", s.BotUser.Login, newBranch)
 	createdNum, err := s.GitHubClient.CreatePullRequest(org, repo, title, cherryPickBody, head, targetBranch, true)
 	if err != nil {
@@ -771,8 +776,37 @@ func normalize(input string) string {
 	return strings.ReplaceAll(input, "/", "-")
 }
 
-// CreateCherrypickBody creates the body of a cherrypick PR
-func createCherrypickBody(num int, note string) string {
+// createCherryPickCommitMessage creates the commit message for the cherry-pick commit.
+func createCherryPickCommitMessage(gc githubClient, log *logrus.Entry, copyIssueNumbers bool,
+	org, repo string, num int, mergeSHA *string) string {
+	cherryPickCommitMessage := fmt.Sprintf(cherryPickTipFmt, num)
+
+	if copyIssueNumbers {
+		sha := ""
+
+		if mergeSHA == nil {
+			log.Errorf("Failed to get the merge SHA of PR #%d.", num)
+			return cherryPickCommitMessage
+		} else {
+			sha = *mergeSHA
+		}
+
+		commit, err := gc.GetSingleCommit(org, repo, sha)
+		if err != nil {
+			log.WithError(err).Errorf("Failed to get the squash commit %s of PR #%d.", sha, num)
+			return cherryPickCommitMessage
+		}
+		numbers := utils.NormalizeIssueNumbers(commit.Commit.Message, org, repo, "\n")
+		if len(numbers) != 0 {
+			cherryPickCommitMessage = fmt.Sprintf("%s\n\n%s", cherryPickCommitMessage, numbers)
+		}
+	}
+
+	return cherryPickCommitMessage
+}
+
+// createCherryPickBody creates the body of a cherry-pick PR.
+func createCherryPickBody(num int, note string) string {
 	cherryPickBody := fmt.Sprintf(cherryPickTipFmt, num)
 	if len(note) != 0 {
 		cherryPickBody = fmt.Sprintf("%s\n\n%s", cherryPickBody, note)

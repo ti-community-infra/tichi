@@ -256,6 +256,8 @@ type TiCommunityCherrypicker struct {
 	PickedLabelPrefix string `json:"picked_label_prefix,omitempty"`
 	// ExcludeLabels specifies the labels that need to be excluded when copying the labels of the original PR.
 	ExcludeLabels []string `json:"excludeLabels,omitempty"`
+	// CopyIssueNumbersFromSquashedCommit specifies whether to copy the issue numbers from the squashed commit message.
+	CopyIssueNumbersFromSquashedCommit bool `json:"copy_issue_numbers_from_squashed_commit"`
 }
 
 // setDefaults will set the default value for the config of blunderbuss plugin.
