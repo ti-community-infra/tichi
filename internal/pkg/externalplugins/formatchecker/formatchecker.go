@@ -259,7 +259,20 @@ func handle(
 			continue
 		}
 
-		regex, err := regexp.Compile(rule.Regexp)
+		pattern, err := generateTemplate(rule.Regexp, "regexp-match-rule", struct {
+			Org      string
+			Repo     string
+			PRNumber int
+		}{
+			Org:      org,
+			Repo:     repo,
+			PRNumber: num,
+		})
+		if err != nil {
+			log.WithError(err).Errorf("Failed to generate template: %s.", rule.Regexp)
+			continue
+		}
+		regex, err := regexp.Compile(pattern)
 		if err != nil {
 			log.WithError(err).Errorf("Failed to compile regex: %s.", rule.Regexp)
 			continue
