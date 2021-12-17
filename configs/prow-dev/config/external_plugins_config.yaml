@@ -110,18 +110,10 @@ ti-community-format-checker:
     required_match_rules:
       - pull_request: true
         body: true
-        regexp: "(?i)Issue Number:\\s*((,\\s*)?(ref|close[sd]?|resolve[sd]?|fix(e[sd])?)\\s*((https|http)://github\\.com/[a-zA-Z0-9][a-zA-Z0-9-]{0,38}/[a-zA-Z0-9-_]{1,100}/issues/|[a-zA-Z0-9][a-zA-Z0-9-]{0,38}/[a-zA-Z0-9-_]{1,100}#|#)(?P<issue_number>[1-9]\\d*))+"
+        regexp: "(?im)^Issue Number:\\s*((,\\s*)?(ref|close[sd]?|resolve[sd]?|fix(e[sd])?)\\s*((https|http)://github\\.com/[a-zA-Z0-9][a-zA-Z0-9-]{0,38}/[a-zA-Z0-9-_]{1,100}/issues/|[a-zA-Z0-9][a-zA-Z0-9-]{0,38}/[a-zA-Z0-9-_]{1,100}#|#)(?P<issue_number>[1-9]\\d*))+"
         missing_message: |
-          To remove the `do-not-merge/needs-linked-issue` label, please provide the linked issue number in the PR body, for example: `Issue Number: close #123`, or `Issue Number: ref #456`.
-          <details>
+          **Notice**: To remove the `do-not-merge/needs-linked-issue` label, please provide the linked issue number on one line in the PR body, for example: `Issue Number: close #123` or `Issue Number: ref #456`.
           
-          - If the current PR resolves the associated issue, please use the [syntax](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword) supported by GitHub to link it
-          
-          - If the current PR only refers to a certain issue, please use the specified `ref` keyword to link it
-          
-          - If the current PR associate a cross-repository issue, please create a trakcing issue linked to the issue in current repository in advance
-          
-          - If the current PR associate multiple issues, please use full syntax for each issue, such as `Issue Number: close #123, close #456`
-          
-          </details>
-        missing_label: do-not-merge/needs-linked-issue
+          For more info, you can check the ["Contribute Code"](https://pingcap.github.io/tidb-dev-guide/contribute-to-tidb/contribute-code.html#referring-to-an-issue) section in the development guide.
+
+missing_label: do-not-merge/needs-linked-issue
