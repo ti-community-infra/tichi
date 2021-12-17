@@ -261,7 +261,7 @@ func handle(
 
 		regex, err := createMatchRegexp(rule.Regexp, org, repo, num)
 		if err != nil {
-			log.WithError(err).Errorf("Failed to create Regexp of the rule.")
+			log.WithError(err).Errorf("Failed to create Regexp %s of the rule.", rule.Regexp)
 			continue
 		}
 
