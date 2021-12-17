@@ -72,8 +72,9 @@ tide:
   merge_commit_template:
     ti-community-infra/test-dev:
       title: "{{ .Title }} (#{{ .Number }})"
+      # Regex for matching issue number line: https://regex101.com/r/ezCYFC/1/
       body: |
-        {{- $pattern := .Regexp "(?i)Issue Number:.+" -}}
+        {{- $pattern := .Regexp "(?im)^Issue Number:.+" -}}
         {{- $body := print .Body -}}
         {{- $org := print .Repository.Owner.Login -}}
         {{- $repo := print .Repository.Name -}}
