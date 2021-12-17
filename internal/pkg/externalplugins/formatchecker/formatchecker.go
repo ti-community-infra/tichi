@@ -259,22 +259,9 @@ func handle(
 			continue
 		}
 
-		pattern, err := generateTemplate(rule.Regexp, "regexp-match-rule", struct {
-			Org      string
-			Repo     string
-			PRNumber int
-		}{
-			Org:      org,
-			Repo:     repo,
-			PRNumber: num,
-		})
+		regex, err := createMatchRegexp(rule.Regexp, org, repo, num)
 		if err != nil {
-			log.WithError(err).Errorf("Failed to generate template: %s.", rule.Regexp)
-			continue
-		}
-		regex, err := regexp.Compile(pattern)
-		if err != nil {
-			log.WithError(err).Errorf("Failed to compile regex: %s.", rule.Regexp)
+			log.WithError(err).Errorf("Failed to create Regexp of the rule.")
 			continue
 		}
 
@@ -481,4 +468,20 @@ func generateNotification(messages []string) (string, error) {
 	}
 
 	return notification, nil
+}
+
+func createMatchRegexp(regexpTemplate, org, repo string, num int) (*regexp.Regexp, error) {
+	pattern, err := generateTemplate(regexpTemplate, "regexp-match-rule", struct {
+		Org      string
+		Repo     string
+		PRNumber int
+	}{
+		Org:      org,
+		Repo:     repo,
+		PRNumber: num,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return regexp.Compile(pattern)
 }
