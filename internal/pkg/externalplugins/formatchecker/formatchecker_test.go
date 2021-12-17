@@ -15,8 +15,15 @@ import (
 )
 
 const (
-	issueTitleRegex  = "^(\\[TI-(?P<issue_number>[1-9]\\d*)\\])+.+: .{10,160}$"
-	issueNumberRegex = "#([1-9]\\d*)"
+	issueTitleRegex         = "^(\\[TI-(?P<issue_number>[1-9]\\d*)\\])+.+: .{10,160}$"
+	issueNumberRegex        = "#([1-9]\\d*)"
+	issueNumberPrefixRegex  = "((https|http)://github\\.com/{{.Org}}/{{.Repo}}/issues/|{{.Org}}/{{.Repo}}#|#)"
+	keywordPrefixRegex      = "(ref|close[sd]?|resolve[sd]?|fix(e[sd])?)"
+	issueNumberLineTemplate = "(?im)^Issue Number:\\s*((,\\s*)?%s\\s*%s(?P<issue_number>[1-9]\\d*))+"
+)
+
+var (
+	issueNumberLineRegexp = fmt.Sprintf(issueNumberLineTemplate, keywordPrefixRegex, issueNumberPrefixRegex)
 )
 
 func TestHandlePullRequestEvent(t *testing.T) {
@@ -114,6 +121,82 @@ func TestHandlePullRequestEvent(t *testing.T) {
 					Body:         true,
 					Regexp:       issueNumberRegex,
 					MissingLabel: "do-not-merge/needs-issue-number",
+				},
+			},
+
+			expectAddedLabels:   []string{},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:   "PR body with cross-repository issue number",
+			action: github.PullRequestActionOpened,
+			title:  "pkg: what's changed",
+			body:   "\r\n\r\nIssue Number: close org2/repo2#12345\r\n\r\n",
+			labels: []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Body:         true,
+					Regexp:       issueNumberLineRegexp,
+					MissingLabel: "do-not-merge/needs-linked-issue",
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/needs-linked-issue"),
+			},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:   "PR body with same-repository issue number",
+			action: github.PullRequestActionOpened,
+			title:  "pkg: what's changed",
+			body:   "\r\n\r\nIssue Number: close org/repo#12345\r\n\r\n",
+			labels: []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Body:         true,
+					Regexp:       issueNumberLineRegexp,
+					MissingLabel: "do-not-merge/needs-linked-issue",
+				},
+			},
+
+			expectAddedLabels:   []string{},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:   "PR body with cross-repository issue number link",
+			action: github.PullRequestActionOpened,
+			title:  "pkg: what's changed",
+			body:   "\r\n\r\nIssue Number: close https://github.com/org2/repo2/issues/12345\r\n\r\n",
+			labels: []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Body:         true,
+					Regexp:       issueNumberLineRegexp,
+					MissingLabel: "do-not-merge/needs-linked-issue",
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/needs-linked-issue"),
+			},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:   "PR body with same-repository issue number link",
+			action: github.PullRequestActionOpened,
+			title:  "pkg: what's changed",
+			body:   "\r\n\r\nIssue Number: close https://github.com/org/repo/issues/12345\r\n\r\n",
+			labels: []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Body:         true,
+					Regexp:       issueNumberLineRegexp,
+					MissingLabel: "do-not-merge/needs-linked-issue",
 				},
 			},
 
