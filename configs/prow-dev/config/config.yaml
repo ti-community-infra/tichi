@@ -80,11 +80,14 @@ tide:
         {{- $repo := print .Repository.Name -}}
         {{- $issueNumberLine := $pattern.FindString $body -}}
         {{- $numbers := .NormalizeIssueNumbers $issueNumberLine $org $repo -}}
-        {{- range $index, $number := $numbers -}}
-        {{- if $index }}, {{ end -}}
-        {{- .AssociatePrefix }} {{ .Org -}}/{{- .Repo -}}#{{- .Number -}}
+        {{- if $numbers -}}
+          {{- range $index, $number := $numbers -}}
+            {{- if $index }}, {{ end -}}
+            {{- .AssociatePrefix }} {{ .Org -}}/{{- .Repo -}}#{{- .Number -}}
+          {{- end -}}
+        {{- else -}}
+          {{- " " -}}
         {{- end -}}
-        {{- " " -}}
   target_url: https://prow-dev.tidb.io/tide
 
   queries:
