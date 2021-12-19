@@ -79,8 +79,15 @@ tide:
         {{- $org := print .Repository.Owner.Login -}}
         {{- $repo := print .Repository.Name -}}
         {{- $issueNumberLine := $pattern.FindString $body -}}
-        {{- .NormalizeIssueNumbers $issueNumberLine $org $repo "" -}}
-
+        {{- $numbers := .NormalizeIssueNumbers $issueNumberLine $org $repo -}}
+        {{- if $numbers -}}
+          {{- range $index, $number := $numbers -}}
+            {{- if $index }}, {{ end -}}
+            {{- .AssociatePrefix }} {{ .Org -}}/{{- .Repo -}}#{{- .Number -}}
+          {{- end -}}
+        {{- else -}}
+          {{- " " -}}
+        {{- end -}}
   target_url: https://prow-dev.tidb.io/tide
 
   queries:
