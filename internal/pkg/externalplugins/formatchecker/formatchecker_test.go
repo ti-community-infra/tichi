@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
@@ -31,13 +32,33 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		return fmt.Sprintf("%s/%s#%d:%s", "org", "repo", 1, label)
 	}
 
+	earlierCreatedAt, err := time.Parse(time.RFC3339, "2021-10-01T12:00:00Z")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	startTime, err := time.Parse(time.RFC3339, "2021-11-01T12:00:00Z")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	laterCreatedAt, err := time.Parse(time.RFC3339, "2021-12-01T12:00:00Z")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
 	testcases := []struct {
 		name   string
 		action github.PullRequestEventAction
 		// label that will be labeled or unlabeled.
-		label string
-		title string
-		body  string
+		label     string
+		title     string
+		body      string
+		branch    string
+		createdAt time.Time
 		// labels is the labels existed on the pull request (after the labeled / unlabeled event happened).
 		labels             []string
 		commitMessages     []string
@@ -48,10 +69,12 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		shouldComment       bool
 	}{
 		{
-			name:   "PR title with issue number",
-			action: github.PullRequestActionOpened,
-			title:  "[TI-12345] pkg: what's changed (#999)",
-			labels: []string{},
+			name:      "PR title with issue number",
+			action:    github.PullRequestActionOpened,
+			title:     "[TI-12345] pkg: what's changed (#999)",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:    true,
@@ -67,10 +90,12 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			shouldComment:       false,
 		},
 		{
-			name:   "PR title without issue number",
-			action: github.PullRequestActionOpened,
-			title:  "invalid title",
-			labels: []string{},
+			name:      "PR title without issue number",
+			action:    github.PullRequestActionOpened,
+			title:     "invalid title",
+			labels:    []string{},
+			branch:    "main",
+			createdAt: earlierCreatedAt,
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:    true,
@@ -88,10 +113,12 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			shouldComment:       true,
 		},
 		{
-			name:   "PR body without issue number",
-			action: github.PullRequestActionOpened,
-			body:   `PR Body content`,
-			labels: []string{},
+			name:      "PR body without issue number",
+			action:    github.PullRequestActionOpened,
+			body:      `PR Body content`,
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
@@ -114,7 +141,9 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			PR Body content
 			close #12345
 `,
-			labels: []string{},
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
@@ -128,11 +157,13 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "PR body with cross-repository issue number",
-			action: github.PullRequestActionOpened,
-			title:  "pkg: what's changed",
-			body:   "\r\n\r\nIssue Number: close org2/repo2#12345\r\n\r\n",
-			labels: []string{},
+			name:      "PR body with cross-repository issue number",
+			action:    github.PullRequestActionOpened,
+			title:     "pkg: what's changed",
+			body:      "\r\n\r\nIssue Number: close org2/repo2#12345\r\n\r\n",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
@@ -148,11 +179,13 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "PR body with same-repository issue number",
-			action: github.PullRequestActionOpened,
-			title:  "pkg: what's changed",
-			body:   "\r\n\r\nIssue Number: close org/repo#12345\r\n\r\n",
-			labels: []string{},
+			name:      "PR body with same-repository issue number",
+			action:    github.PullRequestActionOpened,
+			title:     "pkg: what's changed",
+			body:      "\r\n\r\nIssue Number: close org/repo#12345\r\n\r\n",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
@@ -166,11 +199,13 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "PR body with cross-repository issue number link",
-			action: github.PullRequestActionOpened,
-			title:  "pkg: what's changed",
-			body:   "\r\n\r\nIssue Number: close https://github.com/org2/repo2/issues/12345\r\n\r\n",
-			labels: []string{},
+			name:      "PR body with cross-repository issue number link",
+			action:    github.PullRequestActionOpened,
+			title:     "pkg: what's changed",
+			body:      "\r\n\r\nIssue Number: close https://github.com/org2/repo2/issues/12345\r\n\r\n",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
@@ -186,11 +221,13 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "PR body with same-repository issue number link",
-			action: github.PullRequestActionOpened,
-			title:  "pkg: what's changed",
-			body:   "\r\n\r\nIssue Number: close https://github.com/org/repo/issues/12345\r\n\r\n",
-			labels: []string{},
+			name:      "PR body with same-repository issue number link",
+			action:    github.PullRequestActionOpened,
+			title:     "pkg: what's changed",
+			body:      "\r\n\r\nIssue Number: close https://github.com/org/repo/issues/12345\r\n\r\n",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
@@ -204,8 +241,10 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "PR commits without issue number",
-			action: github.PullRequestActionOpened,
+			name:      "PR commits without issue number",
+			action:    github.PullRequestActionOpened,
+			branch:    "main",
+			createdAt: earlierCreatedAt,
 			commitMessages: []string{
 				"First commit message",
 				"Second commit message",
@@ -225,8 +264,10 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "PR commits with issue number",
-			action: github.PullRequestActionOpened,
+			name:      "PR commits with issue number",
+			action:    github.PullRequestActionOpened,
+			branch:    "main",
+			createdAt: earlierCreatedAt,
 			commitMessages: []string{
 				"First commit message\nclose #12345",
 				"Second commit message",
@@ -244,9 +285,11 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "PR title updated with issue number",
-			action: github.PullRequestActionEdited,
-			title:  "[TI-12345] pkg: what's changed",
+			name:      "PR title updated with issue number",
+			action:    github.PullRequestActionEdited,
+			title:     "[TI-12345] pkg: what's changed",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
 			labels: []string{
 				"do-not-merge/invalid-title",
 			},
@@ -265,9 +308,11 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			},
 		},
 		{
-			name:   "PR commit messages or title contain issue number",
-			action: github.PullRequestActionSynchronize,
-			title:  "invalid title",
+			name:      "PR commit messages or title contain issue number",
+			action:    github.PullRequestActionSynchronize,
+			title:     "invalid title",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
 			labels: []string{
 				"do-not-merge/needs-issue-number",
 			},
@@ -293,9 +338,11 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			},
 		},
 		{
-			name:   "PR commits with issue number but title is invalid",
-			action: github.PullRequestActionSynchronize,
-			title:  "invalid title",
+			name:      "PR commits with issue number but title is invalid",
+			action:    github.PullRequestActionSynchronize,
+			title:     "invalid title",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
 			labels: []string{
 				"do-not-merge/invalid-title",
 				"do-not-merge/needs-issue-number",
@@ -326,9 +373,11 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			},
 		},
 		{
-			name:   "check issue number and the issue number is correct",
-			action: github.PullRequestActionEdited,
-			title:  "[TI-12345][TI-12346] pkg: what's changed",
+			name:      "check issue number and the issue number is correct",
+			action:    github.PullRequestActionEdited,
+			title:     "[TI-12345][TI-12346] pkg: what's changed",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
 			labels: []string{
 				"do-not-merge/invalid-title",
 			},
@@ -347,9 +396,11 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			},
 		},
 		{
-			name:   "check issue number but issue number is wrong",
-			action: github.PullRequestActionEdited,
-			title:  "[TI-1234] pkg: what's changed",
+			name:      "check issue number but issue number is wrong",
+			action:    github.PullRequestActionEdited,
+			title:     "[TI-1234] pkg: what's changed",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
@@ -365,9 +416,11 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "check issue number but one of issue numbers is wrong",
-			action: github.PullRequestActionEdited,
-			title:  "[TI-12345][TI-1234] pkg: what's changed",
+			name:      "check issue number but one of issue numbers is wrong",
+			action:    github.PullRequestActionEdited,
+			title:     "[TI-12345][TI-1234] pkg: what's changed",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
@@ -383,10 +436,12 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "Labeled the skip label, pass the rule",
-			action: github.PullRequestActionLabeled,
-			label:  "skip-issue",
-			title:  "pkg: what's changed",
+			name:      "Labeled the skip label, pass the rule",
+			action:    github.PullRequestActionLabeled,
+			label:     "skip-issue",
+			title:     "pkg: what's changed",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
 			labels: []string{
 				"do-not-merge/invalid-title",
 				"skip-issue",
@@ -407,11 +462,13 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			},
 		},
 		{
-			name:   "Unlabeled the skip label, recheck the rule",
-			action: github.PullRequestActionUnlabeled,
-			label:  "skip-issue",
-			title:  "pkg: what's changed",
-			labels: []string{},
+			name:      "Unlabeled the skip label, recheck the rule",
+			action:    github.PullRequestActionUnlabeled,
+			label:     "skip-issue",
+			title:     "pkg: what's changed",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
@@ -428,11 +485,13 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "Labeled the other label, do not trigger the check",
-			action: github.PullRequestActionLabeled,
-			label:  "other",
-			title:  "pkg: what's changed",
-			labels: []string{},
+			name:      "Labeled the other label, do not trigger the check",
+			action:    github.PullRequestActionLabeled,
+			label:     "other",
+			title:     "pkg: what's changed",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					PullRequest:  true,
@@ -440,6 +499,90 @@ func TestHandlePullRequestEvent(t *testing.T) {
 					Regexp:       issueTitleRegex,
 					MissingLabel: "do-not-merge/invalid-title",
 					SkipLabel:    "skip-issue",
+				},
+			},
+
+			expectAddedLabels:   []string{},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:      "The create time of PR is before start time of the rule",
+			action:    github.PullRequestActionOpened,
+			title:     "pkg: what's changed",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					StartTime:    &startTime,
+				},
+			},
+
+			expectAddedLabels:   []string{},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:      "The create time of PR is after start time of the rule",
+			action:    github.PullRequestActionOpened,
+			title:     "pkg: what's changed",
+			branch:    "main",
+			createdAt: laterCreatedAt,
+			labels:    []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					StartTime:    &startTime,
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:      "PR on the branch that need to be checked",
+			action:    github.PullRequestActionOpened,
+			title:     "pkg: what's changed",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					Branches:     []string{"main"},
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:      "PR on the branch that do not need to be checked",
+			action:    github.PullRequestActionOpened,
+			title:     "pkg: what's changed",
+			branch:    "release",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					Branches:     []string{"main"},
 				},
 			},
 
@@ -505,6 +648,12 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				Title:  tc.title,
 				Body:   tc.body,
 				Labels: labels,
+				Base: github.PullRequestBranch{
+					Ref:  tc.branch,
+					SHA:  "sha",
+					Repo: github.Repo{},
+				},
+				CreatedAt: tc.createdAt,
 			},
 			Repo: github.Repo{
 				Owner: github.User{
@@ -518,7 +667,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		}
 		err := HandlePullRequestEvent(fc, pe, cfg, logrus.WithField("plugin", PluginName))
 		if err != nil {
-			t.Errorf("For case %s, didn't expect error: %v", tc.name, err)
+			t.Errorf("For case \"%s\", didn't expect error: %v", tc.name, err)
 		}
 
 		sort.Strings(tc.expectAddedLabels)
@@ -550,16 +699,34 @@ func TestHandleIssueEvent(t *testing.T) {
 		return fmt.Sprintf("%s/%s#%d:%s", "org", "repo", 1, label)
 	}
 
+	earlierCreatedAt, err := time.Parse(time.RFC3339, "2021-10-01T12:00:00Z")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	startTime, err := time.Parse(time.RFC3339, "2021-11-01T12:00:00Z")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	laterCreatedAt, err := time.Parse(time.RFC3339, "2021-12-01T12:00:00Z")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
 	testcases := []struct {
 		name   string
 		action github.IssueEventAction
 		// label that will be labeled or unlabeled.
-		label string
-		title string
-		body  string
+		label     string
+		title     string
+		body      string
+		createdAt time.Time
 		// labels is the labels existed on the pull request (after the labeled / unlabeled event happened).
 		labels             []string
-		commitMessages     []string
 		requiredMatchRules []externalplugins.RequiredMatchRule
 
 		expectAddedLabels   []string
@@ -567,10 +734,11 @@ func TestHandleIssueEvent(t *testing.T) {
 		shouldComment       bool
 	}{
 		{
-			name:   "Issue title with issue number",
-			action: github.IssueActionOpened,
-			title:  "[TI-12345] pkg: what's changed (#999)",
-			labels: []string{},
+			name:      "Issue title with issue number",
+			action:    github.IssueActionOpened,
+			title:     "[TI-12345] pkg: what's changed (#999)",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:          true,
@@ -586,10 +754,11 @@ func TestHandleIssueEvent(t *testing.T) {
 			shouldComment:       false,
 		},
 		{
-			name:   "Issue title without issue number",
-			action: github.IssueActionOpened,
-			title:  "invalid title",
-			labels: []string{},
+			name:      "Issue title without issue number",
+			action:    github.IssueActionOpened,
+			title:     "invalid title",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:          true,
@@ -607,10 +776,11 @@ func TestHandleIssueEvent(t *testing.T) {
 			shouldComment:       true,
 		},
 		{
-			name:   "Issue body without issue number",
-			action: github.IssueActionOpened,
-			body:   `Issue Body content`,
-			labels: []string{},
+			name:      "Issue body without issue number",
+			action:    github.IssueActionOpened,
+			body:      `Issue Body content`,
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:        true,
@@ -633,7 +803,8 @@ func TestHandleIssueEvent(t *testing.T) {
 			Issue Body content
 			close #12345
 `,
-			labels: []string{},
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:        true,
@@ -647,30 +818,10 @@ func TestHandleIssueEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "Issue commits without issue number",
-			action: github.IssueActionOpened,
-			commitMessages: []string{
-				"First commit message",
-				"Second commit message",
-			},
-			requiredMatchRules: []externalplugins.RequiredMatchRule{
-				{
-					Issue:         true,
-					CommitMessage: true,
-					Regexp:        issueNumberRegex,
-					MissingLabel:  "do-not-merge/invalid-commit-message",
-				},
-			},
-
-			expectAddedLabels: []string{
-				formattedLabel("do-not-merge/invalid-commit-message"),
-			},
-			expectDeletedLabels: []string{},
-		},
-		{
-			name:   "Issue title updated with issue number",
-			action: github.IssueActionEdited,
-			title:  "[TI-12345] pkg: what's changed",
+			name:      "Issue title updated with issue number",
+			action:    github.IssueActionEdited,
+			title:     "[TI-12345] pkg: what's changed",
+			createdAt: earlierCreatedAt,
 			labels: []string{
 				"do-not-merge/invalid-title",
 			},
@@ -689,9 +840,10 @@ func TestHandleIssueEvent(t *testing.T) {
 			},
 		},
 		{
-			name:   "check issue number but issue number is wrong",
-			action: github.IssueActionEdited,
-			title:  "[TI-1234] pkg: what's changed",
+			name:      "check issue number but issue number is wrong",
+			action:    github.IssueActionEdited,
+			title:     "[TI-1234] pkg: what's changed",
+			createdAt: earlierCreatedAt,
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:        true,
@@ -707,10 +859,11 @@ func TestHandleIssueEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "Labeled the skip label, pass the rule",
-			action: github.IssueActionLabeled,
-			label:  "skip-issue",
-			title:  "pkg: what's changed",
+			name:      "Labeled the skip label, pass the rule",
+			action:    github.IssueActionLabeled,
+			label:     "skip-issue",
+			title:     "pkg: what's changed",
+			createdAt: earlierCreatedAt,
 			labels: []string{
 				"do-not-merge/invalid-title",
 				"skip-issue",
@@ -731,11 +884,12 @@ func TestHandleIssueEvent(t *testing.T) {
 			},
 		},
 		{
-			name:   "Unlabeled the skip label, recheck the rule",
-			action: github.IssueActionUnlabeled,
-			label:  "skip-issue",
-			title:  "pkg: what's changed",
-			labels: []string{},
+			name:      "Unlabeled the skip label, recheck the rule",
+			action:    github.IssueActionUnlabeled,
+			label:     "skip-issue",
+			title:     "pkg: what's changed",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:        true,
@@ -752,11 +906,12 @@ func TestHandleIssueEvent(t *testing.T) {
 			expectDeletedLabels: []string{},
 		},
 		{
-			name:   "Labeled the other label, do not trigger the check",
-			action: github.IssueActionLabeled,
-			label:  "other",
-			title:  "pkg: what's changed",
-			labels: []string{},
+			name:      "Labeled the other label, do not trigger the check",
+			action:    github.IssueActionLabeled,
+			label:     "other",
+			title:     "pkg: what's changed",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
 			requiredMatchRules: []externalplugins.RequiredMatchRule{
 				{
 					Issue:        true,
@@ -770,19 +925,50 @@ func TestHandleIssueEvent(t *testing.T) {
 			expectAddedLabels:   []string{},
 			expectDeletedLabels: []string{},
 		},
+		{
+			name:      "The create time of issue is before start time of the rule",
+			action:    github.IssueActionOpened,
+			title:     "pkg: what's changed",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					Issue:        true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					StartTime:    &startTime,
+				},
+			},
+
+			expectAddedLabels:   []string{},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:      "The create time of issue is after start time of the rule",
+			action:    github.IssueActionOpened,
+			title:     "pkg: what's changed",
+			createdAt: laterCreatedAt,
+			labels:    []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					Issue:        true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					StartTime:    &startTime,
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+			expectDeletedLabels: []string{},
+		},
 	}
 
 	for _, testcase := range testcases {
 		tc := testcase
-
-		commits := make([]github.RepositoryCommit, 0)
-		for _, message := range tc.commitMessages {
-			commits = append(commits, github.RepositoryCommit{
-				Commit: github.GitCommit{
-					Message: message,
-				},
-			})
-		}
 
 		labels := make([]github.Label, 0)
 		for _, l := range tc.labels {
@@ -805,9 +991,6 @@ func TestHandleIssueEvent(t *testing.T) {
 			IssueComments:      make(map[int][]github.IssueComment),
 			IssueLabelsAdded:   []string{},
 			IssueLabelsRemoved: []string{},
-			CommitMap: map[string][]github.RepositoryCommit{
-				"org/repo#1": commits,
-			},
 		}
 
 		cfg := &externalplugins.Configuration{}
@@ -821,10 +1004,11 @@ func TestHandleIssueEvent(t *testing.T) {
 		ie := &github.IssueEvent{
 			Action: tc.action,
 			Issue: github.Issue{
-				Number: 1,
-				Title:  tc.title,
-				Body:   tc.body,
-				Labels: labels,
+				Number:    1,
+				Title:     tc.title,
+				Body:      tc.body,
+				CreatedAt: tc.createdAt,
+				Labels:    labels,
 			},
 			Repo: github.Repo{
 				Owner: github.User{
@@ -844,7 +1028,7 @@ func TestHandleIssueEvent(t *testing.T) {
 		sort.Strings(tc.expectAddedLabels)
 		sort.Strings(fc.IssueLabelsAdded)
 		if !reflect.DeepEqual(tc.expectAddedLabels, fc.IssueLabelsAdded) {
-			t.Errorf("For case %s, expected the labels %q to be added, but %q were added",
+			t.Errorf("For case \"%s\", expected the labels %q to be added, but %q were added",
 				tc.name, tc.expectAddedLabels, fc.IssueLabelsAdded)
 		}
 

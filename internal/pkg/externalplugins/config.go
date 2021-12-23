@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -279,6 +280,8 @@ type TiCommunityFormatChecker struct {
 type RequiredMatchRule struct {
 	// PullRequest specifies whether check for pull request.
 	PullRequest bool `json:"pull_request,omitempty"`
+	// Branches specifies only check the PR of the specified branch, empty means check the PR of all branches.
+	Branches []string `json:"branches,omitempty"`
 	// Issue specifies whether check for issue.
 	Issue bool `json:"issue,omitempty"`
 	// Title specifies whether check the issue or pull request title.
@@ -289,6 +292,8 @@ type RequiredMatchRule struct {
 	CommitMessage bool `json:"commit_message,omitempty"`
 	// Regexp specifies the regular expression used for text match.
 	Regexp string `json:"regexp"`
+	// StartTime indicates that the rule is only effective for PR or issue created after this time.
+	StartTime *time.Time `json:"start_time,omitempty"`
 	// MissingMessage specifies the content commented by bot when there is no match.
 	MissingMessage string `json:"missing_message,omitempty"`
 	// MissingLabel specifies the label added by the bot when there is no match.
@@ -595,7 +600,7 @@ func (c *Configuration) Validate() error {
 		return err
 	}
 
-	if err := validateMatchBlocker(c.TiCommunityFormatChecker); err != nil {
+	if err := validateFormatBlocker(c.TiCommunityFormatChecker); err != nil {
 		return err
 	}
 
@@ -737,10 +742,10 @@ func validateTars(tars []TiCommunityTars) error {
 	return nil
 }
 
-// validateMatchBlocker will return an error if the regex cannot compile or actions is illegal.
-func validateMatchBlocker(matchBlockers []TiCommunityFormatChecker) error {
-	for _, matchBlocker := range matchBlockers {
-		for _, rule := range matchBlocker.RequiredMatchRules {
+// validateFormatBlocker will return an error if the regex cannot compile or actions is illegal.
+func validateFormatBlocker(formatCheckers []TiCommunityFormatChecker) error {
+	for _, formatChecker := range formatCheckers {
+		for _, rule := range formatChecker.RequiredMatchRules {
 			_, err := regexp.Compile(rule.Regexp)
 			if err != nil {
 				return fmt.Errorf("the regex of matching rule is broken: %v", err)

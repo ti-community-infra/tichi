@@ -17,17 +17,19 @@ The plugin will use regular expressions to verify the title and content of the P
 
 ### RequiredMatchRule
 
-| Parameter name  | Type   | Description                                                                                                                          |
-|-----------------|--------|--------------------------------------------------------------------------------------------------------------------------------------|
-| pull_request    | bool   | Whether to verify the PR                                                                                                             |
-| issue           | bool   | Whether to verify the issue                                                                                                          |
-| title           | bool   | Whether to verify the title part of the PR or issue                                                                                  |
-| body            | bool   | Whether to verify the content of PR or issue                                                                                         |
-| commit_message  | bool   | Whether to verify the commit message part of commit in PR                                                                            |
-| regexp          | string | Regular expression used in verification                                                                                              |
-| missing_message | string | When the match fails, comment and reply to the PR or issue, and the prompt information of multiple rules will be aggregated together |
-| missing_label   | string | The label added to PR or issue when the match fails                                                                                  |
-| skip_label      | string | Specify the label that can skip the current rule check                                                                               |
+| Parameter name  | Type       | Description                                                                                                                          |
+|-----------------|------------|--------------------------------------------------------------------------------------------------------------------------------------|
+| pull_request    | bool       | Whether to verify the PR                                                                                                             |
+| issue           | bool       | Whether to verify the issue                                                                                                          |
+| title           | bool       | Whether to verify the title part of the PR or issue                                                                                  |
+| body            | bool       | Whether to verify the content of PR or issue                                                                                         |
+| branches        | []string   | Specify the branch that needs to be verified                                                                                         |
+| start_time      | *time.Time | Specify the time when the rule becomes effective, PR or issue created before the effective time will not be verified                 |
+| commit_message  | bool       | Whether to verify the commit message part of commit in PR                                                                            |
+| regexp          | string     | Regular expression used in verification                                                                                              |
+| missing_message | string     | When the match fails, comment and reply to the PR or issue, and the prompt information of multiple rules will be aggregated together |
+| missing_label   | string     | The label added to PR or issue when the match fails                                                                                  |
+| skip_label      | string     | Specify the label that can skip the current rule check                                                                               |
 
 The regular expressions in the matching rules can be used to perform additional checks on specific parts by [named group](https://pkg.go.dev/regexp#Regexp.SubexpNames). The currently supported named groups are as follows:
 
@@ -43,6 +45,9 @@ ti-community-format-checker:
       - pull_request: true
         title: true
         regexp: "^(\\[TI-(?P<issue_number>[1-9]\\d*)\\])+.+: .{10,160}$"
+        branches:
+          - main
+        start_time: "2021-11-01T12:00:00Z"
         missing_message: |
           Please follow PR Title Format: `[TI-<issue_number>] pkg, pkg2, pkg3: what is changed`
           Or if the count of mainly changed packages are more than 3, use `[TI-<issue_number>] *: what is changed`
