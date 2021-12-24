@@ -10,24 +10,26 @@
 
 ## 参数配置 
 
-| 参数名               | 类型              | 说明         |
-|----------------------|-------------------|--------------|
+| 参数名                  | 类型                | 说明     |
+|----------------------|-------------------|--------|
 | repos                | []string          | 配置生效仓库 |
-| required_match_rules | RequiredMatchRule | 匹配规则     |
+| required_match_rules | RequiredMatchRule | 匹配规则   |
 
 ### RequiredMatchRule
 
-| 参数名          | 类型   | 说明                                                                      |
-|-----------------|--------|---------------------------------------------------------------------------|
-| pull_request    | bool   | 是否对 PR 进行校验                                                        |
-| issue           | bool   | 是否对 issue 进行校验                                                     |
-| title           | bool   | 是否对 PR 或 issue 的标题部分进行校验                                     |
-| body            | bool   | 是否对  PR 或 issue 的内容部分进行校验                                    |
-| commit_message  | bool   | 是否对 PR 当中 commit 的 commit message 部分进行校验                      |
-| regexp          | string | 校验时使用的正则表达式                                                    |
-| missing_message | string | 当匹配失败时，对 PR 或 issue 进行评论回复，多个规则的提示信息会聚合在一起        |
-| missing_label   | string | 当匹配失败时，对 PR 或 issue 添加的标签                                   |
-| skip_label      | string | 指定能够跳过当前检查规则的标签                                             |
+| 参数名             | 类型         | 说明                                         |
+|-----------------|------------|--------------------------------------------|
+| pull_request    | bool       | 是否对 PR 进行校验                                |
+| issue           | bool       | 是否对 issue 进行校验                             |
+| title           | bool       | 是否对 PR 或 issue 的标题部分进行校验                   |
+| branches        | []string   | 指定需要进行校验的分支                                |
+| start_time      | *time.Time | 指定规则开始生效的时间，在生效时间之前创建的 PR 或 issue 不会被校验    |
+| body            | bool       | 是否对  PR 或 issue 的内容部分进行校验                  |
+| commit_message  | bool       | 是否对 PR 当中 commit 的 commit message 部分进行校验   |
+| regexp          | string     | 校验时使用的正则表达式                                |
+| missing_message | string     | 当匹配失败时，对 PR 或 issue 进行评论回复，多个规则的提示信息会聚合在一起 |
+| missing_label   | string     | 当匹配失败时，对 PR 或 issue 添加的标签                  |
+| skip_label      | string     | 指定能够跳过当前检查规则的标签                            |
 
 匹配规则当中的正则表达式可以通过 [命名分组](https://pkg.go.dev/regexp#Regexp.SubexpNames) 的方式对特定部分进行额外的检查，目前支持的命名分组如下：
 
@@ -43,6 +45,9 @@ ti-community-format-checker:
       - pull_request: true
         title: true
         regexp: "^(\\[TI-(?P<issue_number>[1-9]\\d*)\\])+.+: .{10,160}$"
+        branches:
+          - main
+        start_time: "2021-11-01T12:00:00Z"
         missing_message: |
           Please follow PR Title Format: `[TI-<issue_number>] pkg, pkg2, pkg3: what is changed`
           Or if the count of mainly changed packages are more than 3, use `[TI-<issue_number>] *: what is changed`

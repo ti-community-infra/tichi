@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
@@ -174,8 +175,8 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 	}
 
 	err := handle(
-		gc, log, org, repo, num, pe.PullRequest.Title, pe.PullRequest.Body, commitMessages,
-		pe.PullRequest.Labels, rulesForPullRequest,
+		gc, log, org, repo, num, true, &pe.PullRequest.Base, commitMessages, pe.PullRequest.Title,
+		pe.PullRequest.Body, pe.PullRequest.CreatedAt, pe.PullRequest.Labels, rulesForPullRequest,
 	)
 	if err != nil {
 		return err
@@ -227,8 +228,8 @@ func HandleIssueEvent(gc githubClient, ie *github.IssueEvent,
 	}
 
 	err := handle(
-		gc, log, org, repo, num, ie.Issue.Title, ie.Issue.Body, nil,
-		ie.Issue.Labels, rulesForIssue,
+		gc, log, org, repo, num, false, nil, nil, ie.Issue.Title, ie.Issue.Body,
+		ie.Issue.CreatedAt, ie.Issue.Labels, rulesForIssue,
 	)
 	if err != nil {
 		return err
@@ -238,8 +239,9 @@ func HandleIssueEvent(gc githubClient, ie *github.IssueEvent,
 }
 
 func handle(
-	gc githubClient, log *logrus.Entry, org, repo string, num int, title, body string, commitMessages []string,
-	labels []github.Label, rules []tiexternalplugins.RequiredMatchRule,
+	gc githubClient, log *logrus.Entry, org, repo string, num int, isPullRequest bool, branch *github.PullRequestBranch,
+	commitMessages []string, title, body string, createdAt time.Time, labels []github.Label,
+	rules []tiexternalplugins.RequiredMatchRule,
 ) error {
 	messages := sets.NewString()
 	labelsExisted := sets.NewString()
@@ -251,11 +253,29 @@ func handle(
 	}
 
 	for _, rule := range rules {
+		// If SkipLabel is specified, adding skip label to the PR or issue can skip the rule.
 		if len(rule.SkipLabel) != 0 && labelsExisted.Has(rule.SkipLabel) {
-			log.Infof("The rule is passed by the skip label %s.", rule.SkipLabel)
+			log.Infof("PR/Issue %s/%s#%d skip the check by the skip label %s.", org, repo, num, rule.SkipLabel)
 			if len(rule.MissingLabel) != 0 && labelsExisted.Has(rule.MissingLabel) {
 				labelsNeedDeleted.Insert(rule.MissingLabel)
 			}
+			continue
+		}
+
+		// If Branches is specified, only PRs on the specified branches will be checked.
+		branches := sets.NewString(rule.Branches...)
+		if isPullRequest && branches.Len() != 0 && !branches.Has(branch.Ref) {
+			log.Infof("PR %s/%s#%d skip the check because its branch %s no need to be checked.",
+				org, repo, num, branch.Ref,
+			)
+			continue
+		}
+
+		// If StartTime is specified, PR or Issue created before this time can skip the rule.
+		if rule.StartTime != nil && createdAt.Before(*rule.StartTime) {
+			log.Infof("PR/Issue %s/%s#%d skip the check because it created before %v.",
+				org, repo, num, rule.StartTime,
+			)
 			continue
 		}
 
@@ -294,22 +314,10 @@ func handle(
 	labelsOnConflict := labelsNeedAdded.Intersection(labelsNeedDeleted)
 
 	labelsDeleted := labelsNeedDeleted.Difference(labelsOnConflict).List()
-	if len(labelsDeleted) != 0 {
-		for _, label := range labelsDeleted {
-			err := gc.RemoveLabel(org, repo, num, label)
-			if err != nil {
-				log.WithError(err).Errorf("Failed to remove label %s for %s/%s#%d.", label, org, repo, num)
-			}
-		}
-	}
+	removeLabels(gc, log, org, repo, num, labelsDeleted)
 
 	labelsAdded := labelsNeedAdded.Difference(labelsOnConflict).List()
-	if len(labelsAdded) != 0 {
-		err := gc.AddLabels(org, repo, num, labelsAdded...)
-		if err != nil {
-			log.WithError(err).Errorf("Failed to add labels %s for %s/%s#%d.", labelsAdded, org, repo, num)
-		}
-	}
+	addLabels(gc, log, org, repo, num, labelsAdded)
 
 	// Clean up the old notifications.
 	err := cleanUpOldNotifications(gc, log, org, repo, num)
@@ -389,6 +397,26 @@ func checkIssueNumber(gc githubClient, log *logrus.Entry, org, repo, str string,
 	}
 
 	return true
+}
+
+func addLabels(gc githubClient, log *logrus.Entry, org, repo string, num int, labelsAdded []string) {
+	if len(labelsAdded) != 0 {
+		err := gc.AddLabels(org, repo, num, labelsAdded...)
+		if err != nil {
+			log.WithError(err).Errorf("Failed to add labels %s for %s/%s#%d.", labelsAdded, org, repo, num)
+		}
+	}
+}
+
+func removeLabels(gc githubClient, log *logrus.Entry, org, repo string, num int, labelsDeleted []string) {
+	if len(labelsDeleted) != 0 {
+		for _, label := range labelsDeleted {
+			err := gc.RemoveLabel(org, repo, num, label)
+			if err != nil {
+				log.WithError(err).Errorf("Failed to remove label %s for %s/%s#%d.", label, org, repo, num)
+			}
+		}
+	}
 }
 
 // cleanUpOldNotifications used to clean up old Notifications.
