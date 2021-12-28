@@ -75,12 +75,16 @@ tide:
       # Regex for matching issue number line: https://regex101.com/r/ezCYFC/1/
       body: |
         {{- $body := print .Body -}}
-        
+
         {{- $issueNumberLine := .ExtractContent "(?im)^Issue Number:.+" $body -}}
         {{- $numbers := .NormalizeIssueNumbers $issueNumberLine -}}
-        {{- range $index, $number := $numbers -}}
-        {{- if $index }}, {{ end -}}
-        {{- .AssociatePrefix }} {{ .Org -}}/{{- .Repo -}}#{{- .Number -}}
+        {{- if $numbers -}}
+          {{- range $index, $number := $numbers -}}
+            {{- if $index }}, {{ end -}}
+            {{- .AssociatePrefix }} {{ .Org -}}/{{- .Repo -}}#{{- .Number -}}
+          {{- end -}}
+        {{- else -}}
+          {{- " " -}}
         {{- end -}}
         
         {{- $description := .ExtractContent "(?i)\x60\x60\x60commit-message(?P<content>[\\w|\\W]+)\x60\x60\x60" $body -}}
@@ -90,15 +94,15 @@ tide:
         {{- $signedAuthors := .NormalizeSignedOffBy -}}
         {{- if $signedAuthors -}}{{- "\n\n" -}}{{- end -}}
         {{- range $index, $author := $signedAuthors -}}
-        {{- if $index -}}{{- "\n" -}}{{- end -}}
-        {{- "Signed-off-by:" }} {{ .Name }} <{{- .Email -}}>
+          {{- if $index -}}{{- "\n" -}}{{- end -}}
+          {{- "Signed-off-by:" }} {{ .Name }} <{{- .Email -}}>
         {{- end -}}
         
         {{- $coAuthors := .NormalizeCoAuthorBy -}}
         {{- if $coAuthors -}}{{- "\n\n" -}}{{- end -}}
-        {{- range $index, $author := $coAuthors -}}
-        {{- if $index -}}{{- "\n" -}}{{- end -}}
-        {{- "Co-authored-by:" }} {{ .Name }} <{{- .Email -}}>
+          {{- range $index, $author := $coAuthors -}}
+          {{- if $index -}}{{- "\n" -}}{{- end -}}
+          {{- "Co-authored-by:" }} {{ .Name }} <{{- .Email -}}>
         {{- end -}}
   target_url: https://prow-dev.tidb.io/tide
 
