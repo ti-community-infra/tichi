@@ -17,6 +17,7 @@ branch-protection:
               required_status_checks:
                 contexts:
                   - "tide"
+                  - "triage"
                 strict: true
 
 in_repo_config:
@@ -123,5 +124,7 @@ tide:
       ti-community-infra:
         repos:
           test-dev:
+            required-if-present-contexts:
+              - "markdown-test"
             skip-unknown-contexts: true
             from-branch-protection: true
