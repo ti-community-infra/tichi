@@ -3,7 +3,6 @@ package issuetriage
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"reflect"
 	"sort"
 	"strings"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/github"
 )
 
@@ -72,7 +72,7 @@ func (f *fghc) RemoveLabel(owner, repo string, number int, label string) error {
 	return fmt.Errorf("cannot remove %v from %s/%s/#%d", label, owner, repo, number)
 }
 
-func (f *fghc) CreateStatus(owner, repo, SHA string, s github.Status) error {
+func (f *fghc) CreateStatus(owner, repo, sha string, s github.Status) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	if f.Error != nil {
@@ -81,7 +81,7 @@ func (f *fghc) CreateStatus(owner, repo, SHA string, s github.Status) error {
 	if f.CreatedStatuses == nil {
 		f.CreatedStatuses = make(map[string][]github.Status)
 	}
-	statuses := f.CreatedStatuses[SHA]
+	statuses := f.CreatedStatuses[sha]
 	var updated bool
 	for i := range statuses {
 		if statuses[i].Context == s.Context {
@@ -92,9 +92,9 @@ func (f *fghc) CreateStatus(owner, repo, SHA string, s github.Status) error {
 	if !updated {
 		statuses = append(statuses, s)
 	}
-	f.CreatedStatuses[SHA] = statuses
-	f.CombinedStatuses[SHA] = &github.CombinedStatus{
-		SHA:      SHA,
+	f.CreatedStatuses[sha] = statuses
+	f.CombinedStatuses[sha] = &github.CombinedStatus{
+		SHA:      sha,
 		Statuses: statuses,
 	}
 	return nil
@@ -255,11 +255,12 @@ func TestHandleIssueEvent(t *testing.T) {
 		cfg := &externalplugins.Configuration{}
 		cfg.TiCommunityIssueTriage = []externalplugins.TiCommunityIssueTriage{
 			{
-				Repos:                 []string{"org/repo"},
-				MaintainVersions:      []string{"5.1", "5.2", "5.3"},
-				AffectsLabelPrefix:    "affects/",
-				MayAffectsLabelPrefix: "may-affects/",
-				NeedTriagedLabel:      "do-not-merge/needs-triage-completed",
+				Repos:                     []string{"org/repo"},
+				MaintainVersions:          []string{"5.1", "5.2", "5.3"},
+				AffectsLabelPrefix:        "affects/",
+				MayAffectsLabelPrefix:     "may-affects/",
+				NeedTriagedLabel:          "do-not-merge/needs-triage-completed",
+				NeedCherryPickLabelPrefix: "needs-cherry-pick-release-",
 			},
 		}
 		ca := &externalplugins.ConfigAgent{}
@@ -490,7 +491,9 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				},
 			},
 
-			expectAddedLabels:        []string{},
+			expectAddedLabels: []string{
+				"org/repo#1:needs-cherry-pick-release-5.1",
+			},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
 		},
@@ -602,12 +605,15 @@ func TestHandlePullRequestEvent(t *testing.T) {
 					Labels: []github.Label{
 						{Name: "type/bug"},
 						{Name: "severity/major"},
-						{Name: "affects/5.2"},
+						{Name: "affects/5.3"},
 					},
 				},
 			},
 
-			expectAddedLabels:        []string{},
+			expectAddedLabels: []string{
+				"org/repo#1:needs-cherry-pick-release-5.2",
+				"org/repo#1:needs-cherry-pick-release-5.3",
+			},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
 		},
@@ -631,11 +637,12 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		cfg := &externalplugins.Configuration{}
 		cfg.TiCommunityIssueTriage = []externalplugins.TiCommunityIssueTriage{
 			{
-				Repos:                 []string{"org/repo"},
-				MaintainVersions:      []string{"5.1", "5.2", "5.3"},
-				AffectsLabelPrefix:    "affects/",
-				MayAffectsLabelPrefix: "may-affects/",
-				NeedTriagedLabel:      "do-not-merge/needs-triage-completed",
+				Repos:                     []string{"org/repo"},
+				MaintainVersions:          []string{"5.1", "5.2", "5.3"},
+				AffectsLabelPrefix:        "affects/",
+				MayAffectsLabelPrefix:     "may-affects/",
+				NeedTriagedLabel:          "do-not-merge/needs-triage-completed",
+				NeedCherryPickLabelPrefix: "needs-cherry-pick-release-",
 			},
 		}
 		ca := &externalplugins.ConfigAgent{}
@@ -730,11 +737,9 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			if !ok || len(createdStatuses) != 1 {
 				t.Errorf("For case [%s], expect created status: %s, but got: none.\n",
 					tc.name, tc.expectCreatedStatusState)
-			} else {
-				if tc.expectCreatedStatusState != createdStatuses[0].State {
-					t.Errorf("For case [%s], expect status state: %s, but got: %s.\n",
-						tc.name, tc.expectCreatedStatusState, createdStatuses[0].State)
-				}
+			} else if tc.expectCreatedStatusState != createdStatuses[0].State {
+				t.Errorf("For case [%s], expect status state: %s, but got: %s.\n",
+					tc.name, tc.expectCreatedStatusState, createdStatuses[0].State)
 			}
 		}
 	}
@@ -908,7 +913,9 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 				},
 			},
 
-			expectAddedLabels:        []string{},
+			expectAddedLabels: []string{
+				"org/repo#1:needs-cherry-pick-release-5.1",
+			},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
 		},
@@ -1024,12 +1031,15 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 					Labels: []github.Label{
 						{Name: "type/bug"},
 						{Name: "severity/major"},
-						{Name: "affects/5.2"},
+						{Name: "affects/5.3"},
 					},
 				},
 			},
 
-			expectAddedLabels:        []string{},
+			expectAddedLabels: []string{
+				"org/repo#1:needs-cherry-pick-release-5.2",
+				"org/repo#1:needs-cherry-pick-release-5.3",
+			},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
 		},
@@ -1053,11 +1063,12 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		cfg := &externalplugins.Configuration{}
 		cfg.TiCommunityIssueTriage = []externalplugins.TiCommunityIssueTriage{
 			{
-				Repos:                 []string{"org/repo"},
-				MaintainVersions:      []string{"5.1", "5.2", "5.3"},
-				AffectsLabelPrefix:    "affects/",
-				MayAffectsLabelPrefix: "may-affects/",
-				NeedTriagedLabel:      "do-not-merge/needs-triage-completed",
+				Repos:                     []string{"org/repo"},
+				MaintainVersions:          []string{"5.1", "5.2", "5.3"},
+				AffectsLabelPrefix:        "affects/",
+				MayAffectsLabelPrefix:     "may-affects/",
+				NeedTriagedLabel:          "do-not-merge/needs-triage-completed",
+				NeedCherryPickLabelPrefix: "needs-cherry-pick-release-",
 			},
 		}
 		ca := &externalplugins.ConfigAgent{}
@@ -1164,11 +1175,9 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			if !ok || len(createdStatuses) != 1 {
 				t.Errorf("For case [%s], expect created status: %s, but got: none.\n",
 					tc.name, tc.expectCreatedStatusState)
-			} else {
-				if tc.expectCreatedStatusState != createdStatuses[0].State {
-					t.Errorf("For case [%s], expect status state: %s, but got: %s.\n",
-						tc.name, tc.expectCreatedStatusState, createdStatuses[0].State)
-				}
+			} else if tc.expectCreatedStatusState != createdStatuses[0].State {
+				t.Errorf("For case [%s], expect status state: %s, but got: %s.\n",
+					tc.name, tc.expectCreatedStatusState, createdStatuses[0].State)
 			}
 		}
 	}

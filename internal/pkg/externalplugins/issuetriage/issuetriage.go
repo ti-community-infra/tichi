@@ -220,6 +220,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 	return nil
 }
 
+//nolint:gocritic
 func (s *Server) handleIssueEvent(ie *github.IssueEvent, log *logrus.Entry) error {
 	org := ie.Repo.Owner.Login
 	repo := ie.Repo.Name
@@ -299,7 +300,7 @@ func (s *Server) handleIssueEvent(ie *github.IssueEvent, log *logrus.Entry) erro
 			prBranch := string(pr.BaseRefName)
 
 			if !isPRNeedToCheck(prState, prBranch, defaultBranch) {
-				log.Debugf("Skipping the check becuase it is not a open PR on the default branch.")
+				log.Debugf("Skipping the check, because it is not a open PR on the default branch.")
 				continue
 			}
 
@@ -332,7 +333,7 @@ func (s *Server) handlePullRequestEvent(pe *github.PullRequestEvent, log *logrus
 	prNum := pr.Number
 
 	if !isPRNeedToCheck(pr.State, pr.Base.Ref, pe.Repo.DefaultBranch) {
-		log.Debugf("Skipping the check becuase it is not a open PR on the default branch.")
+		log.Debugf("Skipping the check, because it is not a open PR on the default branch.")
 		return nil
 	}
 
@@ -361,7 +362,7 @@ func (s *Server) handleIssueCommentEvent(ice *github.IssueCommentEvent, log *log
 	prNum := issue.Number
 
 	if !checkIssueTriagedRe.MatchString(comment) {
-		log.Debugf("Skipping the check becuase no command comment.")
+		log.Debugf("Skipping the check, because no command comment.")
 		return nil
 	}
 
@@ -371,7 +372,7 @@ func (s *Server) handleIssueCommentEvent(ice *github.IssueCommentEvent, log *log
 	}
 
 	if !isPRNeedToCheck(pr.State, pr.Base.Ref, ice.Repo.DefaultBranch) {
-		log.Debugf("Skipping the check becuase it is not a open PR on the default branch.")
+		log.Debugf("Skipping the check because it is not a open PR on the default branch.")
 		return nil
 	}
 
@@ -413,7 +414,7 @@ func (s *Server) handle(log *logrus.Entry, cfg *tiexternalplugins.TiCommunityIss
 	}
 
 	if len(issueKeys) == 0 {
-		log.Debugf("Skipping the check becuase PR has no linked issues.")
+		log.Debugf("Skipping the check because PR has no linked issues.")
 		return s.createStatus(log, prOrg, prRepo, prSHA, existingStatus,
 			github.StatusPending, issueTriageContextMessageWaiting, cfg.StatusTargetURL)
 	}
@@ -602,7 +603,8 @@ func (s *Server) getReferencePRList(log *logrus.Entry, org, repo string, issueNu
 	return ret, nil
 }
 
-func (s *Server) createStatus(log *logrus.Entry, org, repo, sha, existingState, targetState, message, targetURL string) error {
+func (s *Server) createStatus(log *logrus.Entry, org, repo, sha, existingState,
+	targetState, message, targetURL string) error {
 	if existingState != targetState {
 		log.Debugf("Setting check-issue-triage-complete status context to %s.", targetState)
 		if err := s.GitHubClient.CreateStatus(org, repo, sha, github.Status{

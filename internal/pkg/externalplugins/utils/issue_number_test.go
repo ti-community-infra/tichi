@@ -1,18 +1,18 @@
 package utils
 
 import (
+	"reflect"
 	"testing"
 )
 
 func TestNormalizeIssueNumbers(t *testing.T) {
 	testcases := []struct {
-		name      string
-		content   string
-		currOrg   string
-		currRepo  string
-		delimiter string
+		name     string
+		content  string
+		currOrg  string
+		currRepo string
 
-		expectNumbers string
+		expectNumbers []IssueNumberData
 	}{
 		{
 			name:     "issue number with short prefix",
@@ -20,7 +20,14 @@ func TestNormalizeIssueNumbers(t *testing.T) {
 			currOrg:  "pingcap",
 			currRepo: "tidb",
 
-			expectNumbers: "close #123",
+			expectNumbers: []IssueNumberData{
+				{
+					AssociatePrefix: "close",
+					Org:             "pingcap",
+					Repo:            "tidb",
+					Number:          123,
+				},
+			},
 		},
 		{
 			name:     "issue number with full prefix in the same repo",
@@ -28,7 +35,14 @@ func TestNormalizeIssueNumbers(t *testing.T) {
 			currOrg:  "pingcap",
 			currRepo: "tidb",
 
-			expectNumbers: "close #123",
+			expectNumbers: []IssueNumberData{
+				{
+					AssociatePrefix: "close",
+					Org:             "pingcap",
+					Repo:            "tidb",
+					Number:          123,
+				},
+			},
 		},
 		{
 			name:     "issue number with full prefix in the another repo",
@@ -36,7 +50,14 @@ func TestNormalizeIssueNumbers(t *testing.T) {
 			currOrg:  "pingcap",
 			currRepo: "tidb",
 
-			expectNumbers: "close pingcap/ticdc#123",
+			expectNumbers: []IssueNumberData{
+				{
+					AssociatePrefix: "close",
+					Org:             "pingcap",
+					Repo:            "ticdc",
+					Number:          123,
+				},
+			},
 		},
 		{
 			name:     "issue number with full prefix in the another org",
@@ -44,7 +65,14 @@ func TestNormalizeIssueNumbers(t *testing.T) {
 			currOrg:  "pingcap",
 			currRepo: "tidb",
 
-			expectNumbers: "close tikv/tikv#123",
+			expectNumbers: []IssueNumberData{
+				{
+					AssociatePrefix: "close",
+					Org:             "tikv",
+					Repo:            "tikv",
+					Number:          123,
+				},
+			},
 		},
 		{
 			name:     "issue number with link prefix in the same repo",
@@ -52,7 +80,14 @@ func TestNormalizeIssueNumbers(t *testing.T) {
 			currOrg:  "pingcap",
 			currRepo: "tidb",
 
-			expectNumbers: "close #123",
+			expectNumbers: []IssueNumberData{
+				{
+					AssociatePrefix: "close",
+					Org:             "pingcap",
+					Repo:            "tidb",
+					Number:          123,
+				},
+			},
 		},
 		{
 			name:     "issue number with link prefix in the another repo",
@@ -60,7 +95,14 @@ func TestNormalizeIssueNumbers(t *testing.T) {
 			currOrg:  "pingcap",
 			currRepo: "tidb",
 
-			expectNumbers: "close pingcap/ticdc#123",
+			expectNumbers: []IssueNumberData{
+				{
+					AssociatePrefix: "close",
+					Org:             "pingcap",
+					Repo:            "ticdc",
+					Number:          123,
+				},
+			},
 		},
 		{
 			name:     "issue number with link prefix in the another org",
@@ -68,7 +110,14 @@ func TestNormalizeIssueNumbers(t *testing.T) {
 			currOrg:  "pingcap",
 			currRepo: "tidb",
 
-			expectNumbers: "close tikv/tikv#123",
+			expectNumbers: []IssueNumberData{
+				{
+					AssociatePrefix: "close",
+					Org:             "tikv",
+					Repo:            "tikv",
+					Number:          123,
+				},
+			},
 		},
 		{
 			name:     "duplicate issue numbers with same associate prefix",
@@ -76,7 +125,14 @@ func TestNormalizeIssueNumbers(t *testing.T) {
 			currOrg:  "pingcap",
 			currRepo: "tidb",
 
-			expectNumbers: "close #123",
+			expectNumbers: []IssueNumberData{
+				{
+					AssociatePrefix: "close",
+					Org:             "pingcap",
+					Repo:            "tidb",
+					Number:          123,
+				},
+			},
 		},
 		{
 			name:     "multiple issue numbers with same associate prefix",
@@ -84,33 +140,29 @@ func TestNormalizeIssueNumbers(t *testing.T) {
 			currOrg:  "pingcap",
 			currRepo: "tidb",
 
-			expectNumbers: "close #123, close #456",
-		},
-		{
-			name:      "multiple issue numbers and custom delimiter",
-			content:   "Issue Number: ref #123, close #456",
-			currOrg:   "pingcap",
-			currRepo:  "tidb",
-			delimiter: "\n",
-
-			expectNumbers: "ref #123\nclose #456",
-		},
-		{
-			name:      "multiple issue numbers and custom delimiter",
-			content:   "Issue Number: ref #123\nclose #456",
-			currOrg:   "pingcap",
-			currRepo:  "tidb",
-			delimiter: "\n",
-
-			expectNumbers: "ref #123\nclose #456",
+			expectNumbers: []IssueNumberData{
+				{
+					AssociatePrefix: "close",
+					Org:             "pingcap",
+					Repo:            "tidb",
+					Number:          123,
+				},
+				{
+					AssociatePrefix: "close",
+					Org:             "pingcap",
+					Repo:            "tidb",
+					Number:          456,
+				},
+			},
 		},
 	}
 
 	for _, testcase := range testcases {
 		tc := testcase
-		actualNumbers := NormalizeIssueNumbers(tc.content, tc.currOrg, tc.currRepo, tc.delimiter)
-		if tc.expectNumbers != actualNumbers {
-			t.Errorf("For case \"%s\": \nexpect issue numbers are: \n%s\nbut got: \n%s",
+		actualNumbers := NormalizeIssueNumbers(tc.content, tc.currOrg, tc.currRepo)
+
+		if !reflect.DeepEqual(tc.expectNumbers, actualNumbers) {
+			t.Errorf("For case [%s]: expect issue numbers are: \n%v\nbut got: \n%v\n",
 				tc.name, tc.expectNumbers, actualNumbers)
 		}
 	}
