@@ -54,6 +54,7 @@ type Configuration struct {
 	TiCommunityContribution  []TiCommunityContribution  `json:"ti-community-contribution,omitempty"`
 	TiCommunityCherrypicker  []TiCommunityCherrypicker  `json:"ti-community-cherrypicker,omitempty"`
 	TiCommunityFormatChecker []TiCommunityFormatChecker `json:"ti-community-format-checker,omitempty"`
+	TiCommunityIssueTriage   []TiCommunityIssueTriage   `json:"ti-community-issue-triage,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -302,6 +303,24 @@ type RequiredMatchRule struct {
 	SkipLabel string `json:"skip_label,omitempty"`
 }
 
+// TiCommunityIssueTriage is the config for the issue-triage plugin.
+type TiCommunityIssueTriage struct {
+	// Repos are either of the form org/repo or just org.
+	Repos []string `json:"repos,omitempty"`
+	// MaintainVersions specifies the version number under maintenance, like 5.1.
+	MaintainVersions []string `json:"maintain_versions"`
+	// AffectsLabelPrefix specifies the prefix for the affects label
+	AffectsLabelPrefix string `json:"affects_label_prefix"`
+	// MayAffectsLabelPrefix specifies the prefix for the may-affects label
+	MayAffectsLabelPrefix string `json:"may_affects_label_prefix"`
+	// NeedTriagedLabel is the label added to the PR when the linked issue needs further triage.
+	NeedTriagedLabel string `json:"linked_issue_needs_triage_label"`
+	// NeedCherryPickLabelPrefix is the prefix of label indicates that pr needs to be cherry-picked.
+	NeedCherryPickLabelPrefix string `json:"need_cherry_pick_label_prefix"`
+	// StatusTargetURL
+	StatusTargetURL string `json:"status_target_url"`
+}
+
 // LgtmFor finds the Lgtm for a repo, if one exists
 // a trigger can be listed for the repo itself or for the
 // owning organization
@@ -531,6 +550,27 @@ func (c *Configuration) FormatCheckerFor(org, repo string) *TiCommunityFormatChe
 		return &formatChecker
 	}
 	return &TiCommunityFormatChecker{}
+}
+
+// IssueTriageFor finds the TiCommunityIssueTriage for a repo, if one exists.
+// TiCommunityIssueTriage configuration can be listed for a repository
+// or an organization.
+func (c *Configuration) IssueTriageFor(org, repo string) *TiCommunityIssueTriage {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, issueTriage := range c.TiCommunityIssueTriage {
+		if !sets.NewString(issueTriage.Repos...).Has(fullName) {
+			continue
+		}
+		return &issueTriage
+	}
+	// If you don't find anything, loop again looking for an org config
+	for _, issueTriage := range c.TiCommunityIssueTriage {
+		if !sets.NewString(issueTriage.Repos...).Has(org) {
+			continue
+		}
+		return &issueTriage
+	}
+	return &TiCommunityIssueTriage{}
 }
 
 // setDefaults will set the default value for the configuration of all plugins.

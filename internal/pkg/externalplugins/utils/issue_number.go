@@ -23,7 +23,6 @@ const (
 	issueNumberGroupName       = "issue_number"
 	orgGroupName               = "org"
 	repoGroupName              = "repo"
-	defaultDelimiter           = ", "
 )
 
 var (
@@ -32,29 +31,29 @@ var (
 	fullPrefixRegexp        = fmt.Sprintf(fullPrefixRegexpTemplate, orgRegexp, repoRegexp)
 )
 
-type issueNumberValue struct {
-	associatePrefix string
-	org             string
-	repo            string
-	number          int
+type IssueNumberData struct {
+	AssociatePrefix string
+	Org             string
+	Repo            string
+	Number          int
 }
 
-type issueNumberData map[string]issueNumberValue
+type issueNumberMap map[string]IssueNumberData
 
 // put use map results to de duplicate data.
-func (d issueNumberData) put(associatePrefix, org, repo string, issueNumber int) {
+func (m issueNumberMap) put(associatePrefix, org, repo string, issueNumber int) {
 	key := fmt.Sprintf("%s-%s-%s-%d", associatePrefix, org, repo, issueNumber)
-	d[key] = issueNumberValue{
-		associatePrefix: associatePrefix,
-		org:             org,
-		repo:            repo,
-		number:          issueNumber,
+	m[key] = IssueNumberData{
+		AssociatePrefix: associatePrefix,
+		Org:             org,
+		Repo:            repo,
+		Number:          issueNumber,
 	}
 }
 
 // NormalizeIssueNumbers is an utils method in CommitTemplate that used to extract the issue numbers in the text
 // and normalize it by a uniform format.
-func NormalizeIssueNumbers(content, currOrg, currRepo, delimiter string) string {
+func NormalizeIssueNumbers(content, currOrg, currRepo string) []IssueNumberData {
 	issueNumberBlockRegexp := fmt.Sprintf(issueNumberBlockRegexpTemplate, associatePrefixRegexp, issueNumberPrefixRegexp)
 	compile, err := regexp.Compile(issueNumberBlockRegexp)
 	if err != nil {
@@ -64,7 +63,7 @@ func NormalizeIssueNumbers(content, currOrg, currRepo, delimiter string) string 
 	allMatches := compile.FindAllStringSubmatch(content, -1)
 	groupNames := compile.SubexpNames()
 
-	issueNumberMap := make(issueNumberData)
+	issueNumberMap := make(issueNumberMap)
 	for _, matches := range allMatches {
 		associatePrefix := ""
 		issueNumberPrefix := ""
@@ -93,39 +92,15 @@ func NormalizeIssueNumbers(content, currOrg, currRepo, delimiter string) string 
 	}
 
 	// The issue number will be sorted in ascending order.
-	issueNumberValues := make([]issueNumberValue, 0)
+	issueNumberValues := make([]IssueNumberData, 0)
 	for _, value := range issueNumberMap {
 		issueNumberValues = append(issueNumberValues, value)
 	}
 	sort.Slice(issueNumberValues, func(i, j int) bool {
-		return issueNumberValues[i].number < issueNumberValues[j].number
+		return issueNumberValues[i].Number < issueNumberValues[j].Number
 	})
 
-	// Use a uniform prefix style.
-	issueNumbers := make([]string, 0)
-	for _, v := range issueNumberValues {
-		issueNumbers = append(issueNumbers,
-			shortenPrefix(v.associatePrefix, v.org, v.repo, currOrg, currRepo, v.number),
-		)
-	}
-
-	result := ""
-	if len(delimiter) == 0 {
-		result = strings.Join(issueNumbers, defaultDelimiter)
-	} else {
-		result = strings.Join(issueNumbers, delimiter)
-	}
-
-	return result
-}
-
-// shortenPrefix used to simplify the prefix format. If it is the issue number of the same repository, the short prefix
-// style will be used instead of the full prefix.
-func shortenPrefix(associatePrefix, org, repo, currOrg, currRepo string, issueNumber int) string {
-	if org == currOrg && repo == currRepo {
-		return fmt.Sprintf("%s #%d", associatePrefix, issueNumber)
-	}
-	return fmt.Sprintf("%s %s/%s#%d", associatePrefix, org, repo, issueNumber)
+	return issueNumberValues
 }
 
 // isLinkPrefix used to determine whether the prefix style of the issue number is link prefix,
@@ -186,7 +161,8 @@ func isFullPrefix(prefix string) (bool, string, string) {
 	return true, org, repo
 }
 
-// isShortPrefix used to determine whether the prefix style of the issue number is short prefix, for example: #123.
+// isShortPrefix used to determine whether the prefix style of the issue number is short prefix,
+// for example: #123.
 func isShortPrefix(prefix string) bool {
 	return prefix == shortPrefix
 }

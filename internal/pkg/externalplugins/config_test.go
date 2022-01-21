@@ -2011,12 +2011,82 @@ func TestFormatCheckerFor(t *testing.T) {
 				*tc.formatChecker,
 			}}
 
-			contribution := config.FormatCheckerFor(tc.org, tc.repo)
+			formatChecker := config.FormatCheckerFor(tc.org, tc.repo)
 
 			if tc.expectEmpty != nil {
-				assert.DeepEqual(t, contribution, &TiCommunityFormatChecker{})
+				assert.DeepEqual(t, formatChecker, &TiCommunityFormatChecker{})
 			} else {
-				assert.DeepEqual(t, contribution.Repos, tc.formatChecker.Repos)
+				assert.DeepEqual(t, formatChecker.Repos, tc.formatChecker.Repos)
+			}
+		})
+	}
+}
+
+func TestIssueTriageFor(t *testing.T) {
+	testcases := []struct {
+		name        string
+		issueTriage *TiCommunityIssueTriage
+		org         string
+		repo        string
+		expectEmpty *TiCommunityIssueTriage
+	}{
+		{
+			name: "Full name",
+			issueTriage: &TiCommunityIssueTriage{
+				Repos:                 []string{"ti-community-infra/test-dev"},
+				MaintainVersions:      []string{},
+				AffectsLabelPrefix:    "affects/",
+				MayAffectsLabelPrefix: "may-affects/",
+				NeedTriagedLabel:      "needs-triage-complete",
+				StatusTargetURL:       "http://example",
+			},
+			org:  "ti-community-infra",
+			repo: "test-dev",
+		},
+		{
+			name: "Only org",
+			issueTriage: &TiCommunityIssueTriage{
+				Repos:                 []string{"ti-community-infra/test-dev"},
+				MaintainVersions:      []string{},
+				AffectsLabelPrefix:    "affects/",
+				MayAffectsLabelPrefix: "may-affects/",
+				NeedTriagedLabel:      "needs-triage-complete",
+				StatusTargetURL:       "http://example",
+			},
+			org:  "ti-community-infra",
+			repo: "test-dev",
+		},
+		{
+			name: "Can not find",
+			issueTriage: &TiCommunityIssueTriage{
+				Repos:                 []string{"ti-community-infra/test-dev"},
+				MaintainVersions:      []string{},
+				AffectsLabelPrefix:    "affects/",
+				MayAffectsLabelPrefix: "may-affects/",
+				NeedTriagedLabel:      "needs-triage-complete",
+				StatusTargetURL:       "http://example",
+			},
+			org:         "ti-community-infra1",
+			repo:        "test-dev1",
+			expectEmpty: &TiCommunityIssueTriage{},
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			config := Configuration{
+				TiCommunityIssueTriage: []TiCommunityIssueTriage{
+					*tc.issueTriage,
+				},
+			}
+
+			issueTriage := config.IssueTriageFor(tc.org, tc.repo)
+
+			if tc.expectEmpty != nil {
+				assert.DeepEqual(t, issueTriage, &TiCommunityIssueTriage{})
+			} else {
+				assert.DeepEqual(t, issueTriage.Repos, tc.issueTriage.Repos)
 			}
 		})
 	}

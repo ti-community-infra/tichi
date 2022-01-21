@@ -794,9 +794,14 @@ func createCherryPickCommitMessage(gc githubClient, log *logrus.Entry, copyIssue
 			log.WithError(err).Errorf("Failed to get the squash commit %s of PR #%d.", sha, num)
 			return cherryPickCommitMessage
 		}
-		numbers := utils.NormalizeIssueNumbers(commit.Commit.Message, org, repo, "\n")
-		if len(numbers) != 0 {
-			cherryPickCommitMessage = fmt.Sprintf("%s\n\n%s", cherryPickCommitMessage, numbers)
+		numberValues := utils.NormalizeIssueNumbers(commit.Commit.Message, org, repo)
+		if len(numberValues) != 0 {
+			numbersTexts := make([]string, 0)
+			for _, numberValue := range numberValues {
+				numberText := fmt.Sprintf("%s %s/%s#%d", numberValue.AssociatePrefix, numberValue.Org, numberValue.Repo, numberValue.Number)
+				numbersTexts = append(numbersTexts, numberText)
+			}
+			cherryPickCommitMessage = fmt.Sprintf("%s\n\n%s", cherryPickCommitMessage, strings.Join(numbersTexts, ", "))
 		}
 	}
 
