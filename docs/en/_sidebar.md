@@ -13,6 +13,7 @@
     - [ti-community-contribution](en/plugins/contribution.md)
     - [ti-community-cherrypicker](en/plugins/cherrypicker.md)
     - [ti-community-format-checker](plugins/format-checker.md)
+    - [ti-community-issue-triage](plugins/issue-triage.md)
     - [needs-rebase](en/plugins/needs-rebase.md)
   - Internal
     - [require-matching-label](en/plugins/require-matching-label.md)
