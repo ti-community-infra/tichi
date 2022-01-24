@@ -257,7 +257,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 		}
 		go func() {
 			if err := s.handlePullRequestEvent(&pe, l); err != nil {
-				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
+				l.WithError(err).Info("Error handling event.")
 			}
 		}()
 	case tiexternalplugins.IssuesEvent:
@@ -267,7 +267,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 		}
 		go func() {
 			if err := s.handleIssueEvent(&ie, l); err != nil {
-				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
+				l.WithError(err).Info("Error handling event.")
 			}
 		}()
 	case tiexternalplugins.IssueCommentEvent:
@@ -277,7 +277,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 		}
 		go func() {
 			if err := s.handleIssueCommentEvent(&ice, l); err != nil {
-				l.WithField("event-type", eventType).WithError(err).Info("Error handling event.")
+				l.WithError(err).Info("Error handling event.")
 			}
 		}()
 	default:
@@ -336,10 +336,7 @@ func (s *Server) handleIssueEvent(ie *github.IssueEvent, log *logrus.Entry) erro
 		version := strings.TrimPrefix(newLabel, cfg.AffectsLabelPrefix)
 		mayAffectsVersionLabel := cfg.MayAffectsLabelPrefix + version
 		if existedLabels.Has(mayAffectsVersionLabel) {
-			err := s.GitHubClient.RemoveLabel(org, repo, num, mayAffectsVersionLabel)
-			if err != nil {
-				log.Errorf("Failed to add may affects labels.")
-			}
+			return s.GitHubClient.RemoveLabel(org, repo, num, mayAffectsVersionLabel)
 		}
 	} else if strings.HasPrefix(newLabel, cfg.MayAffectsLabelPrefix) {
 		// Rerun the issue triage complete checker when may-affects label was removed.
@@ -656,13 +653,15 @@ func (s *Server) getReferencePRList(log *logrus.Entry, org, repo string, issueNu
 
 	totalCost := int(query.RateLimit.Cost)
 	remaining := int(query.RateLimit.Remaining)
-	log.Infof("Get reference PR list for issue %s/%s#%d cost %d point(s). %d remaining.",
-		org, repo, issueNumber, totalCost, remaining)
 
-	var ret []pullRequest
+	ret := make([]pullRequest, 0)
 	for _, node := range query.Repository.Issue.TimelineItems.Nodes {
 		ret = append(ret, node.CrossReferencedEvent.Source.PullRequest)
 	}
+
+	log.Infof("Get reference PR list for issue %s/%s#%d cost %d point(s), %d remaining, found %d.",
+		org, repo, issueNumber, totalCost, remaining, len(ret))
+
 	return ret, nil
 }
 
@@ -678,6 +677,8 @@ func (s *Server) createStatus(log *logrus.Entry, org, repo, sha, existingState,
 		}); err != nil {
 			return fmt.Errorf("error setting pull request status: %w", err)
 		}
+	} else {
+		log.Debugf("The check-issue-triage-complete status context is already %s.", targetState)
 	}
 
 	return nil
