@@ -385,8 +385,8 @@ func (s *Server) handleIssueEvent(ie *github.IssueEvent, log *logrus.Entry) erro
 
 func (s *Server) handlePullRequestEvent(pe *github.PullRequestEvent, log *logrus.Entry) error {
 	if pe.Action != github.PullRequestActionOpened && pe.Action != github.PullRequestActionReopened &&
-		pe.Action != github.PullRequestActionEdited {
-		log.Debug("Skipping because not a opened / reopened / edited action.")
+		pe.Action != github.PullRequestActionEdited && pe.Action != github.PullRequestActionSynchronize {
+		log.Debug("Skipping because not a opened / reopened / edited / synchronize action.")
 		return nil
 	}
 
