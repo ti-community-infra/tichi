@@ -37,7 +37,7 @@ const (
 
 var (
 	IssueNumberLineRe   = regexp.MustCompile("(?im)^Issue Number:.+")
-	checkIssueTriagedRe = regexp.MustCompile(`(?mi)^/run-check-issue-triage-complete\s*$`)
+	checkIssueTriagedRe = regexp.MustCompile(`(?mi)^/(run-)*check-issue-triage-complete\s*$`)
 )
 
 type githubClient interface {
@@ -126,19 +126,60 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		cfg := epa.Config()
 
 		for _, repo := range enabledRepos {
-			cfg.IssueTriageFor(repo.Org, repo.Repo)
-			var isConfigured bool
+			opts := cfg.IssueTriageFor(repo.Org, repo.Repo)
 			var configInfoStrings []string
 
-			if isConfigured {
-				configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
+			configInfoStrings = append(configInfoStrings, "The plugin has these configurations:<ul>")
+
+			if len(opts.AffectsLabelPrefix) != 0 {
+				configInfoStrings = append(configInfoStrings,
+					fmt.Sprintf("<li>The affects label prefix is: %s</li>", opts.AffectsLabelPrefix))
 			}
+			if len(opts.MayAffectsLabelPrefix) != 0 {
+				configInfoStrings = append(configInfoStrings,
+					fmt.Sprintf("<li>The may affects label prefix is: %s</li>", opts.MayAffectsLabelPrefix))
+			}
+			if len(opts.NeedTriagedLabel) != 0 {
+				configInfoStrings = append(configInfoStrings,
+					fmt.Sprintf("<li>The need triaged label prefix is: %s</li>", opts.NeedTriagedLabel))
+			}
+			if len(opts.NeedCherryPickLabelPrefix) != 0 {
+				configInfoStrings = append(configInfoStrings,
+					fmt.Sprintf("<li>The need cherry-pick label prefix is: %s</li>", opts.NeedCherryPickLabelPrefix))
+			}
+			if len(opts.StatusTargetURL) != 0 {
+				configInfoStrings = append(
+					configInfoStrings,
+					fmt.Sprintf("<li>The status details will be targeted to: <a href=\"%s\">Link</a></li>",
+						opts.StatusTargetURL),
+				)
+			}
+
+			if opts.MaintainVersions != nil && len(opts.MaintainVersions) != 0 {
+				var versionConfigStrings []string
+				versionConfigStrings = append(versionConfigStrings,
+					"The release branches that the current repository is maintaining: ")
+				versionConfigStrings = append(versionConfigStrings, "<ul>")
+				for _, version := range opts.MaintainVersions {
+					versionConfigStrings = append(versionConfigStrings, fmt.Sprintf("<li>%s</li>", version))
+				}
+				versionConfigStrings = append(versionConfigStrings, "</ul>")
+				configInfoStrings = append(configInfoStrings, strings.Join(versionConfigStrings, "\n"))
+			}
+
+			configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
 		}
 
 		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
 			TiCommunityIssueTriage: []tiexternalplugins.TiCommunityIssueTriage{
 				{
-					Repos: []string{"ti-community-infra/test-dev"},
+					Repos:                     []string{"ti-community-infra/test-dev"},
+					MaintainVersions:          []string{"5.1", "5.2", "5.3"},
+					AffectsLabelPrefix:        "affects/",
+					MayAffectsLabelPrefix:     "may-affects/",
+					NeedTriagedLabel:          "do-not-merge/needs-triage-completed",
+					NeedCherryPickLabelPrefix: "needs-cherry-pick-release-",
+					StatusTargetURL:           "https://book.prow.tidb.io/#/plugins/issue-triage",
 				},
 			},
 		})
@@ -150,6 +191,17 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			Description: fmt.Sprintf("The %s plugin", PluginName),
 			Config:      configInfo,
 			Snippet:     yamlSnippet,
+			Commands: []pluginhelp.Command{
+				{
+					Usage: "/[run-]check-issue-triage-complete",
+					Examples: []string{
+						"/run-check-issue-triage-complete",
+						"/check-issue-triage-complete",
+					},
+					Description: "Forces rechecking of the check-issue-triage-complete status.",
+					WhoCanUse:   "Anyone",
+				},
+			},
 			Events: []string{
 				tiexternalplugins.PullRequestEvent,
 			},
@@ -167,7 +219,6 @@ type Server struct {
 
 	GitHubClient githubClient
 	ConfigAgent  *tiexternalplugins.ConfigAgent
-	Log          *logrus.Entry
 
 	mapLock sync.Mutex
 	lockMap map[checkRequest]*sync.Mutex
@@ -192,7 +243,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // handleEvent distributed events and handles them.
 func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error {
-	l := s.Log.WithFields(
+	l := logrus.WithFields(
 		logrus.Fields{
 			"event-type":     eventType,
 			github.EventGUID: eventGUID,
@@ -230,7 +281,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			}
 		}()
 	default:
-		s.Log.Debugf("received an event of type %q but didn't ask for it", eventType)
+		l.Debugf("received an event of type %q but didn't ask for it", eventType)
 	}
 	return nil
 }

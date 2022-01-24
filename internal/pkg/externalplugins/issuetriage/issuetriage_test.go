@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"sort"
 	"strings"
@@ -14,7 +17,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"k8s.io/apimachinery/pkg/util/sets"
+	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
+	"k8s.io/test-infra/prow/plugins"
 )
 
 var botName = "ti-chi-bot"
@@ -455,15 +460,15 @@ func TestHandleIssueEvent(t *testing.T) {
 		}
 
 		// Mock Server.
+		log := logrus.WithField("plugin", PluginName)
 		s := &Server{
 			ConfigAgent:            ca,
 			GitHubClient:           fc,
 			WebhookSecretGenerator: getSecret,
 			GitHubTokenGenerator:   getGithubToken,
-			Log:                    logrus.StandardLogger().WithField("client", "issue-triage"),
 		}
 
-		err := s.handleIssueEvent(ie, logrus.WithField("plugin", PluginName))
+		err := s.handleIssueEvent(ie, log)
 		if err != nil {
 			t.Errorf("For case [%s], didn't expect error: %v", tc.name, err)
 		}
@@ -940,15 +945,15 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		}
 
 		// Mock Server.
+		log := logrus.WithField("plugin", PluginName)
 		s := &Server{
 			ConfigAgent:            ca,
 			GitHubClient:           fc,
 			WebhookSecretGenerator: getSecret,
 			GitHubTokenGenerator:   getGithubToken,
-			Log:                    logrus.StandardLogger().WithField("client", "issue-triage"),
 		}
 
-		err := s.handlePullRequestEvent(pe, logrus.WithField("plugin", PluginName))
+		err := s.handlePullRequestEvent(pe, log)
 		if err != nil {
 			t.Errorf("For case [%s], didn't expect error: %v", tc.name, err)
 		}
@@ -1013,6 +1018,30 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+		},
+		{
+			name:         "comment shorten command to a pull request with empty body",
+			action:       github.IssueCommentActionCreated,
+			comment:      "/check-issue-triage-complete",
+			body:         "",
+			state:        "open",
+			targetBranch: "master",
+
+			expectAddedLabels:        []string{},
+			expectRemovedLabels:      []string{},
+			expectCreatedStatusState: github.StatusSuccess,
+		},
+		{
+			name:         "comment non command to a pull request with empty body",
+			action:       github.IssueCommentActionCreated,
+			comment:      "/check-dco",
+			body:         "",
+			state:        "open",
+			targetBranch: "master",
+
+			expectAddedLabels:        []string{},
+			expectRemovedLabels:      []string{},
+			expectCreatedStatusState: "",
 		},
 		{
 			name:         "comment to a pull request linked to a feature issue",
@@ -1378,15 +1407,15 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		}
 
 		// Mock Server.
+		log := logrus.WithField("plugin", PluginName)
 		s := &Server{
 			ConfigAgent:            ca,
 			GitHubClient:           fc,
 			WebhookSecretGenerator: getSecret,
 			GitHubTokenGenerator:   getGithubToken,
-			Log:                    logrus.StandardLogger().WithField("client", "issue-triage"),
 		}
 
-		err := s.handleIssueCommentEvent(ice, logrus.WithField("plugin", PluginName))
+		err := s.handleIssueCommentEvent(ice, log)
 		if err != nil {
 			t.Errorf("For case [%s], didn't expect error: %v", tc.name, err)
 		}
@@ -1419,5 +1448,347 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 					tc.name, tc.expectCreatedStatusState, createdStatuses[0].State)
 			}
 		}
+	}
+}
+
+func TestServeHTTPErrors(t *testing.T) {
+	pa := &plugins.ConfigAgent{}
+	pa.Set(&plugins.Configuration{})
+
+	getSecret := func() []byte {
+		var repoLevelSec = `
+'*':
+  - value: abc
+    created_at: 2019-10-02T15:00:00Z
+  - value: key2
+    created_at: 2020-10-02T15:00:00Z
+foo/bar:
+  - value: 123abc
+    created_at: 2019-10-02T15:00:00Z
+  - value: key6
+    created_at: 2020-10-02T15:00:00Z
+`
+		return []byte(repoLevelSec)
+	}
+
+	// This is the SHA1 signature for payload "{}" and signature "abc"
+	// echo -n '{}' | openssl dgst -sha1 -hmac abc
+	const hmac string = "sha1=db5c76f4264d0ad96cf21baec394964b4b8ce580"
+	const body string = "{}"
+	var testcases = []struct {
+		name string
+
+		Method string
+		Header map[string]string
+		Body   string
+		Code   int
+	}{
+		{
+			name: "Delete",
+
+			Method: http.MethodDelete,
+			Header: map[string]string{
+				"X-GitHub-Event":    "ping",
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   hmac,
+				"content-type":      "application/json",
+			},
+			Body: body,
+			Code: http.StatusMethodNotAllowed,
+		},
+		{
+			name: "No event",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   hmac,
+				"content-type":      "application/json",
+			},
+			Body: body,
+			Code: http.StatusBadRequest,
+		},
+		{
+			name: "No content type",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":    "ping",
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   hmac,
+			},
+			Body: body,
+			Code: http.StatusBadRequest,
+		},
+		{
+			name: "No event guid",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":  "ping",
+				"X-Hub-Signature": hmac,
+				"content-type":    "application/json",
+			},
+			Body: body,
+			Code: http.StatusBadRequest,
+		},
+		{
+			name: "No signature",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":    "ping",
+				"X-GitHub-Delivery": "I am unique",
+				"content-type":      "application/json",
+			},
+			Body: body,
+			Code: http.StatusForbidden,
+		},
+		{
+			name: "Bad signature",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":    "ping",
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   "this doesn't work",
+				"content-type":      "application/json",
+			},
+			Body: body,
+			Code: http.StatusForbidden,
+		},
+		{
+			name: "Good",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":    "ping",
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   hmac,
+				"content-type":      "application/json",
+			},
+			Body: body,
+			Code: http.StatusOK,
+		},
+		{
+			name: "Good, again",
+
+			Method: http.MethodGet,
+			Header: map[string]string{
+				"content-type": "application/json",
+			},
+			Body: body,
+			Code: http.StatusMethodNotAllowed,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Logf("Running scenario %q", tc.name)
+
+		w := httptest.NewRecorder()
+		r, err := http.NewRequest(tc.Method, "", strings.NewReader(tc.Body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for k, v := range tc.Header {
+			r.Header.Set(k, v)
+		}
+
+		s := Server{
+			WebhookSecretGenerator: getSecret,
+		}
+
+		s.ServeHTTP(w, r)
+		if w.Code != tc.Code {
+			t.Errorf("For test case: %+v\nExpected code %v, got code %v", tc, tc.Code, w.Code)
+		}
+	}
+}
+
+func TestServeHTTP(t *testing.T) {
+	pa := &plugins.ConfigAgent{}
+	pa.Set(&plugins.Configuration{})
+
+	getSecret := func() []byte {
+		var repoLevelSec = `
+'*':
+  - value: abc
+    created_at: 2019-10-02T15:00:00Z
+  - value: key2
+    created_at: 2020-10-02T15:00:00Z
+foo/bar:
+  - value: 123abc
+    created_at: 2019-10-02T15:00:00Z
+  - value: key6
+    created_at: 2020-10-02T15:00:00Z
+`
+		return []byte(repoLevelSec)
+	}
+
+	lgtmComment, err := ioutil.ReadFile("../../../../test/testdata/lgtm_comment.json")
+	if err != nil {
+		t.Fatalf("read lgtm comment file failed: %v", err)
+	}
+
+	openedPR, err := ioutil.ReadFile("../../../../test/testdata/opened_pr.json")
+	if err != nil {
+		t.Fatalf("read opened PR file failed: %v", err)
+	}
+
+	// This is the SHA1 signature for payload "{}" and signature "abc"
+	// echo -n '{}' | openssl dgst -sha1 -hmac abc
+	var testcases = []struct {
+		name string
+
+		Method string
+		Header map[string]string
+		Body   string
+		Code   int
+	}{
+		{
+			name: "Issue comment event",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":    "issue_comment",
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   "sha1=f3fee26b22d3748f393f7e37f71baa467495971a",
+				"content-type":      "application/json",
+			},
+			Body: string(lgtmComment),
+			Code: http.StatusOK,
+		},
+		{
+			name: "Pull request event",
+
+			Method: http.MethodPost,
+			Header: map[string]string{
+				"X-GitHub-Event":    "pull_request",
+				"X-GitHub-Delivery": "I am unique",
+				"X-Hub-Signature":   "sha1=9a62c443a5ab561e023e64610dc467523188defc",
+				"content-type":      "application/json",
+			},
+			Body: string(openedPR),
+			Code: http.StatusOK,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Logf("Running scenario %q", tc.name)
+
+		w := httptest.NewRecorder()
+		r, err := http.NewRequest(tc.Method, "", strings.NewReader(tc.Body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for k, v := range tc.Header {
+			r.Header.Set(k, v)
+		}
+
+		cfg := &externalplugins.Configuration{}
+		cfg.TiCommunityCherrypicker = []externalplugins.TiCommunityCherrypicker{
+			{
+				Repos: []string{"foo/bar"},
+			},
+		}
+		ca := &externalplugins.ConfigAgent{}
+		ca.Set(cfg)
+
+		s := Server{
+			WebhookSecretGenerator: getSecret,
+			ConfigAgent:            ca,
+		}
+
+		s.ServeHTTP(w, r)
+		if w.Code != tc.Code {
+			t.Errorf("For test case: %+v\nExpected code %v, got code %v", tc, tc.Code, w.Code)
+		}
+	}
+}
+
+func TestHelpProvider(t *testing.T) {
+	enabledRepos := []config.OrgRepo{
+		{Org: "org1", Repo: "repo"},
+		{Org: "org2", Repo: "repo"},
+	}
+	cases := []struct {
+		name               string
+		config             *externalplugins.Configuration
+		enabledRepos       []config.OrgRepo
+		err                bool
+		configInfoIncludes []string
+		configInfoExcludes []string
+	}{
+		{
+			name: "Empty config",
+			config: &externalplugins.Configuration{
+				TiCommunityIssueTriage: []externalplugins.TiCommunityIssueTriage{
+					{
+						Repos: []string{"org2/repo"},
+					},
+				},
+			},
+			enabledRepos: enabledRepos,
+			configInfoIncludes: []string{
+				"The plugin has these configurations:",
+			},
+			configInfoExcludes: []string{
+				"The affects label prefix is:",
+				"The may affects label prefix is:",
+				"The need triaged label prefix is:",
+				"The need cherry-pick label prefix is:",
+				"The status details will be targeted to:",
+			},
+		},
+		{
+			name: "All configs enabled",
+			config: &externalplugins.Configuration{
+				TiCommunityIssueTriage: []externalplugins.TiCommunityIssueTriage{
+					{
+						Repos: []string{"org2/repo"},
+						MaintainVersions: []string{
+							"5.1", "5.2", "5.3",
+						},
+						NeedCherryPickLabelPrefix: "needs-cherry-pick-release-",
+						AffectsLabelPrefix:        "affects/",
+						MayAffectsLabelPrefix:     "may-affects/",
+						NeedTriagedLabel:          "do-not-merge/needs-triage-completed",
+						StatusTargetURL:           "https://tidb.io",
+					},
+				},
+			},
+			enabledRepos: enabledRepos,
+			configInfoIncludes: []string{
+				"The affects label prefix is:",
+				"The may affects label prefix is:",
+				"The need triaged label prefix is:",
+				"The need cherry-pick label prefix is:",
+				"The status details will be targeted to:",
+			},
+			configInfoExcludes: []string{},
+		},
+	}
+	for _, testcase := range cases {
+		tc := testcase
+		t.Run(tc.name, func(t *testing.T) {
+			epa := &externalplugins.ConfigAgent{}
+			epa.Set(tc.config)
+
+			helpProvider := HelpProvider(epa)
+			pluginHelp, err := helpProvider(tc.enabledRepos)
+			if err != nil && !tc.err {
+				t.Fatalf("helpProvider error: %v", err)
+			}
+			for _, msg := range tc.configInfoExcludes {
+				if strings.Contains(pluginHelp.Config["org2/repo"], msg) {
+					t.Fatalf("helpProvider.Config error mismatch: got %v, but didn't want it", msg)
+				}
+			}
+			for _, msg := range tc.configInfoIncludes {
+				if !strings.Contains(pluginHelp.Config["org2/repo"], msg) {
+					t.Fatalf("helpProvider.Config error mismatch: didn't get %v, but wanted it", msg)
+				}
+			}
+		})
 	}
 }

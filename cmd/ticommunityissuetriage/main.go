@@ -90,7 +90,6 @@ func main() {
 		GitHubTokenGenerator:   secretAgent.GetTokenGenerator(o.github.TokenPath),
 		GitHubClient:           githubClient,
 		ConfigAgent:            epa,
-		Log:                    log,
 	}
 
 	health := pjutil.NewHealth()

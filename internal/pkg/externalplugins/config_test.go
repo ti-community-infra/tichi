@@ -2028,7 +2028,7 @@ func TestIssueTriageFor(t *testing.T) {
 		issueTriage *TiCommunityIssueTriage
 		org         string
 		repo        string
-		expectEmpty *TiCommunityIssueTriage
+		expectEmpty bool
 	}{
 		{
 			name: "Full name",
@@ -2046,7 +2046,7 @@ func TestIssueTriageFor(t *testing.T) {
 		{
 			name: "Only org",
 			issueTriage: &TiCommunityIssueTriage{
-				Repos:                 []string{"ti-community-infra/test-dev"},
+				Repos:                 []string{"ti-community-infra"},
 				MaintainVersions:      []string{},
 				AffectsLabelPrefix:    "affects/",
 				MayAffectsLabelPrefix: "may-affects/",
@@ -2068,7 +2068,7 @@ func TestIssueTriageFor(t *testing.T) {
 			},
 			org:         "ti-community-infra1",
 			repo:        "test-dev1",
-			expectEmpty: &TiCommunityIssueTriage{},
+			expectEmpty: true,
 		},
 	}
 
@@ -2083,7 +2083,7 @@ func TestIssueTriageFor(t *testing.T) {
 
 			issueTriage := config.IssueTriageFor(tc.org, tc.repo)
 
-			if tc.expectEmpty != nil {
+			if tc.expectEmpty {
 				assert.DeepEqual(t, issueTriage, &TiCommunityIssueTriage{})
 			} else {
 				assert.DeepEqual(t, issueTriage.Repos, tc.issueTriage.Repos)
