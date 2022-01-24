@@ -2,6 +2,7 @@ package issuetriage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -9,6 +10,7 @@ import (
 	"sync"
 	"testing"
 
+	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -39,6 +41,9 @@ type fghc struct {
 	CreatedStatuses  map[string][]github.Status
 	// Error will be returned if set. Currently only implemented for CreateStatus
 	Error error
+
+	// QueryResult will be returned for Query interface.
+	QueryResult interface{}
 
 	// lock to be thread safe
 	lock sync.RWMutex
@@ -147,6 +152,19 @@ func (f *fghc) BotUserChecker() (func(candidate string) bool, error) {
 }
 
 func (f *fghc) Query(ctx context.Context, q interface{}, vars map[string]interface{}) error {
+	sq, ok := q.(*referencePullRequestQuery)
+	if !ok {
+		return errors.New("unexpected query type")
+	}
+
+	res, ok := f.QueryResult.(*referencePullRequestQuery)
+	if !ok {
+		return errors.New("unexpected query result type")
+	}
+
+	sq.Repository = res.Repository
+	sq.RateLimit = res.RateLimit
+
 	return nil
 }
 
@@ -158,10 +176,13 @@ func TestHandleIssueEvent(t *testing.T) {
 		// labels which have already existed on the issue.
 		labels []string
 		// label that will be labeled or unlabeled.
-		label string
+		label       string
+		statusState string
+		issues      map[int]*github.Issue
 
-		expectAddedLabels   []string
-		expectRemovedLabels []string
+		expectAddedLabels        []string
+		expectRemovedLabels      []string
+		expectCreatedStatusState string
 	}{
 		{
 			name:   "add a security/major label to a type/bug issue",
@@ -177,6 +198,7 @@ func TestHandleIssueEvent(t *testing.T) {
 				"org/repo#1:may-affects/5.2",
 				"org/repo#1:may-affects/5.3",
 			},
+			expectRemovedLabels: []string{},
 		},
 		{
 			name:   "add a security/major label to a type/feature issue",
@@ -186,7 +208,8 @@ func TestHandleIssueEvent(t *testing.T) {
 			},
 			label: majorSeverityLabel,
 
-			expectAddedLabels: []string{},
+			expectAddedLabels:   []string{},
+			expectRemovedLabels: []string{},
 		},
 		{
 			name:   "add a security/major label to a type/bug issue that has affects label",
@@ -202,6 +225,7 @@ func TestHandleIssueEvent(t *testing.T) {
 				"org/repo#1:may-affects/5.1",
 				"org/repo#1:may-affects/5.3",
 			},
+			expectRemovedLabels: []string{},
 		},
 		{
 			name:   "add a security/major label to a type/bug issue that has may-affects label",
@@ -217,6 +241,7 @@ func TestHandleIssueEvent(t *testing.T) {
 				"org/repo#1:may-affects/5.1",
 				"org/repo#1:may-affects/5.3",
 			},
+			expectRemovedLabels: []string{},
 		},
 		{
 			name:   "add a affects label from the type/bug issue that has may-affects label",
@@ -231,9 +256,45 @@ func TestHandleIssueEvent(t *testing.T) {
 			},
 			label: "affects/5.2",
 
+			expectAddedLabels: []string{},
 			expectRemovedLabels: []string{
 				"org/repo#1:may-affects/5.2",
 			},
+		},
+		{
+			name:   "the type/bug issue removed a may-affects label but still has other may-affects labels",
+			action: github.IssueActionUnlabeled,
+			label:  "may-affects/5.2",
+			labels: []string{
+				bugTypeLabel,
+				majorSeverityLabel,
+				"affects/5.2",
+				"may-affects/5.1",
+				"may-affects/5.3",
+			},
+
+			expectAddedLabels: []string{
+				"org/repo#2:do-not-merge/needs-triage-completed",
+			},
+			expectRemovedLabels:      []string{},
+			expectCreatedStatusState: github.StatusPending,
+		},
+		{
+			name:   "the type/bug issue removed a may-affects label and does not have any other may-affects labels",
+			action: github.IssueActionUnlabeled,
+			label:  "may-affects/5.2",
+			labels: []string{
+				bugTypeLabel,
+				majorSeverityLabel,
+				"affects/5.2",
+			},
+			statusState: github.StatusPending,
+
+			expectAddedLabels: []string{
+				"org/repo#2:needs-cherry-pick-release-5.2",
+			},
+			expectRemovedLabels:      []string{},
+			expectCreatedStatusState: github.StatusSuccess,
 		},
 	}
 
@@ -267,10 +328,106 @@ func TestHandleIssueEvent(t *testing.T) {
 		ca.Set(cfg)
 
 		// Mock GitHub client and webhook event.
+		repo := repository{
+			Owner: struct{ Login githubql.String }{
+				Login: githubql.String("org"),
+			},
+			Name: githubql.String("repo"),
+			DefaultBranchRef: struct{ Name githubql.String }{
+				Name: githubql.String("master"),
+			},
+		}
+
+		pullRequest1 := pullRequest{
+			Number:      2,
+			Repository:  repo,
+			State:       githubql.String(github.PullRequestStateOpen),
+			BaseRefName: "master",
+			HeadRefOid:  "sha",
+			Labels: struct {
+				Nodes []struct {
+					Name githubql.String
+				}
+			}{},
+			Body: "Issue Number: close #1",
+		}
+
+		pullRequest2 := pullRequest{
+			Number:      3,
+			Repository:  repo,
+			State:       githubql.String(github.PullRequestStateOpen),
+			BaseRefName: "release-5.1",
+			HeadRefOid:  "sha2",
+			Labels: struct {
+				Nodes []struct {
+					Name githubql.String
+				}
+			}{},
+			Body: "Issue Number: close #1",
+		}
+
+		prStatus := github.StatusSuccess
+		if len(tc.statusState) != 0 {
+			prStatus = tc.statusState
+		}
+
 		fc := &fghc{
+			Issues:              tc.issues,
 			IssueLabelsAdded:    []string{},
 			IssueLabelsRemoved:  []string{},
 			IssueLabelsExisting: labelsWithPrefix,
+			CombinedStatuses: map[string]*github.CombinedStatus{
+				"sha": {
+					SHA: "sha",
+					Statuses: []github.Status{
+						{
+							State:       prStatus,
+							Description: "...",
+							Context:     issueNeedTriagedContextName,
+						},
+					},
+				},
+				"sha2": {
+					SHA: "sha",
+					Statuses: []github.Status{
+						{
+							State:       github.StatusSuccess,
+							Description: "...",
+							Context:     issueNeedTriagedContextName,
+						},
+					},
+				},
+			},
+			QueryResult: &referencePullRequestQuery{
+				Repository: queryRepository{
+					Issue: issue{
+						TimelineItems: timelineItems{
+							Nodes: []timelineItemNode{
+								{
+									CrossReferencedEvent: crossReferencedEvent{
+										Source: crossReferencedEventSource{
+											PullRequest: pullRequest1,
+										},
+										WillCloseTarget: true,
+									},
+								},
+								{
+									CrossReferencedEvent: crossReferencedEvent{
+										Source: crossReferencedEventSource{
+											PullRequest: pullRequest2,
+										},
+										WillCloseTarget: false,
+									},
+								},
+							},
+						},
+					},
+				},
+				RateLimit: rateLimit{
+					Cost:      githubql.Int(5),
+					Remaining: githubql.Int(100),
+				},
+			},
 		}
 		ie := &github.IssueEvent{
 			Action: tc.action,
@@ -328,6 +485,17 @@ func TestHandleIssueEvent(t *testing.T) {
 					tc.name, tc.expectRemovedLabels, fc.IssueLabelsRemoved)
 			}
 		}
+
+		if len(tc.expectCreatedStatusState) != 0 {
+			createdStatuses, ok := fc.CreatedStatuses["sha"]
+			if !ok || len(createdStatuses) != 1 {
+				t.Errorf("For case [%s], expect created status: %s, but got: none.\n",
+					tc.name, tc.expectCreatedStatusState)
+			} else if tc.expectCreatedStatusState != createdStatuses[0].State {
+				t.Errorf("For case [%s], expect status state: %s, but got: %s.\n",
+					tc.name, tc.expectCreatedStatusState, createdStatuses[0].State)
+			}
+		}
 	}
 }
 
@@ -357,7 +525,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 
 			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatePending,
+			expectCreatedStatusState: github.StatusSuccess,
 		},
 		{
 			name:         "open a pull request linked to a feature issue",
@@ -498,7 +666,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectCreatedStatusState: github.StatusSuccess,
 		},
 		{
-			name:         "open a pull request linked to a bug issue with severity/major label and *-affects/* label",
+			name:         "open a pull request linked to a bug issue with severity/major, affects/* and may-affects/* labels",
 			action:       github.PullRequestActionOpened,
 			labels:       []string{},
 			body:         "Issue Number: close #2",
@@ -612,6 +780,77 @@ func TestHandlePullRequestEvent(t *testing.T) {
 
 			expectAddedLabels: []string{
 				"org/repo#1:needs-cherry-pick-release-5.2",
+				"org/repo#1:needs-cherry-pick-release-5.3",
+			},
+			expectRemovedLabels:      []string{},
+			expectCreatedStatusState: github.StatusSuccess,
+		},
+		{
+			name:         "open a pull request on release branch and link to a bug issue with may-affects/* labels",
+			action:       github.PullRequestActionOpened,
+			labels:       []string{},
+			body:         "Issue Number: close #2",
+			state:        github.PullRequestStateOpen,
+			targetBranch: "release-5.1",
+			issues: map[int]*github.Issue{
+				2: {
+					Number: 2,
+					Labels: []github.Label{
+						{Name: "type/bug"},
+						{Name: "severity/major"},
+						{Name: "may-affects/5.2"},
+					},
+				},
+			},
+
+			expectAddedLabels:   []string{},
+			expectRemovedLabels: []string{},
+		},
+		{
+			name:         "edit a closed pull request linked to a bug issue with severity/major and may-affects/* labels",
+			action:       github.PullRequestActionEdited,
+			labels:       []string{},
+			body:         "Issue Number: close #2",
+			state:        github.PullRequestStateClosed,
+			targetBranch: "master",
+			issues: map[int]*github.Issue{
+				2: {
+					Number: 2,
+					Labels: []github.Label{
+						{Name: "type/bug"},
+						{Name: "severity/major"},
+						{Name: "may-affects/5.2"},
+					},
+				},
+			},
+
+			expectAddedLabels:   []string{},
+			expectRemovedLabels: []string{},
+		},
+		{
+			name:   "open a pull request with needs-cherry-pick-release-* labels and linked to a triaged issue",
+			action: github.PullRequestActionOpened,
+			labels: []string{
+				"needs-cherry-pick-release-5.2",
+			},
+			body:         "Issue Number: close #2",
+			state:        github.PullRequestStateOpen,
+			targetBranch: "master",
+			issues: map[int]*github.Issue{
+				2: {
+					Number: 2,
+					Labels: []github.Label{
+						{Name: "type/bug"},
+						{Name: "severity/major"},
+						{Name: "affects/5.1"},
+						{Name: "affects/5.2"},
+						{Name: "affects/5.3"},
+					},
+				},
+			},
+
+			expectAddedLabels: []string{
+				"org/repo#1:needs-cherry-pick-release-5.1",
 				"org/repo#1:needs-cherry-pick-release-5.3",
 			},
 			expectRemovedLabels:      []string{},
@@ -773,7 +1012,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 
 			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatePending,
+			expectCreatedStatusState: github.StatusSuccess,
 		},
 		{
 			name:         "comment to a pull request linked to a feature issue",

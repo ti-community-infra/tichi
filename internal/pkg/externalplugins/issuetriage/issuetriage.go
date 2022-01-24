@@ -33,7 +33,6 @@ const (
 	issueNeedTriagedContextName      = "check-issue-triage-complete"
 	issueTriageContextMessageSuccess = "All linked bug issues have been triaged complete."
 	issueTriageContextMessagePending = "Bug issues need to triage completed before merge."
-	issueTriageContextMessageWaiting = "Wait PR linked issue."
 )
 
 var (
@@ -54,20 +53,47 @@ type githubClient interface {
 	Query(context.Context, interface{}, map[string]interface{}) error
 }
 
+type referencePullRequestQuery struct {
+	Repository queryRepository `graphql:"repository(owner: $org, name: $repo)"`
+	RateLimit  rateLimit
+}
+
+type queryRepository struct {
+	Issue issue `graphql:"issue(number: $issueNumber)"`
+}
+
+type issue struct {
+	TimelineItems timelineItems `graphql:"timelineItems(first: 10, itemTypes: [CROSS_REFERENCED_EVENT])"`
+}
+
+type rateLimit struct {
+	Cost      githubql.Int
+	Remaining githubql.Int
+}
+
+type timelineItems struct {
+	Nodes []timelineItemNode
+}
+
+type timelineItemNode struct {
+	CrossReferencedEvent crossReferencedEvent `graphql:"... on CrossReferencedEvent"`
+}
+
+type crossReferencedEvent struct {
+	Source          crossReferencedEventSource
+	WillCloseTarget githubql.Boolean
+}
+
+type crossReferencedEventSource struct {
+	PullRequest pullRequest `graphql:"... on PullRequest"`
+}
+
 // See: https://developer.github.com/v4/object/pullrequest/.
 type pullRequest struct {
 	Number     githubql.Int
-	Repository struct {
-		Name  githubql.String
-		Owner struct {
-			Login githubql.String
-		}
-		DefaultBranchRef struct {
-			Name githubql.String
-		}
-	}
-	State  githubql.String
-	Author struct {
+	Repository repository
+	State      githubql.String
+	Author     struct {
 		Login githubql.String
 	}
 	BaseRefName githubql.String
@@ -80,24 +106,13 @@ type pullRequest struct {
 	Body githubql.String
 }
 
-type referencePullRequestQuery struct {
-	Repository struct {
-		Issue struct {
-			TimelineItems struct {
-				Nodes []struct {
-					CrossReferencedEvent struct {
-						Source struct {
-							PullRequest pullRequest `graphql:"... on PullRequest"`
-						}
-						WillCloseTarget githubql.Boolean
-					} `graphql:"... on CrossReferencedEvent"`
-				}
-			} `graphql:"timelineItems(first: 10, itemTypes: [CROSS_REFERENCED_EVENT])"`
-		} `graphql:"issue(number: $issueNumber)"`
-	} `graphql:"repository(owner: $org, name: $repo)"`
-	RateLimit struct {
-		Cost      githubql.Int
-		Remaining githubql.Int
+type repository struct {
+	Name  githubql.String
+	Owner struct {
+		Login githubql.String
+	}
+	DefaultBranchRef struct {
+		Name githubql.String
 	}
 }
 
@@ -235,7 +250,7 @@ func (s *Server) handleIssueEvent(ie *github.IssueEvent, log *logrus.Entry) erro
 	// to bug issues in batches. At this time, a large number of requests will be generated. We need to handle
 	// labeled events very carefully to avoid it consumes too many API points.
 	if ie.Action != github.IssueActionLabeled && ie.Action != github.IssueActionUnlabeled {
-		log.Debug("Skipping because not a labeled / unlabeled event.")
+		log.Debug("Skipping because not a labeled / unlabeled action.")
 		return nil
 	}
 
@@ -309,7 +324,7 @@ func (s *Server) handleIssueEvent(ie *github.IssueEvent, log *logrus.Entry) erro
 				prLabels.Insert(string(node.Name))
 			}
 
-			err := s.handle(log, cfg, prOrg, prRepo, prSHA, prNum, prLabels, linkedIssueNumbers, issueCache{})
+			err := s.handle(log, cfg, prOrg, prRepo, prSHA, prNum, prLabels, linkedIssueNumbers, issues)
 			if err != nil {
 				errs = append(errs, err)
 			}
@@ -323,6 +338,7 @@ func (s *Server) handleIssueEvent(ie *github.IssueEvent, log *logrus.Entry) erro
 func (s *Server) handlePullRequestEvent(pe *github.PullRequestEvent, log *logrus.Entry) error {
 	if pe.Action != github.PullRequestActionOpened && pe.Action != github.PullRequestActionReopened &&
 		pe.Action != github.PullRequestActionEdited {
+		log.Debug("Skipping because not a opened / reopened / edited action.")
 		return nil
 	}
 
@@ -411,12 +427,6 @@ func (s *Server) handle(log *logrus.Entry, cfg *tiexternalplugins.TiCommunityIss
 	existingStatus, err := s.checkExistingStatus(log, prOrg, prRepo, prSHA)
 	if err != nil {
 		return err
-	}
-
-	if len(issueKeys) == 0 {
-		log.Debugf("Skipping the check because PR has no linked issues.")
-		return s.createStatus(log, prOrg, prRepo, prSHA, existingStatus,
-			github.StatusPending, issueTriageContextMessageWaiting, cfg.StatusTargetURL)
 	}
 
 	allTriaged, affectsVersionLabels, err := s.checkLinkedIssues(cfg, issueKeys, issueCache)
@@ -576,6 +586,8 @@ func (s *Server) getIssueWithCache(issues issueCache, org, repo string, num int)
 	if err != nil {
 		return nil, err
 	}
+	issues[key] = issue
+
 	return issue, nil
 }
 
