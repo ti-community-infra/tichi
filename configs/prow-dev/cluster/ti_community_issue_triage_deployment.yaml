@@ -2,24 +2,24 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: prow
-  name: ti-community-label
+  name: ti-community-issue-triage
   labels:
-    app: ti-community-label
+    app: ti-community-issue-triage
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ti-community-label
+      app: ti-community-issue-triage
   template:
     metadata:
       labels:
-        app: ti-community-label
+        app: ti-community-issue-triage
     spec:
       serviceAccountName: "hook"
       terminationGracePeriodSeconds: 180
       containers:
-        - name: ti-community-label
-          image: ticommunityinfra/tichi-label-plugin:v2.0.0-beta.1
+        - name: ti-community-issue-triage
+          image: ticommunityinfra/tichi-issue-triage-plugin:v2.0.0-beta.1
           imagePullPolicy: Always
           args:
             - --dry-run=false
@@ -35,6 +35,9 @@ spec:
               readOnly: true
             - name: github-token
               mountPath: /etc/github
+              readOnly: true
+            - name: plugins
+              mountPath: /etc/plugins
               readOnly: true
             - name: external-plugins-config
               mountPath: /etc/external_plugins_config
@@ -58,6 +61,9 @@ spec:
         - name: github-token
           secret:
             secretName: github-token
+        - name: plugins
+          configMap:
+            name: plugins
         - name: external-plugins-config
           configMap:
             name: external-plugins-config
