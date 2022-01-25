@@ -1262,6 +1262,54 @@ func TestEnsureForkExists(t *testing.T) {
 	}
 }
 
+func TestCreateCherryPickCommitMessage(t *testing.T) {
+	var testcases = []struct {
+		name             string
+		copyIssueNumbers bool
+
+		expectCommitMessage string
+	}{
+		{
+			name:             "do not copy issue numbers",
+			copyIssueNumbers: false,
+
+			expectCommitMessage: "This is an automated cherry-pick of #1",
+		},
+		{
+			name:             "copy issue numbers",
+			copyIssueNumbers: true,
+
+			expectCommitMessage: "This is an automated cherry-pick of #1\n\nclose org/repo#1, ref org/repo#2",
+		},
+	}
+
+	for _, testcase := range testcases {
+		tc := testcase
+		log := logrus.WithField("test", "CreateCherryPickCommitMessage")
+		fc := &fghc{
+			commits: map[string]github.RepositoryCommit{
+				"sha": {
+					Commit: github.GitCommit{
+						Message: "heading 1\nclose #1, ref #2",
+					},
+				},
+			},
+		}
+		sha := "sha"
+
+		actualCommitMessage := createCherryPickCommitMessage(
+			fc, log, tc.copyIssueNumbers, "org", "repo", 1, &sha,
+		)
+
+		if tc.expectCommitMessage != actualCommitMessage {
+			t.Errorf(
+				"For case [%s], expect commit message: %s, but got %s.", tc.name,
+				tc.expectCommitMessage, actualCommitMessage,
+			)
+		}
+	}
+}
+
 type threadUnsafeFGHC struct {
 	*fghc
 	orgRepoCountCalled int

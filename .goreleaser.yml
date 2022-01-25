@@ -127,6 +127,15 @@ builds:
     main: ./cmd/ticommunityformatchecker/main.go
     env:
       - CGO_ENABLED=0
+  - id: "ti-community-issue-triage"
+    binary: ticommunityissuetriage
+    goos:
+      - linux
+    goarch:
+      - amd64
+    main: ./cmd/ticommunityissuetriage/main.go
+    env:
+      - CGO_ENABLED=0
 source:
   enabled: true
 checksum:
@@ -280,3 +289,13 @@ dockers:
       - "ticommunityinfra/tichi-format-checker-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-format-checker-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/formatchecker/Dockerfile
+  -
+    binaries:
+      - ticommunityissuetriage
+    builds:
+      - ti-community-issue-triage
+    image_templates:
+      - "ticommunityinfra/tichi-issue-triage-plugin:latest"
+      - "ticommunityinfra/tichi-issue-triage-plugin:{{ .Tag }}"
+      - "ticommunityinfra/tichi-issue-triage-plugin:{{ .Major }}"
+    dockerfile: ./deployments/plugins/issuetriage/Dockerfile
