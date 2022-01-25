@@ -113,3 +113,8 @@ external_plugins:
       events:
         - pull_request
         - issues
+    - name: ti-community-issue-triage
+      events:
+        - pull_request
+        - issues
+        - issue_comment
