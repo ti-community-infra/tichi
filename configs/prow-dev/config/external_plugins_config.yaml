@@ -74,9 +74,6 @@ ti-community-label-blocker:
         trusted_users:
           - mini-bot
         message: You can't add the status/can-merge label.
-  - repos:
-      - ti-community-infra/test-dev
-    block_labels:
       - regex: "^do-not-merge/needs-triage-completed$"
         actions:
           - unlabeled
@@ -112,8 +109,9 @@ ti-community-tars:
       - needs-rebase
       # Notice: only for test, make tars test easily.
       #- do-not-merge/work-in-progress
-      - do-not-merge/invalid-commit-message
       - do-not-merge/hold
+      - do-not-merge/needs-linked-issue
+      - do-not-merge/needs-triage-completed
     message: |
       Your PR was out of date, I have automatically updated it for you.
 
