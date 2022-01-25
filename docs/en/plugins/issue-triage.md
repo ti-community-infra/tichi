@@ -10,7 +10,7 @@ In the new process, before merging pull requests for fixing critical or major se
 
 The ti-community-issue-triage plugin is designed to manage and automate this process.
 
-## Design Ideas
+## Design
 
 ### Issue side
 
@@ -22,7 +22,7 @@ For critical or major severity bug issues.
 
 - When the `may-affects/x.y` label on an issue changes, it will rerun all pull requests opened on the **default branch** (e.g. `master` branch) associated with it
 
-### Pull request aspects
+### Pull request side
 
 For pull requests that fix related bug issues and linked with them, we add a check named `check-issue-triage-complete` that will ensure that the bug issues are triaged before the pull request is merged.
 
