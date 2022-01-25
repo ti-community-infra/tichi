@@ -42,6 +42,8 @@ ti-community-label:
       - status
       - sig
       - size
+      - affects
+      - may-affects
     additional_labels:
       - 'help wanted'
       - 'good first issue'
@@ -72,6 +74,13 @@ ti-community-label-blocker:
         trusted_users:
           - mini-bot
         message: You can't add the status/can-merge label.
+      - regex: "^do-not-merge/needs-triage-completed$"
+        actions:
+          - unlabeled
+        trusted_users:
+          - mini-bot
+        message: |
+          You can't add the `do-not-merge/needs-triage-completed` label, please rerun the check with `/run-check-issue-triage-complete`.
 
 ti-community-contribution:
   - repos:
@@ -83,6 +92,7 @@ ti-community-cherrypicker:
       - ti-community-infra/test-dev
     allow_all: true
     create_issue_on_conflict: false
+    label_prefix: needs-cherry-pick-
     picked_label_prefix: type/cherrypick-for-
     excludeLabels:
       - status/can-merge
@@ -99,8 +109,9 @@ ti-community-tars:
       - needs-rebase
       # Notice: only for test, make tars test easily.
       #- do-not-merge/work-in-progress
-      - do-not-merge/invalid-commit-message
       - do-not-merge/hold
+      - do-not-merge/needs-linked-issue
+      - do-not-merge/needs-triage-completed
     message: |
       Your PR was out of date, I have automatically updated it for you.
 
@@ -119,3 +130,16 @@ ti-community-format-checker:
           <sub>:open_book: For more info, you can check the ["Contribute Code"](https://pingcap.github.io/tidb-dev-guide/contribute-to-tidb/contribute-code.html#referring-to-an-issue) section in the development guide.</sub>
         missing_label: do-not-merge/needs-linked-issue
         start_time: "2021-12-24T16:30:00+08:00"
+
+ti-community-issue-triage:
+  - repos:
+      - ti-community-infra/test-dev
+    maintain_versions:
+      - "5.1"
+      - "5.2"
+      - "5.3"
+    affects_label_prefix: "affects/"
+    may_affects_label_prefix: "may-affects/"
+    linked_issue_needs_triage_label: "do-not-merge/needs-triage-completed"
+    need_cherry_pick_label_prefix: "needs-cherry-pick-release-"
+    status_target_url: "https://book.prow.tidb.io/#/en/plugins/issue-triage"
