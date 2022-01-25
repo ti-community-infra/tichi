@@ -174,6 +174,8 @@ func (f *fghc) Query(ctx context.Context, q interface{}, vars map[string]interfa
 }
 
 func TestHandleIssueEvent(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []struct {
 		name   string
 		config externalplugins.TiCommunityIssueTriage
@@ -277,6 +279,18 @@ func TestHandleIssueEvent(t *testing.T) {
 				"may-affects/5.1",
 				"may-affects/5.3",
 			},
+			issues: map[int]*github.Issue{
+				1: {
+					Number: 1,
+					Labels: []github.Label{
+						{Name: bugTypeLabel},
+						{Name: majorSeverityLabel},
+						{Name: "affects/5.2"},
+						{Name: "may-affects/5.1"},
+						{Name: "may-affects/5.3"},
+					},
+				},
+			},
 
 			expectAddedLabels: []string{
 				"org/repo#2:do-not-merge/needs-triage-completed",
@@ -292,6 +306,16 @@ func TestHandleIssueEvent(t *testing.T) {
 				bugTypeLabel,
 				majorSeverityLabel,
 				"affects/5.2",
+			},
+			issues: map[int]*github.Issue{
+				1: {
+					Number: 1,
+					Labels: []github.Label{
+						{Name: bugTypeLabel},
+						{Name: majorSeverityLabel},
+						{Name: "affects/5.2"},
+					},
+				},
 			},
 			statusState: github.StatusPending,
 
@@ -505,6 +529,8 @@ func TestHandleIssueEvent(t *testing.T) {
 }
 
 func TestHandlePullRequestEvent(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []struct {
 		name         string
 		config       externalplugins.TiCommunityIssueTriage
@@ -990,6 +1016,8 @@ func TestHandlePullRequestEvent(t *testing.T) {
 }
 
 func TestHandleIssueCommentEvent(t *testing.T) {
+	t.Parallel()
+
 	var testcases = []struct {
 		name         string
 		config       externalplugins.TiCommunityIssueTriage
