@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"time"
 
 	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
@@ -345,9 +346,16 @@ func (s *Server) handleIssueEvent(ie *github.IssueEvent, log *logrus.Entry) erro
 			return err
 		}
 
+		// Notice: wait a few seconds to reduce API consumption in case of batched label operations.
+		time.Sleep(5 * time.Second)
+		issue, err := s.GitHubClient.GetIssue(org, repo, num)
+		if err != nil {
+			return err
+		}
+
 		issues := make(issueCache)
 		key := fmt.Sprintf("%s/%s#%d", org, repo, num)
-		issues[key] = &ie.Issue
+		issues[key] = issue
 
 		var errs []error
 		for _, pr := range prs {
