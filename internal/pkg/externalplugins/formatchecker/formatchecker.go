@@ -176,7 +176,7 @@ func HandlePullRequestEvent(gc githubClient, pe *github.PullRequestEvent,
 
 	err := handle(
 		gc, log, org, repo, num, true, &pe.PullRequest.Base, commitMessages, pe.PullRequest.Title,
-		pe.PullRequest.Body, pe.PullRequest.CreatedAt, pe.PullRequest.Labels, rulesForPullRequest,
+		pe.PullRequest.Body, pe.PullRequest.User.Login, pe.PullRequest.CreatedAt, pe.PullRequest.Labels, rulesForPullRequest,
 	)
 	if err != nil {
 		return err
@@ -229,7 +229,7 @@ func HandleIssueEvent(gc githubClient, ie *github.IssueEvent,
 
 	err := handle(
 		gc, log, org, repo, num, false, nil, nil, ie.Issue.Title, ie.Issue.Body,
-		ie.Issue.CreatedAt, ie.Issue.Labels, rulesForIssue,
+		ie.Issue.User.Login, ie.Issue.CreatedAt, ie.Issue.Labels, rulesForIssue,
 	)
 	if err != nil {
 		return err
@@ -240,7 +240,7 @@ func HandleIssueEvent(gc githubClient, ie *github.IssueEvent,
 
 func handle(
 	gc githubClient, log *logrus.Entry, org, repo string, num int, isPullRequest bool, branch *github.PullRequestBranch,
-	commitMessages []string, title, body string, createdAt time.Time, labels []github.Label,
+	commitMessages []string, title, body, authorLogin string, createdAt time.Time, labels []github.Label,
 	rules []tiexternalplugins.RequiredMatchRule,
 ) error {
 	messages := sets.NewString()
@@ -256,9 +256,14 @@ func handle(
 		// If SkipLabel is specified, adding skip label to the PR or issue can skip the rule.
 		if len(rule.SkipLabel) != 0 && labelsExisted.Has(rule.SkipLabel) {
 			log.Infof("PR/Issue %s/%s#%d skip the check by the skip label %s.", org, repo, num, rule.SkipLabel)
-			if len(rule.MissingLabel) != 0 && labelsExisted.Has(rule.MissingLabel) {
-				labelsNeedDeleted.Insert(rule.MissingLabel)
-			}
+			deleteLabelIfExisted(rule.MissingLabel, &labelsExisted, &labelsNeedDeleted)
+			continue
+		}
+
+		trustedUsers := sets.NewString(rule.TrustedUsers...)
+		if trustedUsers.Has(authorLogin) {
+			log.Infof("PR/Issue %s/%s#%d skip the check by the trusted user %s.", org, repo, num, authorLogin)
+			deleteLabelIfExisted(rule.MissingLabel, &labelsExisted, &labelsNeedDeleted)
 			continue
 		}
 
@@ -416,6 +421,12 @@ func removeLabels(gc githubClient, log *logrus.Entry, org, repo string, num int,
 				log.WithError(err).Errorf("Failed to remove label %s for %s/%s#%d.", label, org, repo, num)
 			}
 		}
+	}
+}
+
+func deleteLabelIfExisted(label string, labelsExisted *sets.String, labelsNeedDeleted *sets.String) {
+	if len(label) != 0 && labelsExisted.Has(label) {
+		labelsNeedDeleted.Insert(label)
 	}
 }
 

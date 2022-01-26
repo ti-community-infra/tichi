@@ -301,6 +301,8 @@ type RequiredMatchRule struct {
 	MissingLabel string `json:"missing_label,omitempty"`
 	// SkipLabel specifies the label added by the contributor for skipping the format checking.
 	SkipLabel string `json:"skip_label,omitempty"`
+	// TrustedUsers specifies the GitHub login of the account allowed skipping the rule.
+	TrustedUsers []string `json:"trusted_users,omitempty"`
 }
 
 // TiCommunityIssueTriage is the config for the issue-triage plugin.
