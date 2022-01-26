@@ -589,6 +589,78 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectAddedLabels:   []string{},
 			expectDeletedLabels: []string{},
 		},
+		{
+			name:   "PR authored by trusted user zhang-san doesn't need to be checked",
+			action: github.PullRequestActionOpened,
+
+			title:     "pkg: what's changed",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					Branches:     []string{"main"},
+					TrustedUsers: []string{"zhang-san"},
+				},
+			},
+
+			expectAddedLabels:   []string{},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:   "PR authored by trusted user zhang-san has do-not-merge label",
+			action: github.PullRequestActionOpened,
+
+			title:     "pkg: what's changed",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels: []string{
+				"do-not-merge/invalid-title",
+			},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					Branches:     []string{"main"},
+					TrustedUsers: []string{"zhang-san"},
+				},
+			},
+
+			expectAddedLabels: []string{},
+			expectDeletedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+		},
+		{
+			name:   "PR authored by trusted user zhang-san need to be checked",
+			action: github.PullRequestActionOpened,
+
+			title:     "pkg: what's changed",
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:  true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					Branches:     []string{"main"},
+					TrustedUsers: []string{"li-si", "wang-wu"},
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+			expectDeletedLabels: []string{},
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -652,6 +724,9 @@ func TestHandlePullRequestEvent(t *testing.T) {
 					Ref:  tc.branch,
 					SHA:  "sha",
 					Repo: github.Repo{},
+				},
+				User: github.User{
+					Login: "zhang-san",
 				},
 				CreatedAt: tc.createdAt,
 			},
@@ -965,6 +1040,72 @@ func TestHandleIssueEvent(t *testing.T) {
 			},
 			expectDeletedLabels: []string{},
 		},
+		{
+			name:   "Issue authored by trusted user zhang-san doesn't need to be checked",
+			action: github.IssueActionOpened,
+
+			title:     "pkg: what's changed",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					Issue:        true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					TrustedUsers: []string{"zhang-san"},
+				},
+			},
+
+			expectAddedLabels:   []string{},
+			expectDeletedLabels: []string{},
+		},
+		{
+			name:   "Issue authored by trusted user zhang-san and has do-not-merge label",
+			action: github.IssueActionOpened,
+
+			title:     "pkg: what's changed",
+			createdAt: earlierCreatedAt,
+			labels: []string{
+				"do-not-merge/invalid-title",
+			},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					Issue:        true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					TrustedUsers: []string{"zhang-san"},
+				},
+			},
+
+			expectAddedLabels: []string{},
+			expectDeletedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+		},
+		{
+			name:   "Issue authored by zhang-san who is no trusted by the rule need to be checked",
+			action: github.IssueActionOpened,
+
+			title:     "pkg: what's changed",
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					Issue:        true,
+					Title:        true,
+					Regexp:       issueTitleRegex,
+					MissingLabel: "do-not-merge/invalid-title",
+					TrustedUsers: []string{"li-si", "wang-wu"},
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/invalid-title"),
+			},
+			expectDeletedLabels: []string{},
+		},
 	}
 
 	for _, testcase := range testcases {
@@ -1007,6 +1148,7 @@ func TestHandleIssueEvent(t *testing.T) {
 				Number:    1,
 				Title:     tc.title,
 				Body:      tc.body,
+				User:      github.User{Login: "zhang-san"},
 				CreatedAt: tc.createdAt,
 				Labels:    labels,
 			},

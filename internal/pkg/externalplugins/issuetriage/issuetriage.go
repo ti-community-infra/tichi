@@ -493,7 +493,7 @@ func (s *Server) handle(log *logrus.Entry, cfg *tiexternalplugins.TiCommunityIss
 	// Notice: all triaged means all the linked issues needed to be triaged have triaged complete, if a PR
 	// has no issues that require triaged, the check will pass too.
 	if allTriaged {
-		if prLabels.Has(cfg.NeedTriagedLabel) {
+		if len(cfg.NeedTriagedLabel) != 0 && prLabels.Has(cfg.NeedTriagedLabel) {
 			err := s.GitHubClient.RemoveLabel(prOrg, prRepo, prNum, cfg.NeedTriagedLabel)
 			if err != nil {
 				return err
@@ -524,7 +524,7 @@ func (s *Server) handle(log *logrus.Entry, cfg *tiexternalplugins.TiCommunityIss
 		return nil
 	}
 
-	if !prLabels.Has(cfg.NeedTriagedLabel) {
+	if len(cfg.NeedTriagedLabel) != 0 && !prLabels.Has(cfg.NeedTriagedLabel) {
 		err := s.GitHubClient.AddLabel(prOrg, prRepo, prNum, cfg.NeedTriagedLabel)
 		if err != nil {
 			return err
