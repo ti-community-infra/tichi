@@ -256,21 +256,14 @@ func handle(
 		// If SkipLabel is specified, adding skip label to the PR or issue can skip the rule.
 		if len(rule.SkipLabel) != 0 && labelsExisted.Has(rule.SkipLabel) {
 			log.Infof("PR/Issue %s/%s#%d skip the check by the skip label %s.", org, repo, num, rule.SkipLabel)
-			if len(rule.MissingLabel) != 0 && labelsExisted.Has(rule.MissingLabel) {
-				labelsNeedDeleted.Insert(rule.MissingLabel)
-			}
+			deleteLabelIfExisted(rule.MissingLabel, &labelsExisted, &labelsNeedDeleted)
 			continue
 		}
 
-		trustedUsers := sets.NewString()
-		for _, u := range rule.TrustedUsers {
-			trustedUsers.Insert(u)
-		}
+		trustedUsers := sets.NewString(rule.TrustedUsers...)
 		if trustedUsers.Has(authorLogin) {
 			log.Infof("PR/Issue %s/%s#%d skip the check by the trusted user %s.", org, repo, num, authorLogin)
-			if len(rule.MissingLabel) != 0 && labelsExisted.Has(rule.MissingLabel) {
-				labelsNeedDeleted.Insert(rule.MissingLabel)
-			}
+			deleteLabelIfExisted(rule.MissingLabel, &labelsExisted, &labelsNeedDeleted)
 			continue
 		}
 
@@ -428,6 +421,12 @@ func removeLabels(gc githubClient, log *logrus.Entry, org, repo string, num int,
 				log.WithError(err).Errorf("Failed to remove label %s for %s/%s#%d.", label, org, repo, num)
 			}
 		}
+	}
+}
+
+func deleteLabelIfExisted(label string, labelsExisted *sets.String, labelsNeedDeleted *sets.String) {
+	if len(label) != 0 && labelsExisted.Has(label) {
+		labelsNeedDeleted.Insert(label)
 	}
 }
 
