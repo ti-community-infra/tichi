@@ -30,6 +30,7 @@
 | missing_message | string     | 当匹配失败时，对 PR 或 issue 进行评论回复，多个规则的提示信息会聚合在一起 |
 | missing_label   | string     | 当匹配失败时，对 PR 或 issue 添加的标签                  |
 | skip_label      | string     | 指定能够跳过当前检查规则的标签                            |
+| trusted_users   | []string   | 允许指定用户可以跳过当前规则检查                           |
 
 匹配规则当中的正则表达式可以通过 [命名分组](https://pkg.go.dev/regexp#Regexp.SubexpNames) 的方式对特定部分进行额外的检查，目前支持的命名分组如下：
 
@@ -53,6 +54,8 @@ ti-community-format-checker:
           Or if the count of mainly changed packages are more than 3, use `[TI-<issue_number>] *: what is changed`
         missing_label: do-not-merge/invalid-title
         skip_label: skip-issue
+        trusted_users:
+          - dependabot[bot]
 ```
 
 注意: 如果想把匹配规则作为合并前必须通过的检查项，需要将 `missing_label` 设置为 [tide](components/tide) 组件的 `missingLabels` 选项，以及 [tars](plugins/tars) 插件的 `exclude_labels` 选项。
