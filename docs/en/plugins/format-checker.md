@@ -30,6 +30,7 @@ The plugin will use regular expressions to verify the title and content of the P
 | missing_message | string     | When the match fails, comment and reply to the PR or issue, and the prompt information of multiple rules will be aggregated together |
 | missing_label   | string     | The label added to PR or issue when the match fails                                                                                  |
 | skip_label      | string     | Specify the label that can skip the current rule check                                                                               |
+| trusted_users   | []string   | allow specified users to skip current rule check                                                                                     |
 
 The regular expressions in the matching rules can be used to perform additional checks on specific parts by [named group](https://pkg.go.dev/regexp#Regexp.SubexpNames). The currently supported named groups are as follows:
 
@@ -53,6 +54,8 @@ ti-community-format-checker:
           Or if the count of mainly changed packages are more than 3, use `[TI-<issue_number>] *: what is changed`
         missing_label: do-not-merge/invalid-title
         skip_label: skip-issue
+        trusted_users:
+          - dependabot[bot]
 ```
 
 Notice: If you want to use the matching rule as a check item that must be passed before merging, you need to set `missing_label` value as the `missingLabels` option of the [tide](en/components/tide) component and the `exclude_labels` option of [tars](en/plugins/tars) plugin.
