@@ -74,7 +74,7 @@ Get the PR status from these places.
 
 #### PR Status Context
 
-Contributor can check the status of the PR in the CI Status Context under the PR, e.g. what status checks must be passed before the merge, what required labels are missing from the PR, or what labels are not allowed on the PR. If all conditions are passed, the PR will go to the merge pool (queue) and wait to be merged (prompt: `In merge pool.`).
+Contributors can check the status of the PR in the CI Status Context under the PR, e.g. what status checks must be passed before the merge, what required labels are missing from the PR, or what labels are not allowed on the PR. If all conditions are passed, the PR will go to the merge pool (queue) and wait to be merged (prompt: `In merge pool.`).
 
 ![PR Status Context](https://user-images.githubusercontent.com/29879298/98230629-54037400-1f96-11eb-8a9c-1144905fbbd5.png)
 
@@ -130,7 +130,7 @@ tide:
         {{ .Body }}
 ```
 
-We can define the commit message template for the entire org repos or for a single repo, e.g. for the above configuration, the contents of the `title` and `body` configurations will be processed by go [text template](https://pkg.go.dev/text/template ) will be processed by go [text template](https://pkg.go.dev/k8s.io/test-infra/prow/tide#PullRequest) and populated with data related to [Pull Request](https://pkg.go.dev/k8s.io/test-infra/prow/tide#PullRequest) to generate the final commit message.
+We can define the commit message template for the entire org repos or a single repo, e.g. for the above configuration, the contents of the `title` and `body` configurations will be processed by go [text template](https://pkg.go.dev/text/template ) will be processed by go [text template](https://pkg.go.dev/k8s.io/test-infra/prow/tide#PullRequest) and populated with data related to [Pull Request](https://pkg.go.dev/k8s.io/test-infra/prow/tide#PullRequest) to generate the final commit message.
 
 If the `title` or `body` configuration is empty, GitHub will use the default commit message when merging the PR (e.g., [merge-message-for-a-squash-merge](https://docs.github.com/en/pull- requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#merge-message-for-a squash-merge) ) as the title and body of the commit message. If you wish to fill in an empty commit message body, you can set the `body` configuration to the empty string `" "`.
 
@@ -189,9 +189,9 @@ In the above configuration, if there is a line `Issue Number: close #123, ref #4
 
 This function formats the signature (`Signed-off-by: `) information in PR commits and returns an array of signed-author objects.
 
-Some open source repositories use the [DCO protocol](https://wiki.linuxfoundation.org/dco) instead of the [CLA protocol](https://en.wikipedia.org/wiki/Contributor_License_Agreement), which The former requires Contributors to indicate their acceptance of the protocol by filling in the `Signned-off-by: ` line in the commit.
+Some open source repositories use the [DCO protocol](https://wiki.linuxfoundation.org/dco) instead of the [CLA protocol](https://en.wikipedia.org/wiki/Contributor_License_Agreement), which The former requires Contributors to indicate their acceptance of the protocol by filling in the `Signed-off-by: ` line in the commit.
 
-When using the squash method to merge PRs, multiple commits in a PR are merged into a single squashed commit before being merged into a base branch. To simplify the message of a squashed commit, we can use the `.NormalizeSignedOffBy` function to de-duplicate and merge the `Signed-off-by:` messages of multiple commits.
+When using the squash method to merge PRs, multiple commits in a PR are merged into a single squashed commit before being merged into a base branch. To simplify the message of a squashed commit, we can use the `.NormalizeSignedOffBy` function will help us de-duplicate and merge the `Signed-off-by:` messages of multiple commits.
 
 Example configuration:
 
@@ -213,9 +213,9 @@ tide:
 
 This function formats the information about the co-author of a PR, returning an array of co-author objects.
 
-A PR may have multiple commits from different authors, and the same commit may have multiple authors (GitHub defines that you can use [`Co-authored-by:`](https://docs.github.com/en/pull-) in the commit message) requests/committing-changes-to-your-project/creating-and-editing-commits/creating-a-commit-with-multiple-authors) line in the commit message to declare the commit's co-authors).
+A PR may have multiple commits from different authors, and the same commit may have multiple authors (GitHub defines that you can use [`Co-authored-by:`](https://docs.github.com/en/pull-requests/committing-changes-to-your-project/creating-and-editing-commits/creating-a-commit-with-multiple-authors) line in the commit message to declare the commit's co-authors).
 
-When we use the squash method to merge PRs, the multiple commits in the PR are first merged into a new squashed commit and then into the base branch. NormalizeCoAuthorBy` function to de-duplicate and merge the author information of multiple commits.
+When we use the squash method to merge PRs, the multiple commits in the PR are first merged into a new squashed commit and then into the base branch. `NormalizeCoAuthorBy` function will help us de-duplicate and merge the co-author information of multiple commits.
 
 **This function considers all commit authors or co-authors in the PR other than the PR author to be the co-author of the squashed commit.**
 

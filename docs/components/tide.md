@@ -190,7 +190,7 @@ tide:
 
 该函数用于对 PR commits 当中的签名 (`Signed-off-by: `) 信息进行格式化处理，并返回一个 signed-author 对象数组。
 
-在一些开源仓库当中会使用 [DCO 协议](https://wiki.linuxfoundation.org/dco) 替代 [CLA 协议](https://en.wikipedia.org/wiki/Contributor_License_Agreement) , 前者会要求 Contributor 在 Commit 当中填写 `Signned-off-by: ` 行来表明其接受该协议内容。
+在一些开源仓库当中会使用 [DCO 协议](https://wiki.linuxfoundation.org/dco) 替代 [CLA 协议](https://en.wikipedia.org/wiki/Contributor_License_Agreement) , 前者会要求 Contributor 在 Commit 当中填写 `Signed-off-by: ` 行来表明其接受该协议内容。
 
 在使用 squash 方式合并 PR 时，PR 当中的多个 commit 会先合并为一个 squashed commit 再合入 base 分支。为了简化 squashed commit 的 message，我们可以通过 `.NormalizeSignedOffBy` 函数对多个 commit 的 `Signed-off-by: `信息进行去重与合并。
 
