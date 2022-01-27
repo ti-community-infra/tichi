@@ -43,7 +43,7 @@ tide:
   - repos:
       - pingcap/community
     includedBranches:
-      - master      # 只有 master 分支上的 PR 会被合并
+      - master      # 只有 master 分支上的 PR 会被合并。
     labels:
       - status/can-merge # 该仓库的 PR 只有在被打上 status/can-merge 的标签时才能合并。
     missingLabels:
@@ -52,7 +52,7 @@ tide:
       - do-not-merge/hold
       - do-not-merge/work-in-progress
       - needs-rebase
-    reviewApprovedRequired: true    # PR 必须满足 GitHub 上的 Review 条件
+    reviewApprovedRequired: true    # PR 必须满足 GitHub 上的 Review 条件。
 
   context_options:
     orgs:
@@ -195,7 +195,6 @@ tide:
 在使用 squash 方式合并 PR 时，PR 当中的多个 commit 会先合并为一个 squashed commit 再合入 base 分支。为了简化 squashed commit 的 message，我们可以通过 `.NormalizeSignedOffBy` 函数对多个 commit 的 `Signed-off-by: `信息进行去重与合并。
 
 配置示例：
-
 
 ```yaml
 tide:
