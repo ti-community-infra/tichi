@@ -26,7 +26,7 @@ For critical or major severity bug issues.
 
 For pull requests that fix related bug issues and linked with them, we add a check named `check-issue-triage-complete` that will ensure that the bug issues are triaged before the pull request is merged.
 
-By default, the plugin will trigger the check at the right time, and if it doesn't, contributors can trigger it manually with the `/run-check-issue-triage-complete` command.
+By default, the plugin will trigger the check at the right time, and if it doesn't, contributors can trigger it manually with the `/run-check-issue-triage-complete` or `/check-issue-triage-complete` command.
 
 The plugin determines whether a pull request is triaged according to the following rules.
 
