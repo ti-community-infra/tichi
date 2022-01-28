@@ -620,7 +620,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusError,
-			expectCreatedStatusDesc:  "Can not found any severity label on bug issue org/repo#2.",
+			expectCreatedStatusDesc:  "Can not find any severity label on bug issue org/repo#2.",
 		},
 		{
 			name:         "open a pull request linked to a bug issue with severity/moderate label",
@@ -1157,7 +1157,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusError,
-			expectCreatedStatusDesc:  "Can not found any severity label on bug issue org/repo#2.",
+			expectCreatedStatusDesc:  "Can not find any severity label on bug issue org/repo#2.",
 		},
 		{
 			name:         "comment to a pull request linked to a bug issue with severity/moderate label",

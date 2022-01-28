@@ -37,12 +37,13 @@ const (
 )
 
 const (
-	issueNeedTriagedContextName      = "check-issue-triage-complete"
+	issueNeedTriagedContextName = "check-issue-triage-complete"
+
 	statusDescAllBugIssueTriaged     = "All linked bug issues have been triaged complete."
 	statusDescNoLinkedIssue          = "No linked issue found."
 	statusDescFailedToGetIssue       = "Failed to get issue %s/%s#%d."
-	statusDescTypeLabelNotFound      = "Can not found any type label on issue %s/%s#%d."
-	statusDescSeverityLabelNotFound  = "Can not found any severity label on bug issue %s/%s#%d."
+	statusDescTypeLabelNotFound      = "Can not find any type label on issue %s/%s#%d."
+	statusDescSeverityLabelNotFound  = "Can not find any severity label on bug issue %s/%s#%d."
 	statusDescMayAffectsLabelBeFound = "Found may-affects label on bug issue %s/%s#%d."
 )
 
@@ -356,7 +357,7 @@ func (s *Server) handleIssueEvent(ie *github.IssueEvent, log *logrus.Entry) erro
 			return err
 		}
 		if len(prs) == 0 {
-			log.Infof("Can not found any reference PRs.")
+			log.Infof("Can not find any reference PRs.")
 			return nil
 		}
 		log.Infof("Found %d reference PRs.", len(prs))
