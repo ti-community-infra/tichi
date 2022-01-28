@@ -642,9 +642,8 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				},
 			},
 
-			expectAddedLabels: []string{
-				"org/repo#1:do-not-merge/needs-triage-completed",
-			},
+			// Notice: a bug issue maybe only affect master branch.
+			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusPending,
 		},
@@ -1159,9 +1158,8 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 				},
 			},
 
-			expectAddedLabels: []string{
-				"org/repo#1:do-not-merge/needs-triage-completed",
-			},
+			// Notice: a bug issue maybe only affect master branch.
+			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusPending,
 		},

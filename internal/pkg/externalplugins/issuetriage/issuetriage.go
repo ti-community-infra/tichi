@@ -575,10 +575,9 @@ func (s *Server) checkLinkedIssues(cfg *tiexternalplugins.TiCommunityIssueTriage
 			continue
 		}
 
-		// Check if issue has any may-affects labels or no affects label, if any issue have
+		// Check if issue has any may-affects labels, if any issue have
 		// not yet been triaged, the checker will fail.
-		if !hasAnyAffectsLabel(issue, cfg.AffectsLabelPrefix) ||
-			hasAnyMayAffectsLabel(issue, cfg.MayAffectsLabelPrefix) {
+		if hasAnyMayAffectsLabel(issue, cfg.MayAffectsLabelPrefix) {
 			return false, sets.String{}, nil
 		}
 	}
@@ -608,15 +607,6 @@ func (s *Server) checkExistingStatus(l *logrus.Entry, org, repo, sha string) (st
 func hasAnySeverityLabel(issue *github.Issue) bool {
 	for _, label := range issue.Labels {
 		if strings.HasPrefix(label.Name, severityLabelPrefix) {
-			return true
-		}
-	}
-	return false
-}
-
-func hasAnyAffectsLabel(issue *github.Issue, affectsLabelPrefix string) bool {
-	for _, label := range issue.Labels {
-		if strings.HasPrefix(label.Name, affectsLabelPrefix) {
 			return true
 		}
 	}
