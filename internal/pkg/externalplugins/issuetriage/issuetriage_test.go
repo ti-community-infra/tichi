@@ -190,6 +190,7 @@ func TestHandleIssueEvent(t *testing.T) {
 		expectAddedLabels        []string
 		expectRemovedLabels      []string
 		expectCreatedStatusState string
+		expectCreatedStatusDesc  string
 	}{
 		{
 			name:   "add a security/major label to a type/bug issue",
@@ -296,7 +297,8 @@ func TestHandleIssueEvent(t *testing.T) {
 				"org/repo#2:do-not-merge/needs-triage-completed",
 			},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusState: github.StatusError,
+			expectCreatedStatusDesc:  "Found may-affects label on bug issue org/repo#1.",
 		},
 		{
 			name:   "the type/bug issue removed a may-affects label and does not have any other may-affects labels",
@@ -317,13 +319,14 @@ func TestHandleIssueEvent(t *testing.T) {
 					},
 				},
 			},
-			statusState: github.StatusPending,
+			statusState: github.StatusError,
 
 			expectAddedLabels: []string{
 				"org/repo#2:needs-cherry-pick-release-5.2",
 			},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 		},
 	}
 
@@ -525,6 +528,17 @@ func TestHandleIssueEvent(t *testing.T) {
 					tc.name, tc.expectCreatedStatusState, createdStatuses[0].State)
 			}
 		}
+
+		if len(tc.expectCreatedStatusDesc) != 0 {
+			createdStatuses, ok := fc.CreatedStatuses["sha"]
+			if !ok || len(createdStatuses) != 1 {
+				t.Errorf("For case [%s], expect status description: %s, but got: none.\n",
+					tc.name, tc.expectCreatedStatusDesc)
+			} else if tc.expectCreatedStatusDesc != createdStatuses[0].Description {
+				t.Errorf("For case [%s], expect status description: %s, but got: %s.\n",
+					tc.name, tc.expectCreatedStatusDesc, createdStatuses[0].Description)
+			}
+		}
 	}
 }
 
@@ -546,6 +560,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		expectAddedLabels        []string
 		expectRemovedLabels      []string
 		expectCreatedStatusState string
+		expectCreatedStatusDesc  string
 	}{
 		{
 			name:         "open a pull request with empty body",
@@ -557,6 +572,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescNoLinkedIssue,
 		},
 		{
 			name:         "open a pull request linked to a feature issue",
@@ -579,6 +595,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 		},
 		{
 			name:         "open a pull request linked to a bug issue without severity label",
@@ -602,7 +619,8 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				"org/repo#1:do-not-merge/needs-triage-completed",
 			},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusState: github.StatusError,
+			expectCreatedStatusDesc:  "Can not find any severity label on bug issue org/repo#2.",
 		},
 		{
 			name:         "open a pull request linked to a bug issue with severity/moderate label",
@@ -623,6 +641,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 
 			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 			expectCreatedStatusState: github.StatusSuccess,
 		},
 		{
@@ -642,11 +661,11 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				},
 			},
 
-			expectAddedLabels: []string{
-				"org/repo#1:do-not-merge/needs-triage-completed",
-			},
+			// Notice: a bug issue maybe only affect master branch.
+			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
+			expectCreatedStatusState: github.StatusSuccess,
 		},
 		{
 			name:         "open a pull request linked to a bug issue with severity/major label and may-affects/* label",
@@ -670,7 +689,8 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				"org/repo#1:do-not-merge/needs-triage-completed",
 			},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusState: github.StatusError,
+			expectCreatedStatusDesc:  "Found may-affects label on bug issue org/repo#2.",
 		},
 		{
 			name:         "open a pull request linked to a bug issue with severity/major label and affects/* label",
@@ -695,6 +715,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 		},
 		{
 			name:         "open a pull request linked to a bug issue with severity/major, affects/* and may-affects/* labels",
@@ -719,7 +740,8 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				"org/repo#1:do-not-merge/needs-triage-completed",
 			},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusState: github.StatusError,
+			expectCreatedStatusDesc:  "Found may-affects label on bug issue org/repo#2.",
 		},
 		{
 			name:         "open a pull request linked to a non-triaged bug issue and a feature issue",
@@ -749,7 +771,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				"org/repo#1:do-not-merge/needs-triage-completed",
 			},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusState: github.StatusError,
 		},
 		{
 			name:         "open a pull request linked to a triaged issue and a non-triaged issue",
@@ -781,7 +803,8 @@ func TestHandlePullRequestEvent(t *testing.T) {
 				"org/repo#1:do-not-merge/needs-triage-completed",
 			},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusState: github.StatusError,
+			expectCreatedStatusDesc:  "Found may-affects label on bug issue org/repo#3.",
 		},
 		{
 			name:         "open a pull request linked to two triaged issue",
@@ -815,6 +838,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 		},
 		{
 			name:         "open a pull request on release branch and link to a bug issue with may-affects/* labels",
@@ -886,6 +910,7 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 		},
 	}
 
@@ -1012,6 +1037,17 @@ func TestHandlePullRequestEvent(t *testing.T) {
 					tc.name, tc.expectCreatedStatusState, createdStatuses[0].State)
 			}
 		}
+
+		if len(tc.expectCreatedStatusDesc) != 0 {
+			createdStatuses, ok := fc.CreatedStatuses["sha"]
+			if !ok || len(createdStatuses) != 1 {
+				t.Errorf("For case [%s], expect status description: %s, but got: none.\n",
+					tc.name, tc.expectCreatedStatusDesc)
+			} else if tc.expectCreatedStatusDesc != createdStatuses[0].Description {
+				t.Errorf("For case [%s], expect status description: %s, but got: %s.\n",
+					tc.name, tc.expectCreatedStatusDesc, createdStatuses[0].Description)
+			}
+		}
 	}
 }
 
@@ -1034,6 +1070,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 		expectAddedLabels        []string
 		expectRemovedLabels      []string
 		expectCreatedStatusState string
+		expectCreatedStatusDesc  string
 	}{
 		{
 			name:         "comment to a pull request with empty body",
@@ -1046,6 +1083,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescNoLinkedIssue,
 		},
 		{
 			name:         "comment shorten command to a pull request with empty body",
@@ -1058,6 +1096,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescNoLinkedIssue,
 		},
 		{
 			name:         "comment non command to a pull request with empty body",
@@ -1067,9 +1106,8 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			state:        "open",
 			targetBranch: "master",
 
-			expectAddedLabels:        []string{},
-			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: "",
+			expectAddedLabels:   []string{},
+			expectRemovedLabels: []string{},
 		},
 		{
 			name:         "comment to a pull request linked to a feature issue",
@@ -1093,6 +1131,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 		},
 		{
 			name:         "comment to a pull request linked to a bug issue without severity label",
@@ -1117,7 +1156,8 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 				"org/repo#1:do-not-merge/needs-triage-completed",
 			},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusState: github.StatusError,
+			expectCreatedStatusDesc:  "Can not find any severity label on bug issue org/repo#2.",
 		},
 		{
 			name:         "comment to a pull request linked to a bug issue with severity/moderate label",
@@ -1140,6 +1180,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 		},
 		{
 			name:         "comment to a pull request linked to a bug issue with severity/major label",
@@ -1159,11 +1200,11 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 				},
 			},
 
-			expectAddedLabels: []string{
-				"org/repo#1:do-not-merge/needs-triage-completed",
-			},
+			// Notice: a bug issue maybe only affect master branch.
+			expectAddedLabels:        []string{},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 		},
 		{
 			name:         "comment to a pull request linked to a bug issue with severity/major label and may-affects/* label",
@@ -1188,7 +1229,8 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 				"org/repo#1:do-not-merge/needs-triage-completed",
 			},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusState: github.StatusError,
+			expectCreatedStatusDesc:  "Found may-affects label on bug issue org/repo#2.",
 		},
 		{
 			name:         "comment to a pull request linked to a bug issue with severity/major label and affects/* label",
@@ -1214,6 +1256,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 		},
 		{
 			name:         "comment to a pull request linked to a bug issue with severity/major label and *-affects/* label",
@@ -1239,7 +1282,8 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 				"org/repo#1:do-not-merge/needs-triage-completed",
 			},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusState: github.StatusError,
+			expectCreatedStatusDesc:  "Found may-affects label on bug issue org/repo#2.",
 		},
 		{
 			name:         "comment to a pull request linked to a non-triaged bug issue and a feature issue",
@@ -1270,7 +1314,8 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 				"org/repo#1:do-not-merge/needs-triage-completed",
 			},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusState: github.StatusError,
+			expectCreatedStatusDesc:  "Found may-affects label on bug issue org/repo#2.",
 		},
 		{
 			name:         "comment to a pull request linked to a triaged issue and a non-triaged issue",
@@ -1303,7 +1348,8 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 				"org/repo#1:do-not-merge/needs-triage-completed",
 			},
 			expectRemovedLabels:      []string{},
-			expectCreatedStatusState: github.StatusPending,
+			expectCreatedStatusState: github.StatusError,
+			expectCreatedStatusDesc:  "Found may-affects label on bug issue org/repo#3.",
 		},
 		{
 			name:         "comment to a pull request linked to two triaged issue",
@@ -1338,6 +1384,7 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			},
 			expectRemovedLabels:      []string{},
 			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 		},
 	}
 
@@ -1474,6 +1521,17 @@ func TestHandleIssueCommentEvent(t *testing.T) {
 			} else if tc.expectCreatedStatusState != createdStatuses[0].State {
 				t.Errorf("For case [%s], expect status state: %s, but got: %s.\n",
 					tc.name, tc.expectCreatedStatusState, createdStatuses[0].State)
+			}
+		}
+
+		if len(tc.expectCreatedStatusDesc) != 0 {
+			createdStatuses, ok := fc.CreatedStatuses["sha"]
+			if !ok || len(createdStatuses) != 1 {
+				t.Errorf("For case [%s], expect status description: %s, but got: none.\n",
+					tc.name, tc.expectCreatedStatusDesc)
+			} else if tc.expectCreatedStatusDesc != createdStatuses[0].Description {
+				t.Errorf("For case [%s], expect status description: %s, but got: %s.\n",
+					tc.name, tc.expectCreatedStatusDesc, createdStatuses[0].Description)
 			}
 		}
 	}
