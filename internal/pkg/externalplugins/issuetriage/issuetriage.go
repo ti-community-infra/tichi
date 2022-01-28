@@ -38,7 +38,7 @@ const (
 
 var (
 	IssueNumberLineRe   = regexp.MustCompile("(?im)^Issue Number:.+")
-	checkIssueTriagedRe = regexp.MustCompile(`(?mi)^/(run-)*check-issue-triage-complete\s*$`)
+	checkIssueTriagedRe = regexp.MustCompile(`(?mi)^/(run-)?check-issue-triage-complete\s*$`)
 )
 
 type githubClient interface {

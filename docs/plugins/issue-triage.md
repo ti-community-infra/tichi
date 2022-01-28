@@ -26,7 +26,7 @@ ti-community-issue-triage 插件将被设计来对以上流程进行管控和自
 
 对于修复相关 bug issue 并与之关联的 pull request 而言，我们会添加一个名为 `check-issue-triage-complete` 的检查项，该检查将会确保 bug issue 在 pull request 合并之前完成 triage。
 
-默认情况下，插件会在合适的时机来触发该检查，如果没有触发成功，Contributor 可以通过 `/run-check-issue-triage-complete` 命令进行手动触发。
+默认情况下，插件会在合适的时机来触发该检查，如果没有触发成功，Contributor 可以通过 `/run-check-issue-triage-complete` 或 `/check-issue-triage-complete` 命令进行手动触发。
 
 插件会根据如下规则来判断 pull request 是否完成 triaged：
 
