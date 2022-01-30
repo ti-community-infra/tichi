@@ -19,7 +19,7 @@ It has the following features:
 
 As the name Tide implies, Tide does not immediately trigger a check when a PR is opened or a new commit is committed. Instead, it takes the strategy of periodically (every minute or two) running a full scan of all repositories hosted by Tide to check which open PRs meet the merge conditions, and if they do, they are sent to the merge pool (queue) for merge.
 
-**So, if you find no tide context in the PR's checks, or it prompts "Waiting for status to be reported", please wait for a while. **
+**So, if you find no "tide" context in the PR's checks, or it prompts "Waiting for status to be reported", please wait for a while.**
 
 We can control the period of the full scan with the ``tide.sync_period`` configuration, an example configuration is as follows.
 
@@ -90,7 +90,7 @@ In the [Tide Dashboard](https://prow.tidb.io/tide), the status of each merge poo
 
 ### Tide's merge method
 
-GitHub provides us with merge / [squash](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a- pull-request/about-pull-request-merges#squash-and-merge-your-pull-request-commits) / [rebase](https://docs.github.com/en/pull- requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#rebase-and-merge- your-pull-request-commits) three types of Pull Requests are merged. We can set Tide's default PR merge method via the `tide.merge_method.<org_or_repo_name>` configuration, or we can specify the merge method for a given PR by adding a label.
+GitHub provides us with merge / [squash](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#squash-and-merge-your-pull-request-commits) / [rebase](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#rebase-and-merge-your-pull-request-commits) three types of Pull Requests are merged. We can set Tide's default PR merge method via the `tide.merge_method.<org_or_repo_name>` configuration, or we can specify the merge method for a given PR by adding a label.
 
 The associated label is determined by the `squash_label`, `rebase_label`, and `merge_label` configuration items.
 
@@ -108,7 +108,7 @@ tide:
   merge_label: tide/merge-method-merge
 ```
 
-Note: Before using other merge methods, you need to make sure the merge method is allowed in the repository settings. **The configuration of the repository will not be synced to Tide immediately after the changes are made, Tide will go and get the latest repository settings every hour**.
+Note: Before using other merge methods, you need to make sure the merge method is allowed in the repository settings. **The configuration of the repository will not be synced to Tide immediately after the changes are made, Tide will fetch the latest repository settings once hourly.**
 
 ![Merge Button Setting](https://user-images.githubusercontent.com/5086433/151337189-29ae600b-2c1d-4bb3-bf71-b852d556f3cf.png)
 
@@ -119,7 +119,7 @@ When merging PRs manually, GitHub provides us with a page form to fill in the me
 
 ![Commit Message Form](https://user-images.githubusercontent.com/5086433/151338288-63da93b5-cd35-4622-842f-7f16fcc299f7.png)
 
-Now we use Tide to help us automate the PR merge, Tide provides us with [`commit_message_template`](https://github.com/ti-community-infra/configs/blob/main/prow/config/) config.yaml#:~:text=merge_commit_template) to configure a template for customizing the commit message title and commit message body.
+Now we use Tide to help us automate the PR merge, Tide provides us with [`commit_message_template`](https://github.com/ti-community-infra/configs/blob/main/prow/config/config.yaml#:~:text=merge_commit_template) to configure a template for customizing the commit message title and commit message body.
 
 ```yaml
 tide:
@@ -130,9 +130,9 @@ tide:
         {{ .Body }}
 ```
 
-We can define the commit message template for the entire org repos or a single repo, e.g. for the above configuration, the contents of the `title` and `body` configurations will be processed by go [text template](https://pkg.go.dev/text/template ) will be processed by go [text template](https://pkg.go.dev/k8s.io/test-infra/prow/tide#PullRequest) and populated with data related to [Pull Request](https://pkg.go.dev/k8s.io/test-infra/prow/tide#PullRequest) to generate the final commit message.
+We can define the commit message template for the entire org repos or a single repo, e.g. for the above configuration, the contents of the `title` and `body` configurations will be processed by go [text template](https://pkg.go.dev/text/template), populated with [Pull Request](https://pkg.go.dev/k8s.io/test-infra/prow/tide#PullRequest) data, and generate the final commit message.
 
-If the `title` or `body` configuration is empty, GitHub will use the default commit message when merging the PR (e.g., [merge-message-for-a-squash-merge](https://docs.github.com/en/pull- requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#merge-message-for-a squash-merge) ) as the title and body of the commit message. If you wish to fill in an empty commit message body, you can set the `body` configuration to the empty string `" "`.
+If the `title` or `body` configuration is empty, GitHub will use the default commit message when merging the PR (e.g. [merge-message-for-a-squash-merge](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/about-pull-request-merges#merge-message-for-a-squash-merge) ) as the title and body of the commit message. If you wish to fill in an empty commit message body, you can set the `body` configuration to the empty string `" "`.
 
 #### utility functions
 
@@ -160,7 +160,7 @@ tide:
 
 The `.NormalizeIssueNumbers` function extracts the issue number from the text content list, formats it, and returns an array of issue number objects.
 
-Linked issue numbers must be prefixed with a GitHub-supported keyword or the agreed-upon `ref` keyword.
+Linked issue numbers must be prefixed with a [GitHub-supported keyword](https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue#linking-a-pull-request-to-an-issue-using-a-keyword) or `ref` keyword.
 
 Example configuration:
 
@@ -189,7 +189,7 @@ In the above configuration, if there is a line `Issue Number: close #123, ref #4
 
 This function formats the signature (`Signed-off-by: `) information in PR commits and returns an array of signed-author objects.
 
-Some open source repositories use the [DCO protocol](https://wiki.linuxfoundation.org/dco) instead of the [CLA protocol](https://en.wikipedia.org/wiki/Contributor_License_Agreement), which The former requires Contributors to indicate their acceptance of the protocol by filling in the `Signed-off-by: ` line in the commit.
+Some open source repositories use the [Developer Certificate of Origin Protocol](https://wiki.linuxfoundation.org/dco) instead of the [Contributor License Agreement](https://en.wikipedia.org/wiki/Contributor_License_Agreement), which requires contributors to indicate their acceptance of the protocol by filling in the `Signed-off-by: ` line in the commit.
 
 When using the squash method to merge PRs, multiple commits in a PR are merged into a single squashed commit before being merged into a base branch. To simplify the message of a squashed commit, we can use the `.NormalizeSignedOffBy` function will help us de-duplicate and merge the `Signed-off-by:` messages of multiple commits.
 
@@ -235,7 +235,7 @@ tide:
         {{- end -}}
 ```
 
-### PR merge with CI test
+### PR merge and CI test
 
 Tide works mostly fine in the TiDB community, but there's still a tricky issue (**other communities haven't solved it yet either**):
 
