@@ -77,8 +77,7 @@ tide:
       body: |
         {{- $body := print .Body -}}
 
-        {{- $issueNumberLine := .ExtractContent "(?im)^Issue Number:.+" $body -}}
-        {{- $numbers := .NormalizeIssueNumbers $issueNumberLine -}}
+        {{- $numbers := .NormalizeIssueNumbers $body -}}
         {{- if $numbers -}}
           {{- range $index, $number := $numbers -}}
             {{- if $index }}, {{ end -}}
