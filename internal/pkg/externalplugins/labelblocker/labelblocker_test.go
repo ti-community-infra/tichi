@@ -1,16 +1,145 @@
 package labelblocker
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/tichi/internal/pkg/lib"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
-	"k8s.io/test-infra/prow/github/fakegithub"
 )
+
+const botName = "ti-chi-bot"
+
+// fghc is a fake GitHub client.
+type fghc struct {
+	Issues  map[int]*github.Issue
+	IssueID int
+
+	IssueComments  map[int][]github.IssueComment
+	IssueCommentID int
+	// org/repo#number:body
+	IssueCommentsAdded []string
+	// org/repo#issuecommentid
+	IssueCommentsDeleted []string
+
+	// org/repo#number:label
+	IssueLabelsAdded    []string
+	IssueLabelsExisting []string
+	IssueLabelsRemoved  []string
+
+	PullRequests     map[int]*github.PullRequest
+	CombinedStatuses map[string]*github.CombinedStatus
+	CreatedStatuses  map[string][]github.Status
+	// Error will be returned if set. Currently only implemented for CreateStatus
+	Error error
+
+	// QueryResult will be returned for Query interface.
+	QueryResult interface{}
+
+	// lock to be thread safe
+	lock sync.RWMutex
+}
+
+func (f *fghc) AddLabel(org, repo string, number int, label string) error {
+	return f.AddLabels(org, repo, number, label)
+}
+
+func (f *fghc) AddLabels(org, repo string, number int, labels ...string) error {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	for _, label := range labels {
+		labelString := fmt.Sprintf("%s/%s#%d:%s", org, repo, number, label)
+		if sets.NewString(f.IssueLabelsAdded...).Has(labelString) {
+			return fmt.Errorf("cannot add %v to %s/%s/#%d", label, org, repo, number)
+		}
+		f.IssueLabelsAdded = append(f.IssueLabelsAdded, labelString)
+	}
+	return nil
+}
+
+// RemoveLabel removes a label
+func (f *fghc) RemoveLabel(owner, repo string, number int, label string) error {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	labelString := fmt.Sprintf("%s/%s#%d:%s", owner, repo, number, label)
+	if !sets.NewString(f.IssueLabelsRemoved...).Has(labelString) {
+		f.IssueLabelsRemoved = append(f.IssueLabelsRemoved, labelString)
+		return nil
+	}
+	return fmt.Errorf("cannot remove %v from %s/%s/#%d", label, owner, repo, number)
+}
+
+// ListTeams return a list of fake teams that correspond to the fake team members returned by ListTeamAllMembers
+func (f *fghc) ListTeams(org string) ([]github.Team, error) {
+	f.lock.RLock()
+	defer f.lock.RUnlock()
+	return []github.Team{
+		{
+			ID:   0,
+			Name: "Admins",
+			Slug: "Admins",
+		},
+		{
+			ID:   42,
+			Name: "Leads",
+			Slug: "Admins",
+		},
+	}, nil
+}
+
+func (f *fghc) GetTeamBySlug(slug string, org string) (*github.Team, error) {
+	teams, _ := f.ListTeams(org)
+	for _, team := range teams {
+		if team.Name == slug {
+			return &team, nil
+		}
+	}
+	return &github.Team{}, nil
+}
+
+// CreateComment adds a comment to a PR
+func (f *fghc) CreateComment(owner, repo string, number int, comment string) error {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	f.IssueCommentID++
+	f.IssueCommentsAdded = append(f.IssueCommentsAdded, fmt.Sprintf("%s/%s#%d:%s", owner, repo, number, comment))
+	f.IssueComments[number] = append(f.IssueComments[number], github.IssueComment{
+		ID:   f.IssueCommentID,
+		Body: comment,
+		User: github.User{Login: botName},
+	})
+	return nil
+}
+
+func (f *fghc) Query(ctx context.Context, q interface{}, vars map[string]interface{}) error {
+	sq, ok := q.(*lib.TeamMembersQuery)
+	if !ok {
+		return errors.New("unexpected query type")
+	}
+
+	var res lib.TeamMembersQuery
+	members := make([]lib.MemberEdge, 0)
+	members = append(members, lib.MemberEdge{
+		Node: lib.MemberNode{
+			Login: "default-sig-lead",
+		},
+	})
+
+	res.Organization.Team.Members.Edges = members
+	sq.Organization = res.Organization
+	sq.RateLimit = res.RateLimit
+
+	return nil
+}
 
 func TestLabelBlockerPullRequest(t *testing.T) {
 	var testcases = []struct {
@@ -170,7 +299,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 	for _, testcase := range testcases {
 		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
-			var fc = &fakegithub.FakeClient{
+			var fc = &fghc{
 				PullRequests: map[int]*github.PullRequest{
 					5: {
 						Number: 5,
@@ -381,7 +510,7 @@ func TestLabelBlockerIssue(t *testing.T) {
 	for _, testcase := range testcases {
 		tc := testcase
 		t.Run(tc.name, func(t *testing.T) {
-			var fc = &fakegithub.FakeClient{
+			var fc = &fghc{
 				Issues: map[int]*github.Issue{
 					5: {
 						Number: 5,

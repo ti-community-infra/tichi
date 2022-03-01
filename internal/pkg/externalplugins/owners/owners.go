@@ -13,6 +13,7 @@ import (
 	githubql "github.com/shurcooL/githubv4"
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/tichi/internal/pkg/lib"
 	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/github"
@@ -59,7 +60,6 @@ const (
 type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
 	ListTeams(org string) ([]github.Team, error)
-	ListTeamMembers(org string, id int, role string) ([]github.TeamMember, error)
 	Query(context.Context, interface{}, map[string]interface{}) error
 }
 
@@ -499,7 +499,7 @@ func getTeamMembers(log *logrus.Entry, gc githubClient, org string, orgTeams []g
 		if strings.Compare(teamInOrg.Name, trustTeam) == 0 {
 			var members []github.TeamMember
 			var err error
-			if members, err = gc.ListTeamMembers(org, teamInOrg.ID, github.RoleAll); err != nil {
+			if members, err = lib.ListTeamAllMembers(context.TODO(), log, gc, org, teamInOrg.Slug); err != nil {
 				log.WithError(err).Errorf("Failed to list members in %s:%s.", org, teamInOrg.Name)
 				return []string{}
 			}
