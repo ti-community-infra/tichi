@@ -13,8 +13,10 @@ import (
 	"testing"
 
 	githubql "github.com/shurcooL/githubv4"
+	"github.com/shurcooL/graphql"
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/tichi/internal/pkg/lib"
 	"gotest.tools/assert"
 	"k8s.io/test-infra/prow/github"
 )
@@ -33,13 +35,56 @@ func (f *fakegithub) GetPullRequest(owner, repo string, number int) (*github.Pul
 	return val, nil
 }
 
-func (f *fakegithub) Query(_ context.Context, q interface{}, _ map[string]interface{}) error {
+func (f *fakegithub) Query(_ context.Context, q interface{}, vars map[string]interface{}) error {
 	query, ok := q.(*collaboratorsQuery)
-	if !ok {
-		return errors.New("invalid query format")
+	if ok {
+		query.Repository.Collaborators.Edges = f.Collaborators
+		return nil
 	}
-	query.Repository.Collaborators.Edges = f.Collaborators
-	return nil
+
+	sq, ok := q.(*lib.TeamMembersQuery)
+	if ok {
+		var res lib.TeamMembersQuery
+		members := make([]lib.MemberEdge, 0)
+		logins := make([]string, 0)
+
+		teamSlug, ok := vars["teamSlug"]
+		if !ok {
+			return errors.New("can not found variable teamSlug")
+		}
+		slug, ok := teamSlug.(githubql.String)
+		if !ok {
+			return errors.New("unexpected variable type")
+		}
+
+		switch string(slug) {
+		case "Admins":
+			logins = []string{"admin1", "admin2"}
+		case "Leads":
+			logins = []string{"sig-leader1", "sig-leader2"}
+		case "Releasers":
+			logins = []string{"admin1", "releaser1", "releaser2"}
+		case "Reviewers":
+			logins = []string{"reviewer1", "reviewer2"}
+		case "Committers":
+			logins = []string{"committer1", "committer2"}
+		}
+
+		for _, login := range logins {
+			members = append(members, lib.MemberEdge{
+				Node: lib.MemberNode{
+					Login: graphql.String(login),
+				},
+			})
+		}
+
+		res.Organization.Team.Members.Edges = members
+		sq.Organization = res.Organization
+		sq.RateLimit = res.RateLimit
+		return nil
+	}
+
+	return errors.New("unexpected query type")
 }
 
 // ListTeams return a list of fake teams that correspond to the fake team members returned by ListTeamMembers.
@@ -48,59 +93,29 @@ func (f *fakegithub) ListTeams(org string) ([]github.Team, error) {
 		{
 			ID:   0,
 			Name: "Admins",
+			Slug: "Admins",
 		},
 		{
 			ID:   42,
 			Name: "Leads",
+			Slug: "Leads",
 		},
 		{
 			ID:   60,
 			Name: "Releasers",
+			Slug: "Releasers",
 		},
 		{
 			ID:   70,
 			Name: "Reviewers",
+			Slug: "Reviewers",
 		},
 		{
 			ID:   80,
 			Name: "Committers",
+			Slug: "Committers",
 		},
 	}, nil
-}
-
-// ListTeamMembers return a fake team with a single "sig-lead" GitHub team member.
-func (f *fakegithub) ListTeamMembers(_ string, teamID int, role string) ([]github.TeamMember, error) {
-	if role != github.RoleAll {
-		return nil, fmt.Errorf("unsupported role %v (only all supported)", role)
-	}
-	teams := map[int][]github.TeamMember{
-		0: {
-			{Login: "admin1"},
-			{Login: "admin2"},
-		},
-		42: {
-			{Login: "sig-leader1"},
-			{Login: "sig-leader2"},
-		},
-		60: {
-			{Login: "admin1"},
-			{Login: "releaser1"},
-			{Login: "releaser2"},
-		},
-		70: {
-			{Login: "reviewer1"},
-			{Login: "reviewer2"},
-		},
-		80: {
-			{Login: "committer1"},
-			{Login: "committer2"},
-		},
-	}
-	members, ok := teams[teamID]
-	if !ok {
-		return []github.TeamMember{}, nil
-	}
-	return members, nil
 }
 
 func TestListOwners(t *testing.T) {

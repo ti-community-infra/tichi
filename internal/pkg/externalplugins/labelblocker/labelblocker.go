@@ -1,6 +1,7 @@
 package labelblocker
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"k8s.io/test-infra/prow/plugins"
 
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/tichi/internal/pkg/lib"
 )
 
 const PluginName = "ti-community-label-blocker"
@@ -27,8 +29,8 @@ type githubClient interface {
 	AddLabel(org, repo string, number int, label string) error
 	RemoveLabel(org, repo string, number int, label string) error
 	GetTeamBySlug(slug string, org string) (*github.Team, error)
-	ListTeamMembers(org string, id int, role string) ([]github.TeamMember, error)
 	CreateComment(org, repo string, number int, comment string) error
+	Query(context.Context, interface{}, map[string]interface{}) error
 }
 
 // labelCtx contains information about each label event.
@@ -233,7 +235,7 @@ func listAllTrustedUserLogins(owner string, trustTeams, trustedUsers []string,
 			continue
 		}
 
-		trustTeamMembers, err := gc.ListTeamMembers(owner, team.ID, github.RoleAll)
+		trustTeamMembers, err := lib.ListTeamAllMembers(context.TODO(), log, gc, owner, team.Slug)
 
 		if err == nil {
 			log.Infof("Get the members of trusted team named %s successfully", slug)

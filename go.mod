@@ -8,6 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.7.0
 	github.com/mroth/weightedrand v0.4.1
 	github.com/shurcooL/githubv4 v0.0.0-20191102174205-af46314aec7b
+	github.com/shurcooL/graphql v0.0.0-20181231061246-d48a9a75455f
 	github.com/sirupsen/logrus v1.7.0
 	gotest.tools v2.2.0+incompatible
 	k8s.io/apimachinery v0.20.2
