@@ -39,13 +39,11 @@ ti-community-label:
       - type
       - status
     additional_labels:
-      - 'wontfix'
-      - 'duplicate'
+      - 'help wanted'
+      - 'good first issue'
     exclude_labels:
       - 'status/can-merge'
 ```
-
-**如果需要添加 `help wanted` 或 `good first issue` 标签，请使用 [help](https://prow.tidb.io/command-help#help) 插件提供的 `/[remove-]help` 和 `/[remove-]good-first-issue` 命令。**
 
 ## 参考文档
 
