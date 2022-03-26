@@ -39,11 +39,13 @@ ti-community-label:
       - type
       - status
     additional_labels:
-      - 'help wanted'
-      - 'good first issue'
+      - 'wontfix'
+      - 'duplicate'
     exclude_labels:
       - 'status/can-merge'
 ```
+
+**If you want to add a `help wanted` or `good first issue` label, please use the `/[remove-]help` and `/[remove-]good-first-issue` command provided by the [help](https://prow.tidb.io/command-help#help) plugin.**
 
 ## Reference Documents
 
