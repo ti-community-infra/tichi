@@ -1,3 +1,24 @@
+blunderbuss:
+  # ExcludeApprovers controls whether approvers are considered to be
+  # reviewers. By default, approvers are considered as reviewers if
+  # insufficient reviewers are available. If ExcludeApprovers is true,
+  # approvers will never be considered as reviewers.
+  exclude_approvers: true
+
+  # MaxReviewerCount is the maximum number of reviewers to request
+  # reviews from. Defaults to 0 meaning no limit.
+  max_request_count: 3
+
+  # ReviewerCount is the minimum number of reviewers to request
+  # reviews from. Defaults to requesting reviews from 2 reviewers
+  request_count: 2
+
+  # UseStatusAvailability controls whether blunderbuss will consider GitHub's
+  # status availability when requesting reviews for users. This will use at one
+  # additional token per successful reviewer (and potentially more depending on
+  # how many busy reviewers it had to pass over).
+  use_status_availability: false
+
 config_updater:
   maps:
     configs/prow-dev/config/config.yaml:
@@ -51,6 +72,7 @@ plugins:
   ti-community-infra/test-dev:
     plugins:
       - assign
+      - blunderbuss
       - branchcleaner
       - size
       - welcome

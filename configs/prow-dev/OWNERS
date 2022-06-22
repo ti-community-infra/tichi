@@ -1,0 +1,8 @@
+# REF: https://www.kubernetes.dev/docs/guide/owners/#owners
+approvers:
+  - wuhuizuo
+  - Mini256
+  - purelind
+reviewers:
+  - ti-community-infra/community-infra-reviewers
+emeritus_approvers: []
