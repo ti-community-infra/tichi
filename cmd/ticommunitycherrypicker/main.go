@@ -14,7 +14,7 @@ import (
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
-	"k8s.io/test-infra/prow/git/v2"
+	git "k8s.io/test-infra/prow/git/v2"
 	"k8s.io/test-infra/prow/interrupts"
 	"k8s.io/test-infra/prow/pjutil"
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
