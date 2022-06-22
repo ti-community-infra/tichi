@@ -126,4 +126,4 @@ tide:
             required-if-present-contexts:
               - "markdown-test"
             skip-unknown-contexts: true
-            from-branch-protection: true
+            from-branch-protection: false

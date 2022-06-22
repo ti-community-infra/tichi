@@ -113,10 +113,6 @@ external_plugins:
       events:
         - pull_request
         - issue_comment
-    - name: ti-community-blunderbuss
-      events:
-        - pull_request
-        - issue_comment
     - name: ti-community-cherrypicker
       events:
         - pull_request
