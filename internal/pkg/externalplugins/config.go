@@ -13,6 +13,7 @@ import (
 	"k8s.io/test-infra/prow/labels"
 )
 
+// constants for ti-community-blunderbuss plugin.
 const (
 	// defaultGracePeriodDuration define the time for blunderbuss plugin to wait
 	// before requesting a review (default five seconds).
@@ -25,6 +26,12 @@ const (
 const (
 	LabeledAction   = "labeled"
 	UnlabeledAction = "unlabeled"
+)
+
+// constants for ti-community-boss plugin.
+const (
+	defaultLabelBossApproved   = "status/config-approved"
+	defaultLabelBossUnapproved = "do-not-merge/needs-config-approve"
 )
 
 // Configuration is the top-level serialization target for external plugin Configuration.
@@ -55,6 +62,7 @@ type Configuration struct {
 	TiCommunityCherrypicker  []TiCommunityCherrypicker  `json:"ti-community-cherrypicker,omitempty"`
 	TiCommunityFormatChecker []TiCommunityFormatChecker `json:"ti-community-format-checker,omitempty"`
 	TiCommunityIssueTriage   []TiCommunityIssueTriage   `json:"ti-community-issue-triage,omitempty"`
+	TiCommunityBoss          []TiCommunityBoss          `json:"ti-community-boss,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -324,6 +332,41 @@ type TiCommunityIssueTriage struct {
 	StatusTargetURL string `json:"status_target_url"`
 }
 
+// TiCommunityBoss is the config for the ti-community-boss plugin.
+type TiCommunityBoss struct {
+	// Repos is either of the form org/repos or just org.
+	Repos []string `json:"repos,omitempty"`
+
+	// any changed file hit any pattern will cause unapproved label adding
+	// example: ^config/.*\.conf$
+	Patterns []string
+
+	Label struct {
+		// example: config-approved.
+		// only bot can label it.
+		Approved string
+		// example: hold/need-config-approve,
+		// only bot can label it
+		// when approved by approve, the label will be removed
+		Unapproved string
+	}
+
+	// Approvers specifies who can approve
+	// any approver approved, will remove the unapproved label and add approved label.
+	Approvers []string `json:"include_reviewers,omitempty"`
+}
+
+// setDefaults will set the default value for the config of ti-community-boss plugin.
+func (c *TiCommunityBoss) setDefaults() {
+	if strings.TrimSpace(c.Label.Approved) == "" {
+		c.Label.Approved = defaultLabelBossApproved
+	}
+
+	if strings.TrimSpace(c.Label.Unapproved) == "" {
+		c.Label.Unapproved = defaultLabelBossUnapproved
+	}
+}
+
 // LgtmFor finds the Lgtm for a repo, if one exists
 // a trigger can be listed for the repo itself or for the
 // owning organization
@@ -576,6 +619,26 @@ func (c *Configuration) IssueTriageFor(org, repo string) *TiCommunityIssueTriage
 	return &TiCommunityIssueTriage{}
 }
 
+func (c *Configuration) BossFor(org, repo string) *TiCommunityBoss {
+	fullName := fmt.Sprintf("%s/%s", org, repo)
+	for _, boss := range c.TiCommunityBoss {
+		if !sets.NewString(boss.Repos...).Has(fullName) {
+			continue
+		}
+		return &boss
+	}
+
+	// If you don't find anything, loop again looking for an org config
+	for _, boss := range c.TiCommunityBoss {
+		if !sets.NewString(boss.Repos...).Has(org) {
+			continue
+		}
+		return &boss
+	}
+
+	return nil
+}
+
 // setDefaults will set the default value for the configuration of all plugins.
 func (c *Configuration) setDefaults() {
 	for i := range c.TiCommunityBlunderbuss {
@@ -590,6 +653,10 @@ func (c *Configuration) setDefaults() {
 		c.TiCommunityTars[i].setDefaults()
 	}
 
+	for i := range c.TiCommunityBoss {
+		c.TiCommunityBoss[i].setDefaults()
+	}
+
 	if len(c.LogLevel) == 0 {
 		c.LogLevel = defaultLogLevel.String()
 	}
@@ -600,6 +667,7 @@ func (c *Configuration) Validate() error {
 	// Defaulting should run before validation.
 	c.setDefaults()
 
+	// TODO(wuhuizuo): aggregate validation errors.
 	// Validate tichi web URL.
 	if _, err := url.ParseRequestURI(c.TichiWebURL); err != nil {
 		return err
@@ -647,17 +715,17 @@ func (c *Configuration) Validate() error {
 		return err
 	}
 
+	if err := validateBoss(c.TiCommunityBoss); err != nil {
+		return err
+	}
+
 	return validateTars(c.TiCommunityTars)
 }
 
 // validateLogLevel will return an error if the value of the log level is invalid.
 func validateLogLevel(logLevel string) error {
 	_, err := logrus.ParseLevel(logLevel)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // validateLgtm will return an error if the URL configured by lgtm is invalid.
@@ -801,5 +869,28 @@ func validateFormatBlocker(formatCheckers []TiCommunityFormatChecker) error {
 			}
 		}
 	}
+	return nil
+}
+
+func validateBoss(configs []TiCommunityBoss) error {
+	for _, b := range configs {
+		if len(b.Repos) == 0 {
+			return errors.New("repo list can not be empty, it can be full repo names or org names")
+		}
+		for _, p := range b.Patterns {
+			if _, err := regexp.Compile(p); err != nil {
+				return fmt.Errorf("the regex of matching rule is broken: %v", err)
+			}
+		}
+
+		if len(b.Patterns) > 0 && len(b.Approvers) == 0 {
+			return errors.New("approvers should not be empty when patterns have items")
+		}
+
+		if b.Label.Approved == b.Label.Unapproved {
+			return errors.New("approved label can not be same with unapproved label")
+		}
+	}
+
 	return nil
 }
