@@ -339,21 +339,24 @@ type TiCommunityBoss struct {
 
 	// any changed file hit any pattern will cause unapproved label adding
 	// example: ^config/.*\.conf$
-	Patterns []string
+	Patterns []string `json:"patterns,omitempty"`
 
-	Label struct {
-		// example: config-approved.
-		// only bot can label it.
-		Approved string
-		// example: hold/need-config-approve,
-		// only bot can label it
-		// when approved by approve, the label will be removed
-		Unapproved string
-	}
+	Label TiCommunityBossLabel `json:"label,omitempty"`
 
 	// Approvers specifies who can approve
 	// any approver approved, will remove the unapproved label and add approved label.
 	Approvers []string `json:"include_reviewers,omitempty"`
+}
+
+// TiCommunityBossLabel is the `label` config field struct for the ti-community-boss plugin.
+type TiCommunityBossLabel struct {
+	// example: config-approved.
+	// only bot can label it.
+	Approved string `json:"approved,omitempty"`
+	// example: hold/need-config-approve,
+	// only bot can label it
+	// when approved by approve, the label will be removed
+	Unapproved string `json:"unapproved,omitempty"`
 }
 
 // setDefaults will set the default value for the config of ti-community-boss plugin.

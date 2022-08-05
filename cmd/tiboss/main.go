@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,7 +14,6 @@ import (
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/blunderbuss"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/boss"
-	"github.com/ti-community-infra/tichi/internal/pkg/ownersclient"
 )
 
 func main() {
@@ -49,18 +47,9 @@ func main() {
 	// but if we use the APP auth later we will have to handle the err.
 	_ = githubClient.Throttle(360, 360)
 
-	// Skip https verify.
-	//nolint:gosec
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
-	client := &http.Client{Transport: tr}
-	ol := &ownersclient.OwnersClient{Client: client}
-
 	server := &server{
 		tokenGenerator: secretAgent.GetTokenGenerator(o.webhookSecretFile),
 		gc:             githubClient,
-		ol:             ol,
 		configAgent:    epa,
 		log:            log,
 	}

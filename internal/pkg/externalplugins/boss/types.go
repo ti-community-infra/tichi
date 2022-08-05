@@ -10,5 +10,8 @@ type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
 	GetPullRequestChanges(org, repo string, number int) ([]github.PullRequestChange, error)
-	ListFileCommits(org, repo, path string) ([]github.RepositoryCommit, error)
+	CreateComment(owner, repo string, number int, comment string) error
+	AddLabel(owner, repo string, number int, label string) error
+	RemoveLabel(owner, repo string, number int, label string) error
+	GetRepoLabels(owner, repo string) ([]github.Label, error)
 }
