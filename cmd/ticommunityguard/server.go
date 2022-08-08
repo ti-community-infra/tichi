@@ -8,7 +8,7 @@ import (
 	"k8s.io/test-infra/prow/github"
 
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/boss"
+	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/guard"
 )
 
 var _ http.Handler = (*server)(nil)
@@ -42,6 +42,8 @@ func (s *server) handleEvent(eventType, eventGUID string, payload []byte) error 
 	switch eventType {
 	case externalplugins.PullRequestEvent:
 		return s.handlePullRequestEvent(config, l, payload)
+	case externalplugins.PullRequestReviewEvent:
+		return s.handlePullRequestReviewEvent(config, l, payload)
 	default:
 		s.log.Debugf("received an event of type %q but didn't ask for it", eventType)
 		return nil
@@ -59,7 +61,7 @@ func (s *server) handlePullRequestEvent(
 	}
 
 	go func() {
-		if err := boss.HandlePullRequestEvent(s.gc, &pe, config, logger); err != nil {
+		if err := guard.HandlePullRequestEvent(s.gc, &pe, config, logger); err != nil {
 			logger.WithError(err).Info("Error handling event.")
 		}
 	}()
@@ -78,7 +80,7 @@ func (s *server) handlePullRequestReviewEvent(
 	}
 
 	go func() {
-		if err := boss.HandlePullRequestReviewEvent(s.gc, &pe, config, logger); err != nil {
+		if err := guard.HandlePullRequestReviewEvent(s.gc, &pe, config, logger); err != nil {
 			logger.WithError(err).Info("Error handling event.")
 		}
 	}()

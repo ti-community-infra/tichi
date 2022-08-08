@@ -136,7 +136,7 @@ external_plugins:
         - pull_request
         - issues
         - issue_comment
-    - name: ti-community-boss
+    - name: ti-community-guard
       events:
         - pull_request
         - pull_request_review

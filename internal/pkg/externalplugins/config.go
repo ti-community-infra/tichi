@@ -28,10 +28,10 @@ const (
 	UnlabeledAction = "unlabeled"
 )
 
-// constants for ti-community-boss plugin.
+// constants for ti-community-guard plugin.
 const (
-	defaultLabelBossApproved   = "status/config-approved"
-	defaultLabelBossUnapproved = "do-not-merge/needs-config-approve"
+	defaultLabelGuardApproved   = "status/config-approved"
+	defaultLabelGuardUnapproved = "do-not-merge/needs-config-approve"
 )
 
 // Configuration is the top-level serialization target for external plugin Configuration.
@@ -62,7 +62,7 @@ type Configuration struct {
 	TiCommunityCherrypicker  []TiCommunityCherrypicker  `json:"ti-community-cherrypicker,omitempty"`
 	TiCommunityFormatChecker []TiCommunityFormatChecker `json:"ti-community-format-checker,omitempty"`
 	TiCommunityIssueTriage   []TiCommunityIssueTriage   `json:"ti-community-issue-triage,omitempty"`
-	TiCommunityBoss          []TiCommunityBoss          `json:"ti-community-boss,omitempty"`
+	TiCommunityGuard         []TiCommunityGuard         `json:"ti-community-guard,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -332,8 +332,8 @@ type TiCommunityIssueTriage struct {
 	StatusTargetURL string `json:"status_target_url"`
 }
 
-// TiCommunityBoss is the config for the ti-community-boss plugin.
-type TiCommunityBoss struct {
+// TiCommunityGuard is the config for the ti-community-guard plugin.
+type TiCommunityGuard struct {
 	// Repos is either of the form org/repos or just org.
 	Repos []string `json:"repos,omitempty"`
 
@@ -341,15 +341,15 @@ type TiCommunityBoss struct {
 	// example: ^config/.*\.conf$
 	Patterns []string `json:"patterns,omitempty"`
 
-	Label TiCommunityBossLabel `json:"label,omitempty"`
+	Label TiCommunityGuardLabel `json:"label,omitempty"`
 
 	// Approvers specifies who can approve
 	// any approver approved, will remove the unapproved label and add approved label.
 	Approvers []string `json:"include_reviewers,omitempty"`
 }
 
-// TiCommunityBossLabel is the `label` config field struct for the ti-community-boss plugin.
-type TiCommunityBossLabel struct {
+// TiCommunityGuardLabel is the `label` config field struct for the ti-community-guard plugin.
+type TiCommunityGuardLabel struct {
 	// example: config-approved.
 	// only bot can label it.
 	Approved string `json:"approved,omitempty"`
@@ -359,14 +359,14 @@ type TiCommunityBossLabel struct {
 	Unapproved string `json:"unapproved,omitempty"`
 }
 
-// setDefaults will set the default value for the config of ti-community-boss plugin.
-func (c *TiCommunityBoss) setDefaults() {
+// setDefaults will set the default value for the config of ti-community-guard plugin.
+func (c *TiCommunityGuard) setDefaults() {
 	if strings.TrimSpace(c.Label.Approved) == "" {
-		c.Label.Approved = defaultLabelBossApproved
+		c.Label.Approved = defaultLabelGuardApproved
 	}
 
 	if strings.TrimSpace(c.Label.Unapproved) == "" {
-		c.Label.Unapproved = defaultLabelBossUnapproved
+		c.Label.Unapproved = defaultLabelGuardUnapproved
 	}
 }
 
@@ -622,21 +622,21 @@ func (c *Configuration) IssueTriageFor(org, repo string) *TiCommunityIssueTriage
 	return &TiCommunityIssueTriage{}
 }
 
-func (c *Configuration) BossFor(org, repo string) *TiCommunityBoss {
+func (c *Configuration) GuardFor(org, repo string) *TiCommunityGuard {
 	fullName := fmt.Sprintf("%s/%s", org, repo)
-	for _, boss := range c.TiCommunityBoss {
-		if !sets.NewString(boss.Repos...).Has(fullName) {
+	for _, guard := range c.TiCommunityGuard {
+		if !sets.NewString(guard.Repos...).Has(fullName) {
 			continue
 		}
-		return &boss
+		return &guard
 	}
 
 	// If you don't find anything, loop again looking for an org config
-	for _, boss := range c.TiCommunityBoss {
-		if !sets.NewString(boss.Repos...).Has(org) {
+	for _, guard := range c.TiCommunityGuard {
+		if !sets.NewString(guard.Repos...).Has(org) {
 			continue
 		}
-		return &boss
+		return &guard
 	}
 
 	return nil
@@ -656,8 +656,8 @@ func (c *Configuration) setDefaults() {
 		c.TiCommunityTars[i].setDefaults()
 	}
 
-	for i := range c.TiCommunityBoss {
-		c.TiCommunityBoss[i].setDefaults()
+	for i := range c.TiCommunityGuard {
+		c.TiCommunityGuard[i].setDefaults()
 	}
 
 	if len(c.LogLevel) == 0 {
@@ -718,7 +718,7 @@ func (c *Configuration) Validate() error {
 		return err
 	}
 
-	if err := validateBoss(c.TiCommunityBoss); err != nil {
+	if err := validateGuard(c.TiCommunityGuard); err != nil {
 		return err
 	}
 
@@ -875,7 +875,7 @@ func validateFormatBlocker(formatCheckers []TiCommunityFormatChecker) error {
 	return nil
 }
 
-func validateBoss(configs []TiCommunityBoss) error {
+func validateGuard(configs []TiCommunityGuard) error {
 	for _, b := range configs {
 		if len(b.Repos) == 0 {
 			return errors.New("repo list can not be empty, it can be full repo names or org names")

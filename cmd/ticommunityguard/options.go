@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"k8s.io/test-infra/pkg/flagutil"
 	fu "k8s.io/test-infra/pkg/flagutil"
 	pfu "k8s.io/test-infra/prow/flagutil"
 )
@@ -50,7 +49,7 @@ func gatherOptions() (*options, error) {
 		"Path to the file containing the GitHub HMAC secret.",
 	)
 
-	for _, group := range []flagutil.OptionGroup{&o.github} {
+	for _, group := range []fu.OptionGroup{&o.github} {
 		group.AddFlags(fs)
 	}
 

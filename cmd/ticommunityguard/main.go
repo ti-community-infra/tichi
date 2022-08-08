@@ -13,12 +13,11 @@ import (
 
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/blunderbuss"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/boss"
+	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/guard"
 )
 
 func main() {
-	var log = logrus.StandardLogger().WithField("plugin", boss.PluginName)
-
+	var log = logrus.StandardLogger().WithField("plugin", guard.PluginName)
 	o, err := gatherOptions()
 	if err != nil {
 		log.Fatalf("Invalid options: %v", err)

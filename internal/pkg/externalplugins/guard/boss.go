@@ -1,4 +1,4 @@
-package boss
+package guard
 
 import (
 	"regexp"
@@ -16,11 +16,6 @@ import (
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
-// 1. 新 pr 识别到匹配文件后自动 打 label
-// 2. 识别 人员，分配  boss 人员 到 assignees
-// 3. assignees approve 时, 去除标签。
-// 4. 指定目录，指定人 满足后
-
 type prBasicInfo struct {
 	org  string
 	repo string
@@ -34,7 +29,7 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		cfg := epa.Config()
 
 		for _, repo := range enabledRepos {
-			opts := cfg.BossFor(repo.Org, repo.Repo)
+			opts := cfg.GuardFor(repo.Org, repo.Repo)
 			if opts == nil {
 				continue
 			}
@@ -47,10 +42,10 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		}
 
 		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
-			TiCommunityBoss: []tiexternalplugins.TiCommunityBoss{
+			TiCommunityGuard: []tiexternalplugins.TiCommunityGuard{
 				{
 					Repos:     []string{"ti-community-infra/test-dev"},
-					Approvers: []string{"boss-a", "boss-b"},
+					Approvers: []string{"guard-a", "guard-b"},
 					Patterns:  []string{`^config/.*\.go`, `^var/.*\.go`},
 				},
 			},
@@ -61,8 +56,8 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		}
 
 		pluginHelp := &pluginhelp.PluginHelp{
-			Description: `The ti-community-boss plugin automatically requests approves to 
- 			bosses when changed file hit patterns`,
+			Description: `The ti-community-guard plugin automatically requests approves to 
+ 			guards when changed file hit patterns`,
 			Config:  configInfo,
 			Snippet: yamlSnippet,
 			Events:  []string{tiexternalplugins.PullRequestEvent, tiexternalplugins.IssueCommentEvent},
@@ -87,8 +82,8 @@ func HandlePullRequestEvent(
 		return nil
 	}
 
-	// skip for no mergeable.
-	if event.PullRequest.Mergable != nil && *event.PullRequest.Mergable {
+	// skip for no mergeable: skip if mergeable is false.
+	if event.PullRequest.Mergable != nil && !*event.PullRequest.Mergable {
 		return nil
 	}
 
@@ -115,7 +110,7 @@ func HandlePullRequestReviewEvent(
 ) error {
 	org := event.Repo.Owner.Login
 	repo := event.Repo.Name
-	opts := cfg.BossFor(org, repo)
+	opts := cfg.GuardFor(org, repo)
 
 	// only deal with approves from `opts.Approves`
 	if !sets.NewString(opts.Approvers...).Has(event.Review.User.Login) {
@@ -151,7 +146,7 @@ func handleForReviewerRemoved(
 	org := event.Repo.Owner.Login
 	repo := event.Repo.Name
 	prNum := event.PullRequest.Number
-	opts := cfg.BossFor(org, repo)
+	opts := cfg.GuardFor(org, repo)
 
 	// only care for unapproved labeled pull request.
 	if !matchLabels(event.PullRequest.Labels, opts.Label.Unapproved) {
@@ -180,7 +175,7 @@ func handleForOpened(
 	org := event.Repo.Owner.Login
 	repo := event.Repo.Name
 	prNum := event.PullRequest.Number
-	opts := cfg.BossFor(org, repo)
+	opts := cfg.GuardFor(org, repo)
 
 	changeFiles, err := getPullRequestChangeFilenames(gc, org, repo, prNum)
 	if err != nil {
@@ -223,7 +218,7 @@ func handleForLabelAdded(
 	org := event.Repo.Owner.Login
 	repo := event.Repo.Name
 	prNum := event.PullRequest.Number
-	opts := cfg.BossFor(org, repo)
+	opts := cfg.GuardFor(org, repo)
 
 	switch event.Label.Name {
 	case opts.Label.Unapproved:
@@ -251,18 +246,18 @@ func handleForRevieweApproved(
 	pr prBasicInfo,
 	gc githubClient,
 	labels []github.Label,
-	bossLabel *tiexternalplugins.TiCommunityBossLabel,
+	guardLabel *tiexternalplugins.TiCommunityGuardLabel,
 ) error {
 	// only care of labeled for need to approve.
-	if !matchLabels(labels, bossLabel.Unapproved) {
+	if !matchLabels(labels, guardLabel.Unapproved) {
 		return nil
 	}
 
 	// add approve label, remove unapprove label
-	if err := gc.AddLabel(pr.org, pr.repo, pr.num, bossLabel.Approved); err != nil {
+	if err := gc.AddLabel(pr.org, pr.repo, pr.num, guardLabel.Approved); err != nil {
 		return err
 	}
-	if err := gc.RemoveLabel(pr.org, pr.repo, pr.num, bossLabel.Unapproved); err != nil {
+	if err := gc.RemoveLabel(pr.org, pr.repo, pr.num, guardLabel.Unapproved); err != nil {
 		return nil
 	}
 
@@ -273,18 +268,18 @@ func handleForRevieweChangesRequested(
 	pr prBasicInfo,
 	gc githubClient,
 	labels []github.Label,
-	bossLabel *tiexternalplugins.TiCommunityBossLabel,
+	guardLabel *tiexternalplugins.TiCommunityGuardLabel,
 ) error {
 	// only care of labeled approved.
-	if !matchLabels(labels, bossLabel.Approved) {
+	if !matchLabels(labels, guardLabel.Approved) {
 		return nil
 	}
 
 	// add unapproved label, remove approved label
-	if err := gc.AddLabel(pr.org, pr.repo, pr.num, bossLabel.Unapproved); err != nil {
+	if err := gc.AddLabel(pr.org, pr.repo, pr.num, guardLabel.Unapproved); err != nil {
 		return err
 	}
-	if err := gc.RemoveLabel(pr.org, pr.repo, pr.num, bossLabel.Approved); err != nil {
+	if err := gc.RemoveLabel(pr.org, pr.repo, pr.num, guardLabel.Approved); err != nil {
 		return nil
 	}
 	return nil
