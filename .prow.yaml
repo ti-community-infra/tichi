@@ -1,7 +1,7 @@
 presubmits:
   - name: pull-tichi-validate-prow-yaml
     decorate: true
-    run_if_changed: 'configs/prow-dev/'
+    run_if_changed: "configs/prow-dev/"
     branches:
       - ^master$
     spec:
@@ -18,7 +18,7 @@ presubmits:
             - --warnings=duplicate-job-refs
   - name: pull-tichi-validate-external-plugin-yaml
     decorate: true
-    run_if_changed: 'configs/prow-dev/config/external_plugins_config.yaml'
+    run_if_changed: "configs/prow-dev/config/external_plugins_config.yaml"
     branches:
       - ^master$
     spec:
@@ -35,7 +35,7 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: golang:1.16
+        - image: golang:1.18
           command:
             - /bin/bash
             - -c
@@ -48,7 +48,7 @@ presubmits:
                   key: ti-community-infra-tichi-codecov-token
   - name: pull-tichi-label-dumpling-checks
     decorate: true
-    run_if_changed: 'tools/label-dumpling/'
+    run_if_changed: "tools/label-dumpling/"
     branches:
       - ^master$
     spec:
@@ -108,12 +108,12 @@ presubmits:
               npm run lint
   - name: pull-tichi-validate-labels-yaml
     decorate: true
-    run_if_changed: 'configs/prow-dev/config/labels.*'
+    run_if_changed: "configs/prow-dev/config/labels.*"
     branches:
       - ^master$
     spec:
       containers:
-        - image: golang:1.16
+        - image: golang:1.18
           command:
             - scripts/verify-labels.sh
   - name: pull-tichi-rerere
@@ -150,7 +150,7 @@ presubmits:
             secretName: github-token
 postsubmits:
   - name: post-tichi-deploy-prow
-    run_if_changed: 'configs/prow-dev/cluster/'
+    run_if_changed: "configs/prow-dev/cluster/"
     decorate: true
     branches:
       - ^master$
@@ -177,7 +177,7 @@ postsubmits:
       description: deploys the configured version of prow by running scripts/deploy.sh
   - name: post-tichi-label-sync
     decorate: true
-    run_if_changed: 'configs/prow-dev/config/labels.yaml'
+    run_if_changed: "configs/prow-dev/config/labels.yaml"
     branches:
       - ^master$
     spec:
@@ -204,7 +204,7 @@ postsubmits:
       - ^(master|rerere)$
     spec:
       containers:
-        - image: golang:1.16
+        - image: golang:1.18
           command:
             - /bin/bash
             - -c
@@ -217,7 +217,7 @@ postsubmits:
                   key: ti-community-infra-tichi-codecov-token
   - name: post-tichi-label-dumpling-checks
     decorate: true
-    run_if_changed: 'tools/label-dumpling/'
+    run_if_changed: "tools/label-dumpling/"
     branches:
       - ^(master|rerere)$
     spec:
