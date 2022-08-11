@@ -47,9 +47,10 @@ When the `check-issue-triage-complete` check passes, the bot removes the `do-not
 ## Parameter Configuration
 
 | parameter name                  | type     | description                                                                         |
-|---------------------------------|----------|-------------------------------------------------------------------------------------|
+| ------------------------------- | -------- | ----------------------------------------------------------------------------------- |
 | repos                           | []string | Configuration effective repository                                                  |
 | maintain_versions               | []string | The version number of the release branch being maintained by the repository         |
+| wontfix_versions                | []string | The version number of the release branch won't be cherry pick to in the repository  |
 | affects_label_prefix            | string   | The label prefix that identifies the release branch affected by the issue           |
 | may_affects_label_prefix        | string   | The label prefix that identifies the release branch that the issue may affect       |
 | linked_issue_needs_triage_label | string   | The label that identifies the PR's associated issue that requires triage completion |
@@ -66,6 +67,8 @@ ti-community-issue-triage:
       - "5.1"
       - "5.2"
       - "5.3"
+    wontfix_versions:
+      - "5.1" # can label `affect-5.1` label to issue, but will not create `needs-cherry-pick-5.1` in pull request.
     affects_label_prefix: "affects/"
     may_affects_label_prefix: "may-affects/"
     linked_issue_needs_triage_label: "do-not-merge/needs-triage_completed"
