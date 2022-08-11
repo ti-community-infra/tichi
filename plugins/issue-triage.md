@@ -46,15 +46,16 @@ ti-community-issue-triage 插件将被设计来对以上流程进行管控和自
 
 ## 参数配置 
 
-| 参数名                             | 类型       | 说明                                   |
-|---------------------------------|----------|--------------------------------------|
-| repos                           | []string | 配置生效仓库                               |
-| maintain_versions               | []string | 仓库正在维护的发行分支版本号                       |
-| affects_label_prefix            | string   | 标识 issue 影响的发行分支的 label 前缀           |
-| may_affects_label_prefix        | string   | 标识 issue 可能影响的发行分支的 label 前缀         |
-| linked_issue_needs_triage_label | string   | 标识 PR 所关联 issue 需要 triage 完成的 label  |
-| need_cherry_pick_label_prefix   | string   | 标识 PR 需要 cherry-pick 到 release 分支的前缀 |
-| status_target_url               | string   | Status check 的详情 URL                 |
+| 参数名                          | 类型     | 说明                                                   |
+| ------------------------------- | -------- | ------------------------------------------------------ |
+| repos                           | []string | 配置生效仓库                                           |
+| maintain_versions               | []string | 仓库正在维护的发行分支版本号                           |
+| wontfix_versions                | []string | 仓库不会再自动创建 cherry pick PR 的目标发行分支版本号 |
+| affects_label_prefix            | string   | 标识 issue 影响的发行分支的 label 前缀                 |
+| may_affects_label_prefix        | string   | 标识 issue 可能影响的发行分支的 label 前缀             |
+| linked_issue_needs_triage_label | string   | 标识 PR 所关联 issue 需要 triage 完成的 label          |
+| need_cherry_pick_label_prefix   | string   | 标识 PR 需要 cherry-pick 到 release 分支的前缀         |
+| status_target_url               | string   | Status check 的详情 URL                                |
 
 例如：
 
@@ -66,6 +67,8 @@ ti-community-issue-triage:
       - "5.1"
       - "5.2"
       - "5.3"
+    wontfix_versions:
+      - "5.1" # issue 会打上 `affect-5.1` 标签, 但 PR 不会自动打上 `needs-cherry-pick-5.1` 标签.      
     affects_label_prefix: "affects/"
     may_affects_label_prefix: "may-affects/"
     linked_issue_needs_triage_label: "do-not-merge/needs-triage-completed"
