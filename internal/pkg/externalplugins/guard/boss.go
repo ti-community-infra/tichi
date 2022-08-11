@@ -149,7 +149,7 @@ func handleForReviewerRemoved(
 	opts := cfg.GuardFor(org, repo)
 
 	// only care for unapproved labeled pull request.
-	if !matchLabels(event.PullRequest.Labels, opts.Label.Unapproved) {
+	if !github.HasLabel(opts.Label.Unapproved, event.PullRequest.Labels) {
 		return nil
 	}
 
@@ -184,7 +184,7 @@ func handleForOpened(
 
 	matchedFiles := matchFiles(changeFiles, opts.Patterns)
 	if len(matchedFiles) == 0 {
-		if !matchLabels(event.PullRequest.Labels, opts.Label.Unapproved) {
+		if !github.HasLabel(opts.Label.Unapproved, event.PullRequest.Labels) {
 			return nil
 		}
 
@@ -193,13 +193,13 @@ func handleForOpened(
 	}
 
 	// todo: comment on github.
-	if matchLabels(event.PullRequest.Labels, opts.Label.Unapproved) {
+	if github.HasLabel(opts.Label.Unapproved, event.PullRequest.Labels) {
 		// keep it, no change.
 		return nil
 	}
 
 	// remove approved label.
-	if matchLabels(event.PullRequest.Labels, opts.Label.Approved) {
+	if github.HasLabel(opts.Label.Approved, event.PullRequest.Labels) {
 		if err := gc.RemoveLabel(org, repo, prNum, opts.Label.Approved); err != nil {
 			// todo: send comment.
 			return err
@@ -249,7 +249,7 @@ func handleForRevieweApproved(
 	guardLabel *tiexternalplugins.TiCommunityGuardLabel,
 ) error {
 	// only care of labeled for need to approve.
-	if !matchLabels(labels, guardLabel.Unapproved) {
+	if !github.HasLabel(guardLabel.Unapproved, labels) {
 		return nil
 	}
 
@@ -271,7 +271,7 @@ func handleForRevieweChangesRequested(
 	guardLabel *tiexternalplugins.TiCommunityGuardLabel,
 ) error {
 	// only care of labeled approved.
-	if !matchLabels(labels, guardLabel.Approved) {
+	if !github.HasLabel(guardLabel.Approved, labels) {
 		return nil
 	}
 
@@ -326,14 +326,4 @@ func matchFiles(files []string, patterns []string) []string {
 		ToSlice(&ret)
 
 	return ret
-}
-
-func matchLabels(labels []github.Label, label string) bool {
-	for _, l := range labels {
-		if l.Name == label {
-			return true
-		}
-	}
-
-	return false
 }
