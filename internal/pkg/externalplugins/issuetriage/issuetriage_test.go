@@ -1870,6 +1870,7 @@ func TestHelpProvider(t *testing.T) {
 					{
 						Repos:                     []string{"org2/repo"},
 						MaintainVersions:          []string{"5.1", "5.2", "5.3"},
+						WontfixVersions:           []string{"5.1", "5.2"},
 						NeedCherryPickLabelPrefix: "needs-cherry-pick-release-",
 						AffectsLabelPrefix:        "affects/",
 						MayAffectsLabelPrefix:     "may-affects/",
@@ -1885,6 +1886,8 @@ func TestHelpProvider(t *testing.T) {
 				"The need triaged label prefix is:",
 				"The need cherry-pick label prefix is:",
 				"The status details will be targeted to:",
+				"The release branches that the current repository is maintaining:",
+				"The release branches won't fix in the current repository:",
 			},
 			configInfoExcludes: []string{},
 		},
