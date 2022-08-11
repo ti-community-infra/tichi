@@ -841,6 +841,42 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 		},
 		{
+			name:         "open a pull request linked to two triaged issue, but affect labels contain won't fix versions",
+			action:       github.PullRequestActionOpened,
+			labels:       []string{},
+			body:         "Issue Number: close #2, ref #3",
+			state:        "open",
+			targetBranch: "master",
+			issues: map[int]*github.Issue{
+				2: {
+					Number: 2,
+					Labels: []github.Label{
+						{Name: "type/bug"},
+						{Name: "severity/major"},
+						{Name: "affects/5.2"},
+						{Name: "affects/4.1"},
+					},
+				},
+				3: {
+					Number: 3,
+					Labels: []github.Label{
+						{Name: "type/bug"},
+						{Name: "severity/major"},
+						{Name: "affects/5.3"},
+						{Name: "affects/4.0"},
+					},
+				},
+			},
+
+			expectAddedLabels: []string{
+				"org/repo#1:needs-cherry-pick-release-5.2",
+				"org/repo#1:needs-cherry-pick-release-5.3",
+			},
+			expectRemovedLabels:      []string{},
+			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
+		},
+		{
 			name:         "open a pull request on release branch and link to a bug issue with may-affects/* labels",
 			action:       github.PullRequestActionOpened,
 			labels:       []string{},
@@ -933,7 +969,8 @@ func TestHandlePullRequestEvent(t *testing.T) {
 		cfg.TiCommunityIssueTriage = []externalplugins.TiCommunityIssueTriage{
 			{
 				Repos:                     []string{"org/repo"},
-				MaintainVersions:          []string{"5.1", "5.2", "5.3"},
+				MaintainVersions:          []string{"4.0", "4.1", "5.1", "5.2", "5.3"},
+				WontfixVersions:           []string{"4.0", "4.1"},
 				AffectsLabelPrefix:        "affects/",
 				MayAffectsLabelPrefix:     "may-affects/",
 				NeedTriagedLabel:          "do-not-merge/needs-triage-completed",
@@ -1831,10 +1868,9 @@ func TestHelpProvider(t *testing.T) {
 			config: &externalplugins.Configuration{
 				TiCommunityIssueTriage: []externalplugins.TiCommunityIssueTriage{
 					{
-						Repos: []string{"org2/repo"},
-						MaintainVersions: []string{
-							"5.1", "5.2", "5.3",
-						},
+						Repos:                     []string{"org2/repo"},
+						MaintainVersions:          []string{"5.1", "5.2", "5.3"},
+						WontfixVersions:           []string{"5.1", "5.2"},
 						NeedCherryPickLabelPrefix: "needs-cherry-pick-release-",
 						AffectsLabelPrefix:        "affects/",
 						MayAffectsLabelPrefix:     "may-affects/",
@@ -1850,6 +1886,8 @@ func TestHelpProvider(t *testing.T) {
 				"The need triaged label prefix is:",
 				"The need cherry-pick label prefix is:",
 				"The status details will be targeted to:",
+				"The release branches that the current repository is maintaining:",
+				"The release branches won't fix in the current repository:",
 			},
 			configInfoExcludes: []string{},
 		},

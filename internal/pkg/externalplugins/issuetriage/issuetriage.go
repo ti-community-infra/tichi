@@ -167,7 +167,7 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 				)
 			}
 
-			if opts.MaintainVersions != nil && len(opts.MaintainVersions) != 0 {
+			if len(opts.MaintainVersions) != 0 {
 				var versionConfigStrings []string
 				versionConfigStrings = append(versionConfigStrings,
 					"The release branches that the current repository is maintaining: ")
@@ -179,6 +179,15 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 				configInfoStrings = append(configInfoStrings, strings.Join(versionConfigStrings, "\n"))
 			}
 
+			if len(opts.WontfixVersions) != 0 {
+				wontFixStrings := []string{"The release branches won't fix in the current repository: ", "<ul>"}
+				for _, version := range opts.WontfixVersions {
+					wontFixStrings = append(wontFixStrings, fmt.Sprintf("<li>%s</li>", version))
+				}
+				wontFixStrings = append(wontFixStrings, "</ul>")
+				configInfoStrings = append(configInfoStrings, strings.Join(wontFixStrings, "\n"))
+			}
+
 			configInfo[repo.String()] = strings.Join(configInfoStrings, "\n")
 		}
 
@@ -186,6 +195,7 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			TiCommunityIssueTriage: []tiexternalplugins.TiCommunityIssueTriage{
 				{
 					Repos:                     []string{"ti-community-infra/test-dev"},
+					WontfixVersions:           []string{"5.0", "6.0"},
 					MaintainVersions:          []string{"5.1", "5.2", "5.3"},
 					AffectsLabelPrefix:        "affects/",
 					MayAffectsLabelPrefix:     "may-affects/",
@@ -542,8 +552,13 @@ func (s *Server) handle(log *logrus.Entry, cfg *tiexternalplugins.TiCommunityIss
 
 		// Add needs-cherry-pick label.
 		labelsNeedToAdd := make([]string, 0)
+		wontfixVersionSets := sets.NewString(cfg.WontfixVersions...)
 		for _, affectsVersionLabel := range affectsVersionLabels.List() {
 			affectVersion := strings.TrimPrefix(affectsVersionLabel, cfg.AffectsLabelPrefix)
+			if wontfixVersionSets.Has(affectVersion) {
+				continue
+			}
+
 			cherryPickLabel := cfg.NeedCherryPickLabelPrefix + affectVersion
 			if !prLabels.Has(cherryPickLabel) {
 				labelsNeedToAdd = append(labelsNeedToAdd, cherryPickLabel)

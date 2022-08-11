@@ -309,8 +309,10 @@ type RequiredMatchRule struct {
 type TiCommunityIssueTriage struct {
 	// Repos are either of the form org/repo or just org.
 	Repos []string `json:"repos,omitempty"`
-	// MaintainVersions specifies the version number under maintenance, like 5.1.
+	// MaintainVersions specifies the version numbers under maintenance, like 5.1.
 	MaintainVersions []string `json:"maintain_versions"`
+	// WontfixVersions specifies the version numbers out of fix support, like 5.0.
+	WontfixVersions []string `json:"wontfix_versions"`
 	// AffectsLabelPrefix specifies the prefix for the affects label
 	AffectsLabelPrefix string `json:"affects_label_prefix"`
 	// MayAffectsLabelPrefix specifies the prefix for the may-affects label
