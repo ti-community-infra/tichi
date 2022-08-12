@@ -40,7 +40,7 @@ cover:
 	rm -rf coverage.txt
 	$(GOTEST) $(PACKAGES) -race -coverprofile=coverage.txt -covermode=atomic
 	echo "Uploading coverage results..."
-	@curl -s https://codecov.io/bash | bash
+	@curl -s https://codecov.io/bash | bash > codecov_upload.log
 
 fmt:
 	@echo "gofmt (simplify)"
