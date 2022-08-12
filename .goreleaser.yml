@@ -1,12 +1,15 @@
+#  $schema: https://goreleaser.com/static/schema.json
 archives:
-  -
+  - id: bin
     format: binary
 before:
   hooks:
-    - go mod download
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+    # you may remove this if you don't need go generate
+    - go generate ./...
 builds:
-  -
-    id: "ti-community-lgtm"
+  - id: "ti-community-lgtm"
     binary: ticommunitylgtm
     goos:
       - linux
@@ -15,8 +18,7 @@ builds:
     main: ./cmd/ticommunitylgtm/main.go
     env:
       - CGO_ENABLED=0
-  -
-    id: "ti-community-merge"
+  - id: "ti-community-merge"
     binary: ticommunitymerge
     goos:
       - linux
@@ -25,8 +27,7 @@ builds:
     main: ./cmd/ticommunitymerge/main.go
     env:
       - CGO_ENABLED=0
-  -
-    id: "ti-community-owners"
+  - id: "ti-community-owners"
     binary: ticommunityowners
     goos:
       - linux
@@ -35,8 +36,7 @@ builds:
     main: ./cmd/ticommunityowners/main.go
     env:
       - CGO_ENABLED=0
-  -
-    id: "ti-community-label"
+  - id: "ti-community-label"
     binary: ticommunitylabel
     goos:
       - linux
@@ -45,8 +45,7 @@ builds:
     main: ./cmd/ticommunitylabel/main.go
     env:
       - CGO_ENABLED=0
-  -
-    id: "ti-community-tars"
+  - id: "ti-community-tars"
     binary: ticommunitytars
     goos:
       - linux
@@ -139,160 +138,132 @@ builds:
 source:
   enabled: true
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
-      - '^chore:'
-      - '^config:'
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^config:"
 release:
   github:
   prerelease: auto
 dockers:
-  -
-    binaries:
-      - ticommunitylgtm
-    builds:
+  - id: tichi-lgtm-plugin
+    ids:
       - ti-community-lgtm
     image_templates:
       - "ticommunityinfra/tichi-lgtm-plugin:latest"
       - "ticommunityinfra/tichi-lgtm-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-lgtm-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/lgtm/Dockerfile
-  -
-    binaries:
-      - ticommunitymerge
-    builds:
+  - id: tichi-merge-plugin
+    ids:
       - ti-community-merge
     image_templates:
       - "ticommunityinfra/tichi-merge-plugin:latest"
       - "ticommunityinfra/tichi-merge-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-merge-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/merge/Dockerfile
-  -
-    binaries:
-      - ticommunityowners
-    builds:
+  - id: tichi-owners-plugin
+    ids:
       - ti-community-owners
     image_templates:
       - "ticommunityinfra/tichi-owners-plugin:latest"
       - "ticommunityinfra/tichi-owners-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-owners-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/owners/Dockerfile
-  -
-    binaries:
-      - ticommunitylabel
-    builds:
+  - id: tichi-label-plugin
+    ids:
       - ti-community-label
     image_templates:
       - "ticommunityinfra/tichi-label-plugin:latest"
       - "ticommunityinfra/tichi-label-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-label-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/label/Dockerfile
-  -
-    binaries:
-      - ticommunitytars
-    builds:
+  - id: tichi-tars-plugin
+    ids:
       - ti-community-tars
     image_templates:
       - "ticommunityinfra/tichi-tars-plugin:latest"
       - "ticommunityinfra/tichi-tars-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-tars-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/tars/Dockerfile
-  -
-    binaries:
-      - ticommunityautoresponder
-    builds:
+  - id: tichi-autoresponder-plugin
+    ids:
       - ti-community-autoresponder
     image_templates:
       - "ticommunityinfra/tichi-autoresponder-plugin:latest"
       - "ticommunityinfra/tichi-autoresponder-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-autoresponder-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/autoresponder/Dockerfile
-  -
-    binaries:
-      - ticommunityblunderbuss
-    builds:
+  - id: tichi-blunderbuss-plugin
+    ids:
       - ti-community-blunderbuss
     image_templates:
       - "ticommunityinfra/tichi-blunderbuss-plugin:latest"
       - "ticommunityinfra/tichi-blunderbuss-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-blunderbuss-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/blunderbuss/Dockerfile
-  -
-    binaries:
-      - ticommunitylabelblocker
-    builds:
+  - id: tichi-label-blocker-plugin
+    ids:
       - ti-community-label-blocker
     image_templates:
       - "ticommunityinfra/tichi-label-blocker-plugin:latest"
       - "ticommunityinfra/tichi-label-blocker-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-label-blocker-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/labelblocker/Dockerfile
-  -
-    binaries:
-      - ticommunitycontribution
-    builds:
+  - id: tichi-contribution-plugin
+    ids:
       - ti-community-contribution
     image_templates:
       - "ticommunityinfra/tichi-contribution-plugin:latest"
       - "ticommunityinfra/tichi-contribution-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-contribution-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/contribution/Dockerfile
-  - binaries:
-      - ticommunitycherrypicker
-    builds:
+  - id: tichi-cherrypicker-plugin
+    ids:
       - ti-community-cherrypicker
     image_templates:
       - "ticommunityinfra/tichi-cherrypicker-plugin:latest"
       - "ticommunityinfra/tichi-cherrypicker-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-cherrypicker-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/cherrypicker/Dockerfile
-  -
-    image_templates:
+  - image_templates:
       - "ticommunityinfra/tichi-web:latest"
       - "ticommunityinfra/tichi-web:{{ .Tag }}"
       - "ticommunityinfra/tichi-web:{{ .Major }}"
     dockerfile: ./deployments/web/Dockerfile
     extra_files:
       - web/
-  -
-    binaries:
-      - check-external-plugin-config
-    builds:
+  - id: tichi-check-external-plugin-config
+    ids:
       - check-external-plugin-config
     image_templates:
       - "ticommunityinfra/tichi-check-external-plugin-config:latest"
       - "ticommunityinfra/tichi-check-external-plugin-config:{{ .Tag }}"
       - "ticommunityinfra/tichi-check-external-plugin-config:{{ .Major }}"
     dockerfile: ./deployments/utils/check-external-plugin-config/Dockerfile
-  -
-    binaries:
-      - rerere
-    builds:
+  - id: rerere-component
+    ids:
       - rerere
     image_templates:
       - "ticommunityinfra/rerere-component:latest"
       - "ticommunityinfra/rerere-component:{{ .Tag }}"
       - "ticommunityinfra/rerere-component:{{ .Major }}"
     dockerfile: ./deployments/components/rerere/Dockerfile
-  -
-    binaries:
-      - ticommunityformatchecker
-    builds:
+  - id: tichi-format-checker-plugin
+    ids:
       - ti-community-format-checker
     image_templates:
       - "ticommunityinfra/tichi-format-checker-plugin:latest"
       - "ticommunityinfra/tichi-format-checker-plugin:{{ .Tag }}"
       - "ticommunityinfra/tichi-format-checker-plugin:{{ .Major }}"
     dockerfile: ./deployments/plugins/formatchecker/Dockerfile
-  -
-    binaries:
-      - ticommunityissuetriage
-    builds:
+  - id: tichi-issue-triage-plugin
+    ids:
       - ti-community-issue-triage
     image_templates:
       - "ticommunityinfra/tichi-issue-triage-plugin:latest"
