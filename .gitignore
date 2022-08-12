@@ -23,3 +23,6 @@ coverage.txt
 
 # Mac OS X
 .DS_Store
+
+# builds
+dist
