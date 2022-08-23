@@ -34,6 +34,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/utils"
@@ -48,17 +49,22 @@ import (
 	"k8s.io/utils/exec"
 )
 
-const PluginName = "ti-community-cherrypicker"
+const (
+	PluginName = "ti-community-cherrypicker"
 
-var (
-	cherryPickRe        = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)\s+(.+)$`)
-	cherryPickBranchFmt = "cherry-pick-%d-to-%s"
-	cherryPickTipFmt    = "This is an automated cherry-pick of #%d"
+	upstreamRemoteName     = "upstream"
+	collaboratorPermission = "push"
 )
 
-const upstreamRemoteName = "upstream"
+var (
+	cherryPickRe            = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)\s+(.+)$`)
+	cherryPickInviteRe      = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)-invite\b`)
+	cherryPickInviteExample = "/cherry-pick-invite"
+	cherryPickBranchFmt     = "cherry-pick-%d-to-%s"
+	cherryPickTipFmt        = "This is an automated cherry-pick of #%d"
+)
 
-type githubClient interface {
+type GithubClient interface {
 	AddLabels(org, repo string, number int, labels ...string) error
 	AssignIssue(org, repo string, number int, logins []string) error
 	CreateComment(org, repo string, number int, comment string) error
@@ -75,6 +81,8 @@ type githubClient interface {
 	ListIssueComments(org, repo string, number int) ([]github.IssueComment, error)
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
 	ListOrgMembers(org, role string) ([]github.TeamMember, error)
+	IsCollaborator(org, repo, user string) (bool, error)
+	AddCollaborator(org, repo, user, permission string) error // pull, triage, push, maintain, admin
 }
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
@@ -168,7 +176,7 @@ type Server struct {
 	GitClient git.ClientFactory
 	// Used for unit testing
 	Push         func(forkName, newBranch string, force bool) error
-	GitHubClient githubClient
+	GitHubClient GithubClient
 	Log          *logrus.Entry
 	ConfigAgent  *tiexternalplugins.ConfigAgent
 
@@ -204,7 +212,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error {
-	l := logrus.WithFields(logrus.Fields{
+	l := s.Log.WithFields(logrus.Fields{
 		"event-type":     eventType,
 		github.EventGUID: eventGUID,
 	})
@@ -216,7 +224,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 		}
 		go func() {
 			if err := s.handleIssueComment(l, ic); err != nil {
-				s.Log.WithError(err).WithFields(l.Data).Info("Cherry-pick failed.")
+				l.WithError(err).Info("Cherry-pick failed.")
 			}
 		}()
 	case "pull_request":
@@ -226,7 +234,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 		}
 		go func() {
 			if err := s.handlePullRequest(l, pr); err != nil {
-				s.Log.WithError(err).WithFields(l.Data).Info("Cherry-pick failed.")
+				l.WithError(err).Info("Cherry-pick failed.")
 			}
 		}()
 	default:
@@ -241,6 +249,14 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 		return nil
 	}
 
+	if cherryPickInviteRe.MatchString(ic.Comment.Body) {
+		return s.inviteIfNotCollaborator(ic.Repo.Owner.Name, ic.Repo.Name, ic.Comment.User.Login, ic.Issue.Number)
+	} else {
+		return s.handleIssueCherryPickComment(l, ic)
+	}
+}
+
+func (s *Server) handleIssueCherryPickComment(l *logrus.Entry, ic github.IssueCommentEvent) error {
 	org := ic.Repo.Owner.Login
 	repo := ic.Repo.Name
 	num := ic.Issue.Number
@@ -558,9 +574,9 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	title = fmt.Sprintf("%s (#%d)", title, num)
 
 	// Try git am --> 3way localPath.
-	if err := r.Am(localPath); err != nil {
-		logger.WithError(err).Warnf("Failed to apply #%d on top of target branch %q.", num, targetBranch)
-		if err := s.cherryPickCommit(logger, err, num, targetBranch, opts, org, repo, title, comment, requestor, r, pr); err != nil {
+	if amErr := r.Am(localPath); amErr != nil {
+		logger.WithError(amErr).Warnf("Failed to apply #%d on top of target branch %q.", num, targetBranch)
+		if err := s.cherryPickCommit(logger, amErr, targetBranch, opts, org, repo, title, comment, requestor, r, pr); err != nil {
 			return err
 		}
 	}
@@ -596,13 +612,17 @@ func (s *Server) newCherryPickLock(org, repo, targetBranch string, num int) *syn
 	return lock
 }
 
-func (s *Server) cherryPickCommit(logger *logrus.Entry, err error, num int, targetBranch string, opts *tiexternalplugins.TiCommunityCherrypicker, org string, repo string, title string, comment *github.IssueComment, requestor string, r git.RepoClient, pr *github.PullRequest) error {
+// TODO(wuhuizuo): reduce param count
+func (s *Server) cherryPickCommit(logger *logrus.Entry, amErr error,
+	targetBranch string, opts *tiexternalplugins.TiCommunityCherrypicker,
+	org string, repo string, title string, comment *github.IssueComment,
+	requestor string, r git.RepoClient, pr *github.PullRequest) error {
 	var errs []error
 	if opts.IssueOnConflict {
 		const respTpl = "manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```"
-		resp := fmt.Sprintf(respTpl, num, targetBranch, err)
+		resp := fmt.Sprintf(respTpl, pr.Number, targetBranch, amErr)
 
-		if err := s.createIssue(logger, org, repo, title, resp, num, comment, nil, []string{requestor}); err != nil {
+		if err := s.createIssue(logger, org, repo, title, resp, pr.Number, comment, nil, []string{requestor}); err != nil {
 			errs = append(errs, fmt.Errorf("failed to create issue: %w", err))
 		} else {
 			// Return after issue created.
@@ -657,7 +677,7 @@ func (s *Server) cherryPickCommit(logger *logrus.Entry, err error, num int, targ
 
 			// Try commit with sign off.
 			commitMessage := createCherryPickCommitMessage(
-				s.GitHubClient, s.Log, opts.CopyIssueNumbersFromSquashedCommit, org, repo, num, pr.MergeSHA,
+				s.GitHubClient, s.Log, opts.CopyIssueNumbersFromSquashedCommit, org, repo, pr.Number, pr.MergeSHA,
 			)
 			commit := ex.Command("git", "commit", "-s", "-m", commitMessage)
 			commit.SetDir(dir)
@@ -671,8 +691,8 @@ func (s *Server) cherryPickCommit(logger *logrus.Entry, err error, num int, targ
 
 	if utilerrors.NewAggregate(errs) != nil {
 		resp := fmt.Sprintf("failed to apply #%d on top of branch %q:\n```\n%v\n```",
-			num, targetBranch, utilerrors.NewAggregate(errs).Error())
-		if err := s.createComment(logger, org, repo, num, comment, resp); err != nil {
+			pr.Number, targetBranch, utilerrors.NewAggregate(errs).Error())
+		if err := s.createComment(logger, org, repo, pr.Number, comment, resp); err != nil {
 			errs = append(errs, fmt.Errorf("failed to create comment: %w", err))
 		}
 		return utilerrors.NewAggregate(errs)
@@ -681,7 +701,15 @@ func (s *Server) cherryPickCommit(logger *logrus.Entry, err error, num int, targ
 	return nil
 }
 
-func (s *Server) createPullRequest(num int, body string, newBranch string, org string, repo string, title string, targetBranch string, logger *logrus.Entry, comment *github.IssueComment, opts *tiexternalplugins.TiCommunityCherrypicker, pr *github.PullRequest, requestor string) error {
+// TODO(wuhuizuo): reduce param count
+func (s *Server) createPullRequest(num int, body string, newBranch string,
+	org string, repo string,
+	title string, targetBranch string,
+	logger *logrus.Entry,
+	comment *github.IssueComment,
+	opts *tiexternalplugins.TiCommunityCherrypicker,
+	trunkPR *github.PullRequest, requestor string,
+) error {
 	cherryPickBody := createCherryPickBody(num, body)
 	head := fmt.Sprintf("%s:%s", s.BotUser.Login, newBranch)
 
@@ -702,7 +730,7 @@ func (s *Server) createPullRequest(num int, body string, newBranch string, org s
 	// Copying original pull request labels.
 	excludeLabelsSet := sets.NewString(opts.ExcludeLabels...)
 	labels := sets.NewString()
-	for _, label := range pr.Labels {
+	for _, label := range trunkPR.Labels {
 		if !excludeLabelsSet.Has(label.Name) && !strings.HasPrefix(label.Name, opts.LabelPrefix) {
 			labels.Insert(label.Name)
 		}
@@ -728,6 +756,7 @@ func (s *Server) createPullRequest(num int, body string, newBranch string, org s
 	return nil
 }
 
+// TODO(wuhuizuo): reduce param count
 func (s *Server) createComment(l *logrus.Entry, org, repo string,
 	num int, comment *github.IssueComment, resp string) error {
 	if err := func() error {
@@ -744,6 +773,7 @@ func (s *Server) createComment(l *logrus.Entry, org, repo string,
 }
 
 // createIssue creates an issue on GitHub.
+// TODO(wuhuizuo): reduce param count
 func (s *Server) createIssue(l *logrus.Entry, org, repo, title, body string, num int,
 	comment *github.IssueComment, labels, assignees []string) error {
 	issueNum, err := s.GitHubClient.CreateIssue(org, repo, title, body, 0, labels, assignees)
@@ -792,12 +822,49 @@ func (s *Server) getPatch(org, repo, targetBranch string, num int) (string, erro
 	return localPath, nil
 }
 
+func (s *Server) inviteIfNotCollaborator(org, repo, username string, prNum int) error {
+	log := s.Log.WithFields(logrus.Fields{"org": org, "repo": repo, "prNum": prNum})
+
+	// already collaborator
+	if ok, err := s.GitHubClient.IsCollaborator(org, repo, username); err != nil {
+		log.Error(err)
+		return err
+	} else if ok {
+		comment := fmt.Sprintf("@%s you're already a collaborator in bot's repo.", username)
+		if err := s.GitHubClient.CreateComment(org, repo, prNum, comment); err != nil {
+			s.Log.WithError(err).Error("create comment failed")
+			return err
+		}
+	}
+	err := s.GitHubClient.AddCollaborator(org, repo, username, collaboratorPermission)
+	if err != nil {
+		comment := fmt.Sprintf("@%s failed when inviting you as a collaborator in bot's repo.", username)
+		if err := s.GitHubClient.CreateComment(org, repo, prNum, comment); err != nil {
+			s.Log.WithError(err).Error("create comment failed")
+			return err
+		}
+		return errors.Wrap(err, "invite failed")
+	}
+
+	// notice user
+	invitationURL := fmt.Sprintf("%s/%s/%s/invitations", s.GitHubURL, org, repo)
+	comment := fmt.Sprintf(
+		"@%s please accept the invitation then you can push to the cherry-pick pull requests. Comment with `%s` if the invitation is expired.\n%s",
+		username, cherryPickInviteExample, invitationURL)
+	if err := s.GitHubClient.CreateComment(org, repo, prNum, comment); err != nil {
+		s.Log.WithError(err).Error("create comment failed")
+		return err
+	}
+
+	return nil
+}
+
 func normalize(input string) string {
 	return strings.ReplaceAll(input, "/", "-")
 }
 
 // createCherryPickCommitMessage creates the commit message for the cherry-pick commit.
-func createCherryPickCommitMessage(gc githubClient, log *logrus.Entry, copyIssueNumbers bool,
+func createCherryPickCommitMessage(gc GithubClient, log *logrus.Entry, copyIssueNumbers bool,
 	org, repo string, num int, mergeSHA *string) string {
 	cherryPickCommitMessage := fmt.Sprintf(cherryPickTipFmt, num)
 

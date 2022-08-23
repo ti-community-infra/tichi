@@ -118,7 +118,7 @@ func main() {
 		ConfigAgent:            epa,
 
 		GitClient:    git.ClientFactoryFrom(gitClient),
-		GitHubClient: githubClient,
+		GitHubClient: newExtGithubClient(githubClient),
 		Log:          log,
 
 		Bare:      &http.Client{},

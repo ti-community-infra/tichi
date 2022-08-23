@@ -34,6 +34,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/git/localgit"
 	"k8s.io/test-infra/prow/github"
@@ -47,14 +48,15 @@ type fghc struct {
 	pr       *github.PullRequest
 	isMember bool
 
-	patch      []byte
-	comments   []string
-	prs        []github.PullRequest
-	prComments []github.IssueComment
-	prLabels   []github.Label
-	orgMembers []github.TeamMember
-	issues     []github.Issue
-	commits    map[string]github.RepositoryCommit
+	patch         []byte
+	comments      []string
+	prs           []github.PullRequest
+	prComments    []github.IssueComment
+	prLabels      []github.Label
+	orgMembers    []github.TeamMember
+	issues        []github.Issue
+	commits       map[string]github.RepositoryCommit
+	collaborators []string
 }
 
 func (f *fghc) GetSingleCommit(org, repo, sha string) (github.RepositoryCommit, error) {
@@ -136,6 +138,15 @@ func (f *fghc) EnsureFork(forkingUser, org, repo string) (string, error) {
 		return repo, errors.New("errors")
 	}
 	return repo, nil
+}
+
+func (f *fghc) IsCollaborator(org, repo, user string) (bool, error) {
+	return sets.NewString(f.collaborators...).Has(user), nil
+}
+
+func (f *fghc) AddCollaborator(org, repo, user, permission string) error {
+	f.collaborators = append(f.collaborators, user)
+	return nil
 }
 
 var prFmt = `title=%q body=%q head=%s base=%s labels=%v assignees=%v`
@@ -381,7 +392,7 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 		Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
 	}
 
-	if err := s.handleIssueComment(logrus.NewEntry(logrus.StandardLogger()), ic); err != nil {
+	if err := s.handleIssueCherryPickComment(logrus.NewEntry(logrus.StandardLogger()), ic); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -407,6 +418,115 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 	}
 	if len(seenBranches) != len(expectedBranches) {
 		t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", len(expectedBranches), len(seenBranches), seenBranches)
+	}
+}
+
+func TestInviteIC(t *testing.T) {
+	lg, c, err := localgit.NewV2()
+	if err != nil {
+		t.Fatalf("Making localgit: %v", err)
+	}
+	defer func() {
+		if err := lg.Clean(); err != nil {
+			t.Errorf("Cleaning up localgit: %v", err)
+		}
+		if err := c.Clean(); err != nil {
+			t.Errorf("Cleaning up client: %v", err)
+		}
+	}()
+	if err := lg.MakeFakeRepo("foo", "bar"); err != nil {
+		t.Fatalf("Making fake repo: %v", err)
+	}
+	if err := lg.AddCommit("foo", "bar", initialFiles); err != nil {
+		t.Fatalf("Adding initial commit: %v", err)
+	}
+
+	expectedBranches := []string{"stage", "release-1.5"}
+	for _, branch := range expectedBranches {
+		if err := lg.CheckoutNewBranch("foo", "bar", branch); err != nil {
+			t.Fatalf("Checking out pull branch: %v", err)
+		}
+	}
+
+	ghc := &fghc{
+		pr: &github.PullRequest{
+			Base: github.PullRequestBranch{
+				Ref: "master",
+			},
+			Number: 2,
+			Merged: true,
+			Title:  "This is a fix for X",
+			Body:   body,
+			Assignees: []github.User{
+				{
+					Login: "user2",
+				},
+			},
+		},
+		isMember: true,
+		patch:    patch,
+	}
+
+	ic := github.IssueCommentEvent{
+		Action: github.IssueCommentActionCreated,
+		Repo: github.Repo{
+			Owner: github.User{
+				Login: "foo",
+			},
+			Name:     "bar",
+			FullName: "foo/bar",
+		},
+		Issue: github.Issue{
+			Number:      2,
+			State:       "closed",
+			PullRequest: &struct{}{},
+		},
+		Comment: github.IssueComment{
+			User: github.User{
+				Login: "wiseguy",
+			},
+			Body: "/cherry-pick-invite",
+		},
+	}
+
+	botUser := &github.UserData{Login: "ci-robot", Email: "ci-robot@users.noreply.github.com"}
+	getSecret := func() []byte {
+		return []byte("sha=abcdefg")
+	}
+
+	getGithubToken := func() []byte {
+		return []byte("token")
+	}
+
+	cfg := &externalplugins.Configuration{}
+	cfg.TiCommunityCherrypicker = []externalplugins.TiCommunityCherrypicker{
+		{
+			Repos:             []string{"foo/bar"},
+			LabelPrefix:       "cherrypick/",
+			PickedLabelPrefix: "type/cherrypick-for-",
+		},
+	}
+	ca := &externalplugins.ConfigAgent{}
+	ca.Set(cfg)
+
+	s := &Server{
+		BotUser:                botUser,
+		GitClient:              c,
+		ConfigAgent:            ca,
+		Push:                   func(forkName, newBranch string, force bool) error { return nil },
+		GitHubClient:           ghc,
+		WebhookSecretGenerator: getSecret,
+		GitHubTokenGenerator:   getGithubToken,
+		Log:                    logrus.StandardLogger().WithField("client", "cherrypicker"),
+		Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
+	}
+
+	if err := s.handleIssueComment(logrus.NewEntry(logrus.StandardLogger()), ic); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !sets.NewString(ghc.collaborators...).Has(ic.Comment.User.Login) {
+		t.Fatalf("Expected collaborators has %s, got %v", ic.Comment.User.Login, ghc.collaborators)
 	}
 }
 
@@ -1092,6 +1212,7 @@ func TestCherryPickCreateIssue(t *testing.T) {
 		ghc := &fghc{}
 
 		s := &Server{
+			Log:          logrus.StandardLogger().WithField("client", "cherrypicker"),
 			GitHubClient: ghc,
 		}
 
@@ -1161,6 +1282,7 @@ func TestHandleLocks(t *testing.T) {
 		ConfigAgent:  ca,
 		GitHubClient: &threadUnsafeFGHC{fghc: &fghc{}},
 		BotUser:      &github.UserData{},
+		Log:          logrus.StandardLogger().WithField("client", "cherrypicker"),
 	}
 
 	routine1Done := make(chan struct{})
@@ -1213,6 +1335,7 @@ func TestEnsureForkExists(t *testing.T) {
 		ConfigAgent:  ca,
 		GitHubClient: ghc,
 		Repos:        []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
+		Log:          logrus.StandardLogger().WithField("client", "cherrypicker"),
 	}
 
 	testCases := []struct {
@@ -1465,6 +1588,7 @@ foo/bar:
 
 		s := Server{
 			WebhookSecretGenerator: getSecret,
+			Log:                    logrus.StandardLogger().WithField("client", "cherrypicker"),
 		}
 
 		s.ServeHTTP(w, r)
@@ -1566,6 +1690,7 @@ foo/bar:
 		s := Server{
 			WebhookSecretGenerator: getSecret,
 			ConfigAgent:            ca,
+			Log:                    logrus.StandardLogger().WithField("client", "cherrypicker"),
 		}
 
 		s.ServeHTTP(w, r)
