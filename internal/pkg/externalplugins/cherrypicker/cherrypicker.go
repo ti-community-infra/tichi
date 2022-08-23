@@ -567,87 +567,11 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	// Title for GitHub issue/PR.
 	title = fmt.Sprintf("%s (#%d)", title, num)
 
-	// Try git am --3way localPath.
+	// Try git am --> 3way localPath.
 	if err := r.Am(localPath); err != nil {
-		var errs []error
 		logger.WithError(err).Warnf("Failed to apply #%d on top of target branch %q.", num, targetBranch)
-		if opts.IssueOnConflict {
-			resp := fmt.Sprintf("manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```",
-				num, targetBranch, err)
-			if err := s.createIssue(logger, org, repo, title, resp, num, comment, nil, []string{requestor}); err != nil {
-				errs = append(errs, fmt.Errorf("failed to create issue: %w", err))
-			} else {
-				// Return after issue created.
-				return nil
-			}
-		} else {
-			// Try to fetch upstream.
-			ex := exec.New()
-			dir := r.Directory()
-
-			// Warning: Do not output url with authorization information to the log and response.
-			upstreamURL := fmt.Sprintf("%s/%s", s.GitHubURL, pr.Base.Repo.FullName)
-			upstreamURLWithAuth, err := url.Parse(upstreamURL)
-			if err != nil {
-				logger.WithError(err).Errorf("Failed to remote parse url: %s", upstreamURL)
-				errs = append(errs, fmt.Errorf("failed to parse remote url: %s", upstreamURL))
-			}
-			upstreamURLWithAuth.User = url.UserPassword(s.BotUser.Login, string(s.GitHubTokenGenerator()))
-
-			// Add the upstream remote.
-			addUpstreamRemote := ex.Command("git", "remote", "add", upstreamRemoteName, upstreamURLWithAuth.String())
-			addUpstreamRemote.SetDir(dir)
-			out, err := addUpstreamRemote.CombinedOutput()
-			if err != nil {
-				logger.WithError(err).Warnf("Failed to git remote add %s and the output look like: %s.", upstreamURL, out)
-				errs = append(errs, fmt.Errorf("failed to git remote add %s %s", upstreamRemoteName, upstreamURL))
-			}
-
-			// Fetch the upstream remote.
-			fetchUpstreamRemote := ex.Command("git", "fetch", upstreamRemoteName)
-			fetchUpstreamRemote.SetDir(dir)
-			out, err = fetchUpstreamRemote.CombinedOutput()
-			if err != nil {
-				logger.WithError(err).Warnf("Failed to fetch %s remote and the output look like: %s.", upstreamRemoteName, out)
-				errs = append(errs, fmt.Errorf("failed to git fetch %s", upstreamRemoteName))
-			}
-
-			//  Try git cherry-pick.
-			cherrypick := ex.Command("git", "cherry-pick", "-m", "1", *pr.MergeSHA)
-			cherrypick.SetDir(dir)
-			out, err = cherrypick.CombinedOutput()
-			if err != nil {
-				logger.WithError(err).Warnf("Failed to cherrypick and the output look like: %s.", out)
-				// Try git add *.
-				add := ex.Command("git", "add", "*")
-				add.SetDir(dir)
-				out, err = add.CombinedOutput()
-				if err != nil {
-					logger.WithError(err).Warnf("Failed to git add conflicting files and the output look like: %s.", out)
-					errs = append(errs, fmt.Errorf("failed to git add conflicting files: %w", err))
-				}
-
-				// Try commit with sign off.
-				commitMessage := createCherryPickCommitMessage(
-					s.GitHubClient, s.Log, opts.CopyIssueNumbersFromSquashedCommit, org, repo, num, pr.MergeSHA,
-				)
-				commit := ex.Command("git", "commit", "-s", "-m", commitMessage)
-				commit.SetDir(dir)
-				out, err = commit.CombinedOutput()
-				if err != nil {
-					logger.WithError(err).Warnf("Failed to git commit and the output look like: %s", out)
-					errs = append(errs, fmt.Errorf("failed to git commit: %w", err))
-				}
-			}
-		}
-
-		if utilerrors.NewAggregate(errs) != nil {
-			resp := fmt.Sprintf("failed to apply #%d on top of branch %q:\n```\n%v\n```",
-				num, targetBranch, utilerrors.NewAggregate(errs).Error())
-			if err := s.createComment(logger, org, repo, num, comment, resp); err != nil {
-				errs = append(errs, fmt.Errorf("failed to create comment: %w", err))
-			}
-			return utilerrors.NewAggregate(errs)
+		if err := s.cherryPickCommit(logger, err, num, targetBranch, opts, org, repo, title, comment, requestor, r, pr); err != nil {
+			return err
 		}
 	}
 
@@ -664,6 +588,92 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	}
 
 	return s.createPullRequest(num, body, newBranch, org, repo, title, targetBranch, logger, comment, opts, pr, requestor)
+}
+
+
+func (s *Server) cherryPickCommit(logger *logrus.Entry, err error, num int, targetBranch string, opts *tiexternalplugins.TiCommunityCherrypicker, org string, repo string, title string, comment *github.IssueComment, requestor string, r git.RepoClient, pr *github.PullRequest) error {
+	var errs []error
+	if opts.IssueOnConflict {
+		const respTpl = "manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```"
+		resp := fmt.Sprintf(respTpl, num, targetBranch, err)
+
+		if err := s.createIssue(logger, org, repo, title, resp, num, comment, nil, []string{requestor}); err != nil {
+			errs = append(errs, fmt.Errorf("failed to create issue: %w", err))
+		} else {
+			// Return after issue created.
+			return nil
+		}
+	} else {
+		// Try to fetch upstream.
+		ex := exec.New()
+		dir := r.Directory()
+
+		// Warning: Do not output url with authorization information to the log and response.
+		upstreamURL := fmt.Sprintf("%s/%s", s.GitHubURL, pr.Base.Repo.FullName)
+		upstreamURLWithAuth, err := url.Parse(upstreamURL)
+		if err != nil {
+			logger.WithError(err).Errorf("Failed to remote parse url: %s", upstreamURL)
+			errs = append(errs, fmt.Errorf("failed to parse remote url: %s", upstreamURL))
+		}
+		upstreamURLWithAuth.User = url.UserPassword(s.BotUser.Login, string(s.GitHubTokenGenerator()))
+
+		// Add the upstream remote.
+		addUpstreamRemote := ex.Command("git", "remote", "add", upstreamRemoteName, upstreamURLWithAuth.String())
+		addUpstreamRemote.SetDir(dir)
+		out, err := addUpstreamRemote.CombinedOutput()
+		if err != nil {
+			logger.WithError(err).Warnf("Failed to git remote add %s and the output look like: %s.", upstreamURL, out)
+			errs = append(errs, fmt.Errorf("failed to git remote add %s %s", upstreamRemoteName, upstreamURL))
+		}
+
+		// Fetch the upstream remote.
+		fetchUpstreamRemote := ex.Command("git", "fetch", upstreamRemoteName)
+		fetchUpstreamRemote.SetDir(dir)
+		out, err = fetchUpstreamRemote.CombinedOutput()
+		if err != nil {
+			logger.WithError(err).Warnf("Failed to fetch %s remote and the output look like: %s.", upstreamRemoteName, out)
+			errs = append(errs, fmt.Errorf("failed to git fetch %s", upstreamRemoteName))
+		}
+
+		//  Try git cherry-pick.
+		cherrypick := ex.Command("git", "cherry-pick", "-m", "1", *pr.MergeSHA)
+		cherrypick.SetDir(dir)
+		out, err = cherrypick.CombinedOutput()
+		if err != nil {
+			logger.WithError(err).Warnf("Failed to cherrypick and the output look like: %s.", out)
+			// Try git add *.
+			add := ex.Command("git", "add", "*")
+			add.SetDir(dir)
+			out, err = add.CombinedOutput()
+			if err != nil {
+				logger.WithError(err).Warnf("Failed to git add conflicting files and the output look like: %s.", out)
+				errs = append(errs, fmt.Errorf("failed to git add conflicting files: %w", err))
+			}
+
+			// Try commit with sign off.
+			commitMessage := createCherryPickCommitMessage(
+				s.GitHubClient, s.Log, opts.CopyIssueNumbersFromSquashedCommit, org, repo, num, pr.MergeSHA,
+			)
+			commit := ex.Command("git", "commit", "-s", "-m", commitMessage)
+			commit.SetDir(dir)
+			out, err = commit.CombinedOutput()
+			if err != nil {
+				logger.WithError(err).Warnf("Failed to git commit and the output look like: %s", out)
+				errs = append(errs, fmt.Errorf("failed to git commit: %w", err))
+			}
+		}
+	}
+
+	if utilerrors.NewAggregate(errs) != nil {
+		resp := fmt.Sprintf("failed to apply #%d on top of branch %q:\n```\n%v\n```",
+			num, targetBranch, utilerrors.NewAggregate(errs).Error())
+		if err := s.createComment(logger, org, repo, num, comment, resp); err != nil {
+			errs = append(errs, fmt.Errorf("failed to create comment: %w", err))
+		}
+		return utilerrors.NewAggregate(errs)
+	}
+
+	return nil
 }
 
 func (s *Server) createPullRequest(num int, body string, newBranch string, org string, repo string, title string, targetBranch string, logger *logrus.Entry, comment *github.IssueComment, opts *tiexternalplugins.TiCommunityCherrypicker, pr *github.PullRequest, requestor string) error {
