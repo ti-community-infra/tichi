@@ -338,9 +338,9 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 	return nil
 }
 
-func (s *Server) handlePullRequest(log *logrus.Entry, pre github.PullRequestEvent) error {
+func (s *Server) handlePullRequest(log *logrus.Entry, event github.PullRequestEvent) error {
 	// Only consider merged PRs.
-	pr := pre.PullRequest
+	pr := event.PullRequest
 	if !pr.Merged || pr.MergeSHA == nil {
 		return nil
 	}
@@ -357,7 +357,7 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre github.PullRequestEven
 		requestorToComments[pr.User.Login] = make(map[string]*github.IssueComment)
 	}
 
-	switch pre.Action {
+	switch event.Action {
 	// Considering close event.
 	case github.PullRequestActionClosed:
 		{
@@ -402,9 +402,9 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre github.PullRequestEven
 	// Considering labeled event(Processes only the label that was added).
 	case github.PullRequestActionLabeled:
 		{
-			if strings.HasPrefix(pre.Label.Name, opts.LabelPrefix) {
+			if strings.HasPrefix(event.Label.Name, opts.LabelPrefix) {
 				// leave this nil which indicates a label-initiated cherry-pick.
-				requestorToComments[pr.User.Login][pre.Label.Name[len(opts.LabelPrefix):]] = nil
+				requestorToComments[pr.User.Login][event.Label.Name[len(opts.LabelPrefix):]] = nil
 			} else {
 				return nil
 			}
@@ -472,8 +472,9 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre github.PullRequestEven
 	return utilerrors.NewAggregate(errs)
 }
 
-//nolint:gocyclo
 // TODO: refactoring to reduce complexity.
+//
+//nolint:gocyclo
 func (s *Server) handle(logger *logrus.Entry, requestor string,
 	comment *github.IssueComment, org, repo, targetBranch string, pr *github.PullRequest) error {
 	num := pr.Number
@@ -662,9 +663,14 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		return utilerrors.NewAggregate([]error{err, s.createComment(logger, org, repo, num, comment, resp)})
 	}
 
-	// Open a PR in GitHub.
+	return s.createPullRequest(num, body, newBranch, org, repo, title, targetBranch, logger, comment, opts, pr, requestor)
+}
+
+func (s *Server) createPullRequest(num int, body string, newBranch string, org string, repo string, title string, targetBranch string, logger *logrus.Entry, comment *github.IssueComment, opts *tiexternalplugins.TiCommunityCherrypicker, pr *github.PullRequest, requestor string) error {
 	cherryPickBody := createCherryPickBody(num, body)
 	head := fmt.Sprintf("%s:%s", s.BotUser.Login, newBranch)
+
+	// open a PR in GitHub.
 	createdNum, err := s.GitHubClient.CreatePullRequest(org, repo, title, cherryPickBody, head, targetBranch, true)
 	if err != nil {
 		logger.WithError(err).Warn("failed to create new pull request")
@@ -699,12 +705,11 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 
 	// Assign pull request to requestor.
 	if err := s.GitHubClient.AssignIssue(org, repo, createdNum, []string{requestor}); err != nil {
-		logger.WithError(err).Warn("failed to assign to new PR")
 		// Ignore returning errors on failure to assign as this is most likely
-		// due to users not being members of the org so that they can't be assigned
-		// in PRs.
-		return nil
+		// due to users not being members of the org so that they can't be assigned in PRs.
+		logger.WithError(err).Warn("failed to assign to new PR")
 	}
+
 	return nil
 }
 
