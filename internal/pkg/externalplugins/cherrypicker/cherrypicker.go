@@ -480,18 +480,8 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	num := pr.Number
 	title := pr.Title
 	body := pr.Body
-	var lock *sync.Mutex
-	func() {
-		s.mapLock.Lock()
-		defer s.mapLock.Unlock()
-		if _, ok := s.lockMap[cherryPickRequest{org, repo, num, targetBranch}]; !ok {
-			if s.lockMap == nil {
-				s.lockMap = map[cherryPickRequest]*sync.Mutex{}
-			}
-			s.lockMap[cherryPickRequest{org, repo, num, targetBranch}] = &sync.Mutex{}
-		}
-		lock = s.lockMap[cherryPickRequest{org, repo, num, targetBranch}]
-	}()
+	lock := s.newCherryPickLock(org, repo, targetBranch, pr.Number)
+
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -590,6 +580,21 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	return s.createPullRequest(num, body, newBranch, org, repo, title, targetBranch, logger, comment, opts, pr, requestor)
 }
 
+func (s *Server) newCherryPickLock(org, repo, targetBranch string, num int) *sync.Mutex {
+	s.mapLock.Lock()
+	defer s.mapLock.Unlock()
+
+	lock, ok := s.lockMap[cherryPickRequest{org, repo, num, targetBranch}]
+	if !ok {
+		if s.lockMap == nil {
+			s.lockMap = map[cherryPickRequest]*sync.Mutex{}
+		}
+		lock = &sync.Mutex{}
+		s.lockMap[cherryPickRequest{org, repo, num, targetBranch}] = lock
+	}
+
+	return lock
+}
 
 func (s *Server) cherryPickCommit(logger *logrus.Entry, err error, num int, targetBranch string, opts *tiexternalplugins.TiCommunityCherrypicker, org string, repo string, title string, comment *github.IssueComment, requestor string, r git.RepoClient, pr *github.PullRequest) error {
 	var errs []error
