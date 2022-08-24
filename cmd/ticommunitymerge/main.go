@@ -114,7 +114,11 @@ func main() {
 
 	helpProvider := merge.HelpProvider(epa)
 	externalplugins.ServeExternalPluginHelp(mux, log, helpProvider)
-	httpServer := &http.Server{Addr: ":" + strconv.Itoa(o.port), Handler: mux}
+	httpServer := &http.Server{
+		Addr:              ":" + strconv.Itoa(o.port),
+		Handler:           mux,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
 
 	defer interrupts.WaitForGracefulShutdown()
 	interrupts.ListenAndServe(httpServer, 5*time.Second)

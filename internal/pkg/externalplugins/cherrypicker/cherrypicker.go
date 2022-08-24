@@ -48,15 +48,23 @@ import (
 	"k8s.io/utils/exec"
 )
 
-const PluginName = "ti-community-cherrypicker"
+const (
+	PluginName = "ti-community-cherrypicker"
 
-var (
-	cherryPickRe        = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)\s+(.+)$`)
-	cherryPickBranchFmt = "cherry-pick-%d-to-%s"
-	cherryPickTipFmt    = "This is an automated cherry-pick of #%d"
+	upstreamRemoteName           = "upstream"
+	collaboratorPermission       = "push"
+	cherryPickInviteExample      = "/cherry-pick-invite"
+	cherryPickBranchFmt          = "cherry-pick-%d-to-%s"
+	cherryPickTipFmt             = "This is an automated cherry-pick of #%d"
+	cherryPickInviteNotifyMsgTpl = `@%s Please accept the invitation then you can push to the cherry-pick pull requests. 
+	Comment with "%s" if the invitation is expired.
+	%s`
 )
 
-const upstreamRemoteName = "upstream"
+var (
+	cherryPickRe       = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)\s+(.+)$`)
+	cherryPickInviteRe = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)-invite\b`)
+)
 
 type githubClient interface {
 	AddLabels(org, repo string, number int, labels ...string) error
@@ -473,8 +481,6 @@ func (s *Server) handlePullRequest(log *logrus.Entry, event github.PullRequestEv
 }
 
 // TODO: refactoring to reduce complexity.
-//
-//nolint:gocyclo
 func (s *Server) handle(logger *logrus.Entry, requestor string,
 	comment *github.IssueComment, org, repo, targetBranch string, pr *github.PullRequest) error {
 	num := pr.Number
@@ -568,9 +574,11 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	title = fmt.Sprintf("%s (#%d)", title, num)
 
 	// Try git am --> 3way localPath.
-	if err := r.Am(localPath); err != nil {
-		logger.WithError(err).Warnf("Failed to apply #%d on top of target branch %q.", num, targetBranch)
-		if err := s.cherryPickCommit(logger, err, num, targetBranch, opts, org, repo, title, comment, requestor, r, pr); err != nil {
+	if amErr := r.Am(localPath); amErr != nil {
+		logger.WithError(amErr).Warnf("Failed to apply #%d on top of target branch %q.", num, targetBranch)
+		if err := s.cherryPickCommit(
+			logger, amErr, num, targetBranch, opts, org, repo, title, comment, requestor, r, pr,
+		); err != nil {
 			return err
 		}
 	}
@@ -589,7 +597,6 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 
 	return s.createPullRequest(num, body, newBranch, org, repo, title, targetBranch, logger, comment, opts, pr, requestor)
 }
-
 
 func (s *Server) cherryPickCommit(logger *logrus.Entry, err error, num int, targetBranch string, opts *tiexternalplugins.TiCommunityCherrypicker, org string, repo string, title string, comment *github.IssueComment, requestor string, r git.RepoClient, pr *github.PullRequest) error {
 	var errs []error
