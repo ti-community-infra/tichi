@@ -68,7 +68,7 @@ func (pa *ConfigAgent) Start(path string, checkUnknownPlugins bool) error {
 	if err := pa.Load(path); err != nil {
 		return err
 	}
-	// nolint:staticcheck
+	//nolint:staticcheck
 	ticker := time.Tick(pullDuration)
 	go func() {
 		for range ticker {
