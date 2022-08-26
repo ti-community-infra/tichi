@@ -51,19 +51,20 @@ import (
 const (
 	PluginName = "ti-community-cherrypicker"
 
-	upstreamRemoteName           = "upstream"
-	collaboratorPermission       = "push"
-	cherryPickInviteExample      = "/cherry-pick-invite"
-	cherryPickBranchFmt          = "cherry-pick-%d-to-%s"
-	cherryPickTipFmt             = "This is an automated cherry-pick of #%d"
-	cherryPickInviteNotifyMsgTpl = `@%s Please accept the invitation then you can push to the cherry-pick pull requests. 
-	Comment with "%s" if the invitation is expired.
-	%s`
+	upstreamRemoteName = "upstream"
+	// collaboratorPermission       = "push"
+	// cherryPickInviteExample      = "/cherry-pick-invite"
+	cherryPickBranchFmt = "cherry-pick-%d-to-%s"
+	cherryPickTipFmt    = "This is an automated cherry-pick of #%d"
+	// cherryPickInviteNotifyMsgTpl =
+	// `@%s Please accept the invitation then you can push to the cherry-pick pull requests.
+	// Comment with "%s" if the invitation is expired.
+	// %s`
 )
 
 var (
-	cherryPickRe       = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)\s+(.+)$`)
-	cherryPickInviteRe = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)-invite\b`)
+	cherryPickRe = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)\s+(.+)$`)
+	// cherryPickInviteRe = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)-invite\b`)
 )
 
 type githubClient interface {
@@ -598,7 +599,11 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	return s.createPullRequest(num, body, newBranch, org, repo, title, targetBranch, logger, comment, opts, pr, requestor)
 }
 
-func (s *Server) cherryPickCommit(logger *logrus.Entry, err error, num int, targetBranch string, opts *tiexternalplugins.TiCommunityCherrypicker, org string, repo string, title string, comment *github.IssueComment, requestor string, r git.RepoClient, pr *github.PullRequest) error {
+func (s *Server) cherryPickCommit(
+	logger *logrus.Entry, err error, num int, targetBranch string,
+	opts *tiexternalplugins.TiCommunityCherrypicker, org string,
+	repo string, title string, comment *github.IssueComment, requestor string,
+	r git.RepoClient, pr *github.PullRequest) error {
 	var errs []error
 	if opts.IssueOnConflict {
 		const respTpl = "manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```"
@@ -683,7 +688,10 @@ func (s *Server) cherryPickCommit(logger *logrus.Entry, err error, num int, targ
 	return nil
 }
 
-func (s *Server) createPullRequest(num int, body string, newBranch string, org string, repo string, title string, targetBranch string, logger *logrus.Entry, comment *github.IssueComment, opts *tiexternalplugins.TiCommunityCherrypicker, pr *github.PullRequest, requestor string) error {
+func (s *Server) createPullRequest(num int, body string, newBranch string, org string,
+	repo string, title string, targetBranch string, logger *logrus.Entry,
+	comment *github.IssueComment, opts *tiexternalplugins.TiCommunityCherrypicker,
+	pr *github.PullRequest, requestor string) error {
 	cherryPickBody := createCherryPickBody(num, body)
 	head := fmt.Sprintf("%s:%s", s.BotUser.Login, newBranch)
 
