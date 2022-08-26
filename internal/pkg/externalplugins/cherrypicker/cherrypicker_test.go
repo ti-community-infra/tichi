@@ -33,7 +33,6 @@ import (
 	"testing"
 
 	"github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/git/localgit"
 	"k8s.io/test-infra/prow/github"
@@ -139,15 +138,6 @@ func (f *fghc) EnsureFork(forkingUser, org, repo string) (string, error) {
 		return repo, errors.New("errors")
 	}
 	return repo, nil
-}
-
-func (f *fghc) IsCollaborator(org, repo, user string) (bool, error) {
-	return sets.NewString(f.collaborators...).Has(user), nil
-}
-
-func (f *fghc) AddCollaborator(org, repo, user, permission string) error {
-	f.collaborators = append(f.collaborators, user)
-	return nil
 }
 
 var prFmt = `title=%q body=%q head=%s base=%s labels=%v assignees=%v`
