@@ -31,7 +31,6 @@ presubmits:
   - name: pull-tichi-unit-test
     decorate: true
     always_run: true
-    run_if_changed: "\\.(go|mod)$"
     branches:
       - ^master$
     spec:
@@ -64,7 +63,6 @@ presubmits:
     always_run: true
     branches:
       - ^master$
-    run_if_changed: "^web/"
     spec:
       containers:
         - image: node:10
@@ -81,7 +79,6 @@ presubmits:
     always_run: true
     branches:
       - ^master$
-    run_if_changed: "^web/"
     spec:
       containers:
         - image: node:12
@@ -98,7 +95,6 @@ presubmits:
     always_run: true
     branches:
       - ^master$
-    run_if_changed: "^web/"
     spec:
       containers:
         - image: node:14
