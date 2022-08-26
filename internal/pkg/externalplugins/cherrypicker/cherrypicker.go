@@ -34,10 +34,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/utils"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
@@ -47,6 +44,9 @@ import (
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
 	"k8s.io/test-infra/prow/plugins"
 	"k8s.io/utils/exec"
+
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/utils"
 )
 
 const (
@@ -253,7 +253,7 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 	}
 
 	if cherryPickInviteRe.MatchString(ic.Comment.Body) {
-		return s.inviteIfNotCollaborator(ic.Repo.Owner.Name, ic.Repo.Name, ic.Comment.User.Login, ic.Issue.Number)
+		return s.inviteCollaborator(ic.Repo.Owner.Name, ic.Repo.Name, ic.Comment.User.Login, ic.Issue.Number)
 	}
 
 	return s.handleIssueCherryPickComment(l, ic)
@@ -823,41 +823,6 @@ func (s *Server) getPatch(org, repo, targetBranch string, num int) (string, erro
 		return "", err
 	}
 	return localPath, nil
-}
-
-func (s *Server) inviteIfNotCollaborator(org, repo, username string, prNum int) error {
-	log := s.Log.WithFields(logrus.Fields{"org": org, "repo": repo, "prNum": prNum})
-
-	// already collaborator
-	if ok, err := s.GitHubClient.IsCollaborator(org, repo, username); err != nil {
-		log.Error(err)
-		return err
-	} else if ok {
-		comment := fmt.Sprintf("@%s you're already a collaborator in bot's repo.", username)
-		if err := s.GitHubClient.CreateComment(org, repo, prNum, comment); err != nil {
-			s.Log.WithError(err).Error("create comment failed")
-			return err
-		}
-	}
-	err := s.GitHubClient.AddCollaborator(org, repo, username, collaboratorPermission)
-	if err != nil {
-		comment := fmt.Sprintf("@%s failed when inviting you as a collaborator in bot's repo.", username)
-		if err := s.GitHubClient.CreateComment(org, repo, prNum, comment); err != nil {
-			s.Log.WithError(err).Error("create comment failed")
-			return err
-		}
-		return errors.Wrap(err, "invite failed")
-	}
-
-	// notice user
-	invitationURL := fmt.Sprintf("%s/%s/%s/invitations", s.GitHubURL, org, repo)
-	comment := fmt.Sprintf(cherryPickInviteNotifyMsgTpl, username, cherryPickInviteExample, invitationURL)
-	if err := s.GitHubClient.CreateComment(org, repo, prNum, comment); err != nil {
-		s.Log.WithError(err).Error("create comment failed")
-		return err
-	}
-
-	return nil
 }
 
 func normalize(input string) string {

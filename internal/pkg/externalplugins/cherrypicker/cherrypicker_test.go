@@ -24,21 +24,22 @@ package cherrypicker
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
 	"testing"
 
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/git/localgit"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/plugins"
+
+	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
 var commentFormat = "%s/%s#%d %s"
@@ -418,115 +419,6 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 	}
 	if len(seenBranches) != len(expectedBranches) {
 		t.Fatalf("Expected to see PRs for %d branches, got %d (%v)", len(expectedBranches), len(seenBranches), seenBranches)
-	}
-}
-
-func TestInviteIC(t *testing.T) {
-	lg, c, err := localgit.NewV2()
-	if err != nil {
-		t.Fatalf("Making localgit: %v", err)
-	}
-	defer func() {
-		if err := lg.Clean(); err != nil {
-			t.Errorf("Cleaning up localgit: %v", err)
-		}
-		if err := c.Clean(); err != nil {
-			t.Errorf("Cleaning up client: %v", err)
-		}
-	}()
-	if err := lg.MakeFakeRepo("foo", "bar"); err != nil {
-		t.Fatalf("Making fake repo: %v", err)
-	}
-	if err := lg.AddCommit("foo", "bar", initialFiles); err != nil {
-		t.Fatalf("Adding initial commit: %v", err)
-	}
-
-	expectedBranches := []string{"stage", "release-1.5"}
-	for _, branch := range expectedBranches {
-		if err := lg.CheckoutNewBranch("foo", "bar", branch); err != nil {
-			t.Fatalf("Checking out pull branch: %v", err)
-		}
-	}
-
-	ghc := &fghc{
-		pr: &github.PullRequest{
-			Base: github.PullRequestBranch{
-				Ref: "master",
-			},
-			Number: 2,
-			Merged: true,
-			Title:  "This is a fix for X",
-			Body:   body,
-			Assignees: []github.User{
-				{
-					Login: "user2",
-				},
-			},
-		},
-		isMember: true,
-		patch:    patch,
-	}
-
-	ic := github.IssueCommentEvent{
-		Action: github.IssueCommentActionCreated,
-		Repo: github.Repo{
-			Owner: github.User{
-				Login: "foo",
-			},
-			Name:     "bar",
-			FullName: "foo/bar",
-		},
-		Issue: github.Issue{
-			Number:      2,
-			State:       "closed",
-			PullRequest: &struct{}{},
-		},
-		Comment: github.IssueComment{
-			User: github.User{
-				Login: "wiseguy",
-			},
-			Body: "/cherry-pick-invite",
-		},
-	}
-
-	botUser := &github.UserData{Login: "ci-robot", Email: "ci-robot@users.noreply.github.com"}
-	getSecret := func() []byte {
-		return []byte("sha=abcdefg")
-	}
-
-	getGithubToken := func() []byte {
-		return []byte("token")
-	}
-
-	cfg := &externalplugins.Configuration{}
-	cfg.TiCommunityCherrypicker = []externalplugins.TiCommunityCherrypicker{
-		{
-			Repos:             []string{"foo/bar"},
-			LabelPrefix:       "cherrypick/",
-			PickedLabelPrefix: "type/cherrypick-for-",
-		},
-	}
-	ca := &externalplugins.ConfigAgent{}
-	ca.Set(cfg)
-
-	s := &Server{
-		BotUser:                botUser,
-		GitClient:              c,
-		ConfigAgent:            ca,
-		Push:                   func(forkName, newBranch string, force bool) error { return nil },
-		GitHubClient:           ghc,
-		WebhookSecretGenerator: getSecret,
-		GitHubTokenGenerator:   getGithubToken,
-		Log:                    logrus.StandardLogger().WithField("client", "cherrypicker"),
-		Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
-	}
-
-	if err := s.handleIssueComment(logrus.NewEntry(logrus.StandardLogger()), ic); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if !sets.NewString(ghc.collaborators...).Has(ic.Comment.User.Login) {
-		t.Fatalf("Expected collaborators has %s, got %v", ic.Comment.User.Login, ghc.collaborators)
 	}
 }
 
@@ -1618,12 +1510,12 @@ foo/bar:
 		return []byte(repoLevelSec)
 	}
 
-	lgtmComment, err := ioutil.ReadFile("../../../../test/testdata/lgtm_comment.json")
+	lgtmComment, err := os.ReadFile("../../../../test/testdata/lgtm_comment.json")
 	if err != nil {
 		t.Fatalf("read lgtm comment file failed: %v", err)
 	}
 
-	openedPR, err := ioutil.ReadFile("../../../../test/testdata/opened_pr.json")
+	openedPR, err := os.ReadFile("../../../../test/testdata/opened_pr.json")
 	if err != nil {
 		t.Fatalf("read opened PR file failed: %v", err)
 	}
