@@ -215,7 +215,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error {
-	l := s.Log.WithFields(logrus.Fields{
+	l := logrus.WithFields(logrus.Fields{
 		"event-type":     eventType,
 		github.EventGUID: eventGUID,
 	})
@@ -227,7 +227,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 		}
 		go func() {
 			if err := s.handleIssueComment(l, ic); err != nil {
-				l.WithError(err).Info("Cherry-pick failed.")
+				s.Log.WithError(err).WithFields(l.Data).Info("Cherry-pick failed.")
 			}
 		}()
 	case "pull_request":
@@ -237,7 +237,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 		}
 		go func() {
 			if err := s.handlePullRequest(l, pr); err != nil {
-				l.WithError(err).Info("Cherry-pick failed.")
+				s.Log.WithError(err).WithFields(l.Data).Info("Cherry-pick failed.")
 			}
 		}()
 	default:
@@ -357,9 +357,9 @@ func (s *Server) handleIssueCherryPickComment(l *logrus.Entry, ic github.IssueCo
 	return nil
 }
 
-func (s *Server) handlePullRequest(log *logrus.Entry, event github.PullRequestEvent) error {
+func (s *Server) handlePullRequest(log *logrus.Entry, pre github.PullRequestEvent) error {
 	// Only consider merged PRs.
-	pr := event.PullRequest
+	pr := pre.PullRequest
 	if !pr.Merged || pr.MergeSHA == nil {
 		return nil
 	}
@@ -376,7 +376,7 @@ func (s *Server) handlePullRequest(log *logrus.Entry, event github.PullRequestEv
 		requestorToComments[pr.User.Login] = make(map[string]*github.IssueComment)
 	}
 
-	switch event.Action {
+	switch pre.Action {
 	// Considering close event.
 	case github.PullRequestActionClosed:
 		{
@@ -421,9 +421,9 @@ func (s *Server) handlePullRequest(log *logrus.Entry, event github.PullRequestEv
 	// Considering labeled event(Processes only the label that was added).
 	case github.PullRequestActionLabeled:
 		{
-			if strings.HasPrefix(event.Label.Name, opts.LabelPrefix) {
+			if strings.HasPrefix(pre.Label.Name, opts.LabelPrefix) {
 				// leave this nil which indicates a label-initiated cherry-pick.
-				requestorToComments[pr.User.Login][event.Label.Name[len(opts.LabelPrefix):]] = nil
+				requestorToComments[pr.User.Login][pre.Label.Name[len(opts.LabelPrefix):]] = nil
 			} else {
 				return nil
 			}
@@ -711,7 +711,7 @@ func (s *Server) createPullRequest(num int, body string, newBranch string,
 	logger *logrus.Entry,
 	comment *github.IssueComment,
 	opts *tiexternalplugins.TiCommunityCherrypicker,
-	trunkPR *github.PullRequest, requestor string,
+	pr *github.PullRequest, requestor string,
 ) error {
 	cherryPickBody := createCherryPickBody(num, body)
 	head := fmt.Sprintf("%s:%s", s.BotUser.Login, newBranch)
@@ -733,7 +733,7 @@ func (s *Server) createPullRequest(num int, body string, newBranch string,
 	// Copying original pull request labels.
 	excludeLabelsSet := sets.NewString(opts.ExcludeLabels...)
 	labels := sets.NewString()
-	for _, label := range trunkPR.Labels {
+	for _, label := range pr.Labels {
 		if !excludeLabelsSet.Has(label.Name) && !strings.HasPrefix(label.Name, opts.LabelPrefix) {
 			labels.Insert(label.Name)
 		}
@@ -751,11 +751,12 @@ func (s *Server) createPullRequest(num int, body string, newBranch string,
 
 	// Assign pull request to requestor.
 	if err := s.GitHubClient.AssignIssue(org, repo, createdNum, []string{requestor}); err != nil {
-		// Ignore returning errors on failure to assign as this is most likely
-		// due to users not being members of the org so that they can't be assigned in PRs.
 		logger.WithError(err).Warn("failed to assign to new PR")
+		// Ignore returning errors on failure to assign as this is most likely
+		// due to users not being members of the org so that they can't be assigned
+		// in PRs.
+		return nil
 	}
-
 	return nil
 }
 
