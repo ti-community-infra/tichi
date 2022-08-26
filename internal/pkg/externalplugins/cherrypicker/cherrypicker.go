@@ -226,7 +226,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			return err
 		}
 		go func() {
-			if err := s.handleIssueComment(l, ic); err != nil {
+			if err := s.handleIssueComment(l, &ic); err != nil {
 				s.Log.WithError(err).WithFields(l.Data).Info("Cherry-pick failed.")
 			}
 		}()
@@ -236,7 +236,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			return err
 		}
 		go func() {
-			if err := s.handlePullRequest(l, pr); err != nil {
+			if err := s.handlePullRequest(l, &pr); err != nil {
 				s.Log.WithError(err).WithFields(l.Data).Info("Cherry-pick failed.")
 			}
 		}()
@@ -246,20 +246,20 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 	return nil
 }
 
-func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent) error {
+func (s *Server) handleIssueComment(l *logrus.Entry, ic *github.IssueCommentEvent) error {
 	// Only consider new comments in PRs.
 	if !ic.Issue.IsPullRequest() || ic.Action != github.IssueCommentActionCreated {
 		return nil
 	}
 
 	if cherryPickInviteRe.MatchString(ic.Comment.Body) {
-		return s.inviteCollaborator(ic.Repo.Owner.Name, ic.Repo.Name, ic.Comment.User.Login, ic.Issue.Number)
+		return s.inviteCollaborator(ic)
 	}
 
 	return s.handleIssueCherryPickComment(l, ic)
 }
 
-func (s *Server) handleIssueCherryPickComment(l *logrus.Entry, ic github.IssueCommentEvent) error {
+func (s *Server) handleIssueCherryPickComment(l *logrus.Entry, ic *github.IssueCommentEvent) error {
 	org := ic.Repo.Owner.Login
 	repo := ic.Repo.Name
 	num := ic.Issue.Number
@@ -357,7 +357,7 @@ func (s *Server) handleIssueCherryPickComment(l *logrus.Entry, ic github.IssueCo
 	return nil
 }
 
-func (s *Server) handlePullRequest(log *logrus.Entry, pre github.PullRequestEvent) error {
+func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEvent) error {
 	// Only consider merged PRs.
 	pr := pre.PullRequest
 	if !pr.Merged || pr.MergeSHA == nil {
@@ -492,13 +492,25 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre github.PullRequestEven
 }
 
 // TODO: refactoring to reduce complexity.
+//
+//nolint:gocyclo
 func (s *Server) handle(logger *logrus.Entry, requestor string,
 	comment *github.IssueComment, org, repo, targetBranch string, pr *github.PullRequest) error {
 	num := pr.Number
 	title := pr.Title
 	body := pr.Body
-	lock := s.newCherryPickLock(org, repo, targetBranch, pr.Number)
-
+	var lock *sync.Mutex
+	func() {
+		s.mapLock.Lock()
+		defer s.mapLock.Unlock()
+		if _, ok := s.lockMap[cherryPickRequest{org, repo, num, targetBranch}]; !ok {
+			if s.lockMap == nil {
+				s.lockMap = map[cherryPickRequest]*sync.Mutex{}
+			}
+			s.lockMap[cherryPickRequest{org, repo, num, targetBranch}] = &sync.Mutex{}
+		}
+		lock = s.lockMap[cherryPickRequest{org, repo, num, targetBranch}]
+	}()
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -575,12 +587,86 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	title = fmt.Sprintf("%s (#%d)", title, num)
 
 	// Try git am --> 3way localPath.
-	if amErr := r.Am(localPath); amErr != nil {
-		logger.WithError(amErr).Warnf("Failed to apply #%d on top of target branch %q.", num, targetBranch)
-		if err := s.cherryPickCommit(
-			logger, amErr, targetBranch, opts, org, repo, title, comment, requestor, r, pr,
-		); err != nil {
-			return err
+	if err := r.Am(localPath); err != nil {
+		var errs []error
+		logger.WithError(err).Warnf("Failed to apply #%d on top of target branch %q.", num, targetBranch)
+		if opts.IssueOnConflict {
+			resp := fmt.Sprintf("manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```",
+				num, targetBranch, err)
+			if err := s.createIssue(logger, org, repo, title, resp, num, comment, nil, []string{requestor}); err != nil {
+				errs = append(errs, fmt.Errorf("failed to create issue: %w", err))
+			} else {
+				// Return after issue created.
+				return nil
+			}
+		} else {
+			// Try to fetch upstream.
+			ex := exec.New()
+			dir := r.Directory()
+
+			// Warning: Do not output url with authorization information to the log and response.
+			upstreamURL := fmt.Sprintf("%s/%s", s.GitHubURL, pr.Base.Repo.FullName)
+			upstreamURLWithAuth, err := url.Parse(upstreamURL)
+			if err != nil {
+				logger.WithError(err).Errorf("Failed to remote parse url: %s", upstreamURL)
+				errs = append(errs, fmt.Errorf("failed to parse remote url: %s", upstreamURL))
+			}
+			upstreamURLWithAuth.User = url.UserPassword(s.BotUser.Login, string(s.GitHubTokenGenerator()))
+
+			// Add the upstream remote.
+			addUpstreamRemote := ex.Command("git", "remote", "add", upstreamRemoteName, upstreamURLWithAuth.String())
+			addUpstreamRemote.SetDir(dir)
+			out, err := addUpstreamRemote.CombinedOutput()
+			if err != nil {
+				logger.WithError(err).Warnf("Failed to git remote add %s and the output look like: %s.", upstreamURL, out)
+				errs = append(errs, fmt.Errorf("failed to git remote add %s %s", upstreamRemoteName, upstreamURL))
+			}
+
+			// Fetch the upstream remote.
+			fetchUpstreamRemote := ex.Command("git", "fetch", upstreamRemoteName)
+			fetchUpstreamRemote.SetDir(dir)
+			out, err = fetchUpstreamRemote.CombinedOutput()
+			if err != nil {
+				logger.WithError(err).Warnf("Failed to fetch %s remote and the output look like: %s.", upstreamRemoteName, out)
+				errs = append(errs, fmt.Errorf("failed to git fetch %s", upstreamRemoteName))
+			}
+
+			//  Try git cherry-pick.
+			cherrypick := ex.Command("git", "cherry-pick", "-m", "1", *pr.MergeSHA)
+			cherrypick.SetDir(dir)
+			out, err = cherrypick.CombinedOutput()
+			if err != nil {
+				logger.WithError(err).Warnf("Failed to cherrypick and the output look like: %s.", out)
+				// Try git add *.
+				add := ex.Command("git", "add", "*")
+				add.SetDir(dir)
+				out, err = add.CombinedOutput()
+				if err != nil {
+					logger.WithError(err).Warnf("Failed to git add conflicting files and the output look like: %s.", out)
+					errs = append(errs, fmt.Errorf("failed to git add conflicting files: %w", err))
+				}
+
+				// Try commit with sign off.
+				commitMessage := createCherryPickCommitMessage(
+					s.GitHubClient, s.Log, opts.CopyIssueNumbersFromSquashedCommit, org, repo, num, pr.MergeSHA,
+				)
+				commit := ex.Command("git", "commit", "-s", "-m", commitMessage)
+				commit.SetDir(dir)
+				out, err = commit.CombinedOutput()
+				if err != nil {
+					logger.WithError(err).Warnf("Failed to git commit and the output look like: %s", out)
+					errs = append(errs, fmt.Errorf("failed to git commit: %w", err))
+				}
+			}
+		}
+
+		if utilerrors.NewAggregate(errs) != nil {
+			resp := fmt.Sprintf("failed to apply #%d on top of branch %q:\n```\n%v\n```",
+				num, targetBranch, utilerrors.NewAggregate(errs).Error())
+			if err := s.createComment(logger, org, repo, num, comment, resp); err != nil {
+				errs = append(errs, fmt.Errorf("failed to create comment: %w", err))
+			}
+			return utilerrors.NewAggregate(errs)
 		}
 	}
 
@@ -596,127 +682,9 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		return utilerrors.NewAggregate([]error{err, s.createComment(logger, org, repo, num, comment, resp)})
 	}
 
-	return s.createPullRequest(num, body, newBranch, org, repo, title, targetBranch, logger, comment, opts, pr, requestor)
-}
-
-func (s *Server) newCherryPickLock(org, repo, targetBranch string, num int) *sync.Mutex {
-	s.mapLock.Lock()
-	defer s.mapLock.Unlock()
-
-	lock, ok := s.lockMap[cherryPickRequest{org, repo, num, targetBranch}]
-	if !ok {
-		if s.lockMap == nil {
-			s.lockMap = map[cherryPickRequest]*sync.Mutex{}
-		}
-		lock = &sync.Mutex{}
-		s.lockMap[cherryPickRequest{org, repo, num, targetBranch}] = lock
-	}
-
-	return lock
-}
-
-// TODO(wuhuizuo): reduce param count
-func (s *Server) cherryPickCommit(logger *logrus.Entry, amErr error,
-	targetBranch string, opts *tiexternalplugins.TiCommunityCherrypicker,
-	org string, repo string, title string, comment *github.IssueComment,
-	requestor string, r git.RepoClient, pr *github.PullRequest) error {
-	var errs []error
-	if opts.IssueOnConflict {
-		const respTpl = "manual cherrypick required.\n\nFailed to apply #%d on top of branch %q:\n```\n%v\n```"
-		resp := fmt.Sprintf(respTpl, pr.Number, targetBranch, amErr)
-
-		if err := s.createIssue(logger, org, repo, title, resp, pr.Number, comment, nil, []string{requestor}); err != nil {
-			errs = append(errs, fmt.Errorf("failed to create issue: %w", err))
-		} else {
-			// Return after issue created.
-			return nil
-		}
-	} else {
-		// Try to fetch upstream.
-		ex := exec.New()
-		dir := r.Directory()
-
-		// Warning: Do not output url with authorization information to the log and response.
-		upstreamURL := fmt.Sprintf("%s/%s", s.GitHubURL, pr.Base.Repo.FullName)
-		upstreamURLWithAuth, err := url.Parse(upstreamURL)
-		if err != nil {
-			logger.WithError(err).Errorf("Failed to remote parse url: %s", upstreamURL)
-			errs = append(errs, fmt.Errorf("failed to parse remote url: %s", upstreamURL))
-		}
-		upstreamURLWithAuth.User = url.UserPassword(s.BotUser.Login, string(s.GitHubTokenGenerator()))
-
-		// Add the upstream remote.
-		addUpstreamRemote := ex.Command("git", "remote", "add", upstreamRemoteName, upstreamURLWithAuth.String())
-		addUpstreamRemote.SetDir(dir)
-		out, err := addUpstreamRemote.CombinedOutput()
-		if err != nil {
-			logger.WithError(err).Warnf("Failed to git remote add %s and the output look like: %s.", upstreamURL, out)
-			errs = append(errs, fmt.Errorf("failed to git remote add %s %s", upstreamRemoteName, upstreamURL))
-		}
-
-		// Fetch the upstream remote.
-		fetchUpstreamRemote := ex.Command("git", "fetch", upstreamRemoteName)
-		fetchUpstreamRemote.SetDir(dir)
-		out, err = fetchUpstreamRemote.CombinedOutput()
-		if err != nil {
-			logger.WithError(err).Warnf("Failed to fetch %s remote and the output look like: %s.", upstreamRemoteName, out)
-			errs = append(errs, fmt.Errorf("failed to git fetch %s", upstreamRemoteName))
-		}
-
-		//  Try git cherry-pick.
-		cherrypick := ex.Command("git", "cherry-pick", "-m", "1", *pr.MergeSHA)
-		cherrypick.SetDir(dir)
-		out, err = cherrypick.CombinedOutput()
-		if err != nil {
-			logger.WithError(err).Warnf("Failed to cherrypick and the output look like: %s.", out)
-			// Try git add *.
-			add := ex.Command("git", "add", "*")
-			add.SetDir(dir)
-			out, err = add.CombinedOutput()
-			if err != nil {
-				logger.WithError(err).Warnf("Failed to git add conflicting files and the output look like: %s.", out)
-				errs = append(errs, fmt.Errorf("failed to git add conflicting files: %w", err))
-			}
-
-			// Try commit with sign off.
-			commitMessage := createCherryPickCommitMessage(
-				s.GitHubClient, s.Log, opts.CopyIssueNumbersFromSquashedCommit, org, repo, pr.Number, pr.MergeSHA,
-			)
-			commit := ex.Command("git", "commit", "-s", "-m", commitMessage)
-			commit.SetDir(dir)
-			out, err = commit.CombinedOutput()
-			if err != nil {
-				logger.WithError(err).Warnf("Failed to git commit and the output look like: %s", out)
-				errs = append(errs, fmt.Errorf("failed to git commit: %w", err))
-			}
-		}
-	}
-
-	if utilerrors.NewAggregate(errs) != nil {
-		resp := fmt.Sprintf("failed to apply #%d on top of branch %q:\n```\n%v\n```",
-			pr.Number, targetBranch, utilerrors.NewAggregate(errs).Error())
-		if err := s.createComment(logger, org, repo, pr.Number, comment, resp); err != nil {
-			errs = append(errs, fmt.Errorf("failed to create comment: %w", err))
-		}
-		return utilerrors.NewAggregate(errs)
-	}
-
-	return nil
-}
-
-// TODO(wuhuizuo): reduce param count
-func (s *Server) createPullRequest(num int, body string, newBranch string,
-	org string, repo string,
-	title string, targetBranch string,
-	logger *logrus.Entry,
-	comment *github.IssueComment,
-	opts *tiexternalplugins.TiCommunityCherrypicker,
-	pr *github.PullRequest, requestor string,
-) error {
+	// Open a PR in GitHub.
 	cherryPickBody := createCherryPickBody(num, body)
 	head := fmt.Sprintf("%s:%s", s.BotUser.Login, newBranch)
-
-	// open a PR in GitHub.
 	createdNum, err := s.GitHubClient.CreatePullRequest(org, repo, title, cherryPickBody, head, targetBranch, true)
 	if err != nil {
 		logger.WithError(err).Warn("failed to create new pull request")

@@ -152,7 +152,7 @@ func TestInviteIC(t *testing.T) {
 			}
 
 			if err := s.handleIssueComment(logrus.NewEntry(logrus.StandardLogger()),
-				ic); (err != nil) != tt.wantError {
+				&ic); (err != nil) != tt.wantError {
 				t.Fatalf("got error: %v, expected error: %v", err, tt.wantError)
 			}
 

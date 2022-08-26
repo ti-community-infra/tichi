@@ -383,7 +383,7 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 		Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
 	}
 
-	if err := s.handleIssueCherryPickComment(logrus.NewEntry(logrus.StandardLogger()), ic); err != nil {
+	if err := s.handleIssueCherryPickComment(logrus.NewEntry(logrus.StandardLogger()), &ic); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -565,7 +565,7 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 				Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
 			}
 
-			if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), pr); err != nil {
+			if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), &pr); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
@@ -775,7 +775,7 @@ func testCherryPickPRWithComment(clients localgit.Clients, t *testing.T) {
 		Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
 	}
 
-	if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), pr); err != nil {
+	if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), &pr); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -853,8 +853,8 @@ func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 		}
 	}
 
-	pr := func(label github.Label) github.PullRequestEvent {
-		return github.PullRequestEvent{
+	pr := func(label github.Label) *github.PullRequestEvent {
+		return &github.PullRequestEvent{
 			Action: github.PullRequestActionLabeled,
 			PullRequest: github.PullRequest{
 				User: github.User{
