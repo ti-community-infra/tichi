@@ -1,7 +1,6 @@
 package cherrypicker
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -12,22 +11,6 @@ import (
 	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
-func (f *fghc) IsCollaborator(org, repo, user string) (bool, error) {
-	if user == "a_user_that_will_make_a_fake_error_when_judge" {
-		return false, errors.New("fake error")
-	}
-
-	return sets.NewString(f.collaborators...).Has(user), nil
-}
-
-func (f *fghc) AddCollaborator(org, repo, user, permission string) error {
-	if user == "a_user_that_will_make_a_fake_error_when_add" {
-		return errors.New("fake error")
-	}
-
-	f.collaborators = append(f.collaborators, user)
-	return nil
-}
 func TestInviteIC(t *testing.T) {
 	lg, c, err := localgit.NewV2()
 	if err != nil {
@@ -77,36 +60,84 @@ func TestInviteIC(t *testing.T) {
 
 	tests := []struct {
 		name          string
+		members       []string
+		isMember      bool
 		collaborators []string
 		commentUser   string
 		wantError     bool
 		wantHad       bool
 	}{
 		{
-			name:          "invite when was a collabtor",
+			name:          "invite when he is a collabtor",
 			collaborators: []string{"wiseguy"},
 			commentUser:   "wiseguy",
+			isMember:      false,
 			wantError:     false,
 			wantHad:       true,
 		},
 		{
-			name:          "invite when not a collabtor",
-			collaborators: nil,
-			commentUser:   "wiseguy",
-			wantError:     false,
+			name:          "invite when he is a collabtor, but comment failed",
+			collaborators: []string{patternErrWhenCreateComment},
+			commentUser:   patternErrWhenCreateComment,
+			isMember:      false,
+			wantError:     true,
 			wantHad:       true,
+		},
+		{
+			name:        "invite when he is not a collabtor, but a org member",
+			commentUser: "wiseguy",
+			wantError:   false,
+			isMember:    true,
+			wantHad:     true,
+		},
+		{
+			name:        "invite when he is not a collabtor, but a org member, notify comment failed",
+			commentUser: patternErrWhenCreateComment,
+			wantError:   true,
+			isMember:    true,
+			wantHad:     true,
+		},
+		{
+			name:        "invite when he is not a collabtor, error when judge member",
+			commentUser: patternErrWhenJudgeMember,
+			wantError:   true,
+			isMember:    false,
+			wantHad:     false,
+		},
+		{
+			name:        "invite when he is not a member of our ORG",
+			isMember:    false,
+			commentUser: "wiseguy",
+			wantError:   false,
+			wantHad:     false,
+		},
+		{
+			name:        "invite when he is not a member of our ORG, error when comment",
+			isMember:    false,
+			commentUser: patternErrWhenCreateComment,
+			wantError:   true,
+			wantHad:     false,
 		},
 		{
 			name:          "invite error when judge",
 			collaborators: nil,
-			commentUser:   "a_user_that_will_make_a_fake_error_when_judge",
+			commentUser:   patternErrWhenIsCollaborator,
 			wantError:     true,
 			wantHad:       false,
 		},
 		{
 			name:          "invite error when add",
 			collaborators: nil,
-			commentUser:   "a_user_that_will_make_a_fake_error_when_add",
+			isMember:      true,
+			commentUser:   patternErrWhenAddCollaborator,
+			wantError:     true,
+			wantHad:       false,
+		},
+		{
+			name:          "invite error when add, and comment failed",
+			collaborators: nil,
+			isMember:      true,
+			commentUser:   patternErrWhenAddCollaborator + patternErrWhenCreateComment,
 			wantError:     true,
 			wantHad:       false,
 		},
@@ -122,7 +153,8 @@ func TestInviteIC(t *testing.T) {
 					Body:      body,
 					Assignees: []github.User{{Login: "user2"}},
 				},
-				isMember:      true,
+				isMember:      tt.isMember,
+				members:       tt.members,
 				patch:         patch,
 				collaborators: tt.collaborators,
 			}
