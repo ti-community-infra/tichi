@@ -1,4 +1,4 @@
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   namespace: prow
@@ -14,25 +14,40 @@ spec:
       http:
         paths:
           - path: /*
+            pathType: ImplementationSpecific
             backend:
-              serviceName: deck
-              servicePort: 80
+              service:
+                name: deck
+                port:
+                  number: 80
           - path: /hook
+            pathType: ImplementationSpecific
             backend:
-              serviceName: hook
-              servicePort: 8888
+              service:
+                name: hook
+                port:
+                  number: 8888
           - path: /ti-community-owners/*
+            pathType: ImplementationSpecific
             backend:
-              serviceName: ti-community-owners
-              servicePort: 80
+              service:
+                name: ti-community-owners
+                port:
+                  number: 80
           - path: /tichi
+            pathType: ImplementationSpecific
             backend:
-              serviceName: tichi-web
-              servicePort: 80
+              service:
+                name: tichi-web
+                port: 
+                  number: 80
           - path: /tichi/*
+            pathType: ImplementationSpecific
             backend:
-              serviceName: tichi-web
-              servicePort: 80
+              service:
+                name: tichi-web
+                port: 
+                  number: 80
   tls:
     - hosts:
         - "*.tidb.io"
