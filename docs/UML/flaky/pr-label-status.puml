@@ -1,0 +1,14 @@
+@startuml pr label status
+title black house PR label status
+
+[*] -> NotLabeled: create
+NotLabeled: No blocked labels
+NotLabeled --> Labeled: pr open/update events.
+
+Labeled: have blocked labels
+Labeled --> NotLabeled: closed on flaky issue.
+Labeled --> NotLabeled: remove assignee on flaky issue.
+NotLabeled --> Labeled: add assignee on flaky issue.
+Labeled --> NotLabeled: associate with flaky issues.
+NotLabeled -> [*]: merged or closed.
+@enduml

@@ -14,6 +14,7 @@
     - [ti-community-cherrypicker](en/plugins/cherrypicker.md)
     - [ti-community-format-checker](en/plugins/format-checker.md)
     - [ti-community-issue-triage](en/plugins/issue-triage.md)
+    - [ti-community-flaky](en/plugins/flaky.md)
     - [needs-rebase](en/plugins/needs-rebase.md)
   - Internal
     - [require-matching-label](en/plugins/require-matching-label.md)

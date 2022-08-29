@@ -1,0 +1,15 @@
+@startuml PR flow
+title black house PR flow
+
+:Receive a PR event;
+if (opened or update action?) then(yes)
+  if (Has flaky labels or issue links?) then (<color:green>yes)
+    #palegreen:Comment on PR to thanks to solve the flaky tests.;
+  else (no)
+    :Get flaky issues of the PR creator;
+    if (Has issues?) then:
+      if (Any created before 1 week?) then (yes);
+        #red:Label the PR with blocked label.;
+      else (no)
+        #orange:Comment on PR about your flaky issue list, tip to fix them on time;
+@enduml

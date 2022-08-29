@@ -1,0 +1,31 @@
+@startuml Issule flow
+title Black house issue flow
+
+:Receive a issue event;
+if (add assignee | add flaky label | reopen action?) then(yes)
+  if (issue has flakey label?) then(has)
+    :Get flaky issues of the assignee that created before 1 week;
+    if (has items?) then(yes)
+      :Get PR list created by the issue assignee:no flaky or blocked labeled ones;
+      if (has items?) then(yes)
+        #red:Update opened PRs(add blocked label);
+        #Orange:Comment it with flaky issues;
+      endif
+    endif
+  endif
+
+elseif (remove assignee | emove flaky label | close issue action?) then(yes)
+  if (issue has flakey label?) then(has)
+    :Get flaky issues of the removed assignee or closed assignees that created before 1 week;
+    if (none?) then(yes)
+      :Get PR list created by the issue assignee that has block labels;
+      if (has items?) then(yes)
+        #PaleGreen:Update opened PRs(delete blocked label);
+        #GreenYellow:Comment it with congratulation.;
+      endif
+    endif
+  endif
+endif
+
+end
+@enduml
