@@ -55,6 +55,7 @@ type Configuration struct {
 	TiCommunityCherrypicker  []TiCommunityCherrypicker  `json:"ti-community-cherrypicker,omitempty"`
 	TiCommunityFormatChecker []TiCommunityFormatChecker `json:"ti-community-format-checker,omitempty"`
 	TiCommunityIssueTriage   []TiCommunityIssueTriage   `json:"ti-community-issue-triage,omitempty"`
+	TiCommunityFlaky         []TiCommunityFlaky         `json:"ti-community-flaky,omitempty"`
 }
 
 // TiCommunityLgtm specifies a configuration for a single ti community lgtm.
@@ -324,6 +325,12 @@ type TiCommunityIssueTriage struct {
 	// StatusTargetURL specify the URL of status details, and more detailed descriptions or guidelines
 	// can be added on the page targeted by the URL.
 	StatusTargetURL string `json:"status_target_url"`
+}
+
+// TiCommunityFlaky is the config for flaky plugin.
+type TiCommunityFlaky struct {
+	// Repos are either of the form org/repo or just org.
+	Repos []string `json:"repos,omitempty"`
 }
 
 // LgtmFor finds the Lgtm for a repo, if one exists
