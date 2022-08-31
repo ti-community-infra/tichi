@@ -586,7 +586,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	// Title for GitHub issue/PR.
 	title = fmt.Sprintf("%s (#%d)", title, num)
 
-	// Try git am --> 3way localPath.
+	// Try git am --3way localPath.
 	if err := r.Am(localPath); err != nil {
 		var errs []error
 		logger.WithError(err).Warnf("Failed to apply #%d on top of target branch %q.", num, targetBranch)

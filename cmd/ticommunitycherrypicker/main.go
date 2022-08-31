@@ -110,15 +110,16 @@ func main() {
 		log.WithError(err).Fatal("Error listing bot repositories.")
 	}
 
+	tokenGenerator := secretAgent.GetTokenGenerator(o.github.TokenPath)
 	server := &cherrypicker.Server{
 		WebhookSecretGenerator: secretAgent.GetTokenGenerator(o.webhookSecretFile),
-		GitHubTokenGenerator:   secretAgent.GetTokenGenerator(o.github.TokenPath),
+		GitHubTokenGenerator:   tokenGenerator,
 		BotUser:                botUser,
 		Email:                  email,
 		ConfigAgent:            epa,
 
 		GitClient:    git.ClientFactoryFrom(gitClient),
-		GitHubClient: newExtGithubClient(githubClient),
+		GitHubClient: newExtGithubClient(githubClient, string(tokenGenerator())),
 		Log:          log,
 
 		Bare:      &http.Client{},

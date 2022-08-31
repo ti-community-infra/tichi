@@ -12,10 +12,10 @@ import (
 
 const timeoutForAddCollaborator = 5 * time.Second
 
-func newExtGithubClient(client github.Client) cherrypicker.GithubClient {
+func newExtGithubClient(client github.Client, accessToken string) cherrypicker.GithubClient {
 	ctx := context.Background()
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: "... your access token ..."},
+		&oauth2.Token{AccessToken: accessToken},
 	)
 	tc := oauth2.NewClient(ctx, ts)
 	cc := gc.NewClient(tc)
