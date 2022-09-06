@@ -142,8 +142,8 @@ func TestInviteIC(t *testing.T) {
 			wantHad:       false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
 			ghc := &fghc{
 				pr: &github.PullRequest{
 					Base:      github.PullRequestBranch{Ref: "master"},
@@ -153,10 +153,10 @@ func TestInviteIC(t *testing.T) {
 					Body:      body,
 					Assignees: []github.User{{Login: "user2"}},
 				},
-				isMember:      tt.isMember,
-				members:       tt.members,
+				isMember:      tc.isMember,
+				members:       tc.members,
 				patch:         patch,
-				collaborators: tt.collaborators,
+				collaborators: tc.collaborators,
 			}
 			ic := github.IssueCommentEvent{
 				Action: github.IssueCommentActionCreated,
@@ -167,7 +167,7 @@ func TestInviteIC(t *testing.T) {
 				},
 				Issue: github.Issue{Number: 2, State: "closed", PullRequest: &struct{}{}},
 				Comment: github.IssueComment{
-					User: github.User{Login: tt.commentUser},
+					User: github.User{Login: tc.commentUser},
 					Body: "/cherry-pick-invite",
 				},
 			}
@@ -184,15 +184,15 @@ func TestInviteIC(t *testing.T) {
 			}
 
 			if err := s.handleIssueComment(logrus.NewEntry(logrus.StandardLogger()),
-				&ic); (err != nil) != tt.wantError {
-				t.Fatalf("got error: %v, expected error: %v", err, tt.wantError)
+				&ic); (err != nil) != tc.wantError {
+				t.Fatalf("got error: %v, expected error: %v", err, tc.wantError)
 			}
 
 			hasErrTpl := "Expected collaborators contains %s, got %v"
-			if !tt.wantHad {
+			if !tc.wantHad {
 				hasErrTpl = "Expected collaborators not contains %s, got %v"
 			}
-			if sets.NewString(ghc.collaborators...).Has(ic.Comment.User.Login) != tt.wantHad {
+			if sets.NewString(ghc.collaborators...).Has(ic.Comment.User.Login) != tc.wantHad {
 				t.Fatalf(hasErrTpl, ic.Comment.User.Login, ghc.collaborators)
 			}
 		})
