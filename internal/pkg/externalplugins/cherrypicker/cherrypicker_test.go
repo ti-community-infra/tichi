@@ -206,7 +206,7 @@ func (f *fghc) IsCollaborator(org, repo, user string) (bool, error) {
 	return sets.NewString(f.collaborators...).Has(user), nil
 }
 
-func (f *fghc) AddCollaborator(org, repo, user, permission string) error {
+func (f *fghc) AddCollaborator(org, repo, user string, permission github.RepoPermissionLevel) error {
 	if strings.Contains(user, patternErrWhenAddCollaborator) {
 		return errors.New("fake error")
 	}

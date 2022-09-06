@@ -85,7 +85,8 @@ type GithubClient interface {
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
 	ListOrgMembers(org, role string) ([]github.TeamMember, error)
 	IsCollaborator(org, repo, user string) (bool, error)
-	AddCollaborator(org, repo, user, permission string) error // pull, triage, push, maintain, admin
+	// AddCollaborator invite collaborator to repo with permission(pull, triage, push, maintain, admin)
+	AddCollaborator(org, repo, user string, permission github.RepoPermissionLevel) error
 }
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.

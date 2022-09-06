@@ -36,11 +36,12 @@ type extendGithubClient struct {
 	rs *gc.RepositoriesService
 }
 
-func (c *extendGithubClient) AddCollaborator(org, repo, user, permission string) error {
+func (c *extendGithubClient) AddCollaborator(org, repo, user string,
+	permission github.RepoPermissionLevel) error {
 	ctx, cancel := context.WithTimeout(context.TODO(), timeoutForAddCollaborator)
 	defer cancel()
 
-	options := &gc.RepositoryAddCollaboratorOptions{Permission: permission}
+	options := &gc.RepositoryAddCollaboratorOptions{Permission: string(permission)}
 	_, _, err := c.rs.AddCollaborator(ctx, org, repo, user, options)
 	return err
 }
