@@ -12,13 +12,18 @@ import (
 
 const timeoutForAddCollaborator = 5 * time.Second
 
-func newExtGithubClient(client github.Client, accessToken string) cherrypicker.GithubClient {
+type oauth2TokenSource func() []byte
+
+// Token implement interface oauth2.TokenSource.
+func (o oauth2TokenSource) Token() (*oauth2.Token, error) {
+	return &oauth2.Token{AccessToken: string(o())}, nil
+}
+
+func newExtGithubClient(client github.Client, tokenGenerator oauth2TokenSource) cherrypicker.GithubClient {
 	ctx := context.Background()
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: accessToken},
-	)
-	tc := oauth2.NewClient(ctx, ts)
-	cc := gc.NewClient(tc)
+
+	ts := oauth2.ReuseTokenSource(nil, tokenGenerator)
+	cc := gc.NewClient(oauth2.NewClient(ctx, ts))
 
 	return &extendGithubClient{
 		Client: client,
