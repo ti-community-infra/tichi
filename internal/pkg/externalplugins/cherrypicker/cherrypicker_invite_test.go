@@ -68,7 +68,7 @@ func TestInviteIC(t *testing.T) {
 		wantHad       bool
 	}{
 		{
-			name:          "invite when he is a collabtor",
+			name:          "invite when he is a collaborator",
 			collaborators: []string{"wiseguy"},
 			commentUser:   "wiseguy",
 			isMember:      false,
@@ -76,7 +76,7 @@ func TestInviteIC(t *testing.T) {
 			wantHad:       true,
 		},
 		{
-			name:          "invite when he is a collabtor, but comment failed",
+			name:          "invite when he is a collaborator, but comment failed",
 			collaborators: []string{patternErrWhenCreateComment},
 			commentUser:   patternErrWhenCreateComment,
 			isMember:      false,
@@ -84,21 +84,21 @@ func TestInviteIC(t *testing.T) {
 			wantHad:       true,
 		},
 		{
-			name:        "invite when he is not a collabtor, but a org member",
+			name:        "invite when he is not a collaborator, but a org member",
 			commentUser: "wiseguy",
 			wantError:   false,
 			isMember:    true,
 			wantHad:     true,
 		},
 		{
-			name:        "invite when he is not a collabtor, but a org member, notify comment failed",
+			name:        "invite when he is not a collaborator, but a org member, notify comment failed",
 			commentUser: patternErrWhenCreateComment,
 			wantError:   true,
 			isMember:    true,
 			wantHad:     true,
 		},
 		{
-			name:        "invite when he is not a collabtor, error when judge member",
+			name:        "invite when he is not a collaborator, error when judge member",
 			commentUser: patternErrWhenJudgeMember,
 			wantError:   true,
 			isMember:    false,
