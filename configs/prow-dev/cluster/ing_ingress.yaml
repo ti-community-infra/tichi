@@ -53,6 +53,61 @@ spec:
         - "*.tidb.io"
       secretName: prow-tidb-io
 ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prow-net
+  namespace: prow
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: prow-dev-tidb-net-ip
+    kubernetes.io/ingress.class: "gce"
+    networking.gke.io/v1beta1.FrontendConfig: ingress-security-config
+    kubernetes.io/ingress.allow-http: "true"
+spec:
+  rules:
+    - host: prow-dev.tidb.net
+      http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: deck
+                port:
+                  number: 80
+          - path: /hook
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: hook
+                port:
+                  number: 8888
+          - path: /ti-community-owners/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: ti-community-owners
+                port:
+                  number: 80
+          - path: /tichi
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: tichi-web
+                port:
+                  number: 80
+          - path: /tichi/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: tichi-web
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - "*.tidb.net"
+      secretName: prow-tidb-net
+---
 apiVersion: networking.gke.io/v1beta1
 kind: FrontendConfig
 metadata:
