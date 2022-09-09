@@ -64,13 +64,24 @@ func TestInviteIC(t *testing.T) {
 		isMember      bool
 		collaborators []string
 		commentUser   string
+		commentBody   string
 		wantError     bool
 		wantHad       bool
 	}{
 		{
+			name:          "invite using invalid comment",
+			collaborators: []string{},
+			commentUser:   "wiseguy",
+			commentBody:   "/cherry-pick-wrong-invite",
+			isMember:      false,
+			wantError:     false,
+			wantHad:       false,
+		},
+		{
 			name:          "invite when he is a collaborator",
 			collaborators: []string{"wiseguy"},
 			commentUser:   "wiseguy",
+			commentBody:   "/cherry-pick-invite",
 			isMember:      false,
 			wantError:     false,
 			wantHad:       true,
@@ -79,6 +90,7 @@ func TestInviteIC(t *testing.T) {
 			name:          "invite when he is a collaborator, but comment failed",
 			collaborators: []string{patternErrWhenCreateComment},
 			commentUser:   patternErrWhenCreateComment,
+			commentBody:   "/cherry-pick-invite",
 			isMember:      false,
 			wantError:     true,
 			wantHad:       true,
@@ -86,6 +98,7 @@ func TestInviteIC(t *testing.T) {
 		{
 			name:        "invite when he is not a collaborator, but a org member",
 			commentUser: "wiseguy",
+			commentBody: "/cherry-pick-invite",
 			wantError:   false,
 			isMember:    true,
 			wantHad:     true,
@@ -93,6 +106,7 @@ func TestInviteIC(t *testing.T) {
 		{
 			name:        "invite when he is not a collaborator, but a org member, notify comment failed",
 			commentUser: patternErrWhenCreateComment,
+			commentBody: "/cherry-pick-invite",
 			wantError:   true,
 			isMember:    true,
 			wantHad:     true,
@@ -100,14 +114,24 @@ func TestInviteIC(t *testing.T) {
 		{
 			name:        "invite when he is not a collaborator, error when judge member",
 			commentUser: patternErrWhenJudgeMember,
+			commentBody: "/cherry-pick-invite",
 			wantError:   true,
 			isMember:    false,
 			wantHad:     false,
 		},
 		{
-			name:        "invite when he is not a member of our ORG",
+			name:        "invite when he is not a member of our ORG using cherry-pick-invite command",
 			isMember:    false,
 			commentUser: "wiseguy",
+			commentBody: "/cherry-pick-invite",
+			wantError:   false,
+			wantHad:     false,
+		},
+		{
+			name:        "invite when he is not a member of our ORG using cherrypick-invite command",
+			isMember:    false,
+			commentUser: "wiseguy",
+			commentBody: "/cherrypick-invite",
 			wantError:   false,
 			wantHad:     false,
 		},
@@ -115,6 +139,7 @@ func TestInviteIC(t *testing.T) {
 			name:        "invite when he is not a member of our ORG, error when comment",
 			isMember:    false,
 			commentUser: patternErrWhenCreateComment,
+			commentBody: "/cherry-pick-invite",
 			wantError:   true,
 			wantHad:     false,
 		},
@@ -122,6 +147,7 @@ func TestInviteIC(t *testing.T) {
 			name:          "invite error when judge",
 			collaborators: nil,
 			commentUser:   patternErrWhenIsCollaborator,
+			commentBody:   "/cherry-pick-invite",
 			wantError:     true,
 			wantHad:       false,
 		},
@@ -130,6 +156,7 @@ func TestInviteIC(t *testing.T) {
 			collaborators: nil,
 			isMember:      true,
 			commentUser:   patternErrWhenAddCollaborator,
+			commentBody:   "/cherry-pick-invite",
 			wantError:     true,
 			wantHad:       false,
 		},
@@ -138,6 +165,7 @@ func TestInviteIC(t *testing.T) {
 			collaborators: nil,
 			isMember:      true,
 			commentUser:   patternErrWhenAddCollaborator + patternErrWhenCreateComment,
+			commentBody:   "/cherry-pick-invite",
 			wantError:     true,
 			wantHad:       false,
 		},
@@ -168,7 +196,7 @@ func TestInviteIC(t *testing.T) {
 				Issue: github.Issue{Number: 2, State: "closed", PullRequest: &struct{}{}},
 				Comment: github.IssueComment{
 					User: github.User{Login: tc.commentUser},
-					Body: "/cherry-pick-invite",
+					Body: tc.commentBody,
 				},
 			}
 			s := &Server{
