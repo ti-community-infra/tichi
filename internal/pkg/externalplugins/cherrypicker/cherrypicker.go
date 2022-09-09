@@ -34,6 +34,7 @@ import (
 	"sync"
 	"time"
 
+	gc "github.com/google/go-github/v29/github"
 	"github.com/sirupsen/logrus"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -84,6 +85,7 @@ type GithubClient interface {
 	ListIssueComments(org, repo string, number int) ([]github.IssueComment, error)
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
 	ListOrgMembers(org, role string) ([]github.TeamMember, error)
+	ListRepoInvitations(org, repo string) ([]*gc.RepositoryInvitation, error)
 	IsCollaborator(org, repo, user string) (bool, error)
 	// AddCollaborator invite collaborator to repo with permission(pull, triage, push, maintain, admin)
 	AddCollaborator(org, repo, user string, permission github.RepoPermissionLevel) error

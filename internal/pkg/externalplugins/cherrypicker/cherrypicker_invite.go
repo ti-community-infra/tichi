@@ -23,11 +23,21 @@ func (s *Server) inviteCollaborator(ic *github.IssueCommentEvent) error {
 		log.Error(err)
 		return err
 	} else if ok {
-		comment := fmt.Sprintf("@%s you're already a collaborator in repo `%s`",
-			commentUser, forkToFullRepo)
-		if err := s.GitHubClient.CreateComment(org, repo, prNum, comment); err != nil {
-			s.Log.WithError(err).Error("create comment failed")
-			return err
+		comment := fmt.Sprintf("@%s you're already a collaborator in repo `%s`", commentUser, forkToFullRepo)
+		return s.dealGithubAPICallErr(prNum, nil, org, repo, comment)
+	}
+
+	// judge if he was already in inviting list.
+	openedInvitation, err := s.GitHubClient.ListRepoInvitations(forkToOwner, forkToRepo)
+	if err != nil {
+		s.Log.WithError(err).Error("get repo invitation failed")
+		return err
+	}
+
+	for _, i := range openedInvitation {
+		if i.Invitee.GetLogin() == commentUser {
+			s.Log.Infof("user was invited already in invitation: %s", i.GetHTMLURL())
+			return nil
 		}
 	}
 
@@ -37,32 +47,36 @@ func (s *Server) inviteCollaborator(ic *github.IssueCommentEvent) error {
 		return err
 	} else if !ok {
 		comment := fmt.Sprintf("@%s you're not a member of org `%s`", commentUser, org)
-		if err := s.GitHubClient.CreateComment(org, repo, prNum, comment); err != nil {
-			s.Log.WithError(err).Error("create comment failed")
-			return err
-		}
-
-		return nil
+		return s.dealGithubAPICallErr(prNum, nil, org, repo, comment)
 	}
 
-	err := s.GitHubClient.AddCollaborator(forkToOwner, forkToRepo, commentUser, collaboratorPermission)
-	if err != nil {
-		comment := fmt.Sprintf("@%s failed when inviting you as a collaborator in repo `%s`.",
-			commentUser, forkToFullRepo)
-		if err := s.GitHubClient.CreateComment(org, repo, prNum, comment); err != nil {
-			s.Log.WithError(err).Error("create comment failed")
-			return err
-		}
-		return errors.Wrap(err, "invite failed")
+	if err := s.GitHubClient.AddCollaborator(forkToOwner, forkToRepo,
+		commentUser, collaboratorPermission); err != nil {
+		comment := fmt.Sprintf(
+			"@%s failed when inviting you as a collaborator in repo `%s`.",
+			commentUser, forkToFullRepo,
+		)
+		return s.dealGithubAPICallErr(prNum, errors.Wrap(err, "invite failed"), org, repo, comment)
 	}
 
 	// notice user
 	invitationURL := fmt.Sprintf("%s/%s/invitations", s.GitHubURL, forkToFullRepo)
 	comment := fmt.Sprintf(cherryPickInviteNotifyMsgTpl, commentUser, cherryPickInviteExample, invitationURL)
+	return s.dealGithubAPICallErr(prNum, nil, org, repo, comment)
+}
+
+// commentErrorReason comment the logic error to pull request or issue.
+func (s *Server) dealGithubAPICallErr(prNum int, apiErr error, org, repo, comment string) error {
+	s.Log.Error(apiErr)
+
+	// send comment into PR.
 	if err := s.GitHubClient.CreateComment(org, repo, prNum, comment); err != nil {
+		// only log the error.
 		s.Log.WithError(err).Error("create comment failed")
-		return err
+		if apiErr == nil {
+			return err
+		}
 	}
 
-	return nil
+	return apiErr
 }

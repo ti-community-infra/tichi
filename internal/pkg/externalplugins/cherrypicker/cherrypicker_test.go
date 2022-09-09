@@ -32,6 +32,7 @@ import (
 	"sync"
 	"testing"
 
+	gc "github.com/google/go-github/v29/github"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
@@ -96,15 +97,16 @@ type fghc struct {
 	members  []string // first judge.
 	isMember bool     // secend judge.
 
-	patch         []byte
-	comments      []string
-	prs           []github.PullRequest
-	prComments    []github.IssueComment
-	prLabels      []github.Label
-	orgMembers    []github.TeamMember
-	issues        []github.Issue
-	commits       map[string]github.RepositoryCommit
-	collaborators []string
+	patch           []byte
+	comments        []string
+	prs             []github.PullRequest
+	prComments      []github.IssueComment
+	prLabels        []github.Label
+	orgMembers      []github.TeamMember
+	repoInvitations []*gc.RepositoryInvitation
+	issues          []github.Issue
+	commits         map[string]github.RepositoryCommit
+	collaborators   []string
 }
 
 func (f *fghc) GetSingleCommit(org, repo, sha string) (github.RepositoryCommit, error) {
@@ -213,6 +215,10 @@ func (f *fghc) AddCollaborator(org, repo, user string, permission github.RepoPer
 
 	f.collaborators = append(f.collaborators, user)
 	return nil
+}
+
+func (f *fghc) ListRepoInvitations(org, repo string) ([]*gc.RepositoryInvitation, error) {
+	return f.repoInvitations, nil
 }
 
 func prToString(pr github.PullRequest) string {

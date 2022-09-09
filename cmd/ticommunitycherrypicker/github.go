@@ -5,12 +5,16 @@ import (
 	"time"
 
 	gc "github.com/google/go-github/v29/github"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/cherrypicker"
 	"golang.org/x/oauth2"
 	"k8s.io/test-infra/prow/github"
+
+	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/cherrypicker"
 )
 
-const timeoutForAddCollaborator = 5 * time.Second
+const (
+	timeoutForAddCollaborator = 5 * time.Second
+	timeoutForListInvitations = 5 * time.Second
+)
 
 type oauth2TokenSource func() []byte
 
@@ -36,12 +40,33 @@ type extendGithubClient struct {
 	rs *gc.RepositoriesService
 }
 
-func (c *extendGithubClient) AddCollaborator(org, repo, user string,
-	permission github.RepoPermissionLevel) error {
+// AddCollaborator to repository.
+func (c *extendGithubClient) AddCollaborator(org, repo, user string, permission github.RepoPermissionLevel) error {
 	ctx, cancel := context.WithTimeout(context.TODO(), timeoutForAddCollaborator)
 	defer cancel()
 
 	options := &gc.RepositoryAddCollaboratorOptions{Permission: string(permission)}
 	_, _, err := c.rs.AddCollaborator(ctx, org, repo, user, options)
 	return err
+}
+
+// ListRepoInvitations list repository invitations.
+func (c *extendGithubClient) ListRepoInvitations(org, repo string) ([]*gc.RepositoryInvitation, error) {
+	ctx, cancel := context.WithTimeout(context.TODO(), timeoutForListInvitations)
+	defer cancel()
+
+	var invitations []*gc.RepositoryInvitation
+	for page, nextPage := 1, 0; nextPage > 0; page++ {
+		data, res, err := c.rs.ListInvitations(ctx, org, repo, &gc.ListOptions{PerPage: 100, Page: page})
+		if err != nil {
+			return nil, err
+		}
+
+		invitations = append(invitations, data...)
+		if res != nil {
+			nextPage = res.NextPage
+		}
+	}
+
+	return invitations, nil
 }
