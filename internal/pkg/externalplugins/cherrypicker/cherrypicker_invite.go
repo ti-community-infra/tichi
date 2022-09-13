@@ -41,7 +41,7 @@ func (s *Server) inviteCollaborator(ic *github.IssueCommentEvent) error {
 		}
 	}
 
-	// judge if the commenter is memmber of the ORG's member.
+	// judge if the commenter is the ORG's member.
 	if ok, err := s.GitHubClient.IsMember(org, commentUser); err != nil {
 		log.WithError(err).Error("judge org member failed")
 		return err
