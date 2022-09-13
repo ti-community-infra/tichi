@@ -56,14 +56,16 @@ func (c *extendGithubClient) ListRepoInvitations(org, repo string) ([]*gc.Reposi
 	defer cancel()
 
 	var invitations []*gc.RepositoryInvitation
-	for page, nextPage := 1, 0; nextPage > 0; page++ {
+	for page, nextPage := 1, 1; nextPage > 0; page++ {
 		data, res, err := c.rs.ListInvitations(ctx, org, repo, &gc.ListOptions{PerPage: 100, Page: page})
 		if err != nil {
 			return nil, err
 		}
 
 		invitations = append(invitations, data...)
-		if res != nil {
+		if res == nil {
+			nextPage = 0
+		} else {
 			nextPage = res.NextPage
 		}
 	}
