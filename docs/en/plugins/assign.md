@@ -21,7 +21,7 @@ No configuration
 
 ## Reference documentations
 
-- [command help](https://prow.tidb.io/plugins?repo=ti-community-infra%2Ftichi)
+- [command help](https://prow.tidb.net/plugins?repo=ti-community-infra%2Ftichi)
 - [code](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/assign)
 
 ## Q&A

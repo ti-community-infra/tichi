@@ -69,5 +69,5 @@ branch-protection:
 
 ## 参考文档
 
-- [dco doc](https://prow.tidb.io/plugins?repo=ti-community-infra%2Ftichi)
+- [dco doc](https://prow.tidb.net/plugins?repo=ti-community-infra%2Ftichi)
 - [代码实现](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/dco)

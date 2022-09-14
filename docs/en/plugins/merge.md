@@ -52,7 +52,7 @@ ti-community-merge:
       - ti-community-infra/ti-challenge-bot
       - tikv/pd
     store_tree_hash: true
-    pull_owners_endpoint: https://prow.tidb.io/ti-community-owners
+    pull_owners_endpoint: https://prow.tidb.net/ti-community-owners
   - repos:
       - tikv/community
       - pingcap/community
@@ -62,7 +62,7 @@ ti-community-merge:
 
 ## Reference Documents
 
-- [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftest-live#merge)
+- [command help](https://prow.tidb.net/command-help?repo=ti-community-infra%2Ftest-live#merge)
 - [code](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/merge)
 
 ## Q&A

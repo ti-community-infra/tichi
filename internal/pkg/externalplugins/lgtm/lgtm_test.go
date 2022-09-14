@@ -184,9 +184,9 @@ func (f *fakeGithubClient) BotUserChecker() (func(candidate string) bool, error)
 }
 
 func getNotificationMessage(reviewers []string) string {
-	ownersLink := fmt.Sprintf(ownersclient.OwnersURLFmt, "https://prow-dev.tidb.io/tichi", "org", "repo", 5)
+	ownersLink := fmt.Sprintf(ownersclient.OwnersURLFmt, "https://prow-dev.tidb.net/tichi", "org", "repo", 5)
 	message, err := getMessage(reviewers,
-		"https://prow-dev.tidb.io/command-help",
+		"https://prow-dev.tidb.net/command-help",
 		"https://book.prow.tidb.io/#/en/workflows/pr",
 		ownersLink, "org", "repo")
 
@@ -457,9 +457,9 @@ func TestLGTMFromApproveReview(t *testing.T) {
 		}
 
 		cfg := &externalplugins.Configuration{}
-		cfg.CommandHelpLink = "https://prow-dev.tidb.io/command-help"
+		cfg.CommandHelpLink = "https://prow-dev.tidb.net/command-help"
 		cfg.PRProcessLink = "https://book.prow.tidb.io/#/en/workflows/pr"
-		cfg.TichiWebURL = "https://prow-dev.tidb.io/tichi"
+		cfg.TichiWebURL = "https://prow-dev.tidb.net/tichi"
 		cfg.TiCommunityLgtm = []externalplugins.TiCommunityLgtm{
 			{
 				Repos:              []string{"org/repo"},

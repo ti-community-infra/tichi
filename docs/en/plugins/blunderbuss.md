@@ -45,7 +45,7 @@ For example:
 ti-community-blunderbuss:
   - repos:
       - ti-community-infra/test-live
-    pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
+    pull_owners_endpoint: https://prow-dev.tidb.net/ti-community-owners
     max_request_count: 1
     exclude_reviewers:
       # Bots
@@ -60,7 +60,7 @@ ti-community-blunderbuss:
 
 ## Reference Documents
 
-- [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Fconfigs#auto_cc)
+- [command help](https://prow.tidb.net/command-help?repo=ti-community-infra%2Fconfigs#auto_cc)
 - [code](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/blunderbuss)
 
 ## Q&A

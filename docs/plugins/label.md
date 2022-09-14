@@ -45,11 +45,11 @@ ti-community-label:
       - 'status/can-merge'
 ```
 
-**如果需要添加 `help wanted` 或 `good first issue` 标签，请使用 [help](https://prow.tidb.io/command-help#help) 插件提供的 `/[remove-]help` 和 `/[remove-]good-first-issue` 命令。**
+**如果需要添加 `help wanted` 或 `good first issue` 标签，请使用 [help](https://prow.tidb.net/command-help#help) 插件提供的 `/[remove-]help` 和 `/[remove-]good-first-issue` 命令。**
 
 ## 参考文档
 
-- [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftichi#type)
+- [command help](https://prow.tidb.net/command-help?repo=ti-community-infra%2Ftichi#type)
 - [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/label)
 
 ## Q&A

@@ -40,7 +40,7 @@ For example:
 
 ## Reference Documents
 
-- [require-matching-label doc](https://prow.tidb.io/plugins?repo=ti-community-infra%2Ftichi)
+- [require-matching-label doc](https://prow.tidb.net/plugins?repo=ti-community-infra%2Ftichi)
 - [code](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/require-matching-label)
 
 ## Q&A

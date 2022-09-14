@@ -47,11 +47,14 @@ deck:
 
 plank:
   job_url_prefix_config:
-    "*": https://prow-dev.tidb.io/view/
+    "*": https://prow-dev.tidb.net/view/
   report_templates:
-    '*': >-
-      [Full PR test history](https://prow-dev.tidb.io/pr-history?org={{.Spec.Refs.Org}}&repo={{.Spec.Refs.Repo}}&pr={{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}).
-      [Your PR dashboard](https://prow-dev.tidb.io/pr?query=is%3Apr%20state%3Aopen%20author%3A{{with index .Spec.Refs.Pulls 0}}{{.Author}}{{end}}).
+    "*": >-
+      [Full PR test
+      history](https://prow-dev.tidb.net/pr-history?org={{.Spec.Refs.Org}}&repo={{.Spec.Refs.Repo}}&pr={{with
+      index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}). [Your PR
+      dashboard](https://prow-dev.tidb.net/pr?query=is%3Apr%20state%3Aopen%20author%3A{{with
+      index .Spec.Refs.Pulls 0}}{{.Author}}{{end}}).
   default_decoration_configs:
     "*":
       gcs_configuration:
@@ -86,26 +89,25 @@ tide:
         {{- else -}}
           {{- " " -}}
         {{- end -}}
-        
+
         {{- $description := .ExtractContent "(?i)\x60\x60\x60commit-message(?P<content>[\\w|\\W]+)\x60\x60\x60" $body -}}
         {{- if $description -}}{{- "\n\n" -}}{{- end -}}
         {{- $description -}}
-        
+
         {{- $signedAuthors := .NormalizeSignedOffBy -}}
         {{- if $signedAuthors -}}{{- "\n\n" -}}{{- end -}}
         {{- range $index, $author := $signedAuthors -}}
           {{- if $index -}}{{- "\n" -}}{{- end -}}
           {{- "Signed-off-by:" }} {{ .Name }} <{{- .Email -}}>
         {{- end -}}
-        
+
         {{- $coAuthors := .NormalizeCoAuthorBy -}}
         {{- if $coAuthors -}}{{- "\n\n" -}}{{- end -}}
           {{- range $index, $author := $coAuthors -}}
           {{- if $index -}}{{- "\n" -}}{{- end -}}
           {{- "Co-authored-by:" }} {{ .Name }} <{{- .Email -}}>
         {{- end -}}
-  target_url: https://prow-dev.tidb.io/tide
-
+  target_url: https://prow-dev.tidb.net/tide
   queries:
     - repos:
         - ti-community-infra/test-dev

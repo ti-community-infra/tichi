@@ -70,5 +70,5 @@ branch-protection:
 
 ## Reference Documents
 
-- [dco doc](https://prow.tidb.io/plugins?repo=ti-community-infra%2Ftichi)
+- [dco doc](https://prow.tidb.net/plugins?repo=ti-community-infra%2Ftichi)
 - [code](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/dco)

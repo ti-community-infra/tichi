@@ -45,5 +45,5 @@ noneRe        = regexp.MustCompile(`(?i)^\W*NONE\W*$`)
 
 ## 参考文档
 
-- [command help](https://prow.tidb.io/command-help#release_note_none)
+- [command help](https://prow.tidb.net/command-help#release_note_none)
 - [代码实现](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/releasenote)
