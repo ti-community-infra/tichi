@@ -45,5 +45,5 @@ No configuration
 
 ## Reference Documents
 
-- [command help](https://prow.tidb.io/command-help#release_note_none)
+- [command help](https://prow.tidb.net/command-help#release_note_none)
 - [code](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/releasenote)

@@ -10,7 +10,7 @@ Tide 是 Prow 的一个核心组件，主要通过一些给定条件来管理 Gi
 - 支持使用特别的 GitHub Label 阻止 PR 合并到单个分支或整个存储库。
 - Prometheus 指标。
 - 支持具有“可选”状态，这些状态上下文对于合并不是强制的。
-- 提供有关当前 PR 池的实时数据和尝试合并历史记录，可以在 [Deck](https://github.com/kubernetes/test-infra/tree/master/prow/cmd/deck) 、[Tide Dashboard](https://prow.tidb.io/tide) 、[PR Status](https://prow.tidb.io/pr) 和 [Tide History](https://prow.tidb.io/tide-history) 中展示这些数据。
+- 提供有关当前 PR 池的实时数据和尝试合并历史记录，可以在 [Deck](https://github.com/kubernetes/test-infra/tree/master/prow/cmd/deck) 、[Tide Dashboard](https://prow.tidb.net/tide) 、[PR Status](https://prow.tidb.net/pr) 和 [Tide History](https://prow.tidb.net/tide-history) 中展示这些数据。
 - 有效地进行扩展，使具有单个 bot 令牌的单个实例可以为满足合并条件的数十个组织和存储库提供合并自动化。每个不同的 `org/repo:branch` 组合都定义了一个互不干扰的合并池，因此合并仅影响同一分支中的其他 PR。
 - 提供可配置的合并模式（`merge`, `squash`, or `rebase`）。
 
@@ -79,15 +79,15 @@ Contributor 可以在 PR 下面的 CI 状态上下文当中查看 PR 的状态�
 
 ![PR Status Context](https://user-images.githubusercontent.com/29879298/98230629-54037400-1f96-11eb-8a9c-1144905fbbd5.png)
 
-点击详情会跳转到 [Tide Dashboard](https://prow.tidb.io/tide) 。
+点击详情会跳转到 [Tide Dashboard](https://prow.tidb.net/tide) 。
 
 #### PR Status Page
 
-Contributor 可以在 [PR status](https://prow.tidb.io/pr) 页面当中查看到自己的提交 PR 的状态，你的每一个 PR 都会有一个卡片，每个卡片都显示了测试结果和合并要求。（推荐使用）
+Contributor 可以在 [PR status](https://prow.tidb.net/pr) 页面当中查看到自己的提交 PR 的状态，你的每一个 PR 都会有一个卡片，每个卡片都显示了测试结果和合并要求。（推荐使用）
 
 #### Tide Dashboard
 
-在 [Tide Dashboard](https://prow.tidb.io/tide) 中，显示每个合并池的状态,可以查看 Tide 当前正在做什么以及 PR 在重新检测队列中的位置。如果在一个合并池（队列）当中的一个 PR 长时间处于正在合并的状态，
+在 [Tide Dashboard](https://prow.tidb.net/tide) 中，显示每个合并池的状态,可以查看 Tide 当前正在做什么以及 PR 在重新检测队列中的位置。如果在一个合并池（队列）当中的一个 PR 长时间处于正在合并的状态，
 
 ### Tide 的合并方式
 

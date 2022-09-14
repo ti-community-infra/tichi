@@ -16,7 +16,7 @@ No configuration
 
 ## Reference documents
 
-- [command-help](https://prow.tidb.io/command-help#hold)
+- [command-help](https://prow.tidb.net/command-help#hold)
 - [code](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/hold)
 
 ## Q&A

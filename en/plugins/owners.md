@@ -100,4 +100,4 @@ ti-community-owners:
 
 ### How can I check the current PR permissions?
 
- Directly check the GitHub-compliant RESTFUL API, for example: [ti-community-infra/test-dev/pulls/179](https://prow.tidb.io/ti-community-owners/repos/ti-community-infra/test-dev/pulls/179/owners)
+ Directly check the GitHub-compliant RESTFUL API, for example: [ti-community-infra/test-dev/pulls/179](https://prow.tidb.net/ti-community-owners/repos/ti-community-infra/test-dev/pulls/179/owners)

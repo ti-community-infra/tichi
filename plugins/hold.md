@@ -16,7 +16,7 @@
 
 ## 参考文档
 
-- [command-help](https://prow.tidb.io/command-help#hold)
+- [command-help](https://prow.tidb.net/command-help#hold)
 - [代码实现](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/hold)
 
 ## Q&A

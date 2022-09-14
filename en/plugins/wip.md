@@ -16,7 +16,7 @@ No configuration
 
 ## Reference documents
 
-- [wip doc](https://prow.tidb.io/plugins?repo=ti-community-infra%2Ftichi)
+- [wip doc](https://prow.tidb.net/plugins?repo=ti-community-infra%2Ftichi)
 - [code](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/wip)
 
 ## Q&A

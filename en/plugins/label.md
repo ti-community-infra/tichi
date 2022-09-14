@@ -45,11 +45,11 @@ ti-community-label:
       - 'status/can-merge'
 ```
 
-**If you want to add a `help wanted` or `good first issue` label, please use the `/[remove-]help` and `/[remove-]good-first-issue` command provided by the [help](https://prow.tidb.io/command-help#help) plugin.**
+**If you want to add a `help wanted` or `good first issue` label, please use the `/[remove-]help` and `/[remove-]good-first-issue` command provided by the [help](https://prow.tidb.net/command-help#help) plugin.**
 
 ## Reference Documents
 
-- [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftichi#type)
+- [command help](https://prow.tidb.net/command-help?repo=ti-community-infra%2Ftichi#type)
 - [code](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/label)
 
 ## Q&A

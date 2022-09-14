@@ -52,13 +52,13 @@ ti-community-lgtm:
       - ti-community-infra/ti-community-bot
       - ti-community-infra/ti-challenge-bot
       - tikv/pd
-    pull_owners_endpoint: https://prow.tidb.io/ti-community-owners # 你可以定义不同的获取 owners 的链接
+    pull_owners_endpoint: https://prow.tidb.net/ti-community-owners # 你可以定义不同的获取 owners 的链接
     ignore_invalid_review_prompt: true
 ```
 
 ## 参考文档
 
-- [command help](https://prow.tidb.io/command-help?repo=ti-community-infra%2Ftest-live#lgtm)
+- [command help](https://prow.tidb.net/command-help?repo=ti-community-infra%2Ftest-live#lgtm)
 - [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/lgtm)
 
 ## Q&A
