@@ -46,7 +46,7 @@ func HelpProvider(_ *tiexternalplugins.ConfigAgent) externalplugins.ExternalPlug
 			TiCommunityLgtm: []tiexternalplugins.TiCommunityLgtm{
 				{
 					Repos:              []string{"ti-community-infra/test-dev"},
-					PullOwnersEndpoint: "https://prow-dev.tidb.io/ti-community-owners",
+					PullOwnersEndpoint: "https://prow-dev.tidb.net/ti-community-owners",
 				},
 			},
 		})

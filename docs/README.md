@@ -43,7 +43,7 @@
 | label_sync                      | 工具   | 能够将 yaml 文件当中配置的标签同步到一个或多个仓库。                                            |
 | autobump                        | 工具   | 通过自动提交 Pull Request 的方式更新上游 Prow 及其相关组件和插件的版本。                           |
 
-同时，你可以在 [Plugins](https://prow.tidb.io/plugins) 当中找到目前所有可用的组件或插件，也可以在 [Command](https://prow.tidb.io/command-help) 当中查看指定仓库可用的命令。
+同时，你可以在 [Plugins](https://prow.tidb.net/plugins) 当中找到目前所有可用的组件或插件，也可以在 [Command](https://prow.tidb.net/command-help) 当中查看指定仓库可用的命令。
 
 如果你想通过 tichi 实现一个新的功能，你可以通过 [RFC](https://github.com/ti-community-infra/rfcs) 方式提出需求，以便能够在社区当中展开广泛的沟通和交流，从而最终确定新功能的具体需求和实施方案。 
 

@@ -16,7 +16,7 @@
 
 ## 参考文档
 
-- [wip doc](https://prow.tidb.io/plugins?repo=ti-community-infra%2Ftichi)
+- [wip doc](https://prow.tidb.net/plugins?repo=ti-community-infra%2Ftichi)
 - [代码实现](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/wip)
 
 ## Q&A

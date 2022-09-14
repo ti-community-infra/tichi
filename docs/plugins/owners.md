@@ -100,4 +100,4 @@ ti-community-owners:
 
 ### 如何查看当前 PR 的权限？
 
-直接通过与 GitHub 一致的 RESTFUL 接口查看，例如：[ti-community-infra/test-dev/pulls/179](https://prow.tidb.io/ti-community-owners/repos/ti-community-infra/test-dev/pulls/179/owners)
+直接通过与 GitHub 一致的 RESTFUL 接口查看，例如：[ti-community-infra/test-dev/pulls/179](https://prow.tidb.net/ti-community-owners/repos/ti-community-infra/test-dev/pulls/179/owners)

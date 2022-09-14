@@ -1,17 +1,17 @@
-tichi_web_url: https://prow-dev.tidb.io/tichi
+tichi_web_url: https://prow-dev.tidb.net/tichi
 pr_process_link: https://book.prow.tidb.io/#/en/workflows/pr
-command_help_link: https://prow-dev.tidb.io/command-help
+command_help_link: https://prow-dev.tidb.net/command-help
 
 ti-community-lgtm:
   - repos:
       - ti-community-infra/test-dev
-    pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
+    pull_owners_endpoint: https://prow-dev.tidb.net/ti-community-owners
 
 ti-community-merge:
   - repos:
       - ti-community-infra/test-dev
     store_tree_hash: true
-    pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
+    pull_owners_endpoint: https://prow-dev.tidb.net/ti-community-owners
 
 ti-community-owners:
   - repos:
@@ -46,7 +46,7 @@ ti-community-autoresponder:
 ti-community-blunderbuss:
   - repos:
       - ti-community-infra/test-dev
-    pull_owners_endpoint: https://prow-dev.tidb.io/ti-community-owners
+    pull_owners_endpoint: https://prow-dev.tidb.net/ti-community-owners
     max_request_count: 2
     require_sig_label: true
     exclude_reviewers:

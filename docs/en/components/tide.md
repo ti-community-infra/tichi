@@ -9,7 +9,7 @@ It has the following features:
 - Support for blocking PR merges to a single branch or an entire repository using a special GitHub Label.
 - Prometheus metrics.
 - Supports having "optional" state contexts that are not mandatory for merging.
-- Provides real-time data about the current PR pool and attempted merge history, which can be displayed in [Deck](https://github.com/kubernetes/test-infra/tree/master/prow/cmd/deck), [Tide Dashboard](https://prow.tidb.io/tide), [PR Status](https://prow.tidb.io/pr), and [Tide History](https://prow.tidb.io/tide-history).
+- Provides real-time data about the current PR pool and attempted merge history, which can be displayed in [Deck](https://github.com/kubernetes/test-infra/tree/master/prow/cmd/deck), [Tide Dashboard](https://prow.tidb.net/tide), [PR Status](https://prow.tidb.net/pr), and [Tide History](https://prow.tidb.net/tide-history).
 - Effectively scales so that a single instance with a single bot token can provide merge automation for dozens of organizations and repositories that meet the merge criteria. Each different `org/repo:branch` combination defines a merge pool that does not interfere with each other, so merging only affects other PRs in the same branch.
 - Provides configurable merge modes (`merge`, `squash`, or `rebase`).
 
@@ -78,15 +78,15 @@ Contributors can check the status of the PR in the CI Status Context under the P
 
 ![PR Status Context](https://user-images.githubusercontent.com/29879298/98230629-54037400-1f96-11eb-8a9c-1144905fbbd5.png)
 
-Click on the "Details" to jump to the [Tide Dashboard](https://prow.tidb.io/tide).
+Click on the "Details" to jump to the [Tide Dashboard](https://prow.tidb.net/tide).
 
 #### PR Status Page
 
-Contributors can view the status of their PR submissions on the [PR status](https://prow.tidb.io/pr) page, where each of your PRs will have a card showing the test results and merge requirements. (Recommended)
+Contributors can view the status of their PR submissions on the [PR status](https://prow.tidb.net/pr) page, where each of your PRs will have a card showing the test results and merge requirements. (Recommended)
 
 #### Tide Dashboard
 
-In the [Tide Dashboard](https://prow.tidb.io/tide), the status of each merge pool is displayed, allowing you to see what Tide is currently doing and where the PR is in the retest queue. If a PR in a merge pool (queue) has been in the merge state for a long time, then
+In the [Tide Dashboard](https://prow.tidb.net/tide), the status of each merge pool is displayed, allowing you to see what Tide is currently doing and where the PR is in the retest queue. If a PR in a merge pool (queue) has been in the merge state for a long time, then
 
 ### Tide's merge method
 

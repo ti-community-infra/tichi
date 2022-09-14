@@ -242,7 +242,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 					"<details>\n\n" +
 					"In response to adding label named status/can-merge.\n\n" +
 					"Instructions for interacting with me using PR comments are available " +
-					"[here](https://prow.tidb.io/command-help).  " +
+					"[here](https://prow.tidb.net/command-help).  " +
 					"If you have questions or suggestions related to my behavior, please file an issue against the " +
 					"[ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) " +
 					"repository.\n" +
@@ -270,7 +270,7 @@ func TestLabelBlockerPullRequest(t *testing.T) {
 					"<details>\n\n" +
 					"In response to removing label named status/can-merge.\n\n" +
 					"Instructions for interacting with me using PR comments are available " +
-					"[here](https://prow.tidb.io/command-help).  " +
+					"[here](https://prow.tidb.net/command-help).  " +
 					"If you have questions or suggestions related to my behavior, please file an issue against the " +
 					"[ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) " +
 					"repository.\n" +
@@ -453,7 +453,7 @@ func TestLabelBlockerIssue(t *testing.T) {
 					"<details>\n\n" +
 					"In response to adding label named status/can-merge.\n\n" +
 					"Instructions for interacting with me using PR comments are available " +
-					"[here](https://prow.tidb.io/command-help).  " +
+					"[here](https://prow.tidb.net/command-help).  " +
 					"If you have questions or suggestions related to my behavior, please file an issue against the " +
 					"[ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) " +
 					"repository.\n" +
@@ -481,7 +481,7 @@ func TestLabelBlockerIssue(t *testing.T) {
 					"<details>\n\n" +
 					"In response to removing label named status/can-merge.\n\n" +
 					"Instructions for interacting with me using PR comments are available " +
-					"[here](https://prow.tidb.io/command-help).  " +
+					"[here](https://prow.tidb.net/command-help).  " +
 					"If you have questions or suggestions related to my behavior, please file an issue against the " +
 					"[ti-community-infra/tichi](https://github.com/ti-community-infra/tichi/issues/new?title=Prow%20issue:) " +
 					"repository.\n" +

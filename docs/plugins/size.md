@@ -40,7 +40,7 @@ size:
 
 ## 参考文档
 
-- [size doc](https://prow.tidb.io/plugins?repo=ti-community-infra%2Ftichi)
+- [size doc](https://prow.tidb.net/plugins?repo=ti-community-infra%2Ftichi)
 - [代码实现](https://github.com/kubernetes/test-infra/tree/master/prow/plugins/size)
 
 ## Q&A

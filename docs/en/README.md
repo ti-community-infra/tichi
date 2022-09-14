@@ -45,7 +45,7 @@ The following shows some commonly used components or plugins in the TiDB communi
 | label_sync                  | tool            | Able to synchronize the labels configured in the yaml file to one or more repositories.                                                   |
 | autobump                    | tool            | Update the version of upstream Prow and its related components and plugins by automatically submitting Pull Requests.                     |
 
-At the same time, you can find all currently available components or plugins in [Plugins](https://prow.tidb.io/plugins) page, or in [Command](https://prow.tidb.io/command-help) to view the commands available in the specified repository.
+At the same time, you can find all currently available components or plugins in [Plugins](https://prow.tidb.net/plugins) page, or in [Command](https://prow.tidb.net/command-help) to view the commands available in the specified repository.
 
 If you want to implement a new feature through tichi, you can put forward your requirements through [RFC](https://github.com/ti-community-infra/rfcs) so that we can communicate widely in the community. So as to finally determine the specific requirements and implementation plan of the new feature.
 

@@ -62,7 +62,7 @@ ti-community-cherrypicker:
 
 ## 参考文档
 
-- [command help](https://prow.tidb.io/command-help#cherrypick)
+- [command help](https://prow.tidb.net/command-help#cherrypick)
 - [代码实现](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/cherrypicker)
 
 ## Q&A
