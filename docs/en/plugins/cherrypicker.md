@@ -12,6 +12,7 @@ This plugin is primarily responsible for cherry-picking code and creating PRs wi
 
 - `allow_all` set to true, all GitHub users can trigger `/cherry-pick some-branch`
 - `allow_all` set to false, only members of the repo's Org can trigger `/cherry-pick some-branch`
+- **only** members of the repo's Org can trigger `/cherry-pick-invite` on cherry-pick pull requests.
 
 ## Design
 

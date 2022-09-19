@@ -12,6 +12,7 @@ ti-community-cherrypicker 将帮助我们自动的 cherry-pick PR 的改动到�
 
 - `allow_all` 配置为 true，所有 GitHub 用户都可以触发 `/cherry-pick some-branch`
 - `allow_all` 配置为 false，则只有该 repo 所在 Org 的成员可以触发 `/cherry-pick some-branch`
+- **只有** 该 repo 所在 Org 的成员可以在 cherry-pick PR 上触发 `/cherry-pick-invite`.
 
 ## 设计思路
 

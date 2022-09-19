@@ -53,6 +53,11 @@ import (
 const (
 	PluginName = "ti-community-cherrypicker"
 
+	pluginDescription = `The cherrypicker plugin is used for cherry-pick PRs across branches.
+For every successful cherry-pick invocation a new PR is opened against the target branch and assigned to the requestor.
+The plugin will send an repo collaborator invitation if the requestor is not a collaborator.
+`
+
 	upstreamRemoteName           = "upstream"
 	collaboratorPermission       = "push"
 	cherryPickInviteExample      = "/cherry-pick-invite"
@@ -149,12 +154,10 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		}
 
 		pluginHelp := &pluginhelp.PluginHelp{
-			Description: "The cherrypicker plugin is used for cherry-pick PRs across branches. " +
-				"For every successful cherry-pick invocation a new PR is opened " +
-				"against the target branch and assigned to the requestor. ",
-			Config:  configInfo,
-			Snippet: yamlSnippet,
-			Events:  []string{tiexternalplugins.PullRequestEvent, tiexternalplugins.IssueCommentEvent},
+			Description: pluginDescription,
+			Config:      configInfo,
+			Snippet:     yamlSnippet,
+			Events:      []string{tiexternalplugins.PullRequestEvent, tiexternalplugins.IssueCommentEvent},
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
@@ -165,6 +168,14 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			Featured:  true,
 			WhoCanUse: "Members of the trusted organization for the repo or anyone(depends on the AllowAll configuration).",
 			Examples:  []string{"/cherrypick release-3.9", "/cherry-pick release-1.15"},
+		})
+		pluginHelp.AddCommand(pluginhelp.Command{
+			Usage: cherryPickInviteExample,
+			Description: "Request a collaborator invitation" +
+				"This command works in cherry-pick pull requests.",
+			Featured:  true,
+			WhoCanUse: "Members of the trusted organization for the repo.",
+			Examples:  []string{cherryPickInviteExample},
 		})
 
 		return pluginHelp, nil
