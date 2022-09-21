@@ -82,4 +82,4 @@ If you have any questions or would like to get more involved in the TiChi commun
 
 Additional resources you might find useful:
 
-- [TiChi documentation](https://book.prow.tidb.io/#/)
+- [TiChi documentation](https://book.prow.tidb.net/#/)
