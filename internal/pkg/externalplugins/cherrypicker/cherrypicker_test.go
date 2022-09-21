@@ -24,37 +24,89 @@ package cherrypicker
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
 	"testing"
 
+	gc "github.com/google/go-github/v29/github"
 	"github.com/sirupsen/logrus"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/git/localgit"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/plugins"
+
+	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
 )
 
-var commentFormat = "%s/%s#%d %s"
+const (
+	patternErrWhenJudgeMember     = "member_but_error_when_judge"
+	patternErrWhenCreateComment   = "error_when_create_comment"
+	patternErrWhenIsCollaborator  = "error_when_judge_collaborator"
+	patternErrWhenAddCollaborator = "error_when_add_collaborator"
+	commentFormat                 = "%s/%s#%d %s"
+	prFormat                      = `title=%q body=%q head=%s base=%s labels=%v assignees=%v`
+
+	body = "This PR updates the magic number.\n\n"
+)
+
+var (
+	initialFiles = map[string][]byte{
+		"bar.go": []byte(`// Package bar does an interesting thing.
+package bar
+
+// Foo does a thing.
+func Foo(wow int) int {
+	return 42 + wow
+}
+`),
+	}
+
+	patch = []byte(`From af468c9e69dfdf39db591f1e3e8de5b64b0e62a2 Mon Sep 17 00:00:00 2001
+From: Wise Guy <wise@guy.com>
+Date: Thu, 19 Oct 2017 15:14:36 +0200
+Subject: [PATCH] Update magic number
+
+---
+ bar.go | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/bar.go b/bar.go
+index 1ea52dc..5bd70a9 100644
+--- a/bar.go
++++ b/bar.go
+@@ -3,5 +3,6 @@ package bar
+
+ // Foo does a thing.
+ func Foo(wow int) int {
+-	return 42 + wow
++	// Needs to be 49 because of a reason.
++	return 49 + wow
+ }
+`)
+)
 
 type fghc struct {
 	sync.Mutex
-	pr       *github.PullRequest
-	isMember bool
+	pr *github.PullRequest
 
-	patch      []byte
-	comments   []string
-	prs        []github.PullRequest
-	prComments []github.IssueComment
-	prLabels   []github.Label
-	orgMembers []github.TeamMember
-	issues     []github.Issue
-	commits    map[string]github.RepositoryCommit
+	members  []string // first judge.
+	isMember bool     // secend judge.
+
+	patch           []byte
+	comments        []string
+	prs             []github.PullRequest
+	prComments      []github.IssueComment
+	prLabels        []github.Label
+	orgMembers      []github.TeamMember
+	repoInvitations []*gc.RepositoryInvitation
+	issues          []github.Issue
+	commits         map[string]github.RepositoryCommit
+	collaborators   []string
 }
 
 func (f *fghc) GetSingleCommit(org, repo, sha string) (github.RepositoryCommit, error) {
@@ -110,16 +162,14 @@ func (f *fghc) GetPullRequests(org, repo string) ([]github.PullRequest, error) {
 }
 
 func (f *fghc) CreateComment(org, repo string, number int, comment string) error {
+	if strings.Contains(comment, patternErrWhenCreateComment) {
+		return errors.New("fake error")
+	}
+
 	f.Lock()
 	defer f.Unlock()
 	f.comments = append(f.comments, fmt.Sprintf(commentFormat, org, repo, number, comment))
 	return nil
-}
-
-func (f *fghc) IsMember(org, user string) (bool, error) {
-	f.Lock()
-	defer f.Unlock()
-	return f.isMember, nil
 }
 
 func (f *fghc) GetRepo(owner, name string) (github.FullRepo, error) {
@@ -138,7 +188,38 @@ func (f *fghc) EnsureFork(forkingUser, org, repo string) (string, error) {
 	return repo, nil
 }
 
-var prFmt = `title=%q body=%q head=%s base=%s labels=%v assignees=%v`
+func (f *fghc) IsMember(org, user string) (bool, error) {
+	f.Lock()
+	defer f.Unlock()
+
+	switch user {
+	case patternErrWhenJudgeMember:
+		return false, errors.New("fake error")
+	default:
+		return sets.NewString(f.members...).Has(user) || f.isMember, nil
+	}
+}
+
+func (f *fghc) IsCollaborator(org, repo, user string) (bool, error) {
+	if strings.Contains(user, patternErrWhenIsCollaborator) {
+		return false, errors.New("fake error")
+	}
+
+	return sets.NewString(f.collaborators...).Has(user), nil
+}
+
+func (f *fghc) AddCollaborator(org, repo, user string, permission github.RepoPermissionLevel) error {
+	if strings.Contains(user, patternErrWhenAddCollaborator) {
+		return errors.New("fake error")
+	}
+
+	f.collaborators = append(f.collaborators, user)
+	return nil
+}
+
+func (f *fghc) ListRepoInvitations(org, repo string) ([]*gc.RepositoryInvitation, error) {
+	return f.repoInvitations, nil
+}
 
 func prToString(pr github.PullRequest) string {
 	var labels []string
@@ -150,7 +231,7 @@ func prToString(pr github.PullRequest) string {
 	for _, assignee := range pr.Assignees {
 		assignees = append(assignees, assignee.Login)
 	}
-	return fmt.Sprintf(prFmt, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, assignees)
+	return fmt.Sprintf(prFormat, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, assignees)
 }
 
 func (f *fghc) CreateIssue(org, repo, title, body string, milestone int, labels, assignees []string) (int, error) {
@@ -219,42 +300,6 @@ func (f *fghc) ListOrgMembers(org, role string) ([]github.TeamMember, error) {
 func (f *fghc) CreateFork(org, repo string) (string, error) {
 	return repo, nil
 }
-
-var initialFiles = map[string][]byte{
-	"bar.go": []byte(`// Package bar does an interesting thing.
-package bar
-
-// Foo does a thing.
-func Foo(wow int) int {
-	return 42 + wow
-}
-`),
-}
-
-var patch = []byte(`From af468c9e69dfdf39db591f1e3e8de5b64b0e62a2 Mon Sep 17 00:00:00 2001
-From: Wise Guy <wise@guy.com>
-Date: Thu, 19 Oct 2017 15:14:36 +0200
-Subject: [PATCH] Update magic number
-
----
- bar.go | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/bar.go b/bar.go
-index 1ea52dc..5bd70a9 100644
---- a/bar.go
-+++ b/bar.go
-@@ -3,5 +3,6 @@ package bar
-
- // Foo does a thing.
- func Foo(wow int) int {
--	return 42 + wow
-+	// Needs to be 49 because of a reason.
-+	return 49 + wow
- }
-`)
-
-var body = "This PR updates the magic number.\n\n"
 
 func TestCherryPickIC(t *testing.T) {
 	t.Parallel()
@@ -346,7 +391,7 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 			expectedLabels = append(expectedLabels, label.Name)
 		}
 		expectedLabels = append(expectedLabels, "type/cherrypick-for-"+branch)
-		return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
+		return fmt.Sprintf(prFormat, expectedTitle, expectedBody, expectedHead,
 			branch, expectedLabels, expectedAssignees)
 	}
 
@@ -381,7 +426,7 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 		Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
 	}
 
-	if err := s.handleIssueComment(logrus.NewEntry(logrus.StandardLogger()), ic); err != nil {
+	if err := s.handleIssueCherryPickComment(logrus.NewEntry(logrus.StandardLogger()), &ic); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -563,7 +608,7 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 				Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
 			}
 
-			if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), pr); err != nil {
+			if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), &pr); err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 
@@ -579,7 +624,7 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 				}
 				expectedLabels = append(expectedLabels, "type/cherrypick-for-"+branch)
 				expectedAssignees := []string{"developer"}
-				return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
+				return fmt.Sprintf(prFormat, expectedTitle, expectedBody, expectedHead,
 					branch, expectedLabels, expectedAssignees)
 			}
 
@@ -773,7 +818,7 @@ func testCherryPickPRWithComment(clients localgit.Clients, t *testing.T) {
 		Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
 	}
 
-	if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), pr); err != nil {
+	if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), &pr); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -786,7 +831,7 @@ func testCherryPickPRWithComment(clients localgit.Clients, t *testing.T) {
 			expectedLabels = append(expectedLabels, label.Name)
 		}
 		expectedAssignees := []string{"approver"}
-		return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
+		return fmt.Sprintf(prFormat, expectedTitle, expectedBody, expectedHead,
 			branch, expectedLabels, expectedAssignees)
 	}
 
@@ -851,8 +896,8 @@ func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 		}
 	}
 
-	pr := func(label github.Label) github.PullRequestEvent {
-		return github.PullRequestEvent{
+	pr := func(label github.Label) *github.PullRequestEvent {
+		return &github.PullRequestEvent{
 			Action: github.PullRequestActionLabeled,
 			PullRequest: github.PullRequest{
 				User: github.User{
@@ -1014,7 +1059,7 @@ func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 						}
 						expectedLabels = append(expectedLabels, "type/cherrypick-for-"+branch)
 						expectedAssignees := []string{"developer"}
-						return fmt.Sprintf(prFmt, expectedTitle, expectedBody, expectedHead,
+						return fmt.Sprintf(prFormat, expectedTitle, expectedBody, expectedHead,
 							branch, expectedLabels, expectedAssignees)
 					}
 
@@ -1092,6 +1137,7 @@ func TestCherryPickCreateIssue(t *testing.T) {
 		ghc := &fghc{}
 
 		s := &Server{
+			Log:          logrus.StandardLogger().WithField("client", "cherrypicker"),
 			GitHubClient: ghc,
 		}
 
@@ -1161,6 +1207,7 @@ func TestHandleLocks(t *testing.T) {
 		ConfigAgent:  ca,
 		GitHubClient: &threadUnsafeFGHC{fghc: &fghc{}},
 		BotUser:      &github.UserData{},
+		Log:          logrus.StandardLogger().WithField("client", "cherrypicker"),
 	}
 
 	routine1Done := make(chan struct{})
@@ -1213,6 +1260,7 @@ func TestEnsureForkExists(t *testing.T) {
 		ConfigAgent:  ca,
 		GitHubClient: ghc,
 		Repos:        []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
+		Log:          logrus.StandardLogger().WithField("client", "cherrypicker"),
 	}
 
 	testCases := []struct {
@@ -1465,6 +1513,7 @@ foo/bar:
 
 		s := Server{
 			WebhookSecretGenerator: getSecret,
+			Log:                    logrus.StandardLogger().WithField("client", "cherrypicker"),
 		}
 
 		s.ServeHTTP(w, r)
@@ -1494,12 +1543,12 @@ foo/bar:
 		return []byte(repoLevelSec)
 	}
 
-	lgtmComment, err := ioutil.ReadFile("../../../../test/testdata/lgtm_comment.json")
+	lgtmComment, err := os.ReadFile("../../../../test/testdata/lgtm_comment.json")
 	if err != nil {
 		t.Fatalf("read lgtm comment file failed: %v", err)
 	}
 
-	openedPR, err := ioutil.ReadFile("../../../../test/testdata/opened_pr.json")
+	openedPR, err := os.ReadFile("../../../../test/testdata/opened_pr.json")
 	if err != nil {
 		t.Fatalf("read opened PR file failed: %v", err)
 	}
@@ -1566,6 +1615,7 @@ foo/bar:
 		s := Server{
 			WebhookSecretGenerator: getSecret,
 			ConfigAgent:            ca,
+			Log:                    logrus.StandardLogger().WithField("client", "cherrypicker"),
 		}
 
 		s.ServeHTTP(w, r)

@@ -368,12 +368,12 @@ func getLastComment(issueComments []*github.IssueComment) *github.IssueComment {
 
 // getMessage returns the comment body that we want the approve plugin to display on PRs
 // The comment shows:
-// 	- a list of reviewed reviewers
-// 	- how an approver can indicate their lgtm
-// 	- how an approver can cancel their lgtm
+//   - a list of reviewed reviewers
+//   - how an approver can indicate their lgtm
+//   - how an approver can cancel their lgtm
 func getMessage(reviewedReviewers []string, commandHelpLink,
 	prProcessLink, ownersLink, org, repo string) (*string, error) {
-	// nolint:lll
+	//nolint:lll
 	message, err := generateTemplate(`
 {{if .reviewers}}
 This pull request has been approved by:

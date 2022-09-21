@@ -34,9 +34,8 @@ import (
 	"sync"
 	"time"
 
+	gc "github.com/google/go-github/v29/github"
 	"github.com/sirupsen/logrus"
-	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
-	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/utils"
 	utilerrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/sets"
 	"k8s.io/test-infra/prow/config"
@@ -46,19 +45,35 @@ import (
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
 	"k8s.io/test-infra/prow/plugins"
 	"k8s.io/utils/exec"
+
+	tiexternalplugins "github.com/ti-community-infra/tichi/internal/pkg/externalplugins"
+	"github.com/ti-community-infra/tichi/internal/pkg/externalplugins/utils"
 )
 
-const PluginName = "ti-community-cherrypicker"
+const (
+	PluginName = "ti-community-cherrypicker"
+
+	pluginDescription = `The cherrypicker plugin is used for cherry-pick PRs across branches.
+For every successful cherry-pick invocation a new PR is opened against the target branch and assigned to the requestor.
+The plugin will send an repo collaborator invitation if the requestor is not a collaborator.
+`
+
+	upstreamRemoteName           = "upstream"
+	collaboratorPermission       = "push"
+	cherryPickInviteExample      = "/cherry-pick-invite"
+	cherryPickBranchFmt          = "cherry-pick-%d-to-%s"
+	cherryPickTipFmt             = "This is an automated cherry-pick of #%d"
+	cherryPickInviteNotifyMsgTpl = `@%s Please accept the invitation then you can push to the cherry-pick pull requests. 
+	Comment with "%s" if the invitation is expired.
+	%s`
+)
 
 var (
-	cherryPickRe        = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)\s+(.+)$`)
-	cherryPickBranchFmt = "cherry-pick-%d-to-%s"
-	cherryPickTipFmt    = "This is an automated cherry-pick of #%d"
+	cherryPickRe       = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)\s+(.+)$`)
+	cherryPickInviteRe = regexp.MustCompile(`(?m)^(?:/cherrypick|/cherry-pick)-invite\b`)
 )
 
-const upstreamRemoteName = "upstream"
-
-type githubClient interface {
+type GithubClient interface {
 	AddLabels(org, repo string, number int, labels ...string) error
 	AssignIssue(org, repo string, number int, logins []string) error
 	CreateComment(org, repo string, number int, comment string) error
@@ -75,6 +90,10 @@ type githubClient interface {
 	ListIssueComments(org, repo string, number int) ([]github.IssueComment, error)
 	GetIssueLabels(org, repo string, number int) ([]github.Label, error)
 	ListOrgMembers(org, role string) ([]github.TeamMember, error)
+	ListRepoInvitations(org, repo string) ([]*gc.RepositoryInvitation, error)
+	IsCollaborator(org, repo, user string) (bool, error)
+	// AddCollaborator invite collaborator to repo with permission(pull, triage, push, maintain, admin)
+	AddCollaborator(org, repo, user string, permission github.RepoPermissionLevel) error
 }
 
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
@@ -135,12 +154,10 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 		}
 
 		pluginHelp := &pluginhelp.PluginHelp{
-			Description: "The cherrypicker plugin is used for cherry-pick PRs across branches. " +
-				"For every successful cherry-pick invocation a new PR is opened " +
-				"against the target branch and assigned to the requestor. ",
-			Config:  configInfo,
-			Snippet: yamlSnippet,
-			Events:  []string{tiexternalplugins.PullRequestEvent, tiexternalplugins.IssueCommentEvent},
+			Description: pluginDescription,
+			Config:      configInfo,
+			Snippet:     yamlSnippet,
+			Events:      []string{tiexternalplugins.PullRequestEvent, tiexternalplugins.IssueCommentEvent},
 		}
 
 		pluginHelp.AddCommand(pluginhelp.Command{
@@ -151,6 +168,14 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			Featured:  true,
 			WhoCanUse: "Members of the trusted organization for the repo or anyone(depends on the AllowAll configuration).",
 			Examples:  []string{"/cherrypick release-3.9", "/cherry-pick release-1.15"},
+		})
+		pluginHelp.AddCommand(pluginhelp.Command{
+			Usage: cherryPickInviteExample,
+			Description: "Request a collaborator invitation" +
+				"This command works in cherry-pick pull requests.",
+			Featured:  true,
+			WhoCanUse: "Members of the trusted organization for the repo.",
+			Examples:  []string{cherryPickInviteExample},
 		})
 
 		return pluginHelp, nil
@@ -168,7 +193,7 @@ type Server struct {
 	GitClient git.ClientFactory
 	// Used for unit testing
 	Push         func(forkName, newBranch string, force bool) error
-	GitHubClient githubClient
+	GitHubClient GithubClient
 	Log          *logrus.Entry
 	ConfigAgent  *tiexternalplugins.ConfigAgent
 
@@ -215,7 +240,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			return err
 		}
 		go func() {
-			if err := s.handleIssueComment(l, ic); err != nil {
+			if err := s.handleIssueComment(l, &ic); err != nil {
 				s.Log.WithError(err).WithFields(l.Data).Info("Cherry-pick failed.")
 			}
 		}()
@@ -225,7 +250,7 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 			return err
 		}
 		go func() {
-			if err := s.handlePullRequest(l, pr); err != nil {
+			if err := s.handlePullRequest(l, &pr); err != nil {
 				s.Log.WithError(err).WithFields(l.Data).Info("Cherry-pick failed.")
 			}
 		}()
@@ -235,12 +260,20 @@ func (s *Server) handleEvent(eventType, eventGUID string, payload []byte) error 
 	return nil
 }
 
-func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent) error {
+func (s *Server) handleIssueComment(l *logrus.Entry, ic *github.IssueCommentEvent) error {
 	// Only consider new comments in PRs.
 	if !ic.Issue.IsPullRequest() || ic.Action != github.IssueCommentActionCreated {
 		return nil
 	}
 
+	if cherryPickInviteRe.MatchString(ic.Comment.Body) {
+		return s.inviteCollaborator(ic)
+	}
+
+	return s.handleIssueCherryPickComment(l, ic)
+}
+
+func (s *Server) handleIssueCherryPickComment(l *logrus.Entry, ic *github.IssueCommentEvent) error {
 	org := ic.Repo.Owner.Login
 	repo := ic.Repo.Name
 	num := ic.Issue.Number
@@ -338,7 +371,7 @@ func (s *Server) handleIssueComment(l *logrus.Entry, ic github.IssueCommentEvent
 	return nil
 }
 
-func (s *Server) handlePullRequest(log *logrus.Entry, pre github.PullRequestEvent) error {
+func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEvent) error {
 	// Only consider merged PRs.
 	pr := pre.PullRequest
 	if !pr.Merged || pr.MergeSHA == nil {
@@ -472,8 +505,9 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre github.PullRequestEven
 	return utilerrors.NewAggregate(errs)
 }
 
-//nolint:gocyclo
 // TODO: refactoring to reduce complexity.
+//
+//nolint:gocyclo
 func (s *Server) handle(logger *logrus.Entry, requestor string,
 	comment *github.IssueComment, org, repo, targetBranch string, pr *github.PullRequest) error {
 	num := pr.Number
@@ -708,6 +742,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	return nil
 }
 
+// TODO(wuhuizuo): reduce param count
 func (s *Server) createComment(l *logrus.Entry, org, repo string,
 	num int, comment *github.IssueComment, resp string) error {
 	if err := func() error {
@@ -724,6 +759,7 @@ func (s *Server) createComment(l *logrus.Entry, org, repo string,
 }
 
 // createIssue creates an issue on GitHub.
+// TODO(wuhuizuo): reduce param count
 func (s *Server) createIssue(l *logrus.Entry, org, repo, title, body string, num int,
 	comment *github.IssueComment, labels, assignees []string) error {
 	issueNum, err := s.GitHubClient.CreateIssue(org, repo, title, body, 0, labels, assignees)
@@ -777,7 +813,7 @@ func normalize(input string) string {
 }
 
 // createCherryPickCommitMessage creates the commit message for the cherry-pick commit.
-func createCherryPickCommitMessage(gc githubClient, log *logrus.Entry, copyIssueNumbers bool,
+func createCherryPickCommitMessage(gc GithubClient, log *logrus.Entry, copyIssueNumbers bool,
 	org, repo string, num int, mergeSHA *string) string {
 	cherryPickCommitMessage := fmt.Sprintf(cherryPickTipFmt, num)
 
