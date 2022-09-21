@@ -73,7 +73,7 @@ ti-community-issue-triage:
     may_affects_label_prefix: "may-affects/"
     linked_issue_needs_triage_label: "do-not-merge/needs-triage-completed"
     need_cherry_pick_label_prefix: "needs-cherry-pick-release-"
-    status_target_url: "https://book.prow.tidb.io/#/plugins/issue-triage"
+    status_target_url: "https://book.prow.tidb.net/#/plugins/issue-triage"
 ```
 
 ## 参考文档
