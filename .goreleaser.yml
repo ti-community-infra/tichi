@@ -15,7 +15,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunitylgtm/main.go
+    main: ./cmd/ticommunitylgtm
     env:
       - CGO_ENABLED=0
   - id: "ti-community-merge"
@@ -24,7 +24,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunitymerge/main.go
+    main: ./cmd/ticommunitymerge
     env:
       - CGO_ENABLED=0
   - id: "ti-community-owners"
@@ -33,7 +33,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunityowners/main.go
+    main: ./cmd/ticommunityowners
     env:
       - CGO_ENABLED=0
   - id: "ti-community-label"
@@ -42,7 +42,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunitylabel/main.go
+    main: ./cmd/ticommunitylabel
     env:
       - CGO_ENABLED=0
   - id: "ti-community-tars"
@@ -51,7 +51,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunitytars/main.go
+    main: ./cmd/ticommunitytars
     env:
       - CGO_ENABLED=0
   - id: "ti-community-autoresponder"
@@ -60,7 +60,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunityautoresponder/main.go
+    main: ./cmd/ticommunityautoresponder
     env:
       - CGO_ENABLED=0
   - id: "ti-community-blunderbuss"
@@ -69,7 +69,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunityblunderbuss/main.go
+    main: ./cmd/ticommunityblunderbuss
     env:
       - CGO_ENABLED=0
   - id: "ti-community-label-blocker"
@@ -78,7 +78,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunitylabelblocker/main.go
+    main: ./cmd/ticommunitylabelblocker
     env:
       - CGO_ENABLED=0
   - id: "ti-community-contribution"
@@ -87,7 +87,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunitycontribution/main.go
+    main: ./cmd/ticommunitycontribution
     env:
       - CGO_ENABLED=0
   - id: "ti-community-cherrypicker"
@@ -96,7 +96,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunitycherrypicker/main.go
+    main: ./cmd/ticommunitycherrypicker
     env:
       - CGO_ENABLED=0
   - id: "check-external-plugin-config"
@@ -105,7 +105,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/check-external-plugin-config/main.go
+    main: ./cmd/check-external-plugin-config
     env:
       - CGO_ENABLED=0
   - id: "rerere"
@@ -114,7 +114,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/rerere/main.go
+    main: ./cmd/rerere
     env:
       - CGO_ENABLED=0
   - id: "ti-community-format-checker"
@@ -123,7 +123,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunityformatchecker/main.go
+    main: ./cmd/ticommunityformatchecker
     env:
       - CGO_ENABLED=0
   - id: "ti-community-issue-triage"
@@ -132,7 +132,7 @@ builds:
       - linux
     goarch:
       - amd64
-    main: ./cmd/ticommunityissuetriage/main.go
+    main: ./cmd/ticommunityissuetriage
     env:
       - CGO_ENABLED=0
 source:
