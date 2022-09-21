@@ -12,7 +12,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Related
 
-- [doc](https://book.prow.tidb.io/plugins/owners.html)
+- [doc](https://book.prow.tidb.net/plugins/owners.html)
 
 The api design is just like `/repos/:org/:repo/pulls/:numbers/owners`, such as `https://prow.tidb.net/ti-community-owners/repos/pingcap/tidb-operator/pulls/3522/owners`
 

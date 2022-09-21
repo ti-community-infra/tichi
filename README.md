@@ -15,7 +15,7 @@ to do GitHub collaboration extensions and automation.
 
 ## Documentation
 
-If you have any questions during the use, you can check [this book](https://book.prow.tidb.io/).
+If you have any questions during the use, you can check [this book](https://book.prow.tidb.net/).
 
 ## Contributing
 

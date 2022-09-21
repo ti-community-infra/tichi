@@ -201,7 +201,7 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 					MayAffectsLabelPrefix:     "may-affects/",
 					NeedTriagedLabel:          "do-not-merge/needs-triage-completed",
 					NeedCherryPickLabelPrefix: "needs-cherry-pick-release-",
-					StatusTargetURL:           "https://book.prow.tidb.io/#/plugins/issue-triage",
+					StatusTargetURL:           "https://book.prow.tidb.net/#/plugins/issue-triage",
 				},
 			},
 		})

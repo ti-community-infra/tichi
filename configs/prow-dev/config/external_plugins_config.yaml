@@ -1,5 +1,5 @@
 tichi_web_url: https://prow-dev.tidb.net/tichi
-pr_process_link: https://book.prow.tidb.io/#/en/workflows/pr
+pr_process_link: https://book.prow.tidb.net/#/en/workflows/pr
 command_help_link: https://prow-dev.tidb.net/command-help
 
 ti-community-lgtm:
@@ -149,4 +149,4 @@ ti-community-issue-triage:
     may_affects_label_prefix: "may-affects/"
     linked_issue_needs_triage_label: "do-not-merge/needs-triage-completed"
     need_cherry_pick_label_prefix: "needs-cherry-pick-release-"
-    status_target_url: "https://book.prow.tidb.io/#/en/plugins/issue-triage"
+    status_target_url: "https://book.prow.tidb.net/#/en/plugins/issue-triage"
