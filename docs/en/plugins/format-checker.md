@@ -27,6 +27,7 @@ The plugin will use regular expressions to verify the title and content of the P
 | start_time      | *time.Time | Specify the time when the rule becomes effective, PR or issue created before the effective time will not be verified                 |
 | commit_message  | bool       | Whether to verify the commit message part of commit in PR                                                                            |
 | regexp          | string     | Regular expression used in verification                                                                                              |
+| matched         | string     | Handle events when the regexp matched instead of failure                                                                                              |
 | missing_message | string     | When the match fails, comment and reply to the PR or issue, and the prompt information of multiple rules will be aggregated together |
 | missing_label   | string     | The label added to PR or issue when the match fails                                                                                  |
 | skip_label      | string     | Specify the label that can skip the current rule check                                                                               |

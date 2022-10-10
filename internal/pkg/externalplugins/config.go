@@ -293,6 +293,8 @@ type RequiredMatchRule struct {
 	CommitMessage bool `json:"commit_message,omitempty"`
 	// Regexp specifies the regular expression used for text match.
 	Regexp string `json:"regexp"`
+	// Matched enables format checker to label and notice when there is a match
+	Matched bool `json:"matched,omitempty"`
 	// StartTime indicates that the rule is only effective for PR or issue created after this time.
 	StartTime *time.Time `json:"start_time,omitempty"`
 	// MissingMessage specifies the content commented by bot when there is no match.

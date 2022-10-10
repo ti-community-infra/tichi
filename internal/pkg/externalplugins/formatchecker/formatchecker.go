@@ -304,13 +304,20 @@ func handle(
 		}
 
 		noMatch := !titleMatch && !bodyMatch && !commitMessageMatch
-		if noMatch && len(rule.MissingLabel) != 0 && !labelsExisted.Has(rule.MissingLabel) {
-			labelsNeedAdded.Insert(rule.MissingLabel)
-		} else if !noMatch && len(rule.MissingLabel) != 0 && labelsExisted.Has(rule.MissingLabel) {
-			labelsNeedDeleted.Insert(rule.MissingLabel)
+		shouldHandle := noMatch
+		if rule.Matched {
+			shouldHandle = !shouldHandle
 		}
 
-		if noMatch && len(rule.MissingMessage) != 0 {
+		if len(rule.MissingLabel) != 0 {
+			if shouldHandle && !labelsExisted.Has(rule.MissingLabel) {
+				labelsNeedAdded.Insert(rule.MissingLabel)
+			} else if !shouldHandle && labelsExisted.Has(rule.MissingLabel) {
+				labelsNeedDeleted.Insert(rule.MissingLabel)
+			}
+		}
+
+		if shouldHandle && len(rule.MissingMessage) != 0 {
 			messages.Insert(rule.MissingMessage)
 		}
 	}

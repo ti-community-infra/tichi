@@ -27,6 +27,7 @@
 | body            | bool       | 是否对  PR 或 issue 的内容部分进行校验                  |
 | commit_message  | bool       | 是否对 PR 当中 commit 的 commit message 部分进行校验   |
 | regexp          | string     | 校验时使用的正则表达式                                |
+| matched         | string     | 在正则表达式匹配成功，而不是匹配失败时进行对应的操作          |
 | missing_message | string     | 当匹配失败时，对 PR 或 issue 进行评论回复，多个规则的提示信息会聚合在一起 |
 | missing_label   | string     | 当匹配失败时，对 PR 或 issue 添加的标签                  |
 | skip_label      | string     | 指定能够跳过当前检查规则的标签                            |

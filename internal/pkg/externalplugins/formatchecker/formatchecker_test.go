@@ -661,6 +661,30 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			},
 			expectDeletedLabels: []string{},
 		},
+		{
+			name:      "notice only when matched",
+			action:    github.PullRequestActionOpened,
+			title:     "invalid title",
+			labels:    []string{},
+			branch:    "main",
+			createdAt: earlierCreatedAt,
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					PullRequest:    true,
+					Title:          true,
+					Regexp:         "invalid title",
+					Matched:        true,
+					MissingLabel:   "matched-invalid-title",
+					MissingMessage: "matched something",
+				},
+			},
+
+			expectAddedLabels: []string{
+				formattedLabel("matched-invalid-title"),
+			},
+			expectDeletedLabels: []string{},
+			shouldComment:       true,
+		},
 	}
 
 	for _, testcase := range testcases {
