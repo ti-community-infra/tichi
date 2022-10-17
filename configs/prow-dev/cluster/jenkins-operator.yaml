@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: prow
+  name: jenkins-operator
+  labels:
+    app: jenkins-operator
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: jenkins-operator
+  template:
+    metadata:
+      labels:
+        app: jenkins-operator
+    spec:
+      serviceAccount: jenkins-operator
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: jenkins-operator
+          image: gcr.io/k8s-prow/jenkins-operator:v20220504-0b3a7e15f4
+          args:
+            - --github-endpoint=http://prow-ghproxy
+            - --github-token-path=/etc/github/token
+            - --skip-report=false
+            - --dry-run=false
+            - --csrf-protect=false
+            - --config-path=/etc/config/config-debug.yaml
+            - --jenkins-url=$(JENKINS_URL)
+            - --jenkins-user=$(JENKINS_AUTH_BASIC_USER)
+            - --jenkins-token-file=$(JENKINS_AUTH_BASIC_TOKEN_FILE)
+          env:
+            - name: JENKINS_AUTH_BASIC_USER
+              valueFrom:
+                secretKeyRef:
+                  key: jenkins-admin-user
+                  name: jenkins
+            - name: JENKINS_URL
+              valueFrom:
+                secretKeyRef:
+                  key: jenkins-url
+                  name: jenkins
+            - name: JENKINS_AUTH_BASIC_TOKEN_FILE
+              value: /etc/jenkins/jenkins-admin-password
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+            requests:
+              cpu: "100m"
+              memory: 512Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/config
+              readOnly: true
+            - name: github-token
+              mountPath: /etc/github
+              readOnly: true
+            - mountPath: /etc/jenkins
+              name: jenkins-auth
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: config
+        - name: github-token
+          secret:
+            secretName: github-token
+        - name: jenkins-auth
+          secret:
+            optional: true
+            secretName: jenkins
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: jenkins-operator
+  namespace: prow
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jenkins-operator
+rules:
+  - apiGroups:
+      - prow.k8s.io
+    resources:
+      - prowjobs
+    verbs:
+      - create
+      - get
+      - list
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - create
+      - get
+      - update
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: jenkins-operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jenkins-operator
+subjects:
+  - kind: ServiceAccount
+    name: jenkins-operator
+    namespace: prow

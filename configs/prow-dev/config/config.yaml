@@ -129,3 +129,9 @@ tide:
               - "markdown-test"
             skip-unknown-contexts: true
             from-branch-protection: false
+
+jenkins_operators:
+- max_concurrency: 2
+  max_goroutines: 20
+  job_url_template: 'https://storage-for-logs/{{if eq .Spec.Type "presubmit"}}pr-logs/pull{{else if eq .Spec.Type "batch"}}pr-logs/pull{{else}}logs{{end}}{{if ne .Spec.Refs.Repo "origin"}}/{{.Spec.Refs.Org}}_{{.Spec.Refs.Repo}}{{end}}{{if eq .Spec.Type "presubmit"}}/{{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}{{else if eq .Spec.Type "batch"}}/batch{{end}}/{{.Spec.Job}}/{{.Status.BuildID}}/'
+  report_template: '[Full PR test history](https://pr-history/{{if ne .Spec.Refs.Repo "origin"}}{{.Spec.Refs.Org}}_{{.Spec.Refs.Repo}}/{{end}}{{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}).'

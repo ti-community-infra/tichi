@@ -1,4 +1,13 @@
 presubmits:
+  - name: debug_test # name in jenkins
+    agent: jenkins
+    labels:
+      master: jenkins-master
+    always_run: true
+    context: ci/debug_test
+    rerun_command: "/debug_test"
+    trigger: "((?m)^/debug_test,?(\\s+|$))"
+
   - name: pull-tichi-validate-prow-yaml
     decorate: true
     run_if_changed: "configs/prow-dev/"
