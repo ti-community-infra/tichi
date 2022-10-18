@@ -706,8 +706,8 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		return utilerrors.NewAggregate([]error{err, s.createComment(logger, org, repo, num, comment, resp)})
 	}
 	*logger = *logger.WithField("new_pull_request_number", createdNum)
-	resp := fmt.Sprintf("new pull request created: #%d.", createdNum)
-	logger.Info("new pull request created")
+	resp := fmt.Sprintf("new pull request created to branch `%s`: #%d.", targetBranch, createdNum)
+	logger.Infof("new pull request created to branch `%s`: #%d.", targetBranch, createdNum)
 	if err := s.createComment(logger, org, repo, num, comment, resp); err != nil {
 		return fmt.Errorf("failed to create comment: %w", err)
 	}
