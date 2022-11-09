@@ -7,8 +7,6 @@ presubmits:
     spec:
       containers:
         - image: gcr.io/k8s-prow/checkconfig:v20211229-5ea9b96f66
-          command:
-            - /checkconfig
           args:
             - --plugin-config=configs/prow-dev/config/plugins.yaml
             - --config-path=configs/prow-dev/config/config.yaml
