@@ -1,4 +1,4 @@
-FROM alpine:3.12
+FROM alpine:3.16
 ADD ticommunityowners /usr/local/bin/
 EXPOSE 80
 ENTRYPOINT ["/usr/local/bin/ticommunityowners"]
