@@ -1,4 +1,4 @@
-FROM alpine:3.12
+FROM alpine:3.16
 
 RUN apk --update add git less openssh && \
     rm -rf /var/lib/apt/lists/* && \
