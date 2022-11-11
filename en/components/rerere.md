@@ -49,7 +49,7 @@ presubmits:
         containers:
           -image: ticommunityinfra/rerere-component:latest
             command:
-              -rerere
+              - rerere
             args:
               ---github-token-path=/etc/github/token
               ---dry-run=false
