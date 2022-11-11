@@ -184,7 +184,7 @@ postsubmits:
       containers:
         - image: gcr.io/k8s-prow/label_sync:v20221104-4497ace285
           command:
-            - /app/label_sync/app.binary
+            - /ko-app/label_sync
           args:
             - --config=configs/prow-dev/config/labels.yaml
             - --confirm=true
