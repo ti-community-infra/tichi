@@ -1116,8 +1116,9 @@ github.com/shirou/gopsutil v0.0.0-20190901111213-e4ec7b275ada/go.mod h1:WWnYX4lz
 github.com/shirou/w32 v0.0.0-20160930032740-bb4de0191aa4/go.mod h1:qsXQc7+bwAM3Q1u/4XEfrquwF8Lw7D7y5cD8CuHnfIc=
 github.com/shurcooL/githubv4 v0.0.0-20180925043049-51d7b505e2e9/go.mod h1:hAF0iLZy4td2EX+/8Tw+4nodhlMrwN3HupfaXj3zkGo=
 github.com/shurcooL/githubv4 v0.0.0-20190718010115-4ba037080260/go.mod h1:hAF0iLZy4td2EX+/8Tw+4nodhlMrwN3HupfaXj3zkGo=
-github.com/shurcooL/githubv4 v0.0.0-20191102174205-af46314aec7b h1:Cocq9/ZZxCoiybhygOR7hX4E3/PkV8eNbd1AEcUvaHM=
 github.com/shurcooL/githubv4 v0.0.0-20191102174205-af46314aec7b/go.mod h1:hAF0iLZy4td2EX+/8Tw+4nodhlMrwN3HupfaXj3zkGo=
+github.com/shurcooL/githubv4 v0.0.0-20221021030919-a134b1472cc7 h1:g0m1EUfoJCgI9ezonUedPJiloNaB6B0yJFgkoxOkT28=
+github.com/shurcooL/githubv4 v0.0.0-20221021030919-a134b1472cc7/go.mod h1:hAF0iLZy4td2EX+/8Tw+4nodhlMrwN3HupfaXj3zkGo=
 github.com/shurcooL/go v0.0.0-20180423040247-9e1955d9fb6e/go.mod h1:TDJrrUr11Vxrven61rcy3hJMUqaf/CLWYhHNPmT14Lk=
 github.com/shurcooL/go-goon v0.0.0-20170922171312-37c2f522c041/go.mod h1:N5mDOmsrJOB+vfqUK+7DmDyjhSLIIBnXo9lvZJj3MWQ=
 github.com/shurcooL/graphql v0.0.0-20180924043259-e4a3a37e6d42/go.mod h1:AuYgA5Kyo4c7HfUmvRGs/6rGlMMV/6B1bVnB9JxJEEg=
