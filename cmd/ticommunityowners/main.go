@@ -72,12 +72,11 @@ func main() {
 		log.WithError(err).Fatalf("Error loading external plugin config from %q.", o.externalPluginsConfig)
 	}
 
-	secretAgent := &secret.Agent{}
-	if err := secretAgent.Start([]string{o.github.TokenPath, o.webhookSecretFile}); err != nil {
+	if err := secret.Add(o.webhookSecretFile); err != nil {
 		logrus.WithError(err).Fatal("Error starting secrets agent.")
 	}
 
-	githubClient, err := o.github.GitHubClient(secretAgent, o.dryRun)
+	githubClient, err := o.github.GitHubClient(o.dryRun)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting GitHub client.")
 	}
@@ -94,7 +93,7 @@ func main() {
 
 	server := &owners.Server{
 		Client:         client,
-		TokenGenerator: secretAgent.GetTokenGenerator(o.webhookSecretFile),
+		TokenGenerator: secret.GetTokenGenerator(o.webhookSecretFile),
 		Gc:             githubClient,
 		ConfigAgent:    epa,
 		Log:            log,

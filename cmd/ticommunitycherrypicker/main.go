@@ -14,7 +14,6 @@ import (
 	"k8s.io/test-infra/pkg/flagutil"
 	"k8s.io/test-infra/prow/config/secret"
 	prowflagutil "k8s.io/test-infra/prow/flagutil"
-	git "k8s.io/test-infra/prow/git/v2"
 	"k8s.io/test-infra/prow/interrupts"
 	"k8s.io/test-infra/prow/pjutil"
 	"k8s.io/test-infra/prow/pluginhelp/externalplugins"
@@ -72,12 +71,11 @@ func main() {
 		log.WithError(err).Fatalf("Error loading external plugin config from %q.", o.externalPluginsConfig)
 	}
 
-	secretAgent := &secret.Agent{}
-	if err := secretAgent.Start([]string{o.github.TokenPath, o.webhookSecretFile}); err != nil {
+	if err := secret.Add(o.webhookSecretFile); err != nil {
 		logrus.WithError(err).Fatal("Error starting secrets agent.")
 	}
 
-	githubClient, err := o.github.GitHubClient(secretAgent, o.dryRun)
+	githubClient, err := o.github.GitHubClient(o.dryRun)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting GitHub client.")
 	}
@@ -85,7 +83,7 @@ func main() {
 	// but if we use the APP auth later we will have to handle the err.
 	_ = githubClient.Throttle(360, 360)
 
-	gitClient, err := o.github.GitClient(secretAgent, o.dryRun)
+	gitClient, err := o.github.GitClientFactory("", nil, o.dryRun)
 	if err != nil {
 		logrus.WithError(err).Fatal("Error getting Git client.")
 	}
@@ -110,16 +108,14 @@ func main() {
 		log.WithError(err).Fatal("Error listing bot repositories.")
 	}
 
-	tokenGenerator := secretAgent.GetTokenGenerator(o.github.TokenPath)
 	server := &cherrypicker.Server{
-		WebhookSecretGenerator: secretAgent.GetTokenGenerator(o.webhookSecretFile),
-		GitHubTokenGenerator:   tokenGenerator,
+		WebhookSecretGenerator: secret.GetTokenGenerator(o.webhookSecretFile),
 		BotUser:                botUser,
 		Email:                  email,
 		ConfigAgent:            epa,
 
-		GitClient:    git.ClientFactoryFrom(gitClient),
-		GitHubClient: newExtGithubClient(githubClient, tokenGenerator),
+		GitClient:    gitClient,
+		GitHubClient: newExtGithubClient(githubClient, nil),
 		Log:          log,
 
 		Bare:      &http.Client{},
