@@ -11,7 +11,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	gotest.tools v2.2.0+incompatible
 	k8s.io/apimachinery v0.24.2
-	k8s.io/test-infra v0.0.0-20221112123756-de927c5c0f12
+	k8s.io/test-infra v0.0.0-20221203060353-b8445e1f694e
 	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
 	sigs.k8s.io/yaml v1.3.0
 )
