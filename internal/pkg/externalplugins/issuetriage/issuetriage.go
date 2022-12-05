@@ -62,7 +62,7 @@ type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
 	GetCombinedStatus(org, repo, ref string) (*github.CombinedStatus, error)
 	BotUserChecker() (func(candidate string) bool, error)
-	Query(context.Context, interface{}, map[string]interface{}) error
+	QueryWithGitHubAppsSupport(ctx context.Context, q interface{}, vars map[string]interface{}, org string) error
 }
 
 type referencePullRequestQuery struct {
@@ -728,7 +728,7 @@ func (s *Server) getReferencePRList(log *logrus.Entry, org, repo string, issueNu
 		"issueNumber": githubql.Int(issueNumber),
 	}
 	ctx := context.Background()
-	if err := s.GitHubClient.Query(ctx, &query, vars); err != nil {
+	if err := s.GitHubClient.QueryWithGitHubAppsSupport(ctx, &query, vars, org); err != nil {
 		return nil, err
 	}
 

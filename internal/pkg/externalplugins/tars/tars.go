@@ -40,7 +40,7 @@ type githubClient interface {
 	GetSingleCommit(org, repo, SHA string) (github.RepositoryCommit, error)
 	ListPRCommits(org, repo string, number int) ([]github.RepositoryCommit, error)
 	UpdatePullRequestBranch(org, repo string, number int, expectedHeadSha *string) error
-	Query(context.Context, interface{}, map[string]interface{}) error
+	QueryWithGitHubAppsSupport(context.Context, interface{}, map[string]interface{}, string) error
 }
 
 // See: https://developer.github.com/v4/object/pullrequest/.
@@ -248,7 +248,7 @@ func HandlePushEvent(log *logrus.Entry, ghc githubClient, pe *github.PushEvent,
 	for _, label := range tars.ExcludeLabels {
 		fmt.Fprintf(&buf, " -label:\"%s\"", label)
 	}
-	prs, err := search(context.Background(), log, ghc, buf.String())
+	prs, err := search(context.Background(), log, ghc, org, buf.String())
 	if err != nil {
 		return err
 	}
@@ -319,7 +319,7 @@ func HandleAll(log *logrus.Entry, ghc githubClient, config *plugins.Configuratio
 		}
 		query := reposQuery.String()
 
-		prs, err := search(context.Background(), log, ghc, query)
+		prs, err := search(context.Background(), log, ghc, org, query)
 		if err != nil {
 			log.WithError(err).Error("Error was encountered when querying GitHub, " +
 				"but the remaining repositories will be processed anyway.")
@@ -403,7 +403,7 @@ check:
 	return true, takeAction(log, ghc, org, repo, number, string(pr.Author.Login), tars.Message)
 }
 
-func search(ctx context.Context, log *logrus.Entry, ghc githubClient, q string) ([]pullRequest, error) {
+func search(ctx context.Context, log *logrus.Entry, ghc githubClient, org, q string) ([]pullRequest, error) {
 	var ret []pullRequest
 	vars := map[string]interface{}{
 		"query":        githubql.String(q),
@@ -413,7 +413,7 @@ func search(ctx context.Context, log *logrus.Entry, ghc githubClient, q string) 
 	var remaining int
 	for {
 		sq := searchQuery{}
-		if err := ghc.Query(ctx, &sq, vars); err != nil {
+		if err := ghc.QueryWithGitHubAppsSupport(ctx, &sq, vars, org); err != nil {
 			return nil, err
 		}
 		totalCost += int(sq.RateLimit.Cost)

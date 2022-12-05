@@ -60,7 +60,7 @@ const (
 type githubClient interface {
 	GetPullRequest(org, repo string, number int) (*github.PullRequest, error)
 	ListTeams(org string) ([]github.Team, error)
-	Query(context.Context, interface{}, map[string]interface{}) error
+	QueryWithGitHubAppsSupport(context.Context, interface{}, map[string]interface{}, string) error
 }
 
 // RepositoryCollaboratorConnection specifies the connection between repository collaborators.
@@ -100,7 +100,7 @@ func listCollaborators(ctx context.Context, log *logrus.Entry, ghc githubClient,
 	var remaining int
 	for {
 		cq := collaboratorsQuery{}
-		if err := ghc.Query(ctx, &cq, vars); err != nil {
+		if err := ghc.QueryWithGitHubAppsSupport(ctx, &cq, vars, owner); err != nil {
 			return nil, err
 		}
 		totalCost += int(cq.RateLimit.Cost)
