@@ -12,7 +12,7 @@ require (
 	gotest.tools v2.2.0+incompatible
 	k8s.io/apimachinery v0.24.2
 	k8s.io/test-infra v0.0.0-20221203060353-b8445e1f694e
-	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
+	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -141,7 +141,7 @@ require (
 	k8s.io/api v0.24.2 // indirect
 	k8s.io/client-go v0.24.2 // indirect
 	k8s.io/component-base v0.24.2 // indirect
-	k8s.io/klog/v2 v2.70.1 // indirect
+	k8s.io/klog/v2 v2.80.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1 // indirect
 	knative.dev/pkg v0.0.0-20220329144915-0a1ec2e0d46c // indirect
 	sigs.k8s.io/controller-runtime v0.12.3 // indirect
