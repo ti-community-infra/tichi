@@ -156,7 +156,8 @@ func (f *fghc) BotUserChecker() (func(candidate string) bool, error) {
 	}, nil
 }
 
-func (f *fghc) QueryWithGitHubAppsSupport(ctx context.Context, q interface{}, _ map[string]interface{}, _ string) error {
+func (f *fghc) QueryWithGitHubAppsSupport(
+	ctx context.Context, q interface{}, _ map[string]interface{}, _ string) error {
 	sq, ok := q.(*referencePullRequestQuery)
 	if !ok {
 		return errors.New("unexpected query type")
