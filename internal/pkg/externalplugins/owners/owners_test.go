@@ -35,7 +35,8 @@ func (f *fakegithub) GetPullRequest(owner, repo string, number int) (*github.Pul
 	return val, nil
 }
 
-func (f *fakegithub) Query(_ context.Context, q interface{}, vars map[string]interface{}) error {
+func (f *fakegithub) QueryWithGitHubAppsSupport(
+	_ context.Context, q interface{}, vars map[string]interface{}, _ string) error {
 	query, ok := q.(*collaboratorsQuery)
 	if ok {
 		query.Repository.Collaborators.Edges = f.Collaborators

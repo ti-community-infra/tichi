@@ -32,11 +32,12 @@ const (
 
 type options struct {
 	dryRun bool
+	github prowflagutil.GitHubOptions
 	labels prowflagutil.Strings
 
-	github    prowflagutil.GitHubOptions
-	git       prowflagutil.GitOptions
-	retesting rerere.RetestingOptions
+	webhookSecretFile string
+	git               prowflagutil.GitOptions
+	retesting         rerere.RetestingOptions
 }
 
 // validate validates options.
@@ -83,17 +84,15 @@ func main() {
 		log.WithError(err).Fatal("Error unmarshal job spec.")
 	}
 
-	secretAgent := &secret.Agent{}
-	if err := secretAgent.Start([]string{o.github.TokenPath}); err != nil {
+	if err := secret.Add(o.webhookSecretFile); err != nil {
 		log.WithError(err).Fatal("Error starting secrets agent.")
 	}
 
-	githubClient, err := o.github.GitHubClient(secretAgent, o.dryRun)
+	githubClient, err := o.github.GitHubClient(o.dryRun)
 	if err != nil {
 		log.WithError(err).Fatal("Error getting GitHub client.")
 	}
-
-	gitClient, err := o.git.GitClient(githubClient, secretAgent.GetTokenGenerator(o.github.TokenPath), nil, o.dryRun)
+	gitClient, err := o.github.GitClientFactory("", nil, o.dryRun)
 	if err != nil {
 		log.WithError(err).Fatal("Error getting Git client.")
 	}

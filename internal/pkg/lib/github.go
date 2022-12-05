@@ -10,7 +10,7 @@ import (
 )
 
 type githubExtendClient interface {
-	Query(context.Context, interface{}, map[string]interface{}) error
+	QueryWithGitHubAppsSupport(context.Context, interface{}, map[string]interface{}, string) error
 }
 
 type MemberNode struct {
@@ -55,7 +55,7 @@ func ListTeamAllMembers(ctx context.Context, log *logrus.Entry, ghc githubExtend
 	var remaining int
 	for {
 		sq := TeamMembersQuery{}
-		if err := ghc.Query(ctx, &sq, vars); err != nil {
+		if err := ghc.QueryWithGitHubAppsSupport(ctx, &sq, vars, org); err != nil {
 			return nil, err
 		}
 		totalCost += int(sq.RateLimit.Cost)

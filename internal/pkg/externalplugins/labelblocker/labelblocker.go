@@ -30,7 +30,7 @@ type githubClient interface {
 	RemoveLabel(org, repo string, number int, label string) error
 	GetTeamBySlug(slug string, org string) (*github.Team, error)
 	CreateComment(org, repo string, number int, comment string) error
-	Query(context.Context, interface{}, map[string]interface{}) error
+	QueryWithGitHubAppsSupport(context.Context, interface{}, map[string]interface{}, string) error
 }
 
 // labelCtx contains information about each label event.
