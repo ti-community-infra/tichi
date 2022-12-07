@@ -12,7 +12,7 @@ clap = "3.0.0-beta.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
 tokio = { version = "1.0", default-features = false, features = ["macros", "rt-multi-thread"] }
-log = "0.4.0"
+log = "0.4.17"
 pretty_env_logger = "0.4"
 dotenv = "0.15.0"
 dotenv_codegen = "0.15.0"
