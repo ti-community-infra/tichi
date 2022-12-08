@@ -73,12 +73,14 @@ ti-community-label-blocker:
           - unlabeled
         trusted_users:
           - mini-bot
+          - zuo-bot-1
         message: You can't add the status/can-merge label.
       - regex: "^do-not-merge/needs-triage-completed$"
         actions:
           - unlabeled
         trusted_users:
           - mini-bot
+          - zuo-bot-1
         message: |
           You can't add the `do-not-merge/needs-triage-completed` label, please rerun the check with `/run-check-issue-triage-complete`.
 
@@ -136,6 +138,7 @@ ti-community-format-checker:
         start_time: "2022-01-30T16:30:00+08:00"
         trusted_users:
           - mini-bot
+          - zuo-bot-1
           - dependabot[bot]
 
 ti-community-issue-triage:
