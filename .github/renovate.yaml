@@ -9,7 +9,7 @@ kubernetes:
     - configs/prow-dev/cluster/.+\\.(yaml|yml)$
 packageRules:
   - matchPackagePatterns: [^ticommunityinfra/tichi-]
-    matchManagers: kubernetes
+    matchManagers: [kubernetes]
     matchDatasources: [docker]
     groupName: "ticommunityinfra tichi images"
 postUpdateOptions:
