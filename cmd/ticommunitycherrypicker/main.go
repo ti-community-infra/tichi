@@ -110,6 +110,7 @@ func main() {
 
 	server := &cherrypicker.Server{
 		WebhookSecretGenerator: secret.GetTokenGenerator(o.webhookSecretFile),
+		GitHubTokenGenerator:   secret.GetTokenGenerator(o.github.TokenPath),
 		BotUser:                botUser,
 		Email:                  email,
 		ConfigAgent:            epa,
