@@ -1,3 +1,4 @@
+log_level: trace
 tichi_web_url: https://prow-dev.tidb.net/tichi
 pr_process_link: https://book.prow.tidb.net/#/en/workflows/pr
 command_help_link: https://prow-dev.tidb.net/command-help
