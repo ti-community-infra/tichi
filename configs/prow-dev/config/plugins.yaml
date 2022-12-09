@@ -136,3 +136,7 @@ external_plugins:
         - pull_request
         - issues
         - issue_comment
+    - name: ti-community-blunderbuss
+      events:
+        - pull_request
+        - issue_comment

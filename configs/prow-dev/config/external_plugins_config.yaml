@@ -6,14 +6,14 @@ command_help_link: https://prow-dev.tidb.net/command-help
 ti-community-lgtm:
   - repos:
       - ti-community-infra/test-dev
-    pull_owners_endpoint: https://prow-dev.tidb.net/ti-community-owners
+    pull_owners_endpoint: http://ti-community-owners/ti-community-owners
     ignore_invalid_review_prompt: true
 
 ti-community-merge:
   - repos:
       - ti-community-infra/test-dev
     store_tree_hash: true
-    pull_owners_endpoint: https://prow-dev.tidb.net/ti-community-owners
+    pull_owners_endpoint: http://ti-community-owners/ti-community-owners
 
 ti-community-owners:
   - repos:
@@ -154,3 +154,19 @@ ti-community-issue-triage:
     linked_issue_needs_triage_label: "do-not-merge/needs-triage-completed"
     need_cherry_pick_label_prefix: "needs-cherry-pick-release-"
     status_target_url: "https://book.prow.tidb.net/#/en/plugins/issue-triage"
+
+
+ti-community-blunderbuss:
+  - repos:
+      - ti-community-infra/test-dev
+    pull_owners_endpoint: http://ti-community-owners/ti-community-owners
+    max_request_count: 2
+    exclude_reviewers:
+      # Inactive maintainers
+      - Mini256
+      # Inactive committers
+      - tisonkun
+      # Bots
+      - ti-chi-bot
+      - mini-bot
+      - mini-bot-2
