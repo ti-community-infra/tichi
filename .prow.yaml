@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=.inner-prowjob.schema.json
 presubmits:
   - name: pull-tichi-validate-prow-yaml
     decorate: true
@@ -30,7 +31,7 @@ presubmits:
             - --external-plugin-config-path=configs/prow-dev/config/external_plugins_config.yaml
   - name: pull-tichi-unit-test
     decorate: true
-    always_run: true
+    run_if_changed: ".+.(go|gomod)$"
     branches:
       - ^master$
     spec:
@@ -58,41 +59,9 @@ presubmits:
             - /bin/bash
             - -c
             - "make label-dumpling-checks"
-  - name: pull-tichi-web-node10-lint
-    decorate: true
-    always_run: true
-    branches:
-      - ^master$
-    spec:
-      containers:
-        - image: node:10
-          command:
-            - /bin/bash
-            - -c
-            - >
-              cd ./web &&
-              npm ci &&
-              npm run build &&
-              npm run lint
-  - name: pull-tichi-web-node12-lint
-    decorate: true
-    always_run: true
-    branches:
-      - ^master$
-    spec:
-      containers:
-        - image: node:12
-          command:
-            - /bin/bash
-            - -c
-            - >
-              cd ./web &&
-              npm ci &&
-              npm run build &&
-              npm run lint
   - name: pull-tichi-web-node14-lint
     decorate: true
-    always_run: true
+    run_if_changed: web/
     branches:
       - ^master$
     spec:
@@ -134,8 +103,6 @@ presubmits:
             - --dry-run=false
             - --github-endpoint=https://api.github.com
             - --require-contexts=lint
-            - --require-contexts=post-tichi-unit-test
-            - --require-contexts=post-tichi-web-node14-lint
             - --labels=status/can-merge
             - --retesting-branch=rerere
             - --git-user-from-github=true
@@ -200,6 +167,7 @@ postsubmits:
             secretName: github-token
   - name: post-tichi-unit-test
     decorate: true
+    run_if_changed: ".+.(go|gomod)$"
     branches:
       - ^(master|rerere)$
     spec:
@@ -229,6 +197,7 @@ postsubmits:
             - "make label-dumpling-checks"
   - name: post-tichi-web-node14-lint
     decorate: true
+    run_if_changed: web/
     branches:
       - ^(master|rerere)$
     spec:
