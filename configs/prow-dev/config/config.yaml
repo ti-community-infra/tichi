@@ -27,7 +27,7 @@ in_repo_config:
 deck:
   external_agent_logs:
     - agent: jenkins
-      url_template: "http://prow-jenkins-operator/job/{{.Spec.Job}}/{{.Status.JenkinsBuildID}}/consoleText"
+      url_template: "http://jenkins-operator/job/{{.Spec.Job}}/{{.Status.JenkinsBuildID}}/consoleText"
   spyglass:
     lenses:
       - lens:
@@ -138,7 +138,7 @@ jenkins_operators:
   - max_concurrency: 20
     max_goroutines: 20
     job_url_template:
-      'https://prow-dev.tidb.net/view/s3/prow-logs/{{if eq .Spec.Type
+      'https://prow-dev.tidb.net/view/gs/prow-dev-tidb-logs/{{if eq .Spec.Type
       "presubmit"}}pr-logs/pull{{else if eq .Spec.Type
       "batch"}}pr-logs/pull{{else}}logs{{end}}{{if ne .Spec.Refs.Repo
       "origin"}}/{{.Spec.Refs.Org}}_{{.Spec.Refs.Repo}}{{end}}{{if eq .Spec.Type
