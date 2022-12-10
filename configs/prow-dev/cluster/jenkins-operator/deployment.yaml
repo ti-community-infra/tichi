@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: jenkins-operator
+  name: jenkins-operator
+  namespace: prow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jenkins-operator
+  template:
+    metadata:
+      labels:
+        app: jenkins-operator
+    spec:
+      containers:
+      - name: jenkins-operator
+        image: gcr.io/k8s-prow/jenkins-operator:v20221208-8898931a7f
+        args:
+        - --github-endpoint=http://ghproxy
+        - --github-endpoint=https://api.github.com
+        - --github-token-path=/etc/github/token
+        - --skip-report=false
+        - --dry-run=false
+        - --csrf-protect=false
+        - --config-path=/etc/config/config.yaml
+        - --jenkins-url=$(JENKINS_URL)
+        - --jenkins-user=$(JENKINS_AUTH_BASIC_USER)
+        - --jenkins-token-file=$(JENKINS_AUTH_BASIC_TOKEN_FILE)
+        env:
+        - name: JENKINS_URL
+          valueFrom:
+            secretKeyRef:
+              key: url
+              name: jenkins-operator-auth
+        - name: JENKINS_AUTH_BASIC_USER
+          valueFrom:
+            secretKeyRef:
+              key: user
+              name: jenkins-operator-auth
+        - name: JENKINS_AUTH_BASIC_TOKEN_FILE
+          value: /etc/jenkins/token
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - mountPath: /etc/config
+          name: config
+          readOnly: true
+        - mountPath: /etc/github
+          name: github-token
+          readOnly: true
+        - mountPath: /etc/jenkins
+          name: jenkins-auth
+          readOnly: true
+      serviceAccount: jenkins-operator
+      serviceAccountName: jenkins-operator
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: config
+        name: config
+      - name: github-token
+        secret:
+          defaultMode: 420
+          secretName: github-token
+      - name: jenkins-auth
+        secret:
+          defaultMode: 420
+          optional: true
+          secretName: jenkins-operator-auth
