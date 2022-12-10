@@ -18,7 +18,7 @@ branch-protection:
                 contexts:
                   - "tide"
                   - "triage"
-                strict: true
+                strict: false
 
 in_repo_config:
   enabled:
