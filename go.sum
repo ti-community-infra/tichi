@@ -1247,8 +1247,8 @@ k8s.io/kube-openapi v0.0.0-20200805222855-6aeccd4b50c6/go.mod h1:UuqjUnNftUyPE5H
 k8s.io/kube-openapi v0.0.0-20220328201542-3ee0da9b0b42/go.mod h1:Z/45zLw8lUo4wdiUkI+v/ImEGAvu3WatcZl3lPMR4Rk=
 k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1 h1:MQ8BAZPZlWk3S9K4a9NCkIFQtZShWqoha7snGixVgEA=
 k8s.io/kube-openapi v0.0.0-20220803162953-67bda5d908f1/go.mod h1:C/N6wCaBHeBHkHUesQOQy2/MZqGgMAFPqGsGQLdbZBU=
-k8s.io/test-infra v0.0.0-20221207211222-8949d0ab2096 h1:xnhBVz1lzJSoYqKrnceJZAuD83SKyuQQHhTNVbgm7ZE=
-k8s.io/test-infra v0.0.0-20221207211222-8949d0ab2096/go.mod h1:LrZ9PXzfL7BKpnjk28oSvx7YFPGzNt4PTCoCSj7UTEI=
+k8s.io/test-infra v0.0.0-20230116043250-28c7a83d5420 h1:/AvXqP67662yia32QltiwCBjbe0Q0U221C7kiLE32wI=
+k8s.io/test-infra v0.0.0-20230116043250-28c7a83d5420/go.mod h1:LrZ9PXzfL7BKpnjk28oSvx7YFPGzNt4PTCoCSj7UTEI=
 k8s.io/utils v0.0.0-20210802155522-efc7438f0176/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 h1:KTgPnR10d5zhztWptI952TNtt/4u5h3IzDXkdIMuo2Y=
