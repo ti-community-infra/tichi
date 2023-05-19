@@ -579,12 +579,13 @@ func (s *Server) addCherryPickLabelsToPR(
 		return nil
 	}
 
+	maintainVersions := sets.NewString(cfg.MaintainVersions...)
 	wontfixVersionSets := sets.NewString(cfg.WontfixVersions...)
 	labelsNeedToAdd := make([]string, 0)
 
 	for _, affectsVersionLabel := range affectsVersionLabels.List() {
 		affectVersion := strings.TrimPrefix(affectsVersionLabel, cfg.AffectsLabelPrefix)
-		if wontfixVersionSets.Has(affectVersion) {
+		if wontfixVersionSets.Has(affectVersion) || !maintainVersions.Has(affectVersion) {
 			continue
 		}
 
