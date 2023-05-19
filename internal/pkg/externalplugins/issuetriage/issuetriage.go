@@ -551,25 +551,8 @@ func (s *Server) handle(log *logrus.Entry, cfg *tiexternalplugins.TiCommunityIss
 		}
 
 		// Add needs-cherry-pick label.
-		labelsNeedToAdd := make([]string, 0)
-		wontfixVersionSets := sets.NewString(cfg.WontfixVersions...)
-		for _, affectsVersionLabel := range affectsVersionLabels.List() {
-			affectVersion := strings.TrimPrefix(affectsVersionLabel, cfg.AffectsLabelPrefix)
-			if wontfixVersionSets.Has(affectVersion) {
-				continue
-			}
-
-			cherryPickLabel := cfg.NeedCherryPickLabelPrefix + affectVersion
-			if !prLabels.Has(cherryPickLabel) {
-				labelsNeedToAdd = append(labelsNeedToAdd, cherryPickLabel)
-			}
-		}
-
-		if len(labelsNeedToAdd) > 0 {
-			err := s.GitHubClient.AddLabels(prOrg, prRepo, prNum, labelsNeedToAdd...)
-			if err != nil {
-				return err
-			}
+		if err := s.addCherryPickLabelsToPR(affectsVersionLabels, prLabels, prOrg, prRepo, prNum, cfg); err != nil {
+			return err
 		}
 	} else if wantStatus == github.StatusError || wantStatus == github.StatusFailure {
 		// Add the need triaged label.
@@ -585,6 +568,36 @@ func (s *Server) handle(log *logrus.Entry, cfg *tiexternalplugins.TiCommunityIss
 	wantDesc = truncatedStatusDesc(log, wantDesc)
 	return s.createStatus(log, prOrg, prRepo, prSHA, existingStatus, existingDesc, existingURL,
 		wantStatus, wantDesc, cfg.StatusTargetURL)
+}
+
+func (s *Server) addCherryPickLabelsToPR(
+	affectsVersionLabels, prLabels sets.String,
+	org, repo string, num int,
+	cfg *tiexternalplugins.TiCommunityIssueTriage,
+) error {
+	if affectsVersionLabels.Len() == 0 {
+		return nil
+	}
+
+	wontfixVersionSets := sets.NewString(cfg.WontfixVersions...)
+	labelsNeedToAdd := make([]string, 0)
+
+	for _, affectsVersionLabel := range affectsVersionLabels.List() {
+		affectVersion := strings.TrimPrefix(affectsVersionLabel, cfg.AffectsLabelPrefix)
+		if wontfixVersionSets.Has(affectVersion) {
+			continue
+		}
+
+		cherryPickLabel := cfg.NeedCherryPickLabelPrefix + affectVersion
+		if !prLabels.Has(cherryPickLabel) {
+			labelsNeedToAdd = append(labelsNeedToAdd, cherryPickLabel)
+		}
+	}
+
+	if len(labelsNeedToAdd) == 0 {
+		return nil
+	}
+	return s.GitHubClient.AddLabels(org, repo, num, labelsNeedToAdd...)
 }
 
 // isPRNeedToCheck used to determine if PR needs to be checked.
