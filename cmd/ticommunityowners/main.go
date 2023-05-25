@@ -130,7 +130,7 @@ func main() {
 		c.JSON(http.StatusOK, ownersData)
 	})
 
-	httpServer := &http.Server{Addr: ":" + strconv.Itoa(o.port), Handler: router}
+	httpServer := &http.Server{Addr: ":" + strconv.Itoa(o.port), Handler: router, ReadHeaderTimeout: 10 * time.Second}
 
 	defer interrupts.WaitForGracefulShutdown()
 	interrupts.ListenAndServe(httpServer, 5*time.Second)

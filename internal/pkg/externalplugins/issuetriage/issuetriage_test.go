@@ -878,6 +878,42 @@ func TestHandlePullRequestEvent(t *testing.T) {
 			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
 		},
 		{
+			name:         "open a pull request linked to two triaged issue, but affect labels not in maintain versions",
+			action:       github.PullRequestActionOpened,
+			labels:       []string{},
+			body:         "Issue Number: close #2, ref #3",
+			state:        "open",
+			targetBranch: "master",
+			issues: map[int]*github.Issue{
+				2: {
+					Number: 2,
+					Labels: []github.Label{
+						{Name: "type/bug"},
+						{Name: "severity/major"},
+						{Name: "affects/5.2"},
+						{Name: "affects/1.1"},
+					},
+				},
+				3: {
+					Number: 3,
+					Labels: []github.Label{
+						{Name: "type/bug"},
+						{Name: "severity/major"},
+						{Name: "affects/5.3"},
+						{Name: "affects/2.0"},
+					},
+				},
+			},
+
+			expectAddedLabels: []string{
+				"org/repo#1:needs-cherry-pick-release-5.2",
+				"org/repo#1:needs-cherry-pick-release-5.3",
+			},
+			expectRemovedLabels:      []string{},
+			expectCreatedStatusState: github.StatusSuccess,
+			expectCreatedStatusDesc:  statusDescAllBugIssueTriaged,
+		},
+		{
 			name:         "open a pull request on release branch and link to a bug issue with may-affects/* labels",
 			action:       github.PullRequestActionOpened,
 			labels:       []string{},

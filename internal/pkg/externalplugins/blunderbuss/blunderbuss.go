@@ -225,6 +225,7 @@ func handle(gc githubClient, opts *tiexternalplugins.TiCommunityBlunderbuss, rep
 	}
 
 	// Always seed random!
+	//nolint: staticcheck
 	rand.Seed(time.Now().UTC().UnixNano())
 	// List the contributors of the changes.
 	contributors, err := listChangesContributors(gc, repo.Owner.Login, repo.Name, pr.Number, log)
