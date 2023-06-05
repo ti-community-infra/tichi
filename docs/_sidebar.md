@@ -29,3 +29,5 @@
   - [autobump](tools/autobump.md)
 - [工作流](workflows.md)
   - [PR 工作流](workflows/pr.md)
+  - [PR 工作流(老)](workflows/pr-old.md)
+

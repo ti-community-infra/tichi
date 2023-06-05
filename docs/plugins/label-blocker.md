@@ -2,7 +2,7 @@
 
 ## 设计背景
 
-在整个 [PR 协作过程](workflows/pr.md) 中，一些标签会被机器人识别和使用，例如：通过根据 PR 是否带有 `status/can-merge` 标签来判断该 PR 是否能够被合并。对于这些较为敏感的标签，我们不希望它们被别人随意的添加或删除，因此设计了 ti-community-label-blocker 这个插件来帮助我们对这类标签的添加或删除操作进行权限控制。
+在整个 [PR 协作过程](workflows/pr-old.md) 中，一些标签会被机器人识别和使用，例如：通过根据 PR 是否带有 `status/can-merge` 标签来判断该 PR 是否能够被合并。对于这些较为敏感的标签，我们不希望它们被别人随意的添加或删除，因此设计了 ti-community-label-blocker 这个插件来帮助我们对这类标签的添加或删除操作进行权限控制。
 
 ## 权限设计
 
@@ -23,13 +23,13 @@
 
 ### BlockLabel
 
-| 参数名        | 类型     | 说明                                                      |
-| ------------- | -------- | --------------------------------------------------------- |
-| regex         | string   | 匹配标签的正则表达式                                      |
+| 参数名        | 类型     | 说明                                                            |
+| ------------- | -------- | --------------------------------------------------------------- |
+| regex         | string   | 匹配标签的正则表达式                                            |
 | actions       | []string | 匹配的 action 类型, 可填 `labeled` 或 `unlabeled`，至少填写一个 |
-| trusted_teams | []string | 信任的 GitHub teams                                       |
-| trusted_users | []string | 信任的 GitHub users                                       |
-| message       | string   | 给用户的操作反馈提示，为空表示不提示                      |
+| trusted_teams | []string | 信任的 GitHub teams                                             |
+| trusted_users | []string | 信任的 GitHub users                                             |
+| message       | string   | 给用户的操作反馈提示，为空表示不提示                            |
 
 例如：
 
