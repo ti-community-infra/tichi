@@ -20,7 +20,7 @@ We use prow's native lgtm + approve related plug-ins to drive the process, but w
     if the configured sufficient lgtm count has not been reached, the bot will add `needs-*-more -lgtm` label.    
   - If sufficient **reviewers** have `/lgtm`'ed, [prow](https://prow.tidb.net)
     ([@ti-chi-bot](https://github.com/apps/ti-chi-bot)) applies an `lgtm` label and remove `needs-*-more-lgtm` label to the PR;
-  - Any reviewer doing `/lgtm cancel` will reset the count of `lgtm`.     
+  - Any valid reviewer or the PR author doing `/lgtm cancel` will reset the count of `lgtm`. 
 - Phase 2: Humans approve the PR
   - The PR **author** `/assign`'s all suggested **approvers** to the PR, and optionally notifies
     them (eg: "pinging @foo for approval")
@@ -45,7 +45,7 @@ We use prow's native lgtm + approve related plug-ins to drive the process, but w
       being re-run one last time
   - Then the PR will automatically be merged
 
-> It's hacked base on the [kubernetes community review process](https://github.com/kubernetes/community/blob/master/contributors/guide/owners.md#code-review-using-owners-files).
+> Modified based on [kubernetes community review process](https://github.com/kubernetes/community/blob/master/contributors/guide/owners.md#code-review-using-owners-files).
 
 ## Recommended configuration items 
 
