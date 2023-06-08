@@ -53,7 +53,7 @@ We use prow's native lgtm + approve related plug-ins to drive the process, but w
 
 In terms of merging, we still recommend using GitHub's Squash mode for merging, because this is the current tradition of the TiDB community. Everyone will create a large number of commits in the PR, and then automatically perform Squash through GitHub when merging. At present, our ti-community-merge is also designed to serve the Squash mode. **If you do not use the Squash mode, then you need to be responsible for rebase or squash commits in the PR, which will invalidate our function of storing and submitting the hash (details See Q&A), eventually causing status/can-merge to automatically cancel** because there are new commits. So we strongly recommend that you use Squash mode for collaboration. 
 
-### If the CI task of the repository is triggered by prow, you need to close the Require branches to be up to date before merging branch protection option. 
+### If the CI task of the repository is triggered by prow, you need to trun off the "Require branches to be up to date before merging branch protection" option. 
 
 If it is a CI task triggered by prow, the pre-merge with the base has been performed in the checkout link before subsequent construction steps . 
 
