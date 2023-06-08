@@ -6,10 +6,6 @@
 
 ## PR 协作流程
 
-
-
-以下是相对上游原生差异的部分：
-
 - **Phase 1：** reviewers review 代码
   - 当 reviewer 进行 `lgtm` 动作时, 如果还没有达到配置的足够数量计数, bot 将会添加 `needs-*-more-lgtm` 标签。
   - 如果 reviewer `lgtm` 后整体的数量足够, bot 将会添加 `lgtm` 并移除 `needs-*-more-lgtm` 标签。
