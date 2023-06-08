@@ -6,11 +6,6 @@
 
 ## PR 协作流程
 
-- **Phase 1：** reviewers review 代码
-  - 当 reviewer 进行 `lgtm` 动作时, 如果还没有达到配置的足够数量计数, bot 将会添加 `needs-*-more-lgtm` 标签。
-  - 如果 reviewer `lgtm` 后整体的数量足够, bot 将会添加 `lgtm` 并移除 `needs-*-more-lgtm` 标签。
-  - 任何 reviewer 进行 `/lgtm cancel` 则会重置 `lgtm` 的计数。
-
 - 作者提交 PR 。
 - 阶段 0：自动化建议 PR 的 [reviewers][reviewer-role] 和 [approvers][approver-role]
   - 确定最接近被更改代码的 OWNERS 文件集。
