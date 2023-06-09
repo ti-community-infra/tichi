@@ -8,7 +8,7 @@
 
 - 作者提交 PR 。
 - 阶段 0：自动化建议 PR 的 [reviewers][reviewer-role] 和 [approvers][approver-role]
-  - 确定最接近被更改代码的 OWNERS 文件集。
+  - 确定最接近被更改代码的 OWNERS([spec](https://www.kubernetes.dev/docs/guide/owners/#owners-spec)) 文件集。
   - 至少选择两个建议的审阅者，尝试为每个叶子 OWNERS 文件找到一个独特的审阅者，并请求他们对 PR 进行审阅。
   - 从每个 OWNERS 文件中选择建议的批准人，并将他们列在 PR 的评论中。
 - 阶段 1：人工审查 PR
@@ -18,7 +18,7 @@
   - 如果有足够多的审阅者已经 `/lgtm` [prow](https://prow.tidb.net) ([@ti-chi-bot](https://github.com/apps/ti-chi-bot)) 会为 PR 添加 `lgtm` 标签并删除 `needs-*-more-lgtm` 标签;
   - 任何有效的 reviewer 或者 PR 作者进行 `/lgtm cancel` 都会重置 lgtm 计数。
 - 阶段 2：人工批准 PR
-  - PR作者可向 PR 评论 `/assign`,这将推荐批准者，也可选择通知他们（例如：“pinging @foo for approval”）。
+  - PR作者可向 PR 评论 `/assign`，这将推荐批准者，也可选择通知他们（例如：“pinging @foo for approval”）。
   - 只有相关 OWNERS 文件中列出的人，无论是直接还是通过别名，如上所述，都可以充当批准人，包括打开 PR 的个人。
   - 审批者寻找整体验收标准，包括与其他功能的依赖性、向前/向后兼容性、API 和标志定义等。
   - 如果代码更改对他们来说很好，批准者会/approve输入 PR 评论或评论；如果他们改变主意，他们可以 `/approve cancel`

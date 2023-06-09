@@ -7,7 +7,7 @@ We use prow's native lgtm + approve related plug-ins to drive the process, but w
 ## Main PR Collaboration Process
 - The **author** submits a PR
 - Phase 0: Automation suggests **[reviewers][reviewer-role]** and **[approvers][approver-role]** for the PR
-  - Determine the set of OWNERS files nearest to the code being changed
+  - Determine the set of OWNERS([spec](https://www.kubernetes.dev/docs/guide/owners/#owners-spec)) files nearest to the code being changed
   - Choose at least two suggested **reviewers**, trying to find a unique reviewer for every leaf
     OWNERS file, and request their reviews on the PR
   - Choose suggested **approvers**, one from each OWNERS file, and list them in a comment on the PR
