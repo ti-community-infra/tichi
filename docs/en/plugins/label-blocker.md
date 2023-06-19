@@ -2,7 +2,7 @@
 
 ## Design Background
 
-Throughout the [PR collaboration process](en/workflows/pr.md), some labels are recognized and used by the bot, for example, to determine if a PR can be merged based on whether it has a `status/can-merge` label. For these sensitive labels, we don't want them to be added or removed at will, so we designed the ti-community-label-blocker plugin to help us control the permissions for adding or removing such labels.
+Throughout the [PR collaboration process](en/workflows/pr-old.md), some labels are recognized and used by the bot, for example, to determine if a PR can be merged based on whether it has a `status/can-merge` label. For these sensitive labels, we don't want them to be added or removed at will, so we designed the ti-community-label-blocker plugin to help us control the permissions for adding or removing such labels.
 
 ## Permission design
 
@@ -23,13 +23,13 @@ For trusted users, i.e. trusted Github users or members of a trusted Github team
 
 ### BlockLabel
 
-| Parameter Name | Type     | Description                                                        |
-| -------------- | -------- | ------------------------------------------------------------------ |
-| regex          | string   | Regular expressions for matching label                             |
+| Parameter Name | Type     | Description                                                              |
+| -------------- | -------- | ------------------------------------------------------------------------ |
+| regex          | string   | Regular expressions for matching label                                   |
 | actions        | []string | Matching action type, can fill in `labeled` or `unlabeled`, at least one |
-| trusted_teams  | []string | Trusted GitHub teams                                               |
-| trusted_users  | []string | Trusted GitHub users                                               |
-| message        | string   | Feedback hints to the user, empty means no hints                   |
+| trusted_teams  | []string | Trusted GitHub teams                                                     |
+| trusted_users  | []string | Trusted GitHub users                                                     |
+| message        | string   | Feedback hints to the user, empty means no hints                         |
 
 For example:
 
