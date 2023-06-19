@@ -29,3 +29,4 @@
   - [autobump](en/tools/autobump.md)
 - [Workflows](en/workflows.md)
   - [PR workflow](en/workflows/pr.md)
+  - [PR workflow(old)](en/workflows/pr-old.md)
