@@ -1266,8 +1266,8 @@ k8s.io/test-infra v0.0.0-20230116043250-28c7a83d5420 h1:/AvXqP67662yia32QltiwCBj
 k8s.io/test-infra v0.0.0-20230116043250-28c7a83d5420/go.mod h1:LrZ9PXzfL7BKpnjk28oSvx7YFPGzNt4PTCoCSj7UTEI=
 k8s.io/utils v0.0.0-20210802155522-efc7438f0176/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
 k8s.io/utils v0.0.0-20220210201930-3a6ce19ff2f9/go.mod h1:jPW/WVKK9YHAvNhRxK0md/EJ228hCsBRufyofKtW8HA=
-k8s.io/utils v0.0.0-20221128185143-99ec85e7a448 h1:KTgPnR10d5zhztWptI952TNtt/4u5h3IzDXkdIMuo2Y=
-k8s.io/utils v0.0.0-20221128185143-99ec85e7a448/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
+k8s.io/utils v0.0.0-20240423183400-0849a56e8f22 h1:ao5hUqGhsqdm+bYbjH/pRkCs0unBGe9UyDahzs9zQzQ=
+k8s.io/utils v0.0.0-20240423183400-0849a56e8f22/go.mod h1:OLgZIPagt7ERELqWJFomSt595RzquPNLL48iOWgYOg0=
 knative.dev/pkg v0.0.0-20220329144915-0a1ec2e0d46c h1:PLzCwnuPt+bjwiyYrRrsbmiBWR8a5cIwKtTd3LK1TqU=
 knative.dev/pkg v0.0.0-20220329144915-0a1ec2e0d46c/go.mod h1:0A5D5tOLettuVoi5x+0SLGRfrvVemXXtLH247WupPJk=
 pack.ag/amqp v0.11.2/go.mod h1:4/cbmt4EJXSKlG6LCfWHoqmN0uFdy5i/+YFz+fTfhV4=
