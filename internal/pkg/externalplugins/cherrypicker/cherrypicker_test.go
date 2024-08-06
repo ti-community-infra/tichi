@@ -262,7 +262,7 @@ func (f *fghc) CreateIssue(_, _, title, body string, _ int, labels, assignees []
 	return num, nil
 }
 
-func (f *fghc) CreatePullRequest(_, _, title, _, head, base string, _ bool) (int, error) {
+func (f *fghc) CreatePullRequest(_, _, title, body, head, base string, _ bool) (int, error) {
 	f.Lock()
 	defer f.Unlock()
 	num := len(f.prs) + 1
