@@ -170,7 +170,7 @@ func (f *fakeGithubClient) DeleteComment(owner, repo string, id int) error {
 }
 
 // ListIssueComments returns comments.
-func (f *fakeGithubClient) ListIssueComments(owner, repo string, number int) ([]github.IssueComment, error) {
+func (f *fakeGithubClient) ListIssueComments(_, _ string, number int) ([]github.IssueComment, error) {
 	f.lock.RLock()
 	defer f.lock.RUnlock()
 	return append([]github.IssueComment{}, f.IssueComments[number]...), nil

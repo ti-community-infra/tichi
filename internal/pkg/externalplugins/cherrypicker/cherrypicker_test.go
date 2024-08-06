@@ -188,7 +188,7 @@ func (f *fghc) EnsureFork(_, repo, _ string) (string, error) {
 	return repo, nil
 }
 
-func (f *fghc) IsMember(string, user string) (bool, error) {
+func (f *fghc) IsMember(_, user string) (bool, error) {
 	f.Lock()
 	defer f.Unlock()
 
@@ -234,7 +234,7 @@ func prToString(pr github.PullRequest) string {
 	return fmt.Sprintf(prFormat, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, assignees)
 }
 
-func (f *fghc) CreateIssue(_, _, title, body string, milestone int, labels, assignees []string) (int, error) {
+func (f *fghc) CreateIssue(_, _, title, body string, _ int, labels, assignees []string) (int, error) {
 	f.Lock()
 	defer f.Unlock()
 
@@ -262,7 +262,7 @@ func (f *fghc) CreateIssue(_, _, title, body string, milestone int, labels, assi
 	return num, nil
 }
 
-func (f *fghc) CreatePullRequest(org, repo, title, body, head, base string, canModify bool) (int, error) {
+func (f *fghc) CreatePullRequest(_, _, title, _, head, base string, _ bool) (int, error) {
 	f.Lock()
 	defer f.Unlock()
 	num := len(f.prs) + 1
