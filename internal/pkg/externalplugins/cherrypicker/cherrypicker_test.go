@@ -143,19 +143,19 @@ func (f *fghc) AssignIssue(_, _ string, number int, logins []string) error {
 	return nil
 }
 
-func (f *fghc) GetPullRequest(org, repo string, number int) (*github.PullRequest, error) {
+func (f *fghc) GetPullRequest(string, string, int) (*github.PullRequest, error) {
 	f.Lock()
 	defer f.Unlock()
 	return f.pr, nil
 }
 
-func (f *fghc) GetPullRequestPatch(org, repo string, number int) ([]byte, error) {
+func (f *fghc) GetPullRequestPatch(string, string, int) ([]byte, error) {
 	f.Lock()
 	defer f.Unlock()
 	return f.patch, nil
 }
 
-func (f *fghc) GetPullRequests(org, repo string) ([]github.PullRequest, error) {
+func (f *fghc) GetPullRequests(string, string) ([]github.PullRequest, error) {
 	f.Lock()
 	defer f.Unlock()
 	return f.prs, nil
@@ -178,7 +178,7 @@ func (f *fghc) GetRepo(_, _ string) (github.FullRepo, error) {
 	return github.FullRepo{}, nil
 }
 
-func (f *fghc) EnsureFork(_, org, repo string) (string, error) {
+func (f *fghc) EnsureFork(_, repo, _ string) (string, error) {
 	if repo == "changeme" {
 		return "changed", nil
 	}
@@ -188,7 +188,7 @@ func (f *fghc) EnsureFork(_, org, repo string) (string, error) {
 	return repo, nil
 }
 
-func (f *fghc) IsMember(org, user string) (bool, error) {
+func (f *fghc) IsMember(string, user string) (bool, error) {
 	f.Lock()
 	defer f.Unlock()
 
@@ -200,7 +200,7 @@ func (f *fghc) IsMember(org, user string) (bool, error) {
 	}
 }
 
-func (f *fghc) IsCollaborator(org, repo, user string) (bool, error) {
+func (f *fghc) IsCollaborator(_, _, user string) (bool, error) {
 	if strings.Contains(user, patternErrWhenIsCollaborator) {
 		return false, errors.New("fake error")
 	}
@@ -208,7 +208,7 @@ func (f *fghc) IsCollaborator(org, repo, user string) (bool, error) {
 	return sets.NewString(f.collaborators...).Has(user), nil
 }
 
-func (f *fghc) AddCollaborator(org, repo, user string, permission github.RepoPermissionLevel) error {
+func (f *fghc) AddCollaborator(_, _, user string, _ github.RepoPermissionLevel) error {
 	if strings.Contains(user, patternErrWhenAddCollaborator) {
 		return errors.New("fake error")
 	}
@@ -217,7 +217,7 @@ func (f *fghc) AddCollaborator(org, repo, user string, permission github.RepoPer
 	return nil
 }
 
-func (f *fghc) ListRepoInvitations(org, repo string) ([]*gc.RepositoryInvitation, error) {
+func (f *fghc) ListRepoInvitations(string, string) ([]*gc.RepositoryInvitation, error) {
 	return f.repoInvitations, nil
 }
 
@@ -234,7 +234,7 @@ func prToString(pr github.PullRequest) string {
 	return fmt.Sprintf(prFormat, pr.Title, pr.Body, pr.Head.Ref, pr.Base.Ref, labels, assignees)
 }
 
-func (f *fghc) CreateIssue(org, repo, title, body string, milestone int, labels, assignees []string) (int, error) {
+func (f *fghc) CreateIssue(_, _, title, body string, milestone int, labels, assignees []string) (int, error) {
 	f.Lock()
 	defer f.Unlock()
 
@@ -276,19 +276,19 @@ func (f *fghc) CreatePullRequest(org, repo, title, body, head, base string, canM
 	return num, nil
 }
 
-func (f *fghc) ListIssueComments(org, repo string, number int) ([]github.IssueComment, error) {
+func (f *fghc) ListIssueComments(_, _ string, _ int) ([]github.IssueComment, error) {
 	f.Lock()
 	defer f.Unlock()
 	return f.prComments, nil
 }
 
-func (f *fghc) GetIssueLabels(org, repo string, number int) ([]github.Label, error) {
+func (f *fghc) GetIssueLabels(_, _ string, _ int) ([]github.Label, error) {
 	f.Lock()
 	defer f.Unlock()
 	return f.prLabels, nil
 }
 
-func (f *fghc) ListOrgMembers(org, role string) ([]github.TeamMember, error) {
+func (f *fghc) ListOrgMembers(_, role string) ([]github.TeamMember, error) {
 	f.Lock()
 	defer f.Unlock()
 	if role != "all" {
