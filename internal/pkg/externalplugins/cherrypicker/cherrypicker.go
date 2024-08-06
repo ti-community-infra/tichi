@@ -646,7 +646,7 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 			}
 
 			//  Try git cherry-pick.
-			cherrypick := ex.Command("git", "cherry-pick", "-m", "1", *pr.MergeSHA)
+			cherrypick := ex.Command("git", "cherry-pick", "-m", "1", "--cleanup=verbatim", *pr.MergeSHA)
 			cherrypick.SetDir(dir)
 			out, err = cherrypick.CombinedOutput()
 			if err != nil {

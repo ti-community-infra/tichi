@@ -41,7 +41,7 @@ var (
 // HelpProvider constructs the PluginHelp for this plugin that takes into account enabled repositories.
 // HelpProvider defines the type for function that construct the PluginHelp for plugins.
 func HelpProvider(_ *tiexternalplugins.ConfigAgent) externalplugins.ExternalPluginHelpProvider {
-	return func(enabledRepos []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
+	return func(_ []config.OrgRepo) (*pluginhelp.PluginHelp, error) {
 		yamlSnippet, err := plugins.CommentMap.GenYaml(&tiexternalplugins.Configuration{
 			TiCommunityLgtm: []tiexternalplugins.TiCommunityLgtm{
 				{

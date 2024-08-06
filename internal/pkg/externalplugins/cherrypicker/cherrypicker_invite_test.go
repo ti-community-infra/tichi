@@ -203,7 +203,7 @@ func TestInviteIC(t *testing.T) {
 				BotUser:                botUser,
 				GitClient:              c,
 				ConfigAgent:            ca,
-				Push:                   func(forkName, newBranch string, force bool) error { return nil },
+				Push:                   func(_, _ string, _ bool) error { return nil },
 				GitHubClient:           ghc,
 				WebhookSecretGenerator: getSecret,
 				GitHubTokenGenerator:   getGithubToken,

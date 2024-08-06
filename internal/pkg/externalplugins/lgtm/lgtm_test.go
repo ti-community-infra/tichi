@@ -139,7 +139,7 @@ func (f *fakeGithubClient) CreateComment(owner, repo string, number int, comment
 }
 
 // EditComment edits a comment. Its a stub that does nothing.
-func (f *fakeGithubClient) EditComment(org, repo string, id int, comment string) error {
+func (f *fakeGithubClient) EditComment(_, _ string, id int, comment string) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	for num, ics := range f.IssueComments {
@@ -170,7 +170,7 @@ func (f *fakeGithubClient) DeleteComment(owner, repo string, id int) error {
 }
 
 // ListIssueComments returns comments.
-func (f *fakeGithubClient) ListIssueComments(owner, repo string, number int) ([]github.IssueComment, error) {
+func (f *fakeGithubClient) ListIssueComments(_, _ string, number int) ([]github.IssueComment, error) {
 	f.lock.RLock()
 	defer f.lock.RUnlock()
 	return append([]github.IssueComment{}, f.IssueComments[number]...), nil

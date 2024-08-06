@@ -13,11 +13,14 @@ import (
 	"k8s.io/test-infra/prow/config"
 	"k8s.io/test-infra/prow/github"
 	"k8s.io/test-infra/prow/github/fakegithub"
+
+	_ "embed"
 )
 
 const (
 	issueTitleRegex         = "^(\\[TI-(?P<issue_number>[1-9]\\d*)\\])+.+: .{10,160}$"
 	issueNumberRegex        = "#([1-9]\\d*)"
+	testTaskCheckedRegex    = `<!-- At least one of them must be included\. -->\s*[\n]{1,}(\- \[[xX ]\] .*\n)*(\- \[[xX]\] .*\n)(\- \[[xX ]\] .*\n)*\n` //nolint: lll
 	issueNumberPrefixRegex  = "((https|http)://github\\.com/{{.Org}}/{{.Repo}}/issues/|{{.Org}}/{{.Repo}}#|#)"
 	keywordPrefixRegex      = "(ref|close[sd]?|resolve[sd]?|fix(e[sd])?)"
 	issueNumberLineTemplate = "(?im)^Issue Number:\\s*((,\\s*)?%s\\s*%s(?P<issue_number>[1-9]\\d*))+"
@@ -26,6 +29,9 @@ const (
 var (
 	issueNumberLineRegexp = fmt.Sprintf(issueNumberLineTemplate, keywordPrefixRegex, issueNumberPrefixRegex)
 )
+
+//go:embed test-task-body.md
+var testTaskBody string
 
 func TestHandlePullRequestEvent(t *testing.T) {
 	formattedLabel := func(label string) string {
@@ -872,6 +878,26 @@ func TestHandleIssueEvent(t *testing.T) {
 			shouldComment:       false,
 		},
 		{
+			name:      "Issue body without test task checked",
+			action:    github.IssueActionOpened,
+			body:      testTaskBody,
+			createdAt: earlierCreatedAt,
+			labels:    []string{},
+			requiredMatchRules: []externalplugins.RequiredMatchRule{
+				{
+					Issue:        true,
+					Body:         true,
+					Regexp:       testTaskCheckedRegex,
+					MissingLabel: "do-not-merge/needs-finish-test-tasks",
+				},
+			},
+			expectAddedLabels: []string{
+				formattedLabel("do-not-merge/needs-finish-test-tasks"),
+			},
+			expectDeletedLabels: []string{},
+			shouldComment:       false,
+		},
+		{
 			name:   "Issue body with issue number",
 			action: github.IssueActionOpened,
 			body: `
@@ -1109,85 +1135,87 @@ func TestHandleIssueEvent(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		tc := testcase
+		t.Run(testcase.name, func(t *testing.T) {
+			tc := testcase
 
-		labels := make([]github.Label, 0)
-		for _, l := range tc.labels {
-			labels = append(labels, github.Label{
-				Name: l,
-			})
-		}
+			labels := make([]github.Label, 0)
+			for _, l := range tc.labels {
+				labels = append(labels, github.Label{
+					Name: l,
+				})
+			}
 
-		fc := &fakegithub.FakeClient{
-			Issues: map[int]*github.Issue{
-				12345: {
-					Number:      12345,
-					PullRequest: nil,
+			fc := &fakegithub.FakeClient{
+				Issues: map[int]*github.Issue{
+					12345: {
+						Number:      12345,
+						PullRequest: nil,
+					},
+					1234: {
+						Number:      1234,
+						PullRequest: &struct{}{},
+					},
 				},
-				1234: {
-					Number:      1234,
-					PullRequest: &struct{}{},
+				IssueComments:      make(map[int][]github.IssueComment),
+				IssueLabelsAdded:   []string{},
+				IssueLabelsRemoved: []string{},
+			}
+
+			cfg := &externalplugins.Configuration{}
+			cfg.TiCommunityFormatChecker = []externalplugins.TiCommunityFormatChecker{
+				{
+					Repos:              []string{"org/repo"},
+					RequiredMatchRules: tc.requiredMatchRules,
 				},
-			},
-			IssueComments:      make(map[int][]github.IssueComment),
-			IssueLabelsAdded:   []string{},
-			IssueLabelsRemoved: []string{},
-		}
+			}
 
-		cfg := &externalplugins.Configuration{}
-		cfg.TiCommunityFormatChecker = []externalplugins.TiCommunityFormatChecker{
-			{
-				Repos:              []string{"org/repo"},
-				RequiredMatchRules: tc.requiredMatchRules,
-			},
-		}
-
-		ie := &github.IssueEvent{
-			Action: tc.action,
-			Issue: github.Issue{
-				Number:    1,
-				Title:     tc.title,
-				Body:      tc.body,
-				User:      github.User{Login: "zhang-san"},
-				CreatedAt: tc.createdAt,
-				Labels:    labels,
-			},
-			Repo: github.Repo{
-				Owner: github.User{
-					Login: "org",
+			ie := &github.IssueEvent{
+				Action: tc.action,
+				Issue: github.Issue{
+					Number:    1,
+					Title:     tc.title,
+					Body:      tc.body,
+					User:      github.User{Login: "zhang-san"},
+					CreatedAt: tc.createdAt,
+					Labels:    labels,
 				},
-				Name: "repo",
-			},
-			Label: github.Label{
-				Name: tc.label,
-			},
-		}
-		err := HandleIssueEvent(fc, ie, cfg, logrus.WithField("plugin", PluginName))
-		if err != nil {
-			t.Errorf("For case %s, didn't expect error: %v", tc.name, err)
-		}
+				Repo: github.Repo{
+					Owner: github.User{
+						Login: "org",
+					},
+					Name: "repo",
+				},
+				Label: github.Label{
+					Name: tc.label,
+				},
+			}
+			err := HandleIssueEvent(fc, ie, cfg, logrus.WithField("plugin", PluginName))
+			if err != nil {
+				t.Errorf("For case %s, didn't expect error: %v", tc.name, err)
+			}
 
-		sort.Strings(tc.expectAddedLabels)
-		sort.Strings(fc.IssueLabelsAdded)
-		if !reflect.DeepEqual(tc.expectAddedLabels, fc.IssueLabelsAdded) {
-			t.Errorf("For case \"%s\", expected the labels %q to be added, but %q were added",
-				tc.name, tc.expectAddedLabels, fc.IssueLabelsAdded)
-		}
+			sort.Strings(tc.expectAddedLabels)
+			sort.Strings(fc.IssueLabelsAdded)
+			if !reflect.DeepEqual(tc.expectAddedLabels, fc.IssueLabelsAdded) {
+				t.Errorf("For case \"%s\", expected the labels %q to be added, but %q were added",
+					tc.name, tc.expectAddedLabels, fc.IssueLabelsAdded)
+			}
 
-		sort.Strings(tc.expectDeletedLabels)
-		sort.Strings(fc.IssueLabelsRemoved)
-		if !reflect.DeepEqual(tc.expectDeletedLabels, fc.IssueLabelsRemoved) {
-			t.Errorf("For case %s, expected the labels %q to be deleted, but %q were deleted",
-				tc.name, tc.expectDeletedLabels, fc.IssueLabelsRemoved)
-		}
+			sort.Strings(tc.expectDeletedLabels)
+			sort.Strings(fc.IssueLabelsRemoved)
+			if !reflect.DeepEqual(tc.expectDeletedLabels, fc.IssueLabelsRemoved) {
+				t.Errorf("For case %s, expected the labels %q to be deleted, but %q were deleted",
+					tc.name, tc.expectDeletedLabels, fc.IssueLabelsRemoved)
+			}
 
-		if !tc.shouldComment && len(fc.IssueCommentsAdded) != 0 {
-			t.Errorf("unexpected comment %v", fc.IssueCommentsAdded)
-		}
+			if !tc.shouldComment && len(fc.IssueCommentsAdded) != 0 {
+				t.Errorf("unexpected comment %v", fc.IssueCommentsAdded)
+			}
 
-		if tc.shouldComment && len(fc.IssueCommentsAdded) == 0 {
-			t.Fatalf("expected comments but got none")
-		}
+			if tc.shouldComment && len(fc.IssueCommentsAdded) == 0 {
+				t.Fatalf("expected comments but got none")
+			}
+		})
 	}
 }
 

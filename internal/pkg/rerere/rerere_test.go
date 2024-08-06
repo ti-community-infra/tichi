@@ -227,8 +227,7 @@ func TestRetesting(t *testing.T) {
 				Timeout:         time.Nanosecond * 5,
 			},
 			run: func() mockCheck {
-				return func(log *logrus.Entry, ghc githubClient, contexts prowflagutil.Strings,
-					retestingBranch string, org string, repo string) (bool, error) {
+				return func(_ *logrus.Entry, _ githubClient, _ prowflagutil.Strings, _, _, _ string) (bool, error) {
 					return true, nil
 				}
 			},
@@ -255,8 +254,7 @@ func TestRetesting(t *testing.T) {
 					i++
 					return err == nil, err
 				}
-				return func(log *logrus.Entry, ghc githubClient, contexts prowflagutil.Strings,
-					retestingBranch string, org string, repo string) (bool, error) {
+				return func(_ *logrus.Entry, _ githubClient, _ prowflagutil.Strings, _, _, _ string) (bool, error) {
 					return next()
 				}
 			},
@@ -283,8 +281,8 @@ func TestRetesting(t *testing.T) {
 					i++
 					return err == nil, err
 				}
-				return func(log *logrus.Entry, ghc githubClient, contexts prowflagutil.Strings,
-					retestingBranch string, org string, repo string) (bool, error) {
+				return func(_ *logrus.Entry, _ githubClient, _ prowflagutil.Strings,
+					_, _, _ string) (bool, error) {
 					return next()
 				}
 			},
@@ -311,8 +309,8 @@ func TestRetesting(t *testing.T) {
 					i++
 					return err == nil, err
 				}
-				return func(log *logrus.Entry, ghc githubClient, contexts prowflagutil.Strings,
-					retestingBranch string, org string, repo string) (bool, error) {
+				return func(_ *logrus.Entry, _ githubClient, _ prowflagutil.Strings,
+					_ string, _ string, _ string) (bool, error) {
 					return next()
 				}
 			},
