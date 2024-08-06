@@ -79,7 +79,7 @@ func (f *fghc) RemoveLabel(owner, repo string, number int, label string) error {
 }
 
 // ListTeams return a list of fake teams that correspond to the fake team members returned by ListTeamAllMembers
-func (f *fghc) ListTeams(org string) ([]github.Team, error) {
+func (f *fghc) ListTeams(_ string) ([]github.Team, error) {
 	f.lock.RLock()
 	defer f.lock.RUnlock()
 	return []github.Team{
@@ -120,8 +120,7 @@ func (f *fghc) CreateComment(owner, repo string, number int, comment string) err
 	return nil
 }
 
-func (f *fghc) QueryWithGitHubAppsSupport(
-	_ context.Context, q interface{}, vars map[string]interface{}, _ string) error {
+func (f *fghc) QueryWithGitHubAppsSupport(_ context.Context, q interface{}, _ map[string]interface{}, _ string) error {
 	sq, ok := q.(*lib.TeamMembersQuery)
 	if !ok {
 		return errors.New("unexpected query type")

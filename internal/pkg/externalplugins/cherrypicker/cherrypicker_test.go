@@ -297,7 +297,7 @@ func (f *fghc) ListOrgMembers(_, role string) ([]github.TeamMember, error) {
 	return f.orgMembers, nil
 }
 
-func (f *fghc) CreateFork(org, repo string) (string, error) {
+func (f *fghc) CreateFork(_, repo string) (string, error) {
 	return repo, nil
 }
 
