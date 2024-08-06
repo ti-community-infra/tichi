@@ -1277,20 +1277,20 @@ func TestEnsureForkExists(t *testing.T) {
 			expected: "repo",
 			errors:   false,
 		},
-		// {
-		// 	name:     "EnsureFork changes repo name",
-		// 	org:      "whatever",
-		// 	repo:     "changeme",
-		// 	expected: "changed",
-		// 	errors:   false,
-		// },
-		// {
-		// 	name:     "EnsureFork errors",
-		// 	org:      "whatever",
-		// 	repo:     "error",
-		// 	expected: "error",
-		// 	errors:   true,
-		// },
+		{
+			name:     "EnsureFork changes repo name",
+			org:      "whatever",
+			repo:     "changeme",
+			expected: "changed",
+			errors:   false,
+		},
+		{
+			name:     "EnsureFork errors",
+			org:      "whatever",
+			repo:     "error",
+			expected: "error",
+			errors:   true,
+		},
 	}
 
 	for _, test := range testCases {
@@ -1363,7 +1363,7 @@ type threadUnsafeFGHC struct {
 	orgRepoCountCalled int
 }
 
-func (tuf *threadUnsafeFGHC) EnsureFork(_, org, repo string) (string, error) {
+func (tuf *threadUnsafeFGHC) EnsureFork(_, _, _ string) (string, error) {
 	tuf.orgRepoCountCalled++
 	return "", errors.New("that is enough")
 }
