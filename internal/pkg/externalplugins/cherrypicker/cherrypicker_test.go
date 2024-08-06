@@ -109,13 +109,13 @@ type fghc struct {
 	collaborators   []string
 }
 
-func (f *fghc) GetSingleCommit(org, repo, sha string) (github.RepositoryCommit, error) {
+func (f *fghc) GetSingleCommit(_, _, sha string) (github.RepositoryCommit, error) {
 	f.Lock()
 	defer f.Unlock()
 	return f.commits[sha], nil
 }
 
-func (f *fghc) AddLabels(org, repo string, number int, labels ...string) error {
+func (f *fghc) AddLabels(_, _ string, number int, labels ...string) error {
 	f.Lock()
 	defer f.Unlock()
 	for i := range f.prs {
@@ -128,7 +128,7 @@ func (f *fghc) AddLabels(org, repo string, number int, labels ...string) error {
 	return nil
 }
 
-func (f *fghc) AssignIssue(org, repo string, number int, logins []string) error {
+func (f *fghc) AssignIssue(_, _ string, number int, logins []string) error {
 	f.Lock()
 	defer f.Unlock()
 	var users []github.User
@@ -172,13 +172,13 @@ func (f *fghc) CreateComment(org, repo string, number int, comment string) error
 	return nil
 }
 
-func (f *fghc) GetRepo(owner, name string) (github.FullRepo, error) {
+func (f *fghc) GetRepo(_, _ string) (github.FullRepo, error) {
 	f.Lock()
 	defer f.Unlock()
 	return github.FullRepo{}, nil
 }
 
-func (f *fghc) EnsureFork(forkingUser, org, repo string) (string, error) {
+func (f *fghc) EnsureFork(_, org, repo string) (string, error) {
 	if repo == "changeme" {
 		return "changed", nil
 	}
@@ -418,7 +418,7 @@ func testCherryPickIC(clients localgit.Clients, t *testing.T) {
 		BotUser:                botUser,
 		GitClient:              c,
 		ConfigAgent:            ca,
-		Push:                   func(forkName, newBranch string, force bool) error { return nil },
+		Push:                   func(_, _ string, _ bool) error { return nil },
 		GitHubClient:           ghc,
 		WebhookSecretGenerator: getSecret,
 		GitHubTokenGenerator:   getGithubToken,
@@ -600,7 +600,7 @@ func testCherryPickPRWithLabels(clients localgit.Clients, t *testing.T) {
 				BotUser:                botUser,
 				GitClient:              c,
 				ConfigAgent:            ca,
-				Push:                   func(forkName, newBranch string, force bool) error { return nil },
+				Push:                   func(_, _ string, _ bool) error { return nil },
 				GitHubClient:           ghc,
 				WebhookSecretGenerator: getSecret,
 				GitHubTokenGenerator:   getGithubToken,
@@ -810,7 +810,7 @@ func testCherryPickPRWithComment(clients localgit.Clients, t *testing.T) {
 		BotUser:                botUser,
 		GitClient:              c,
 		ConfigAgent:            ca,
-		Push:                   func(forkName, newBranch string, force bool) error { return nil },
+		Push:                   func(_, _ string, _ bool) error { return nil },
 		GitHubClient:           ghc,
 		WebhookSecretGenerator: getSecret,
 		GitHubTokenGenerator:   getGithubToken,
@@ -1037,7 +1037,7 @@ func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 						BotUser:                botUser,
 						GitClient:              c,
 						ConfigAgent:            ca,
-						Push:                   func(forkName, newBranch string, force bool) error { return nil },
+						Push:                   func(_, _ string, _ bool) error { return nil },
 						GitHubClient:           ghc,
 						WebhookSecretGenerator: getSecret,
 						GitHubTokenGenerator:   getGithubToken,
@@ -1363,7 +1363,7 @@ type threadUnsafeFGHC struct {
 	orgRepoCountCalled int
 }
 
-func (tuf *threadUnsafeFGHC) EnsureFork(login, org, repo string) (string, error) {
+func (tuf *threadUnsafeFGHC) EnsureFork(_, org, repo string) (string, error) {
 	tuf.orgRepoCountCalled++
 	return "", errors.New("that is enough")
 }

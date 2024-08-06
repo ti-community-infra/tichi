@@ -20,7 +20,7 @@ import (
 const (
 	issueTitleRegex         = "^(\\[TI-(?P<issue_number>[1-9]\\d*)\\])+.+: .{10,160}$"
 	issueNumberRegex        = "#([1-9]\\d*)"
-	testTaskCheckedRegex    = `<!-- At least one of them must be included\. -->\s*[\n]{1,}(\- \[[xX ]\] .*\n)*(\- \[[xX]\] .*\n)(\- \[[xX ]\] .*\n)*\n`
+	testTaskCheckedRegex    = `<!-- At least one of them must be included\. -->\s*[\n]{1,}(\- \[[xX ]\] .*\n)*(\- \[[xX]\] .*\n)(\- \[[xX ]\] .*\n)*\n` //nolint: lll
 	issueNumberPrefixRegex  = "((https|http)://github\\.com/{{.Org}}/{{.Repo}}/issues/|{{.Org}}/{{.Repo}}#|#)"
 	keywordPrefixRegex      = "(ref|close[sd]?|resolve[sd]?|fix(e[sd])?)"
 	issueNumberLineTemplate = "(?im)^Issue Number:\\s*((,\\s*)?%s\\s*%s(?P<issue_number>[1-9]\\d*))+"

@@ -121,7 +121,7 @@ func (f *fghc) CreateComment(owner, repo string, number int, comment string) err
 }
 
 func (f *fghc) QueryWithGitHubAppsSupport(
-	ctx context.Context, q interface{}, vars map[string]interface{}, _ string) error {
+	_ context.Context, q interface{}, vars map[string]interface{}, _ string) error {
 	sq, ok := q.(*lib.TeamMembersQuery)
 	if !ok {
 		return errors.New("unexpected query type")

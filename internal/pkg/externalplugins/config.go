@@ -761,9 +761,7 @@ func validateLabelBlockerAction(actions []string) error {
 	allowActionSet := sets.NewString(LabeledAction, UnlabeledAction)
 
 	for _, action := range actions {
-		if allowActionSet.Has(action) {
-			continue
-		} else {
+		if !allowActionSet.Has(action) {
 			return fmt.Errorf("actions contain illegal value %s", action)
 		}
 	}

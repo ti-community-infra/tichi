@@ -64,7 +64,7 @@ func (pa *ConfigAgent) Set(pc *Configuration) {
 // then start returns the error. Future errors will halt updates but not stop.
 // If checkUnknownPlugins is true, unrecognized plugin names will make config
 // loading fail.
-func (pa *ConfigAgent) Start(path string, checkUnknownPlugins bool) error {
+func (pa *ConfigAgent) Start(path string, _ bool) error {
 	if err := pa.Load(path); err != nil {
 		return err
 	}

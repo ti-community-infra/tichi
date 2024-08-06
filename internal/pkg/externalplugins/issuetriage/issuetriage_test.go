@@ -82,7 +82,7 @@ func (f *fghc) RemoveLabel(owner, repo string, number int, label string) error {
 	return fmt.Errorf("cannot remove %v from %s/%s/#%d", label, owner, repo, number)
 }
 
-func (f *fghc) CreateStatus(owner, repo, sha string, s github.Status) error {
+func (f *fghc) CreateStatus(_, _, sha string, s github.Status) error {
 	f.lock.Lock()
 	defer f.lock.Unlock()
 	if f.Error != nil {
@@ -110,13 +110,13 @@ func (f *fghc) CreateStatus(owner, repo, sha string, s github.Status) error {
 	return nil
 }
 
-func (f *fghc) GetCombinedStatus(owner, repo, ref string) (*github.CombinedStatus, error) {
+func (f *fghc) GetCombinedStatus(_, _, ref string) (*github.CombinedStatus, error) {
 	f.lock.RLock()
 	defer f.lock.RUnlock()
 	return f.CombinedStatuses[ref], nil
 }
 
-func (f *fghc) GetPullRequest(owner, repo string, number int) (*github.PullRequest, error) {
+func (f *fghc) GetPullRequest(_, _ string, number int) (*github.PullRequest, error) {
 	f.lock.RLock()
 	defer f.lock.RUnlock()
 	val, exists := f.PullRequests[number]
@@ -126,7 +126,7 @@ func (f *fghc) GetPullRequest(owner, repo string, number int) (*github.PullReque
 	return val, nil
 }
 
-func (f *fghc) GetIssue(owner, repo string, number int) (*github.Issue, error) {
+func (f *fghc) GetIssue(_, _ string, number int) (*github.Issue, error) {
 	f.lock.RLock()
 	defer f.lock.RUnlock()
 	val, exists := f.Issues[number]
@@ -157,7 +157,7 @@ func (f *fghc) BotUserChecker() (func(candidate string) bool, error) {
 }
 
 func (f *fghc) QueryWithGitHubAppsSupport(
-	ctx context.Context, q interface{}, _ map[string]interface{}, _ string) error {
+	_ context.Context, q interface{}, _ map[string]interface{}, _ string) error {
 	sq, ok := q.(*referencePullRequestQuery)
 	if !ok {
 		return errors.New("unexpected query type")

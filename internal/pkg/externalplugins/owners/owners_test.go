@@ -27,7 +27,7 @@ type fakegithub struct {
 }
 
 // GetPullRequest returns details about the PR.
-func (f *fakegithub) GetPullRequest(owner, repo string, number int) (*github.PullRequest, error) {
+func (f *fakegithub) GetPullRequest(_, _ string, number int) (*github.PullRequest, error) {
 	val, exists := f.PullRequests[number]
 	if !exists {
 		return nil, fmt.Errorf("pull request number %d does not exist", number)
@@ -89,7 +89,7 @@ func (f *fakegithub) QueryWithGitHubAppsSupport(
 }
 
 // ListTeams return a list of fake teams that correspond to the fake team members returned by ListTeamMembers.
-func (f *fakegithub) ListTeams(org string) ([]github.Team, error) {
+func (f *fakegithub) ListTeams(string) ([]github.Team, error) {
 	return []github.Team{
 		{
 			ID:   0,
