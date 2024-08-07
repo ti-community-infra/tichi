@@ -7,7 +7,7 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: gcr.io/k8s-prow/checkconfig:v20221205-a1b0b85d88
+        - image: gcr.io/k8s-prow/checkconfig:v20230417-e4f4057e6e
           command:
             - /ko-app/checkconfig
           args:
@@ -149,7 +149,7 @@ postsubmits:
       - ^master$
     spec:
       containers:
-        - image: gcr.io/k8s-prow/label_sync:v20221205-a1b0b85d88
+        - image: gcr.io/k8s-prow/label_sync:v20230417-e4f4057e6e
           command:
             - /ko-app/label_sync
           args:
