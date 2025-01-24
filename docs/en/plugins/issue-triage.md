@@ -26,7 +26,7 @@ For critical or major severity bug issues.
 
 For pull requests that fix related bug issues and linked with them, we add a check named `check-issue-triage-complete` that will ensure that the bug issues are triaged before the pull request is merged.
 
-By default, the plugin will trigger the check at the right time, and if it doesn't, contributors can trigger it manually with the `/run-check-issue-triage-complete` or `/check-issue-triage-complete` command.
+By default, the plugin will trigger the check at the right time, and if it doesn't, contributors can trigger it manually with the `/retest` or `/run-check-issue-triage-complete` or `/check-issue-triage-complete` command.
 
 The plugin determines whether a pull request is triaged according to the following rules.
 
@@ -42,7 +42,7 @@ The plugin determines whether a pull request is triaged according to the followi
 
 If `check-issue-triage-complete` does not pass, the bot will automatically label `do-not-merge/needs-triage-completed` to prevent the PR from merging.
 
-When the `check-issue-triage-complete` check passes, the bot removes the `do-not-merge/needs-triage-completed` label and automatically labels the PR with `needs- cherry-pick-release-x.y` labels for all associated bug issues.
+When the `check-issue-triage-complete` check passes, the bot removes the `do-not-merge/needs-triage-completed` label and automatically labels the PR with `needs-cherry-pick-release-x.y` labels for all associated bug issues.
 
 ## Parameter Configuration
 
@@ -80,4 +80,3 @@ ti-community-issue-triage:
 
 - [0625-new-triage-method-for-cherrypick.md](https://github.com/pingcap/community/blob/master/votes/0625-new-triage-method-for- cherrypick.md)
 - [code](https://github.com/ti-community-infra/tichi/tree/master/internal/pkg/externalplugins/issuetriage)
-

@@ -49,7 +49,7 @@ const (
 
 var (
 	IssueNumberLineRe   = regexp.MustCompile("(?im)^Issue Number:.+")
-	checkIssueTriagedRe = regexp.MustCompile(`(?mi)^/(run-)?check-issue-triage-complete\s*$`)
+	checkIssueTriagedRe = regexp.MustCompile(`(?mi)^/(retest|(run-)?check-issue-triage-complete)\s*$`)
 )
 
 type githubClient interface {
@@ -215,8 +215,9 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			Snippet:     yamlSnippet,
 			Commands: []pluginhelp.Command{
 				{
-					Usage: "/[run-]check-issue-triage-complete",
+					Usage: "/retest|[run-]check-issue-triage-complete",
 					Examples: []string{
+						"/retest",
 						"/run-check-issue-triage-complete",
 						"/check-issue-triage-complete",
 					},
