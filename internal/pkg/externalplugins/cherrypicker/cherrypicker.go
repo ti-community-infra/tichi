@@ -63,7 +63,7 @@ The plugin will send an repo collaborator invitation if the requestor is not a c
 	cherryPickInviteExample      = "/cherry-pick-invite"
 	cherryPickBranchFmt          = "cherry-pick-%d-to-%s"
 	cherryPickTipFmt             = "This is an automated cherry-pick of #%d"
-	cherryPickInviteNotifyMsgTpl = `@%s Please accept the invitation then you can push to the cherry-pick pull requests. 
+	cherryPickInviteNotifyMsgTpl = `@%s Please accept the invitation then you can push to the cherry-pick pull requests.
 	Comment with "%s" if the invitation is expired.
 	%s`
 )
@@ -706,7 +706,17 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		return utilerrors.NewAggregate([]error{err, s.createComment(logger, org, repo, num, comment, resp)})
 	}
 	*logger = *logger.WithField("new_pull_request_number", createdNum)
+
+	// if there lines match "<<<<<<<" and ">>>>>>>" and "=======" in the pr diff, it means there is a conflict.
+	hasConflict, err := s.isPrHasSoftConflict(org, repo, createdNum)
+	if err != nil {
+		return err
+	}
+
 	resp := fmt.Sprintf("new pull request created to branch `%s`: #%d.", targetBranch, createdNum)
+	if hasConflict {
+		resp += "\nBut this PR has conflicts, please resolve them!"
+	}
 	logger.Infof("new pull request created to branch `%s`: #%d.", targetBranch, createdNum)
 	if err := s.createComment(logger, org, repo, num, comment, resp); err != nil {
 		return fmt.Errorf("failed to create comment: %w", err)
@@ -727,6 +737,10 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		labels.Insert(pickedLabel)
 	}
 
+	if hasConflict {
+		labels.Insert("do-not-merge/hold")
+	}
+
 	if err := s.GitHubClient.AddLabels(org, repo, createdNum, labels.List()...); err != nil {
 		logger.WithError(err).Warnf("Failed to add labels %v", labels.List())
 	}
@@ -739,7 +753,30 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 		// in PRs.
 		return nil
 	}
+
+	// add a comment to ping the requestor when it has conflicts.
+	if hasConflict {
+		// the requestor should solve it or he should ask others to solve it.
+		err := s.GitHubClient.CreateComment(org, repo, createdNum,
+			fmt.Sprintf("@%s This PR has conflicts, I have hold it.", requestor)+"\n"+
+				"Please resolve them or ask others to resolve them, then comment `/unhold` to remove the hold label.")
+		if err != nil {
+			logger.WithError(err).Warn("failed to create comment to requestor")
+		}
+	}
 	return nil
+}
+
+func (s *Server) isPrHasSoftConflict(org, repo string, prNum int) (bool, error) {
+	diffBytes, err := s.GitHubClient.GetPullRequestPatch(org, repo, prNum)
+	if err != nil {
+		return false, fmt.Errorf("failed to get pull request patch: %w", err)
+	}
+	hasConflict := bytes.Contains(diffBytes, []byte("<<<<<<<")) &&
+		bytes.Contains(diffBytes, []byte("=======")) &&
+		bytes.Contains(diffBytes, []byte(">>>>>>>"))
+
+	return hasConflict, nil
 }
 
 // TODO(wuhuizuo): reduce param count
