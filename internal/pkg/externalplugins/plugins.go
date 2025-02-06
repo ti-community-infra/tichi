@@ -1,7 +1,7 @@
 package externalplugins
 
 import (
-	"io/ioutil"
+	"os"
 	"sync"
 	"time"
 
@@ -25,7 +25,7 @@ type ConfigAgent struct {
 // If checkUnknownPlugins is true, unrecognized plugin names will make config
 // loading fail.
 func (pa *ConfigAgent) Load(path string) error {
-	b, err := ioutil.ReadFile(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,6 @@ func (pa *ConfigAgent) Start(path string, _ bool) error {
 	if err := pa.Load(path); err != nil {
 		return err
 	}
-	//nolint:staticcheck
 	ticker := time.Tick(pullDuration)
 	go func() {
 		for range ticker {

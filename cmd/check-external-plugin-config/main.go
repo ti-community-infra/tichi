@@ -4,7 +4,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -63,7 +62,7 @@ func main() {
 }
 
 func validate(o options) error {
-	bytes, err := ioutil.ReadFile(o.externalPluginConfigPath)
+	bytes, err := os.ReadFile(o.externalPluginConfigPath)
 	if err != nil {
 		return err
 	}

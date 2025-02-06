@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -151,7 +151,7 @@ func (s *Server) listOwnersByAllSigs(opts *tiexternalplugins.TiCommunityOwners,
 	}
 
 	// Unmarshal members from body.
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func (s *Server) listOwnersBySigs(sigNames []string, opts *tiexternalplugins.TiC
 		}
 
 		// Unmarshal sigName members from body.
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		if err != nil {
 			return nil, err
 		}

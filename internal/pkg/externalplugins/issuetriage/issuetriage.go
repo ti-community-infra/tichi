@@ -739,7 +739,7 @@ func (s *Server) getReferencePRList(log *logrus.Entry, org, repo string, issueNu
 	vars := map[string]interface{}{
 		"org":         githubql.String(org),
 		"repo":        githubql.String(repo),
-		"issueNumber": githubql.Int(issueNumber),
+		"issueNumber": githubql.Int(int32(issueNumber)), //nolint:gosec
 	}
 	ctx := context.Background()
 	if err := s.GitHubClient.QueryWithGitHubAppsSupport(ctx, &query, vars, org); err != nil {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"reflect"
 	"sort"
 	"strings"
@@ -1785,12 +1785,12 @@ foo/bar:
 		return []byte(repoLevelSec)
 	}
 
-	lgtmComment, err := ioutil.ReadFile("../../../../test/testdata/lgtm_comment.json")
+	lgtmComment, err := os.ReadFile("../../../../test/testdata/lgtm_comment.json")
 	if err != nil {
 		t.Fatalf("read lgtm comment file failed: %v", err)
 	}
 
-	openedPR, err := ioutil.ReadFile("../../../../test/testdata/opened_pr.json")
+	openedPR, err := os.ReadFile("../../../../test/testdata/opened_pr.json")
 	if err != nil {
 		t.Fatalf("read opened PR file failed: %v", err)
 	}

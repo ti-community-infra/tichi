@@ -2,7 +2,6 @@ package blunderbuss
 
 import (
 	"fmt"
-	"math/rand"
 	"regexp"
 	"strings"
 	"time"
@@ -224,8 +223,6 @@ func handle(gc githubClient, opts *tiexternalplugins.TiCommunityBlunderbuss, rep
 		return gc.RequestReview(repo.Owner.Login, repo.Name, pr.Number, availableReviewers.List())
 	}
 
-	// Always seed random!
-	rand.Seed(time.Now().UTC().UnixNano())
 	// List the contributors of the changes.
 	contributors, err := listChangesContributors(gc, repo.Owner.Login, repo.Name, pr.Number, log)
 	if err != nil {

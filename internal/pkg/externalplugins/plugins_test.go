@@ -1,7 +1,6 @@
 package externalplugins
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -72,12 +71,12 @@ func TestStartLoadConfig(t *testing.T) {
 
 	// Move test config into tmp.
 	{
-		testInput, err := ioutil.ReadFile(testConfigPath)
+		testInput, err := os.ReadFile(testConfigPath)
 		if err != nil {
 			t.Errorf("unexpected error: '%v'", err)
 		}
 
-		err = ioutil.WriteFile(tmp, testInput, 0600)
+		err = os.WriteFile(tmp, testInput, 0600)
 		if err != nil {
 			t.Errorf("unexpected error: '%v'", err)
 		}
@@ -85,12 +84,12 @@ func TestStartLoadConfig(t *testing.T) {
 
 	{
 		// Move update config into test config.
-		updateInput, err := ioutil.ReadFile(updateConfigPath)
+		updateInput, err := os.ReadFile(updateConfigPath)
 		if err != nil {
 			t.Errorf("unexpected error: '%v'", err)
 		}
 
-		err = ioutil.WriteFile(testConfigPath, updateInput, 0600)
+		err = os.WriteFile(testConfigPath, updateInput, 0600)
 		if err != nil {
 			t.Errorf("unexpected error: '%v'", err)
 		}
@@ -105,12 +104,12 @@ func TestStartLoadConfig(t *testing.T) {
 
 	{
 		// Move tmp config back to test config file.
-		tmpInput, err := ioutil.ReadFile(tmp)
+		tmpInput, err := os.ReadFile(tmp)
 		if err != nil {
 			t.Errorf("unexpected error: '%v'", err)
 		}
 
-		err = ioutil.WriteFile(testConfigPath, tmpInput, 0600)
+		err = os.WriteFile(testConfigPath, tmpInput, 0600)
 		if err != nil {
 			t.Errorf("unexpected error: '%v'", err)
 		}
