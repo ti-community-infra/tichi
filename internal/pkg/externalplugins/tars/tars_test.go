@@ -724,7 +724,7 @@ func generatePullRequests(org string, repo string, pr *github.PullRequest,
 
 	graphPr := pullRequest{}
 	// Set the basic info.
-	graphPr.Number = githubql.Int(pr.Number)
+	graphPr.Number = githubql.Int(pr.Number) //nolint:gosec
 	graphPr.Repository.Name = githubql.String(repo)
 	graphPr.Repository.Owner.Login = githubql.String(org)
 	graphPr.Author.Login = githubql.String(pr.User.Login)

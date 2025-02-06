@@ -5,7 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -119,7 +119,7 @@ func Retesting(log *logrus.Entry, ghc githubClient, client gitRepoClient,
 		if err != nil {
 			return err
 		}
-		err = ioutil.WriteFile(defaultRetestingLogFileName, rawLog, 0600)
+		err = os.WriteFile(defaultRetestingLogFileName, rawLog, 0600)
 		if err != nil {
 			return err
 		}

@@ -36,7 +36,7 @@ presubmits:
       - ^master$
     spec:
       containers:
-        - image: golang:1.18
+        - image: golang:1.23
           command:
             - /bin/bash
             - -c
