@@ -6,7 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/mroth/weightedrand v0.4.1
 	github.com/pkg/errors v0.9.1
-	github.com/shurcooL/githubv4 v0.0.0-20230704064427-599ae7bbf278
+	github.com/shurcooL/githubv4 v0.0.0-20240727222349-48295856cce7
 	github.com/shurcooL/graphql v0.0.0-20220606043923-3cf50f8a0a29
 	github.com/sirupsen/logrus v1.9.0
 	gotest.tools v2.2.0+incompatible
