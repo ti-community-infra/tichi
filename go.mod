@@ -7,7 +7,7 @@ require (
 	github.com/mroth/weightedrand v0.4.1
 	github.com/pkg/errors v0.9.1
 	github.com/shurcooL/githubv4 v0.0.0-20230704064427-599ae7bbf278
-	github.com/shurcooL/graphql v0.0.0-20220606043923-3cf50f8a0a29
+	github.com/shurcooL/graphql v0.0.0-20230722043721-ed46e5a46466
 	github.com/sirupsen/logrus v1.9.0
 	gotest.tools v2.2.0+incompatible
 	k8s.io/apimachinery v0.24.2
