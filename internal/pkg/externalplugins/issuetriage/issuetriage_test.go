@@ -210,6 +210,38 @@ func TestHandleIssueEvent(t *testing.T) {
 			expectRemovedLabels: []string{},
 		},
 		{
+			name:   "add a type/bug label to a severity/major issue",
+			action: github.IssueActionLabeled,
+			labels: []string{
+				bugTypeLabel,
+				majorSeverityLabel,
+			},
+			label: bugTypeLabel,
+
+			expectAddedLabels: []string{
+				"org/repo#1:may-affects/5.1",
+				"org/repo#1:may-affects/5.2",
+				"org/repo#1:may-affects/5.3",
+			},
+			expectRemovedLabels: []string{},
+		},
+		{
+			name:   "add a type/bug label to a severity/critical issue",
+			action: github.IssueActionLabeled,
+			labels: []string{
+				bugTypeLabel,
+				criticalSeverityLabel,
+			},
+			label: bugTypeLabel,
+
+			expectAddedLabels: []string{
+				"org/repo#1:may-affects/5.1",
+				"org/repo#1:may-affects/5.2",
+				"org/repo#1:may-affects/5.3",
+			},
+			expectRemovedLabels: []string{},
+		},
+		{
 			name:   "add a security/major label to a type/feature issue",
 			action: github.IssueActionLabeled,
 			labels: []string{

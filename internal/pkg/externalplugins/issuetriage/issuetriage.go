@@ -340,7 +340,7 @@ func (s *Server) handleIssueEvent(ie *github.IssueEvent, log *logrus.Entry) erro
 		return nil
 	}
 
-	if ie.Action == github.IssueActionLabeled && (newLabel == majorSeverityLabel || newLabel == criticalSeverityLabel) {
+	if ie.Action == github.IssueActionLabeled && shouldAddMayAffectsLabels(newLabel, existedLabels) {
 		// Add may-affects labels when major or critical severity label was added.
 		labelsNeedToAdd := sets.String{}
 		for _, version := range cfg.MaintainVersions {
@@ -423,6 +423,17 @@ func (s *Server) handleIssueEvent(ie *github.IssueEvent, log *logrus.Entry) erro
 	}
 
 	return nil
+}
+
+func shouldAddMayAffectsLabels(newLabel string, existedLabels sets.String) bool {
+	if newLabel == majorSeverityLabel || newLabel == criticalSeverityLabel {
+		return true
+	}
+	if newLabel != bugTypeLabel {
+		return false
+	}
+
+	return existedLabels.HasAny(majorSeverityLabel, criticalSeverityLabel)
 }
 
 func (s *Server) handlePullRequestEvent(pe *github.PullRequestEvent, log *logrus.Entry) error {
