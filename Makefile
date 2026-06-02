@@ -39,8 +39,12 @@ test:
 cover:
 	rm -rf coverage.txt
 	$(GOTEST) $(PACKAGES) -race -coverprofile=coverage.txt -covermode=atomic
-	echo "Uploading coverage results..."
-	@curl -s https://codecov.io/bash | bash > codecov_upload.log
+	@if [ -n "$$CODECOV_TOKEN" ]; then \
+		echo "Uploading coverage results..."; \
+		curl -s https://codecov.io/bash | bash > codecov_upload.log; \
+	else \
+		echo "Skipping coverage upload because CODECOV_TOKEN is not set."; \
+	fi
 
 fmt:
 	@echo "gofmt (simplify)"
@@ -59,4 +63,3 @@ tools/bin/golangci-lint:
 label-dumpling-checks:
 	@echo "label-dumpling checks"
 	./scripts/label-dumpling-checks.sh
-
