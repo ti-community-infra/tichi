@@ -601,7 +601,7 @@ func (s *Server) addCherryPickLabelsToPR(
 			continue
 		}
 
-		cherryPickLabel := cfg.NeedCherryPickLabelPrefix + affectVersion
+		cherryPickLabel := cherryPickLabelForVersion(affectVersion, cfg)
 		if !prLabels.Has(cherryPickLabel) {
 			labelsNeedToAdd = append(labelsNeedToAdd, cherryPickLabel)
 		}
@@ -611,6 +611,22 @@ func (s *Server) addCherryPickLabelsToPR(
 		return nil
 	}
 	return s.GitHubClient.AddLabels(org, repo, num, labelsNeedToAdd...)
+}
+
+func cherryPickLabelForVersion(version string, cfg *tiexternalplugins.TiCommunityIssueTriage) string {
+	branch, ok := cfg.CherryPickBranches[version]
+	if !ok || strings.TrimSpace(branch) == "" {
+		return cfg.NeedCherryPickLabelPrefix + version
+	}
+
+	branch = strings.TrimSpace(branch)
+	labelPrefix := cfg.NeedCherryPickLabelPrefix
+	// The existing configuration commonly ends in "release-", while the
+	// exception map stores the complete target branch name.
+	if strings.HasSuffix(labelPrefix, "release-") {
+		labelPrefix = strings.TrimSuffix(labelPrefix, "release-")
+	}
+	return labelPrefix + branch
 }
 
 // isPRNeedToCheck used to determine if PR needs to be checked.
