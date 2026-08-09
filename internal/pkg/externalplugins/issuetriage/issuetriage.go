@@ -623,9 +623,7 @@ func cherryPickLabelForVersion(version string, cfg *tiexternalplugins.TiCommunit
 	labelPrefix := cfg.NeedCherryPickLabelPrefix
 	// The existing configuration commonly ends in "release-", while the
 	// exception map stores the complete target branch name.
-	if strings.HasSuffix(labelPrefix, "release-") {
-		labelPrefix = strings.TrimSuffix(labelPrefix, "release-")
-	}
+	labelPrefix = strings.TrimSuffix(labelPrefix, "release-")
 	return labelPrefix + branch
 }
 
