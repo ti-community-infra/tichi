@@ -55,6 +55,7 @@ ti-community-issue-triage 插件将被设计来对以上流程进行管控和自
 | may_affects_label_prefix        | string   | 标识 issue 可能影响的发行分支的 label 前缀             |
 | linked_issue_needs_triage_label | string   | 标识 PR 所关联 issue 需要 triage 完成的 label          |
 | need_cherry_pick_label_prefix   | string   | 标识 PR 需要 cherry-pick 到 release 分支的前缀         |
+| cherry_pick_branches             | map      | 将版本号映射到例外的 cherry-pick 目标 branch；未配置时使用 `release-<version>` |
 | status_target_url               | string   | Status check 的详情 URL                                |
 
 例如：
@@ -73,6 +74,10 @@ ti-community-issue-triage:
     may_affects_label_prefix: "may-affects/"
     linked_issue_needs_triage_label: "do-not-merge/needs-triage-completed"
     need_cherry_pick_label_prefix: "needs-cherry-pick-release-"
+    # 可选：配置 branch 名称不遵循 release-<version> 约定时使用
+    cherry_pick_branches:
+      "25.10": "release-nextgen-20251011"
+      "26.3": "release-nextgen-202603"
     status_target_url: "https://book.prow.tidb.net/#/plugins/issue-triage"
 ```
 

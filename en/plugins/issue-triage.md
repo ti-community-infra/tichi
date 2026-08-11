@@ -55,6 +55,7 @@ When the `check-issue-triage-complete` check passes, the bot removes the `do-not
 | may_affects_label_prefix        | string   | The label prefix that identifies the release branch that the issue may affect       |
 | linked_issue_needs_triage_label | string   | The label that identifies the PR's associated issue that requires triage completion |
 | need_cherry_pick_label_prefix   | string   | The prefix identifying the PR's need for cherry-pick to the release branch          |
+| cherry_pick_branches             | map      | Maps a version to an exceptional cherry-pick target branch; otherwise `release-<version>` is used |
 | status_target_url               | string   | The details URL of the status check                                                 |
 
 Example:
@@ -73,6 +74,10 @@ ti-community-issue-triage:
     may_affects_label_prefix: "may-affects/"
     linked_issue_needs_triage_label: "do-not-merge/needs-triage_completed"
     need_cherry_pick_label_prefix: "needs-cherry-pick-release-"
+    # Optional exceptions for repositories whose branch names do not follow release-<version>.
+    cherry_pick_branches:
+      "25.10": "release-nextgen-20251011"
+      "26.3": "release-nextgen-202603"
     status_target_url: "https://book.prow.tidb.net/#/plugins/issue-triage"
 ```
 
