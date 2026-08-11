@@ -321,6 +321,9 @@ type TiCommunityIssueTriage struct {
 	NeedTriagedLabel string `json:"linked_issue_needs_triage_label"`
 	// NeedCherryPickLabelPrefix is the prefix of label indicates that pr needs to be cherry-picked.
 	NeedCherryPickLabelPrefix string `json:"need_cherry_pick_label_prefix"`
+	// CherryPickBranches maps a release version to an exceptional target branch.
+	// When absent, the target branch keeps the existing release-<version> convention.
+	CherryPickBranches map[string]string `json:"cherry_pick_branches,omitempty"`
 	// StatusTargetURL specify the URL of status details, and more detailed descriptions or guidelines
 	// can be added on the page targeted by the URL.
 	StatusTargetURL string `json:"status_target_url"`

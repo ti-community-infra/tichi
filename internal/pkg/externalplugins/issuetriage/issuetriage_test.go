@@ -1985,3 +1985,68 @@ func TestHelpProvider(t *testing.T) {
 		})
 	}
 }
+
+func TestCherryPickLabelForVersion(t *testing.T) {
+	tests := []struct {
+		name     string
+		version  string
+		prefix   string
+		branches map[string]string
+		want     string
+	}{
+		{
+			name:    "keeps the existing release convention",
+			version: "8.5",
+			want:    "needs-cherry-pick-release-8.5",
+		},
+		{
+			name:    "maps an exceptional nextgen branch",
+			version: "26.3",
+			branches: map[string]string{
+				"26.3": "release-nextgen-202603",
+			},
+			want: "needs-cherry-pick-release-nextgen-202603",
+		},
+		{
+			name:    "supports a prefix without release suffix",
+			version: "26.3",
+			prefix:  "needs-cherry-pick-",
+			branches: map[string]string{
+				"26.3": "release-nextgen-202603",
+			},
+			want: "needs-cherry-pick-release-nextgen-202603",
+		},
+		{
+			name:    "supports a non-release target branch",
+			version: "26.3",
+			branches: map[string]string{
+				"26.3": "master",
+			},
+			want: "needs-cherry-pick-master",
+		},
+		{
+			name:    "ignores an empty mapping",
+			version: "8.5",
+			branches: map[string]string{
+				"8.5": " ",
+			},
+			want: "needs-cherry-pick-release-8.5",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			prefix := tc.prefix
+			if prefix == "" {
+				prefix = "needs-cherry-pick-release-"
+			}
+			cfg := &externalplugins.TiCommunityIssueTriage{
+				NeedCherryPickLabelPrefix: prefix,
+				CherryPickBranches:        tc.branches,
+			}
+			if got := cherryPickLabelForVersion(tc.version, cfg); got != tc.want {
+				t.Fatalf("cherryPickLabelForVersion() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
