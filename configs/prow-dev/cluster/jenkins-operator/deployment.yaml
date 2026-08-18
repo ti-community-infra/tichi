@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: jenkins-operator
-          image: gcr.io/k8s-prow/jenkins-operator:v20221208-8898931a7f
+          image: gcr.io/k8s-prow/jenkins-operator:v20230417-e4f4057e6e
           args:
             - --github-endpoint=http://ghproxy
             - --github-endpoint=https://api.github.com
