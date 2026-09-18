@@ -78,6 +78,7 @@ ti-community-issue-triage:
     cherry_pick_branches:
       "25.10": "release-nextgen-20251011"
       "26.3": "release-nextgen-202603"
+      "26.9": "release-nextgen-202609"
     status_target_url: "https://book.prow.tidb.net/#/plugins/issue-triage"
 ```
 
