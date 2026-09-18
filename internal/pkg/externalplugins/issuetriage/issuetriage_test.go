@@ -2008,6 +2008,14 @@ func TestCherryPickLabelForVersion(t *testing.T) {
 			want: "needs-cherry-pick-release-nextgen-202603",
 		},
 		{
+			name:    "maps the 26.9 nextgen branch",
+			version: "26.9",
+			branches: map[string]string{
+				"26.9": "release-nextgen-202609",
+			},
+			want: "needs-cherry-pick-release-nextgen-202609",
+		},
+		{
 			name:    "supports a prefix without release suffix",
 			version: "26.3",
 			prefix:  "needs-cherry-pick-",
