@@ -1,6 +1,6 @@
 module github.com/ti-community-infra/tichi
 
-go 1.23.4
+go 1.25
 
 require (
 	github.com/gin-gonic/gin v1.9.1
@@ -12,7 +12,7 @@ require (
 	gotest.tools v2.2.0+incompatible
 	k8s.io/apimachinery v0.24.2
 	k8s.io/test-infra v0.0.0-20230116043250-28c7a83d5420
-	k8s.io/utils v0.0.0-20221128185143-99ec85e7a448
+	k8s.io/utils v0.0.0-20260707023825-cf1189d6abe3
 	sigs.k8s.io/yaml v1.3.0
 )
 
