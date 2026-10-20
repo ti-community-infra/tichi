@@ -116,6 +116,11 @@ func HandleIssueCommentEvent(gc githubClient, ice *github.IssueCommentEvent,
 // Get labels from RegExp matches.
 func getLabelsFromREMatches(matches [][]string) (labels []string) {
 	for _, match := range matches {
+		// An empty prefix means that the repo only configures additional labels;
+		// do not treat arbitrary slash commands as prefixed label commands.
+		if len(match) < 2 || match[1] == "" {
+			continue
+		}
 		parts := strings.Split(strings.TrimSpace(match[0]), " ")
 		for _, label := range parts[1:] {
 			// Filter out invisible characters that may be matched.
@@ -160,21 +165,33 @@ func getLabelsFromGenericMatches(matches [][]string, additionalLabels []string, 
 
 func handle(gc githubClient, log *logrus.Entry, additionalLabels,
 	prefixes, excludeLabels []string, e *github.IssueCommentEvent) error {
-	// Arrange prefixes in the format "sig|kind|priority|...",
-	// so that they can be used to create labelRegex and removeLabelRegex.
-	labelPrefixes := strings.Join(prefixes, "|")
+	var (
+		labelMatches       [][]string
+		removeLabelMatches [][]string
+	)
 
-	labelRegex, err := regexp.Compile(fmt.Sprintf(labelRegexp, labelPrefixes))
-	if err != nil {
-		return err
-	}
-	removeLabelRegex, err := regexp.Compile(fmt.Sprintf(removeLabelRegexp, labelPrefixes))
-	if err != nil {
-		return err
+	// A repo may only configure additional labels (e.g. affects-*) without any
+	// prefixes. In that case, do not build the prefix-based regex: an empty
+	// prefix would compile to `(?m)^/()\s*(.*)$`, which matches every slash
+	// command with arguments and turns it into a bogus `/<arg>` label.
+	if len(prefixes) > 0 {
+		// Arrange prefixes in the format "sig|kind|priority|...",
+		// so that they can be used to create labelRegex and removeLabelRegex.
+		labelPrefixes := strings.Join(prefixes, "|")
+
+		labelRegex, err := regexp.Compile(fmt.Sprintf(labelRegexp, labelPrefixes))
+		if err != nil {
+			return err
+		}
+		removeLabelRegex, err := regexp.Compile(fmt.Sprintf(removeLabelRegexp, labelPrefixes))
+		if err != nil {
+			return err
+		}
+
+		labelMatches = labelRegex.FindAllStringSubmatch(e.Comment.Body, -1)
+		removeLabelMatches = removeLabelRegex.FindAllStringSubmatch(e.Comment.Body, -1)
 	}
 
-	labelMatches := labelRegex.FindAllStringSubmatch(e.Comment.Body, -1)
-	removeLabelMatches := removeLabelRegex.FindAllStringSubmatch(e.Comment.Body, -1)
 	customLabelMatches := customLabelRegex.FindAllStringSubmatch(e.Comment.Body, -1)
 	customRemoveLabelMatches := customRemoveLabelRegex.FindAllStringSubmatch(e.Comment.Body, -1)
 	if len(labelMatches) == 0 && len(removeLabelMatches) == 0 &&

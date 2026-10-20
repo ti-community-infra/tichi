@@ -43,6 +43,16 @@ func TestLabelIssueComment(t *testing.T) {
 			expectedRemovedLabels: []string{},
 		},
 		{
+			name:        "Slash command with args and configured prefixes",
+			body:        "/cherry-pick release-8.5",
+			prefixes:    []string{"type"},
+			repoLabels:  []string{"type/bug"},
+			issueLabels: []string{},
+
+			expectedNewLabels:     []string{},
+			expectedRemovedLabels: []string{},
+		},
+		{
 			name:        "Empty Component",
 			body:        "/component",
 			repoLabels:  []string{"component/infra"},
@@ -681,6 +691,123 @@ func TestLabelIssueComment(t *testing.T) {
 			t.Errorf("expected bot comment: `%v`, but actual comment: `%v`",
 				tc.expectedCommentText, fakeClient.IssueCommentsAdded[0])
 		}
+	}
+}
+
+func TestLabelIssueCommentWithoutPrefixes(t *testing.T) {
+	formatTestLabels := func(labels ...string) []string {
+		return externalplugins.FormatTestLabels("org", "repo", 1, labels...)
+	}
+
+	testcases := []struct {
+		name                  string
+		body                  string
+		additionalLabels      []string
+		repoLabels            []string
+		issueLabels           []string
+		expectedNewLabels     []string
+		expectedRemovedLabels []string
+	}{
+		{
+			name: "Cherry-pick command with args",
+			body: "/cherry-pick release-8.5",
+		},
+		{
+			name: "Assign command with args",
+			body: "/assign @foo",
+		},
+		{
+			name:                  "Add additional label",
+			body:                  "/label affects-25.10",
+			additionalLabels:      []string{"affects-25.10"},
+			repoLabels:            []string{"affects-25.10"},
+			expectedNewLabels:     formatTestLabels("affects-25.10"),
+			expectedRemovedLabels: []string{},
+		},
+		{
+			name:                  "Remove additional label",
+			body:                  "/remove-label affects-25.10",
+			additionalLabels:      []string{"affects-25.10"},
+			repoLabels:            []string{"affects-25.10"},
+			issueLabels:           []string{"affects-25.10"},
+			expectedNewLabels:     []string{},
+			expectedRemovedLabels: formatTestLabels("affects-25.10"),
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			issue := github.Issue{
+				Body:   "Test",
+				Number: 1,
+				User:   github.User{Login: "Alice"},
+			}
+			issueComment := github.IssueComment{
+				Body: tc.body,
+				User: github.User{Login: "Alice"},
+			}
+
+			fakeClient := &fakegithub.FakeClient{
+				Issues: map[int]*github.Issue{
+					1: &issue,
+				},
+				IssueComments:      make(map[int][]github.IssueComment),
+				RepoLabelsExisting: tc.repoLabels,
+				IssueLabelsAdded:   []string{},
+				IssueLabelsRemoved: []string{},
+			}
+			// Add initial labels.
+			for _, label := range tc.issueLabels {
+				_ = fakeClient.AddLabel("org", "repo", 1, label)
+			}
+
+			e := &github.IssueCommentEvent{
+				Action:  github.IssueCommentActionCreated,
+				Issue:   issue,
+				Comment: issueComment,
+				Repo:    github.Repo{Owner: github.User{Login: "org"}, Name: "repo"},
+			}
+
+			cfg := &externalplugins.Configuration{
+				TiCommunityLabel: []externalplugins.TiCommunityLabel{{
+					Repos:            []string{"org/repo"},
+					AdditionalLabels: tc.additionalLabels,
+					// Prefixes is intentionally nil: only /label and
+					// /remove-label should be handled in this case.
+					Prefixes: nil,
+				}},
+			}
+
+			err := HandleIssueCommentEvent(fakeClient, e, cfg, logrus.WithField("plugin", PluginName))
+			if err != nil {
+				t.Fatalf("didn't expect error from label test: %v", err)
+			}
+
+			expectedNewLabels := append(formatTestLabels(tc.issueLabels...), tc.expectedNewLabels...)
+			if expectedNewLabels == nil {
+				expectedNewLabels = []string{}
+			}
+			if tc.expectedRemovedLabels == nil {
+				tc.expectedRemovedLabels = []string{}
+			}
+			sort.Strings(expectedNewLabels)
+			sort.Strings(fakeClient.IssueLabelsAdded)
+			if !reflect.DeepEqual(expectedNewLabels, fakeClient.IssueLabelsAdded) {
+				t.Errorf("expected the labels %q to be added, but %q were added.",
+					expectedNewLabels, fakeClient.IssueLabelsAdded)
+			}
+
+			sort.Strings(tc.expectedRemovedLabels)
+			sort.Strings(fakeClient.IssueLabelsRemoved)
+			if !reflect.DeepEqual(tc.expectedRemovedLabels, fakeClient.IssueLabelsRemoved) {
+				t.Errorf("expected the labels %q to be removed, but %q were removed.",
+					tc.expectedRemovedLabels, fakeClient.IssueLabelsRemoved)
+			}
+
+			if len(fakeClient.IssueCommentsAdded) > 0 {
+				t.Errorf("unexpected bot comments: %#v", fakeClient.IssueCommentsAdded)
+			}
+		})
 	}
 }
 
