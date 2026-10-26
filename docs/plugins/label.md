@@ -25,6 +25,10 @@ ti-community-label 采取不一样的策略，该插件支持按照分类打标�
 | prefixes          | []string | 分类前缀                                                                      |
 | exclude_labels    | []string | 一些不希望被该插件添加或移除的 labels （例如：一些只允许机器人操作的 labels） |
 
+> 当 `prefixes` 为空（未配置或 `[]`）时，插件只处理 `/label` 与 `/remove-label`；
+> 形如 `/<prefix> <target>` 的命令不会被解析，因此只配置 `additional_labels` 的仓库
+> 无需为其它插件的 slash 命令（如 `/cherry-pick`、`/assign`）担心误报 label 错误。
+
 例如：
 
 ```yml

@@ -47,7 +47,7 @@ func HelpProvider(epa *tiexternalplugins.ConfigAgent) externalplugins.ExternalPl
 			opts := cfg.LabelFor(repo.Org, repo.Repo)
 
 			var prefixConfigMsg, additionalLabelsConfigMsg, excludeLabelsConfigMsg string
-			if opts.Prefixes != nil {
+			if len(opts.Prefixes) > 0 {
 				prefixConfigMsg = fmt.Sprintf("The label plugin includes commands based on %v prefixes.\n", opts.Prefixes)
 			}
 			if opts.AdditionalLabels != nil {

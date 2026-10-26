@@ -138,6 +138,8 @@ type TiCommunityLabel struct {
 	// Prefixes is a set of label prefixes which replaces the existing
 	// "status", "priority"," and "sig" label prefixes.
 	// Labels can be used with `/[remove-]<prefix> <target>` commands.
+	// An empty or unset Prefixes disables the prefixed commands entirely;
+	// only `/[remove-]label <additionalLabel>` remains available.
 	Prefixes []string `json:"prefixes,omitempty"`
 	// ExcludeLabels specifies labels that cannot be added by TiCommunityLabel.
 	ExcludeLabels []string `json:"exclude_labels,omitempty"`
