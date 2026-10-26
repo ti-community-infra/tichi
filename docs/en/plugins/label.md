@@ -25,6 +25,11 @@ In addition, in the process of implementing the plugin, you should pay attention
 | prefixes          | []string | Category Prefix                                                                                                          |
 | exclude_labels    | []string | Some labels that you do not want to be added or removed by the plugin (e.g. some labels that only allow bots to operate) |
 
+> When `prefixes` is empty (unset or `[]`), the plugin only handles `/label` and
+> `/remove-label`; commands of the form `/<prefix> <target>` are not parsed. Repos that
+> only configure `additional_labels` therefore never get bogus label errors for other
+> plugins' slash commands such as `/cherry-pick` or `/assign`.
+
 For example:
 
 ```yml

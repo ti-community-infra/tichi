@@ -703,18 +703,27 @@ func TestLabelIssueCommentWithoutPrefixes(t *testing.T) {
 		name                  string
 		body                  string
 		additionalLabels      []string
+		prefixes              []string
 		repoLabels            []string
 		issueLabels           []string
 		expectedNewLabels     []string
 		expectedRemovedLabels []string
 	}{
 		{
-			name: "Cherry-pick command with args",
-			body: "/cherry-pick release-8.5",
+			name:             "Cherry-pick command with args",
+			body:             "/cherry-pick release-8.5",
+			additionalLabels: []string{"affects-25.10"},
 		},
 		{
-			name: "Assign command with args",
-			body: "/assign @foo",
+			name:             "Assign command with args",
+			body:             "/assign @foo",
+			additionalLabels: []string{"affects-25.10"},
+		},
+		{
+			name:       "Empty prefixes ignore prefixed commands",
+			body:       "/type bug",
+			prefixes:   []string{},
+			repoLabels: []string{"type/bug"},
 		},
 		{
 			name:                  "Add additional label",
@@ -772,9 +781,9 @@ func TestLabelIssueCommentWithoutPrefixes(t *testing.T) {
 				TiCommunityLabel: []externalplugins.TiCommunityLabel{{
 					Repos:            []string{"org/repo"},
 					AdditionalLabels: tc.additionalLabels,
-					// Prefixes is intentionally nil: only /label and
-					// /remove-label should be handled in this case.
-					Prefixes: nil,
+					// Prefixes defaults to nil (and is set to an empty list in
+					// one case): only /label and /remove-label should be handled.
+					Prefixes: tc.prefixes,
 				}},
 			}
 
@@ -808,6 +817,21 @@ func TestLabelIssueCommentWithoutPrefixes(t *testing.T) {
 				t.Errorf("unexpected bot comments: %#v", fakeClient.IssueCommentsAdded)
 			}
 		})
+	}
+}
+
+func TestGetLabelsFromREMatchesSkipsEmptyPrefix(t *testing.T) {
+	matches := [][]string{
+		// An empty prefix (for example `prefixes: ["type", ""]`) yields an
+		// empty match[1]; those matches must not become `/<arg>` labels.
+		{"/cherry-pick release-8.5", "", "release-8.5"},
+		{"/type bug", "type", "bug"},
+	}
+
+	got := getLabelsFromREMatches(matches)
+	want := []string{"type/bug"}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("expected the labels %q, but %q were generated.", want, got)
 	}
 }
 
