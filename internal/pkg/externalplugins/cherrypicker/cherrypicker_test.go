@@ -1154,6 +1154,9 @@ func testCherryPickPRFromNonMemberAuthor(clients localgit.Clients, t *testing.T)
 	event := func(action github.PullRequestEventAction, label github.Label) *github.PullRequestEvent {
 		return &github.PullRequestEvent{
 			Action: action,
+			Sender: github.User{
+				Login: "approver",
+			},
 			PullRequest: github.PullRequest{
 				User: github.User{
 					Login: "contributor",
@@ -1198,6 +1201,18 @@ func testCherryPickPRFromNonMemberAuthor(clients localgit.Clients, t *testing.T)
 			name:           "labeled event",
 			event:          event(github.PullRequestActionLabeled, github.Label{Name: labelPrefix + "release-1.6"}),
 			expectedBranch: "release-1.6",
+		},
+		{
+			// Repository automation adds the release labels too, for example the
+			// issue-triage plugin running as the ti-chi-bot GitHub App. Such a label is
+			// a valid request, the sender is not an org member and must not be checked.
+			name: "labeled event from an app bot",
+			event: func() *github.PullRequestEvent {
+				e := event(github.PullRequestActionLabeled, github.Label{Name: labelPrefix + "release-1.7"})
+				e.Sender = github.User{Login: "ti-chi-bot[bot]"}
+				return e
+			}(),
+			expectedBranch: "release-1.7",
 		},
 		{
 			name:  "cherry-pick comment from a non-member is ignored and answered",
