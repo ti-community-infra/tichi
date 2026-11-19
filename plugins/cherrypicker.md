@@ -12,6 +12,7 @@ ti-community-cherrypicker 将帮助我们自动的 cherry-pick PR 的改动到�
 
 - `allow_all` 配置为 true，所有 GitHub 用户都可以触发 `/cherry-pick some-branch`
 - `allow_all` 配置为 false，则只有该 repo 所在 Org 的成员可以触发 `/cherry-pick some-branch`
+- 通过 label（`label_prefix` + 目标分支名，例如 `needs-cherry-pick-release-8.5`）触发的 cherry-pick 不受 `allow_all` 限制：只有对该仓库有 triage 及以上权限的用户（或仓库自动化）才能添加 label，label 本身就代表一次已授权的请求。这类请求的 requestor 记为 PR 作者，所以外部贡献者的 PR 被维护者打上 label 后依然会被自动 cherry-pick。
 - **只有** 该 repo 所在 Org 的成员可以在 cherry-pick PR 上触发 `/cherry-pick-invite`.
 
 ## 设计思路

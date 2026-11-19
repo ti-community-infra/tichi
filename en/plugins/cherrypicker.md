@@ -12,6 +12,7 @@ This plugin is primarily responsible for cherry-picking code and creating PRs wi
 
 - `allow_all` set to true, all GitHub users can trigger `/cherry-pick some-branch`
 - `allow_all` set to false, only members of the repo's Org can trigger `/cherry-pick some-branch`
+- Cherry-picks triggered by a label (`label_prefix` + target branch, e.g. `needs-cherry-pick-release-8.5`) are not gated by `allow_all`: only users with triage permission or higher on the repository, or repository automation, can apply such a label, so the label itself already records an authorized request. Such a request is attributed to the pull request author, so labelling an external contributor's pull request still triggers the cherry-pick automatically.
 - **only** members of the repo's Org can trigger `/cherry-pick-invite` on cherry-pick pull requests.
 
 ## Design
