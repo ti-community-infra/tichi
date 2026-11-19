@@ -1098,6 +1098,228 @@ func testCherryPickPRLabeled(clients localgit.Clients, t *testing.T) {
 	}
 }
 
+func TestCherryPickPRFromNonMemberAuthor(t *testing.T) {
+	t.Parallel()
+	testCherryPickPRFromNonMemberAuthor(localgit.New, t)
+}
+
+func TestCherryPickPRFromNonMemberAuthorV2(t *testing.T) {
+	t.Parallel()
+	testCherryPickPRFromNonMemberAuthor(localgit.NewV2, t)
+}
+
+// testCherryPickPRFromNonMemberAuthor checks that the org membership check only gates
+// cherry-pick requests a user makes in their own name: a `needs-cherry-pick-*` label
+// applied by a maintainer must still be picked when the pull request author is an
+// external contributor, while a `/cherry-pick` comment from a non-member must not.
+func testCherryPickPRFromNonMemberAuthor(clients localgit.Clients, t *testing.T) {
+	const labelPrefix = "needs-cherry-pick-"
+
+	lg, c, err := clients()
+	if err != nil {
+		t.Fatalf("Making localgit: %v", err)
+	}
+	defer func() {
+		if err := lg.Clean(); err != nil {
+			t.Errorf("Cleaning up localgit: %v", err)
+		}
+		if err := c.Clean(); err != nil {
+			t.Errorf("Cleaning up client: %v", err)
+		}
+	}()
+	if err := lg.MakeFakeRepo("foo", "bar"); err != nil {
+		t.Fatalf("Making fake repo: %v", err)
+	}
+	if err := lg.AddCommit("foo", "bar", initialFiles); err != nil {
+		t.Fatalf("Adding initial commit: %v", err)
+	}
+	for _, branch := range []string{"release-1.5", "release-1.6", "release-1.7"} {
+		if err := lg.CheckoutNewBranch("foo", "bar", branch); err != nil {
+			t.Fatalf("Checking out pull branch %s: %v", branch, err)
+		}
+	}
+
+	botUser := &github.UserData{Login: "ci-robot", Email: "ci-robot@users.noreply.github.com"}
+
+	getSecret := func() []byte {
+		return []byte("sha=abcdefg")
+	}
+
+	getGithubToken := func() []byte {
+		return []byte("token")
+	}
+
+	// The pull request author is an external contributor: "contributor" is on purpose
+	// missing from the org members below.
+	event := func(action github.PullRequestEventAction, label github.Label) *github.PullRequestEvent {
+		return &github.PullRequestEvent{
+			Action: action,
+			Sender: github.User{
+				Login: "approver",
+			},
+			PullRequest: github.PullRequest{
+				User: github.User{
+					Login: "contributor",
+				},
+				Base: github.PullRequestBranch{
+					Ref: "master",
+					Repo: github.Repo{
+						Owner: github.User{
+							Login: "foo",
+						},
+						Name: "bar",
+					},
+				},
+				Number:   2,
+				Merged:   true,
+				MergeSHA: new(string),
+				Title:    "This is a fix for Z",
+			},
+			Label: label,
+		}
+	}
+
+	label := func(branch string) []github.Label {
+		return []github.Label{{Name: labelPrefix + branch}}
+	}
+
+	testCases := []struct {
+		name               string
+		event              *github.PullRequestEvent
+		prComments         []github.IssueComment
+		prLabels           []github.Label
+		expectedBranch     string
+		expectedRejections int
+	}{
+		{
+			name:           "cherry-pick labels on the closed event",
+			event:          event(github.PullRequestActionClosed, github.Label{}),
+			prLabels:       label("release-1.5"),
+			expectedBranch: "release-1.5",
+		},
+		{
+			name:           "labeled event",
+			event:          event(github.PullRequestActionLabeled, github.Label{Name: labelPrefix + "release-1.6"}),
+			expectedBranch: "release-1.6",
+		},
+		{
+			// Repository automation adds the release labels too, for example the
+			// issue-triage plugin running as the ti-chi-bot GitHub App. Such a label is
+			// a valid request, the sender is not an org member and must not be checked.
+			name: "labeled event from an app bot",
+			event: func() *github.PullRequestEvent {
+				e := event(github.PullRequestActionLabeled, github.Label{Name: labelPrefix + "release-1.7"})
+				e.Sender = github.User{Login: "ti-chi-bot[bot]"}
+				return e
+			}(),
+			expectedBranch: "release-1.7",
+		},
+		{
+			name:  "cherry-pick comment from a non-member is ignored and answered",
+			event: event(github.PullRequestActionClosed, github.Label{}),
+			prComments: []github.IssueComment{
+				{
+					User: github.User{
+						Login: "contributor",
+					},
+					Body: "/cherry-pick release-1.7",
+				},
+			},
+			expectedBranch:     "",
+			expectedRejections: 1,
+		},
+		{
+			name:  "non-member comment already answered is not answered again",
+			event: event(github.PullRequestActionClosed, github.Label{}),
+			prComments: []github.IssueComment{
+				{
+					User: github.User{
+						Login: "contributor",
+					},
+					Body: "/cherry-pick release-1.7",
+				},
+				{
+					User: github.User{
+						Login: "ci-robot",
+					},
+					Body: "only [foo](https://github.com/orgs/foo/people) org members may request cherry-picks. " +
+						"You can still do the cherry-pick manually.",
+				},
+			},
+			expectedBranch:     "",
+			expectedRejections: 0,
+		},
+	}
+
+	for _, test := range testCases {
+		tc := test
+		t.Run(tc.name, func(t *testing.T) {
+			ghc := &fghc{
+				orgMembers: []github.TeamMember{
+					{
+						Login: "approver",
+					},
+				},
+				prComments: tc.prComments,
+				prLabels:   tc.prLabels,
+				patch:      patch,
+			}
+
+			cfg := &externalplugins.Configuration{}
+			cfg.TiCommunityCherrypicker = []externalplugins.TiCommunityCherrypicker{
+				{
+					Repos:             []string{"foo/bar"},
+					LabelPrefix:       labelPrefix,
+					PickedLabelPrefix: "type/cherrypick-for-",
+				},
+			}
+			ca := &externalplugins.ConfigAgent{}
+			ca.Set(cfg)
+
+			s := &Server{
+				BotUser:                botUser,
+				GitClient:              c,
+				ConfigAgent:            ca,
+				Push:                   func(_, _ string, _ bool) error { return nil },
+				GitHubClient:           ghc,
+				WebhookSecretGenerator: getSecret,
+				GitHubTokenGenerator:   getGithubToken,
+				Log:                    logrus.StandardLogger().WithField("client", "cherrypicker"),
+				Repos:                  []github.Repo{{Fork: true, FullName: "ci-robot/bar"}},
+			}
+
+			if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), tc.event); err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+
+			var rejections []string
+			for _, c := range ghc.comments {
+				if strings.Contains(c, "org members may request cherry-picks") {
+					rejections = append(rejections, c)
+				}
+			}
+			if len(rejections) != tc.expectedRejections {
+				t.Fatalf("expected %d non-member rejection replies, got %d: %v",
+					tc.expectedRejections, len(rejections), ghc.comments)
+			}
+
+			if tc.expectedBranch == "" {
+				if len(ghc.prs) != 0 {
+					t.Fatalf("expected no cherry-pick pull request, got %d", len(ghc.prs))
+				}
+				return
+			}
+
+			if len(ghc.prs) != 1 {
+				t.Fatalf("expected 1 cherry-pick pull request, got %d", len(ghc.prs))
+			}
+			if got := ghc.prs[0].Base.Ref; got != tc.expectedBranch {
+				t.Errorf("expected cherry-pick pull request to target %q, got %q", tc.expectedBranch, got)
+			}
+		})
+	}
+}
+
 func TestCherryPickCreateIssue(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {

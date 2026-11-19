@@ -385,6 +385,9 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEve
 	opts := s.ConfigAgent.Config().CherrypickerFor(org, repo)
 	// requestor -> target branch -> issue comment.
 	requestorToComments := make(map[string]map[string]*github.IssueComment)
+	// comments is only filled on the closed event, it is used to tell whether a
+	// non-member has already been answered.
+	var comments []github.IssueComment
 	// NOTICE: This will set the requestor to the author of the PR.
 	if requestorToComments[pr.User.Login] == nil {
 		requestorToComments[pr.User.Login] = make(map[string]*github.IssueComment)
@@ -394,12 +397,14 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEve
 	// Considering close event.
 	case github.PullRequestActionClosed:
 		{
-			comments, err := s.GitHubClient.ListIssueComments(org, repo, num)
+			var err error
+			comments, err = s.GitHubClient.ListIssueComments(org, repo, num)
 			if err != nil {
 				return fmt.Errorf("failed to list comments: %w", err)
 			}
 
 			// First look for our special comments.
+			foundCherryPickComments := false
 			for i := range comments {
 				c := comments[i]
 				cherryPickMatches := cherryPickRe.FindAllStringSubmatch(c.Body, -1)
@@ -409,10 +414,9 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEve
 						requestorToComments[c.User.Login] = make(map[string]*github.IssueComment)
 					}
 					requestorToComments[c.User.Login][targetBranch] = &c
+					foundCherryPickComments = true
 				}
 			}
-
-			foundCherryPickComments := len(requestorToComments) != 0
 
 			// Now look for our special labels.
 			labels, err := s.GitHubClient.GetIssueLabels(org, repo, num)
@@ -447,22 +451,18 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEve
 	}
 
 	// Figure out membership.
+	//
+	// A `needs-cherry-pick-*` label can only be applied by users with triage (or
+	// higher) permission on the repository, or by repository automation, so the
+	// label itself already records an authorized request. The requester of a
+	// label-initiated cherry-pick is the pull request author, who may well be an
+	// external contributor: the org membership check must therefore only apply to
+	// requests a user made in their own name by commenting `/cherry-pick <branch>`.
+	// Otherwise a maintainer labelling a contributor's pull request would silently
+	// do nothing.
 	if !opts.AllowAll {
-		members, err := s.GitHubClient.ListOrgMembers(org, "all")
-		if err != nil {
+		if err := s.dropNonMemberRequests(log, org, repo, num, requestorToComments, comments); err != nil {
 			return err
-		}
-		for requestor := range requestorToComments {
-			isMember := false
-			for _, m := range members {
-				if requestor == m.Login {
-					isMember = true
-					break
-				}
-			}
-			if !isMember {
-				delete(requestorToComments, requestor)
-			}
 		}
 	}
 
@@ -748,10 +748,9 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	// Assign pull request to requestor.
 	if err := s.GitHubClient.AssignIssue(org, repo, createdNum, []string{requestor}); err != nil {
 		logger.WithError(err).Warn("failed to assign to new PR")
-		// Ignore returning errors on failure to assign as this is most likely
-		// due to users not being members of the org so that they can't be assigned
-		// in PRs.
-		return nil
+		// Ignore errors on failure to assign as this is most likely due to the
+		// requestor not being a member of the org, so that they can't be assigned
+		// in PRs. Keep going: the conflict ping below is still useful.
 	}
 
 	// add a comment to ping the requestor when it has conflicts.
@@ -833,8 +832,9 @@ func (s *Server) getPatch(org, repo, targetBranch string, num int) (string, erro
 	if err != nil {
 		return "", err
 	}
-	localPath := fmt.Sprintf("/tmp/%s_%s_%d_%s.patch", org, repo, num, normalize(targetBranch))
-	out, err := os.Create(localPath)
+	// Use a unique file per request, parallel cherry-picks of the same pull request to
+	// different branches must not share (and truncate) the same patch file.
+	out, err := os.CreateTemp("", fmt.Sprintf("%s_%s_%d_%s_*.patch", org, repo, num, normalize(targetBranch)))
 	if err != nil {
 		return "", err
 	}
@@ -842,11 +842,84 @@ func (s *Server) getPatch(org, repo, targetBranch string, num int) (string, erro
 	if _, err := io.Copy(out, bytes.NewBuffer(patch)); err != nil {
 		return "", err
 	}
-	return localPath, nil
+	return out.Name(), nil
 }
 
 func normalize(input string) string {
 	return strings.ReplaceAll(input, "/", "-")
+}
+
+// dropNonMemberRequests drops the cherry-pick requests a non-member asked for in their
+// own name, and answers each of them once. Label-initiated requests are kept: a label can
+// only be applied by users with triage permission or by repository automation.
+func (s *Server) dropNonMemberRequests(logger *logrus.Entry, org, repo string, num int,
+	requestorToComments map[string]map[string]*github.IssueComment, comments []github.IssueComment) error {
+	members, err := s.GitHubClient.ListOrgMembers(org, "all")
+	if err != nil {
+		return err
+	}
+
+	rejected := false
+	for requestor, branches := range requestorToComments {
+		if isOrgMember(members, requestor) {
+			continue
+		}
+		for targetBranch, comment := range branches {
+			if comment == nil {
+				// Label-initiated request, keep it.
+				continue
+			}
+			logger.WithFields(logrus.Fields{
+				"requestor":     requestor,
+				"target_branch": targetBranch,
+			}).Info("Ignoring cherry-pick request from a non-org member.")
+			delete(branches, targetBranch)
+			// Tell the requestor, silence is the worst possible answer. The comment path
+			// already replied when the comment was created, so only answer once.
+			if rejected || alreadyRejected(comments) {
+				continue
+			}
+			rejected = true
+			if err := s.createComment(logger, org, repo, num, comment, nonMemberRejection(org)); err != nil {
+				logger.WithError(err).Warn("Failed to reply to the non-member requestor.")
+			}
+		}
+		if len(branches) == 0 {
+			delete(requestorToComments, requestor)
+		}
+	}
+	return nil
+}
+
+// nonMemberRejection is the answer sent to a non-member asking for a cherry-pick.
+func nonMemberRejection(org string) string {
+	return fmt.Sprintf("only [%s](https://github.com/orgs/%s/people) org members may request cherry-picks. "+
+		"You can still do the cherry-pick manually.", org, org)
+}
+
+// nonMemberRejectionFragment is a stable part of the message sent when a non-member asks
+// for a cherry-pick, it is used to not answer the same request twice.
+const nonMemberRejectionFragment = "org members may request cherry"
+
+// alreadyRejected reports whether the "only org members may request cherry-picks" answer
+// has already been posted on the pull request.
+func alreadyRejected(comments []github.IssueComment) bool {
+	for _, c := range comments {
+		if strings.Contains(c.Body, nonMemberRejectionFragment) {
+			return true
+		}
+	}
+	return false
+}
+
+// isOrgMember checks whether the login is a member of the organization described by members.
+func isOrgMember(members []github.TeamMember, login string) bool {
+	for _, m := range members {
+		if login == m.Login {
+			return true
+		}
+	}
+	return false
 }
 
 // createCherryPickCommitMessage creates the commit message for the cherry-pick commit.
