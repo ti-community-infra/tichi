@@ -400,6 +400,7 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEve
 			}
 
 			// First look for our special comments.
+			foundCherryPickComments := false
 			for i := range comments {
 				c := comments[i]
 				cherryPickMatches := cherryPickRe.FindAllStringSubmatch(c.Body, -1)
@@ -409,10 +410,9 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEve
 						requestorToComments[c.User.Login] = make(map[string]*github.IssueComment)
 					}
 					requestorToComments[c.User.Login][targetBranch] = &c
+					foundCherryPickComments = true
 				}
 			}
-
-			foundCherryPickComments := len(requestorToComments) != 0
 
 			// Now look for our special labels.
 			labels, err := s.GitHubClient.GetIssueLabels(org, repo, num)
@@ -447,20 +447,36 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEve
 	}
 
 	// Figure out membership.
+	//
+	// A `needs-cherry-pick-*` label can only be applied by users with triage (or
+	// higher) permission on the repository, or by repository automation, so the
+	// label itself already records an authorized request. The requester of a
+	// label-initiated cherry-pick is the pull request author, who may well be an
+	// external contributor: the org membership check must therefore only apply to
+	// requests a user made in their own name by commenting `/cherry-pick <branch>`.
+	// Otherwise a maintainer labelling a contributor's pull request would silently
+	// do nothing.
 	if !opts.AllowAll {
 		members, err := s.GitHubClient.ListOrgMembers(org, "all")
 		if err != nil {
 			return err
 		}
-		for requestor := range requestorToComments {
-			isMember := false
-			for _, m := range members {
-				if requestor == m.Login {
-					isMember = true
-					break
-				}
+		for requestor, branches := range requestorToComments {
+			if isOrgMember(members, requestor) {
+				continue
 			}
-			if !isMember {
+			for targetBranch, comment := range branches {
+				if comment == nil {
+					// Label-initiated request, keep it.
+					continue
+				}
+				log.WithFields(logrus.Fields{
+					"requestor":     requestor,
+					"target_branch": targetBranch,
+				}).Info("Ignoring cherry-pick request from a non-org member.")
+				delete(branches, targetBranch)
+			}
+			if len(branches) == 0 {
 				delete(requestorToComments, requestor)
 			}
 		}
@@ -748,10 +764,9 @@ func (s *Server) handle(logger *logrus.Entry, requestor string,
 	// Assign pull request to requestor.
 	if err := s.GitHubClient.AssignIssue(org, repo, createdNum, []string{requestor}); err != nil {
 		logger.WithError(err).Warn("failed to assign to new PR")
-		// Ignore returning errors on failure to assign as this is most likely
-		// due to users not being members of the org so that they can't be assigned
-		// in PRs.
-		return nil
+		// Ignore errors on failure to assign as this is most likely due to the
+		// requestor not being a member of the org, so that they can't be assigned
+		// in PRs. Keep going: the conflict ping below is still useful.
 	}
 
 	// add a comment to ping the requestor when it has conflicts.
@@ -847,6 +862,16 @@ func (s *Server) getPatch(org, repo, targetBranch string, num int) (string, erro
 
 func normalize(input string) string {
 	return strings.ReplaceAll(input, "/", "-")
+}
+
+// isOrgMember checks whether the login is a member of the organization described by members.
+func isOrgMember(members []github.TeamMember, login string) bool {
+	for _, m := range members {
+		if login == m.Login {
+			return true
+		}
+	}
+	return false
 }
 
 // createCherryPickCommitMessage creates the commit message for the cherry-pick commit.
