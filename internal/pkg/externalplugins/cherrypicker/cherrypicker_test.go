@@ -1181,11 +1181,12 @@ func testCherryPickPRFromNonMemberAuthor(clients localgit.Clients, t *testing.T)
 	}
 
 	testCases := []struct {
-		name           string
-		event          *github.PullRequestEvent
-		prComments     []github.IssueComment
-		prLabels       []github.Label
-		expectedBranch string
+		name               string
+		event              *github.PullRequestEvent
+		prComments         []github.IssueComment
+		prLabels           []github.Label
+		expectedBranch     string
+		expectedRejections int
 	}{
 		{
 			name:           "cherry-pick labels on the closed event",
@@ -1199,7 +1200,7 @@ func testCherryPickPRFromNonMemberAuthor(clients localgit.Clients, t *testing.T)
 			expectedBranch: "release-1.6",
 		},
 		{
-			name:  "cherry-pick comment from a non-member is ignored",
+			name:  "cherry-pick comment from a non-member is ignored and answered",
 			event: event(github.PullRequestActionClosed, github.Label{}),
 			prComments: []github.IssueComment{
 				{
@@ -1209,7 +1210,29 @@ func testCherryPickPRFromNonMemberAuthor(clients localgit.Clients, t *testing.T)
 					Body: "/cherry-pick release-1.7",
 				},
 			},
-			expectedBranch: "",
+			expectedBranch:     "",
+			expectedRejections: 1,
+		},
+		{
+			name:  "non-member comment already answered is not answered again",
+			event: event(github.PullRequestActionClosed, github.Label{}),
+			prComments: []github.IssueComment{
+				{
+					User: github.User{
+						Login: "contributor",
+					},
+					Body: "/cherry-pick release-1.7",
+				},
+				{
+					User: github.User{
+						Login: "ci-robot",
+					},
+					Body: "only [foo](https://github.com/orgs/foo/people) org members may request cherry-picks. " +
+						"You can still do the cherry-pick manually.",
+				},
+			},
+			expectedBranch:     "",
+			expectedRejections: 0,
 		},
 	}
 
@@ -1252,6 +1275,17 @@ func testCherryPickPRFromNonMemberAuthor(clients localgit.Clients, t *testing.T)
 
 			if err := s.handlePullRequest(logrus.NewEntry(logrus.StandardLogger()), tc.event); err != nil {
 				t.Fatalf("unexpected error: %v", err)
+			}
+
+			var rejections []string
+			for _, c := range ghc.comments {
+				if strings.Contains(c, "org members may request cherry-picks") {
+					rejections = append(rejections, c)
+				}
+			}
+			if len(rejections) != tc.expectedRejections {
+				t.Fatalf("expected %d non-member rejection replies, got %d: %v",
+					tc.expectedRejections, len(rejections), ghc.comments)
 			}
 
 			if tc.expectedBranch == "" {

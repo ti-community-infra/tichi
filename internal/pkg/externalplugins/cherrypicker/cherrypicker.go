@@ -385,6 +385,9 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEve
 	opts := s.ConfigAgent.Config().CherrypickerFor(org, repo)
 	// requestor -> target branch -> issue comment.
 	requestorToComments := make(map[string]map[string]*github.IssueComment)
+	// comments is only filled on the closed event, it is used to tell whether a
+	// non-member has already been answered.
+	var comments []github.IssueComment
 	// NOTICE: This will set the requestor to the author of the PR.
 	if requestorToComments[pr.User.Login] == nil {
 		requestorToComments[pr.User.Login] = make(map[string]*github.IssueComment)
@@ -394,7 +397,8 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEve
 	// Considering close event.
 	case github.PullRequestActionClosed:
 		{
-			comments, err := s.GitHubClient.ListIssueComments(org, repo, num)
+			var err error
+			comments, err = s.GitHubClient.ListIssueComments(org, repo, num)
 			if err != nil {
 				return fmt.Errorf("failed to list comments: %w", err)
 			}
@@ -461,6 +465,7 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEve
 		if err != nil {
 			return err
 		}
+		rejected := false
 		for requestor, branches := range requestorToComments {
 			if isOrgMember(members, requestor) {
 				continue
@@ -475,6 +480,16 @@ func (s *Server) handlePullRequest(log *logrus.Entry, pre *github.PullRequestEve
 					"target_branch": targetBranch,
 				}).Info("Ignoring cherry-pick request from a non-org member.")
 				delete(branches, targetBranch)
+				// Tell the requestor, silence is the worst possible answer. The comment
+				// path already replied when the comment was created, so only answer once.
+				if !rejected && !alreadyRejected(comments) {
+					rejected = true
+					resp := fmt.Sprintf("only [%s](https://github.com/orgs/%s/people) org members may request cherry-picks. "+
+						"You can still do the cherry-pick manually.", org, org)
+					if err := s.createComment(log, org, repo, num, comment, resp); err != nil {
+						log.WithError(err).Warn("Failed to reply to the non-member requestor.")
+					}
+				}
 			}
 			if len(branches) == 0 {
 				delete(requestorToComments, requestor)
@@ -862,6 +877,21 @@ func (s *Server) getPatch(org, repo, targetBranch string, num int) (string, erro
 
 func normalize(input string) string {
 	return strings.ReplaceAll(input, "/", "-")
+}
+
+// nonMemberRejectionFragment is a stable part of the message sent when a non-member asks
+// for a cherry-pick, it is used to not answer the same request twice.
+const nonMemberRejectionFragment = "org members may request cherry"
+
+// alreadyRejected reports whether the "only org members may request cherry-picks" answer
+// has already been posted on the pull request.
+func alreadyRejected(comments []github.IssueComment) bool {
+	for _, c := range comments {
+		if strings.Contains(c.Body, nonMemberRejectionFragment) {
+			return true
+		}
+	}
+	return false
 }
 
 // isOrgMember checks whether the login is a member of the organization described by members.
